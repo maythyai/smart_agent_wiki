@@ -11,11 +11,22 @@ Per D-14 to D-21 implementation decisions.
 """
 from saw.engines.learn.adaptive import TrainingPeriod, UserPreference
 from saw.engines.learn.fsrs_scheduler import FSRSScheduler, ReviewItem
+from saw.engines.learn.distiller import Distiller, SOP
+from saw.engines.learn.trends import TrendSenser, KnowledgeGap
+from saw.engines.learn.expiry import KnowledgeExpiry, ExpiryCandidate
+from saw.engines.learn.engine import LearnEngine, LearningReport
 
-# Additional modules will be added in Task 4
 __all__ = [
     "TrainingPeriod",
     "UserPreference",
     "FSRSScheduler",
     "ReviewItem",
+    "Distiller",
+    "SOP",
+    "TrendSenser",
+    "KnowledgeGap",
+    "KnowledgeExpiry",
+    "ExpiryCandidate",
+    "LearnEngine",
+    "LearningReport",
 ]
