@@ -18,7 +18,11 @@ console = Console()
 from saw.drivers.cli.commands.init_cmd import init  # noqa: E402
 from saw.drivers.cli.commands.status_cmd import status  # noqa: E402
 from saw.drivers.cli.commands.ingest_cmd import ingest  # noqa: E402
+from saw.drivers.cli.commands.query_cmd import query  # noqa: E402
+from saw.drivers.cli.commands.search_cmd import search  # noqa: E402
 
 app.command(name="init")(init)
 app.command(name="status")(status)
 app.command(name="ingest")(ingest)
+app.command(name="query")(query)
+app.command(name="search")(search)
