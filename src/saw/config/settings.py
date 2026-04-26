@@ -1,0 +1,92 @@
+"""Configuration settings with capability tier detection.
+
+Per D-22: Three-tier degradation (FULL > LIGHTWEIGHT > OFFLINE).
+Per D-24: Agent compatibility layer.
+Per D-23: WIP file structure.
+"""
+from __future__ import annotations
+
+from pathlib import Path
+from typing import Any
+
+import yaml
+from pydantic import BaseModel
+
+from saw.domain.exceptions import ConfigError
+from saw.domain.value_objects import CapabilityTier
+
+
+class LLMSettings(BaseModel):
+    """LLM configuration."""
+    extraction_model: str = ""
+    query_model: str = ""
+    api_key: str = ""
+
+
+class WikiSettings(BaseModel):
+    """Main wiki configuration."""
+    path: Path = Path(".")
+    agent: str | None = None
+    llm: LLMSettings = LLMSettings()
+
+    class Config:
+        arbitrary_types_allowed = True
+
+
+def detect_tier() -> CapabilityTier:
+    """Detect system capability tier on startup (per D-22).
+
+    - OFFLINE: BM25+TF-IDF, zero LLM
+    - LIGHTWEIGHT: LLM + BM25 only
+    - FULL: LLM + embeddings + vector
+
+    Returns:
+        CapabilityTier enum value.
+    """
+    tier = CapabilityTier.OFFLINE
+
+    # Check if any LLM API key is configured
+    if _llm_available():
+        tier = CapabilityTier.LIGHTWEIGHT
+
+    # Check if embeddings are available
+    if _embeddings_available():
+        tier = CapabilityTier.FULL
+
+    return tier
+
+
+def _llm_available() -> bool:
+    """Check if any LLM API key is configured."""
+    import os
+    # Check common LLM API key environment variables
+    llm_keys = [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "GEMINI_API_KEY",
+        "LITELLM_API_KEY",
+    ]
+    return any(os.environ.get(k) for k in llm_keys)
+
+
+def _embeddings_available() -> bool:
+    """Check if sentence-transformers is available for local embeddings."""
+    try:
+        import importlib
+        importlib.import_module("sentence_transformers")
+        return True
+    except ImportError:
+        return False
+
+
+def load_config(config_path: Path) -> WikiSettings:
+    """Load wiki configuration from .saw/config.yaml."""
+    if not config_path.is_file():
+        raise ConfigError(f"Config file not found: {config_path}")
+
+    try:
+        with open(config_path, encoding="utf-8") as f:
+            data = yaml.safe_load(f) or {}
+        return WikiSettings(**data)
+    except Exception as e:
+        raise ConfigError(f"Failed to load config: {e}") from e
