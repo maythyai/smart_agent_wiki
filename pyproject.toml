@@ -1,0 +1,36 @@
+[build-system]
+requires = ["hatchling==1.29.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "smart-agent-wiki"
+version = "0.1.0"
+description = "Smart Agent Wiki - 智能多代理知识平台"
+requires-python = ">=3.11"
+dependencies = [
+    "typer>=0.23.1",
+    "sqlmodel>=0.0.22",
+    "litellm>=1.83.13",
+    "networkx>=3.2",
+    "pydantic>=2.5",
+    "pydantic-settings>=2.0",
+    "rich>=13.0",
+    "python-frontmatter>=1.0",
+    "markdown-it-py>=3.0",
+    "trafilatura>=1.6",
+    "beautifulsoup4>=4.12",
+    "rank-bm25>=0.2",
+    "PyYAML>=6.0",
+    "platformdirs>=3.0",
+    "httpx>=0.25",
+]
+
+[project.scripts]
+saw = "saw.drivers.cli.main:app"
+
+[project.optional-dependencies]
+pdf = ["docling>=2.0", "PyMuPDF>=1.24"]
+dev = ["pytest>=8.0", "ruff>=0.4"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/saw"]
