@@ -12,7 +12,7 @@ Build a local-first intelligent multi-agent knowledge platform in 3 phases. Phas
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Core Data Cycle** - Ingest documents, extract claims, query with search and natural language, all via CLI
+- [x] **Phase 1: Core Data Cycle** - Ingest documents, extract claims, query with search and natural language, all via CLI (completed 2026-04-26)
 - [ ] **Phase 2: Intelligence & Governance** - Confidence scoring, contradiction detection, learning, MCP server, audit trail
 - [ ] **Phase 3: Collaboration & Visualization** - Multi-agent workflows, Web UI, knowledge graph, page editing
 
@@ -31,9 +31,9 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 3
 
 Plans:
-- [ ] 01-01: Foundation: Domain + Write Queue + Storage + CLI Init
-- [ ] 01-02: Ingestion Engine: Document Parsing + LLM Extraction + Git Provenance
-- [ ] 01-03: Query Engine: Search + Context Compilation + NL Query + Graph
+- [x] 01-01: Foundation: Domain + Write Queue + Storage + CLI Init
+- [x] 01-02: Ingestion Engine: Document Parsing + LLM Extraction + Git Provenance
+- [x] 01-03: Query Engine: Search + Context Compilation + NL Query + Graph
 
 ### Phase 2: Intelligence & Governance
 **Goal**: Users can trust the quality of their knowledge base through confidence scoring, contradiction detection, freshness tracking, and learning from their own usage patterns, all accessible via CLI and MCP server
@@ -75,6 +75,6 @@ Phases execute in numeric order: 1 -> 2 -> 3
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Core Data Cycle | 0/3 | Planned | - |
+| 1. Core Data Cycle | 3/3 | Complete | 2026-04-26 |
 | 2. Intelligence & Governance | 0/3 | Not started | - |
 | 3. Collaboration & Visualization | 0/2 | Not started | - |
