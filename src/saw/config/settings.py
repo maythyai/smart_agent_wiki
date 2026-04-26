@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from saw.domain.exceptions import ConfigError
 from saw.domain.value_objects import CapabilityTier
@@ -25,12 +25,11 @@ class LLMSettings(BaseModel):
 
 class WikiSettings(BaseModel):
     """Main wiki configuration."""
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     path: Path = Path(".")
     agent: str | None = None
     llm: LLMSettings = LLMSettings()
-
-    class Config:
-        arbitrary_types_allowed = True
 
 
 def detect_tier() -> CapabilityTier:
