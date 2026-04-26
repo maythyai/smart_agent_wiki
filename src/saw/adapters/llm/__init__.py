@@ -1,0 +1,1 @@
+"""LLM adapter package - LiteLLM router and prompt templates."""

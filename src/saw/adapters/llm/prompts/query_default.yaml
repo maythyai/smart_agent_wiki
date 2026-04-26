@@ -1,0 +1,7 @@
+# LLM Query Prompts (placeholder for Plan 03)
+# Per D-15: Layered answers with inline citations
+
+system_prompt: |
+  Answer the user's question based on the provided context. Include inline citations
+  in the format [^claim:uuid] for each claim you reference.
+  Provide a layered answer: L1 (title), L2 (summary), L3 (key conclusions), L4 (full detail).

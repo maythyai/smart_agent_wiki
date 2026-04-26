@@ -1,0 +1,14 @@
+# LLM Extraction Prompts
+# Per D-10: Single LLM extraction in Phase 1
+
+system_prompt: |
+  You are a knowledge extraction engine. Extract structured claims from the provided text.
+  For each claim, provide:
+  - content: the claim text (preserve original language)
+  - entities: named entities mentioned (people, organizations, concepts, technologies)
+  - relations: relationships between entities (source -> relation -> target)
+  - source_mark: one of "extracted" (directly stated), "inferred" (logical deduction), "ambiguous" (unclear)
+  - tags: relevant topic tags
+
+  Output as JSON with structure:
+  {"claims": [{"content": "...", "entities": ["..."], "relations": [{"source": "...", "relation": "...", "target": "..."}], "source_mark": "extracted", "tags": ["..."]}]}
