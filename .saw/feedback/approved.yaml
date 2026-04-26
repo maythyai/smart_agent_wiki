@@ -1,0 +1,15 @@
+# Approved behavioral patterns
+# Per D-20: Edit implies implicit acceptance
+#
+# These patterns are used for:
+# - Training period preference learning
+# - Cognitive distillation SOP extraction
+# - Behavioral reinforcement for agent outputs
+#
+# Format:
+# - action: <action_type>
+#   pattern: <observed_pattern>
+#   context: <context_description>
+#   timestamp: <ISO8601_timestamp>
+
+[]
