@@ -28,12 +28,12 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Every claim in the knowledge base traces back to the exact Vault source (document UUID + page/line number), verifiable by inspection
   4. User can ingest Markdown, PDF (3-tier fallback), and URL sources, and each produces structured claims, entity Wiki drafts, and graph updates
   5. User can run `saw status` and see knowledge base overview (pages, claims, storage health) and `saw init --agent claude-code` generates agent-specific config
-**Plans**: TBD
+**Plans**: 3
 
 Plans:
-- [ ] 01-01: TBD
-- [ ] 01-02: TBD
-- [ ] 01-03: TBD
+- [ ] 01-01: Foundation: Domain + Write Queue + Storage + CLI Init
+- [ ] 01-02: Ingestion Engine: Document Parsing + LLM Extraction + Git Provenance
+- [ ] 01-03: Query Engine: Search + Context Compilation + NL Query + Graph
 
 ### Phase 2: Intelligence & Governance
 **Goal**: Users can trust the quality of their knowledge base through confidence scoring, contradiction detection, freshness tracking, and learning from their own usage patterns, all accessible via CLI and MCP server
@@ -75,6 +75,6 @@ Phases execute in numeric order: 1 -> 2 -> 3
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Core Data Cycle | 0/3 | Not started | - |
+| 1. Core Data Cycle | 0/3 | Planned | - |
 | 2. Intelligence & Governance | 0/3 | Not started | - |
 | 3. Collaboration & Visualization | 0/2 | Not started | - |
