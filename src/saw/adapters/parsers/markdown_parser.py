@@ -72,20 +72,22 @@ class MarkdownParser:
         headings: list[Heading] = []
         tokens = self._md.parse(content)
 
-        for i, token in enumerate(tokens):
+        i = 0
+        while i < len(tokens):
+            token = tokens[i]
             if token.type == "heading_open":
                 # Level is from the tag (h1 -> level 1, h2 -> level 2, etc.)
                 level = int(token.tag[1])
-                # Next token should be heading_close with content
-                if i + 1 < len(tokens) and tokens[i + 1].type == "heading_close":
-                    # Find the inline content token between open and close
-                    for j in range(i + 1, len(tokens)):
-                        if tokens[j].type == "inline":
-                            headings.append(Heading(
-                                level=level,
-                                text=tokens[j].content,
-                                line=tokens[j].map[0] if tokens[j].map else 0,
-                            ))
-                            break
+                # Next token should be inline with content
+                if i + 1 < len(tokens) and tokens[i + 1].type == "inline":
+                    inline_token = tokens[i + 1]
+                    headings.append(Heading(
+                        level=level,
+                        text=inline_token.content,
+                        line=inline_token.map[0] if inline_token.map else 0,
+                    ))
+                    i += 2  # Skip past heading_open and inline
+                    continue
+            i += 1
 
         return headings
