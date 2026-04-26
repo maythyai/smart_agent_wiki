@@ -45,12 +45,12 @@ Plans:
   3. Each Wiki page displays a 4-tier confidence level and 9-level freshness indicator, and user can run `saw freshness` to see a freshness report
   4. User can run `saw audit` and verify Ed25519 receipt chain integrity for all agent operations
   5. MCP server exposes 23 tools and works with Claude Code, Cursor, and other MCP-compatible agents; knowledge base learns from user behavior over time (training period, spaced repetition, cognitive distillation)
-**Plans**: TBD
+**Plans**: 3
 
 Plans:
-- [ ] 02-01: TBD
-- [ ] 02-02: TBD
-- [ ] 02-03: TBD
+- [ ] 02-01: Governance Core + Learning Engine - Confidence, freshness, lint, verify, review, training period, FSRS, distillation, feedback files
+- [ ] 02-02: Advanced Governance - Contradiction detection, blast radius, Ed25519 audit trail, conflicts and audit CLI
+- [ ] 02-03: MCP Server + Cross-Cutting - 23 MCP tools, progressive memory depth, adaptive index, research-on-miss
 
 ### Phase 3: Collaboration & Visualization
 **Goal**: Users can orchestrate multiple specialized agents to collaboratively manage knowledge and explore their knowledge base visually through a Web UI with graph visualization and page editing
