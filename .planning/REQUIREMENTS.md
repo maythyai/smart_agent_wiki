@@ -209,10 +209,13 @@
 | XCUT-08 | Phase 2 | Pending |
 
 **Coverage:**
-- v1 requirements: 63 total
-- Mapped to phases: 63
-- Unmapped: 0 ✓
+- v1 requirements: 65 total
+- Phase 1 (Core Data Cycle): 32 requirements
+- Phase 2 (Intelligence & Governance): 25 requirements
+- Phase 3 (Collaboration & Visualization): 8 requirements
+- Mapped to phases: 65
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-04-26*
-*Last updated: 2026-04-26 after initial definition*
+*Last updated: 2026-04-26 after roadmap creation*
