@@ -82,11 +82,11 @@ class WikiRepository:
             except KeyError:
                 confidence = ConfidenceLevel.UNVERIFIED
 
-            freshness_val = fm.get("freshness", 3)
+            freshness_val = fm.get("freshness", 0)
             try:
                 freshness = FreshnessLevel(freshness_val)
             except ValueError:
-                freshness = FreshnessLevel.FRESH
+                freshness = FreshnessLevel.LEVEL_0
 
             return WikiPage(
                 path=path,

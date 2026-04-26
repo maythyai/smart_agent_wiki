@@ -27,19 +27,23 @@ class SourceMark(IntEnum):
 
 
 class FreshnessLevel(IntEnum):
-    """9-level freshness system (1=freshest, 9=stalest).
+    """9-level freshness system (0=freshest, 8=stalest).
 
-    Constants only; calculation logic comes in Phase 2.
+    Per D-10 and D-11:
+    - Levels 0-2: Green (fresh)
+    - Levels 3-5: Yellow (recent)
+    - Levels 6-7: Orange (aging)
+    - Level 8: Red (stale)
     """
-    FRESHEST = 1
-    VERY_FRESH = 2
-    FRESH = 3
-    RECENT = 4
-    MODERATE = 5
-    AGING = 6
-    STALE = 7
-    VERY_STALE = 8
-    STALEST = 9
+    LEVEL_0 = 0  # Just created
+    LEVEL_1 = 1  # 1 day old
+    LEVEL_2 = 2  # 3 days old (green boundary)
+    LEVEL_3 = 3  # 1 week old (yellow boundary)
+    LEVEL_4 = 4  # 2 weeks old
+    LEVEL_5 = 5  # 1 month old (yellow boundary)
+    LEVEL_6 = 6  # 3 months old (orange boundary)
+    LEVEL_7 = 7  # 6 months old
+    LEVEL_8 = 8  # Over 6 months (red)
 
 
 class PageType(IntEnum):

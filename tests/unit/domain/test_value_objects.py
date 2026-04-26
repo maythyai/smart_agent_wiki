@@ -99,8 +99,9 @@ class TestFreshnessLevel:
         assert len(FreshnessLevel) == 9
 
     def test_freshest_vs_stalest(self):
-        assert FreshnessLevel.FRESHEST == 1
-        assert FreshnessLevel.STALEST == 9
+        # Per D-10: Levels 0-8 (0=freshest, 8=stalest)
+        assert FreshnessLevel.LEVEL_0 == 0
+        assert FreshnessLevel.LEVEL_8 == 8
 
 
 class TestWriteOpStatus:

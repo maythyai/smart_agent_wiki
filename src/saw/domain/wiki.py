@@ -18,7 +18,7 @@ class WikiPage:
     tags: list[str] = field(default_factory=list)
     related: list[str] = field(default_factory=list)
     confidence: ConfidenceLevel = ConfidenceLevel.UNVERIFIED
-    freshness: FreshnessLevel = FreshnessLevel.FRESH
+    freshness: FreshnessLevel = FreshnessLevel.LEVEL_0  # Freshest by default
     content: str = ""
     frontmatter: dict[str, Any] = field(default_factory=dict)
 
