@@ -20,9 +20,17 @@ from saw.drivers.cli.commands.status_cmd import status  # noqa: E402
 from saw.drivers.cli.commands.ingest_cmd import ingest  # noqa: E402
 from saw.drivers.cli.commands.query_cmd import query  # noqa: E402
 from saw.drivers.cli.commands.search_cmd import search  # noqa: E402
+from saw.drivers.cli.commands.lint_cmd import lint  # noqa: E402
+from saw.drivers.cli.commands.verify_cmd import verify  # noqa: E402
+from saw.drivers.cli.commands.freshness_cmd import freshness  # noqa: E402
+from saw.drivers.cli.commands.review_cmd import review  # noqa: E402
 
 app.command(name="init")(init)
 app.command(name="status")(status)
 app.command(name="ingest")(ingest)
 app.command(name="query")(query)
 app.command(name="search")(search)
+app.command(name="lint")(lint)
+app.command(name="verify")(verify)
+app.command(name="freshness")(freshness)
+app.command(name="review")(review)
