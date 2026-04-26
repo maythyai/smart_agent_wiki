@@ -32,6 +32,24 @@ class WikiSettings(BaseModel):
     llm: LLMSettings = LLMSettings()
 
 
+# File extension to format mapping
+SUPPORTED_EXTENSIONS: dict[str, str] = {
+    ".pdf": "pdf",
+    ".md": "markdown",
+    ".markdown": "markdown",
+    ".py": "code",
+    ".js": "code",
+    ".ts": "code",
+    ".rs": "code",
+    ".go": "code",
+    ".java": "code",
+    ".json": "json",
+    ".jsonl": "json",
+    ".csv": "table",
+    ".tsv": "table",
+}
+
+
 def detect_tier() -> CapabilityTier:
     """Detect system capability tier on startup (per D-22).
 
@@ -89,3 +107,31 @@ def load_config(config_path: Path) -> WikiSettings:
         return WikiSettings(**data)
     except Exception as e:
         raise ConfigError(f"Failed to load config: {e}") from e
+
+
+def scan_directory(dir_path: Path) -> list[Path]:
+    """Recursively find all supported files in a directory.
+
+    Args:
+        dir_path: Directory to scan.
+
+    Returns:
+        List of file paths with supported extensions.
+    """
+    supported_files: list[Path] = []
+    dir_path = Path(dir_path)
+
+    if not dir_path.is_dir():
+        return supported_files
+
+    for ext in SUPPORTED_EXTENSIONS:
+        for file_path in dir_path.rglob(f"*{ext}"):
+            # Skip hidden files and directories
+            if any(part.startswith(".") for part in file_path.parts):
+                continue
+            # Skip common non-content directories
+            if any(part in ("node_modules", "venv", ".venv", "__pycache__") for part in file_path.parts):
+                continue
+            supported_files.append(file_path)
+
+    return sorted(supported_files)

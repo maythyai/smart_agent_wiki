@@ -17,6 +17,8 @@ console = Console()
 # Import and register commands
 from saw.drivers.cli.commands.init_cmd import init  # noqa: E402
 from saw.drivers.cli.commands.status_cmd import status  # noqa: E402
+from saw.drivers.cli.commands.ingest_cmd import ingest  # noqa: E402
 
 app.command(name="init")(init)
 app.command(name="status")(status)
+app.command(name="ingest")(ingest)
