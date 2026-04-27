@@ -81,6 +81,26 @@ class ClaimRef:
     page_location: str | None = None
 
 
+class ContradictionType(IntEnum):
+    """Contradiction classification types (per D-08).
+
+    Used by ContradictionDetector to classify detected conflicts.
+    """
+    TEMPORAL = 1  # New data supersedes old (time-based)
+    OPINION = 2   # Different perspectives (subjective)
+    FACTUAL = 3   # Hard conflict (objective)
+
+
+class ResolutionStrategy(IntEnum):
+    """Resolution strategies for contradictions (per D-09).
+
+    Applied automatically based on contradiction type.
+    """
+    SUPERSEDED = 1  # Temporal: new claim replaces old
+    DISPUTED = 2    # Opinion: both preserved with flag
+    HISTORICAL = 3  # Factual: both preserved for review
+
+
 @dataclass(frozen=True)
 class WikiPageRef:
     """Reference to a wiki page."""
