@@ -16,6 +16,7 @@ from saw.engines.govern.freshness import FreshnessTracker
 from saw.engines.govern.linter import Linter, HealthReport
 from saw.engines.govern.governor import Governor, ProvenanceChain, FreshnessReport
 from saw.engines.govern.contradiction import ContradictionDetector, ContradictionRecord
+from saw.engines.govern.blast_radius import BlastRadiusAnalyzer, BlastRadiusReport
 
 __all__ = [
     "ConfidenceAssessor",
@@ -27,4 +28,6 @@ __all__ = [
     "FreshnessReport",
     "ContradictionDetector",
     "ContradictionRecord",
+    "BlastRadiusAnalyzer",
+    "BlastRadiusReport",
 ]
