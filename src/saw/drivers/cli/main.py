@@ -24,6 +24,8 @@ from saw.drivers.cli.commands.lint_cmd import lint  # noqa: E402
 from saw.drivers.cli.commands.verify_cmd import verify  # noqa: E402
 from saw.drivers.cli.commands.freshness_cmd import freshness  # noqa: E402
 from saw.drivers.cli.commands.review_cmd import review  # noqa: E402
+from saw.drivers.cli.commands.conflicts_cmd import conflicts  # noqa: E402
+from saw.drivers.cli.commands.audit_cmd import audit  # noqa: E402
 
 app.command(name="init")(init)
 app.command(name="status")(status)
@@ -34,3 +36,5 @@ app.command(name="lint")(lint)
 app.command(name="verify")(verify)
 app.command(name="freshness")(freshness)
 app.command(name="review")(review)
+app.command(name="conflicts")(conflicts)
+app.command(name="audit")(audit)
