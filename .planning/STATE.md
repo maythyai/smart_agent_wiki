@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-last_updated: "2026-04-27T00:35:00.000Z"
-last_activity: 2026-04-27 -- Phase 02 Plan 02 completed (Advanced Governance)
+status: complete
+last_updated: "2026-04-27T00:52:00.000Z"
+last_activity: 2026-04-27 -- Phase 02 Plan 03 completed (MCP Server)
 progress:
   total_phases: 3
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 6
-  completed_plans: 5
-  percent: 83
+  completed_plans: 6
+  percent: 100
 ---
 
 # Project State
@@ -20,15 +20,27 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-26)
 
 **Core value:** 知识可信、可溯源、可进化 — 每一条回答都可以追溯到原始文档的具体位置
-**Current focus:** Phase 02 — Intelligence & Governance
+**Current focus:** Phase 02 — COMPLETED
 
 ## Current Position
 
-Phase: 02 (Intelligence & Governance) — EXECUTING
-Plans: 02-01 and 02-02 complete, 02-03 remaining
-Last activity: 2026-04-27 -- Phase 02 Plan 02 completed (Advanced Governance)
+Phase: 02 (Intelligence & Governance) — COMPLETE
+Plans: 02-01, 02-02, 02-03 all complete
+Last activity: 2026-04-27 -- Phase 02 Plan 03 completed (MCP Server)
 
-Progress: [██████░░░] 83%
+Progress: [████████] 100%
+
+## Phase 02 Plan 03 Completion Summary
+
+**Plan:** 02-03 - MCP Server + Progressive Memory + Adaptive Index
+**Duration:** 25 min
+**Tests:** 287 passing (67 new: 10 server + 30 tools + 10 memory + 10 index + 7 research)
+**Key Output:**
+- MCP Server: FastMCP with 23 tools for agent integration
+- Progressive Memory: L0/L1/L2 depth for token efficiency (~8-10K boot tokens)
+- Adaptive Index: Auto-upgrade at 50/200 page thresholds
+- Research-on-Miss: Automatic knowledge gap filling when coverage < 0.5
+- CLI: saw mcp command with --port, --host, --transport options
 
 ## Phase 02 Plan 02 Completion Summary
 
@@ -68,20 +80,20 @@ Progress: [██████░░░] 83%
 
 **Velocity:**
 
-- Total plans completed: 5
-- Average duration: 31 min/plan
-- Total execution time: ~2.5 hours
+- Total plans completed: 6
+- Average duration: 30 min/plan
+- Total execution time: ~3 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-core-data-cycle | 3 | 72 min | 24 min |
-| 02-intelligence-governance | 2 | 80 min | 40 min |
+| 02-intelligence-governance | 3 | 105 min | 35 min |
 
 **Recent Trend:**
 
-- Last 5 plans: 24, 28, 20, 45, 35 min
+- Last 6 plans: 24, 28, 20, 45, 35, 25 min
 - Trend: Phase 02 plans longer due to governance complexity
 
 ## Accumulated Context
@@ -89,56 +101,28 @@ Progress: [██████░░░] 83%
 ### Decisions
 
 Decisions are logged in PROJECT.md Key Decisions table.
-Recent decisions from Phase 02 Plan 02:
+Recent decisions from Phase 02 Plan 03:
 
-- D-06 to D-09: Async queue detection, two-phase filtering, LLM classification, auto-resolution
+- D-10: MCPConfig defaults to 127.0.0.1 per PITFALLS.md
+- D-11: All 23 tools include version field for schema drift detection
+- D-12: L0 index capped at 100 lines per unified-memory-ai-agents
+- D-13: Index thresholds at 50 and 200 pages per XCUT-06
+- D-14: Research-on-Miss threshold defaults to 0.5 per XCUT-08
 
-All Phase 1 decisions remain active:
-
-- D-01: SQLite WAL mode with PRAGMA config
-- D-02: SQLModel for ORM, raw sqlite3 for FTS5
-- D-03: FTS5 unicode61 tokenizer, detail=column
-- D-04: Write Queue outbox pattern
-- D-05: Vault immutable UUID directories
-- D-06: 4-tier confidence levels
-- D-07: Wiki page types and directory structure
-- D-08: Format detection routing
-- D-09: PDF 3-tier fallback (Docling -> PyMuPDF)
-- D-10: Single LLM via LiteLLM (multi-LLM deferred to Phase 2)
-- D-11: Session branch naming convention
-- D-12: Ingestion output schema
-- D-13: BM25+FTS5 search
-- D-14: Context compilation with token budget
-- D-15: Layered NL query answers (L1-L4)
-- D-16: NetworkX graph traversal
-- D-17: Typer CLI
-- D-18: saw init command
-- D-19: saw status command
-- D-20: Git session branch provenance
-- D-21: LiteLLM model router
-- D-22: Three-tier capability degradation
-- D-23: WIP file tracking
-- D-24: Agent compatibility layer
+All Phase 1 and Phase 2 decisions remain active.
 
 ### Pending Todos
 
-None yet.
+None - Phase 02 complete.
 
 ### Blockers/Concerns
 
-- [Phase 2]: cedar-python 0.1.4 is experimental — Guardian agent must abstract behind PolicyEngine protocol with CLI subprocess fallback
-- [Phase 2]: FSRS-to-wiki page mapping is novel — design spike needed during Phase 2 planning (**RESOLVED** - using page-level reviews)
-
-## Deferred Items
-
-Items acknowledged and carried forward from Phase 1:
-
-| Category | Item | Status | Deferred At |
-|----------|------|--------|-------------|
-| INGE-05 | 2 independent LLMs for cross-validation | Deferred to Phase 2 | Phase 1 |
-| PDF | pygit2 excluded, subprocess fallback used | Active | Phase 1 |
+None - all resolved.
 
 ## Session Continuity
 
-Last session: 2026-04-27T00:35:00.000Z
-Next action: Continue Phase 02 with Plan 02-03 (MCP Server)
+Last session: 2026-04-27T00:52:00Z
+Next action: Phase 02 complete, ready for Phase 03
+
+---
+*Last updated: 2026-04-27*
