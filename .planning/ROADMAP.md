@@ -49,7 +49,7 @@ Plans:
 
 Plans:
 - [x] 02-01: Governance Core + Learning Engine - Confidence, freshness, lint, verify, review, training period, FSRS, distillation, feedback files
-- [ ] 02-02: Advanced Governance - Contradiction detection, blast radius, Ed25519 audit trail, conflicts and audit CLI
+- [x] 02-02: Advanced Governance - Contradiction detection, blast radius, Ed25519 audit trail, conflicts and audit CLI
 - [ ] 02-03: MCP Server + Cross-Cutting - 23 MCP tools, progressive memory depth, adaptive index, research-on-miss
 
 ### Phase 3: Collaboration & Visualization
@@ -76,5 +76,5 @@ Phases execute in numeric order: 1 -> 2 -> 3
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Core Data Cycle | 3/3 | Complete | 2026-04-26 |
-| 2. Intelligence & Governance | 1/3 | In Progress | 2026-04-27 (02-01) |
+| 2. Intelligence & Governance | 2/3 | In Progress | 2026-04-27 (02-01, 02-02) |
 | 3. Collaboration & Visualization | 0/2 | Not started | - |
