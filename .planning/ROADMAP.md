@@ -67,8 +67,8 @@ Plans:
 **UI hint**: yes
 
 Plans:
-- [ ] 03-01-01: Agent Foundation - 6 specialized agents, model routing, A2A protocol, AgentProtocol, AgentDispatcher
-- [ ] 03-01-02: Workflow + Policy - YAML workflow parser/executor, Cedar policy engine, gate conditions, fallback actions
+- [x] 03-01-01: Agent Foundation - 6 specialized agents, model routing, A2A protocol, AgentProtocol, AgentDispatcher
+- [x] 03-01-02: Workflow + Policy - YAML workflow parser/executor, Cedar policy engine, gate conditions, fallback actions
 - [ ] 03-02: Web API Foundation - FastAPI server, WebSocket real-time, search API, graph API, page API
 - [ ] 03-03: React Frontend - Search UI, Cytoscape.js graph visualization, Milkdown page editor, agent status dashboard
 
