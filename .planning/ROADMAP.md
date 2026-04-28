@@ -69,7 +69,9 @@ Plans:
 Plans:
 - [x] 03-01-01: Agent Foundation - 6 specialized agents, model routing, A2A protocol, AgentProtocol, AgentDispatcher
 - [x] 03-01-02: Workflow + Policy - YAML workflow parser/executor, Cedar policy engine, gate conditions, fallback actions
-- [ ] 03-02: Web API Foundation - FastAPI server, WebSocket real-time, search API, graph API, page API
+- [ ] 03-02-01: FastAPI Foundation - Application Factory, WebSocket, Middleware (Wave 1)
+- [ ] 03-02-02: Search + Graph API - BM25 search, Cytoscape-compatible graph (Wave 2)
+- [ ] 03-02-03: Page API + CLI - CRUD via Write Queue, `saw web` command (Wave 2)
 - [ ] 03-03: React Frontend - Search UI, Cytoscape.js graph visualization, Milkdown page editor, agent status dashboard
 
 ## Progress
