@@ -57,16 +57,19 @@ Plans:
 **Depends on**: Phase 2
 **Requirements**: COLL-01, COLL-02, COLL-03, COLL-04, COLL-05, WEB-01, WEB-02, WEB-03
 **Success Criteria** (what must be TRUE):
-  1. User can define a YAML workflow that dispatches tasks to 6 specialized agents (Librarian, Writer, Critic, Linker, Scholar, Guardian) with model routing and Cedar policy enforcement
-  2. User can open Web UI, search the knowledge base, and explore entity relationships visually via Cytoscape.js knowledge graph
-  3. User can review, approve, reject, and edit LLM-generated Wiki pages in the Milkdown editor within the Web UI
-  4. Agents can communicate and hand off tasks via A2A protocol within orchestrated workflows
-**Plans**: TBD
+  1. User can define a YAML workflow that dispatches tasks to 6 specialized agents (Librarian, Writer, Critic, Linker, Scholar, Guardian) with automatic model routing based on task complexity
+  2. User can configure Cedar-based policies that permit or forbid specific agents from using specific tools, enforced at runtime
+  3. Agents can communicate and hand off tasks to each other via A2A protocol within orchestrated workflows with gate conditions
+  4. User can open Web UI in browser, search the knowledge base, and get BM25-ranked results with inline citations
+  5. User can explore entity relationships visually via Cytoscape.js knowledge graph with pan/zoom/filter capabilities
+  6. User can review, approve, reject, and edit LLM-generated Wiki pages in the Milkdown editor within the Web UI, with changes persisted via Write Queue
+**Plans**: 3
 **UI hint**: yes
 
 Plans:
-- [ ] 03-01: TBD
-- [ ] 03-02: TBD
+- [ ] 03-01: Multi-Agent Foundation - Agent definitions, model routing, YAML workflows, Cedar policy engine, A2A protocol
+- [ ] 03-02: Web API Foundation - FastAPI server, WebSocket real-time, search API, graph API, page API
+- [ ] 03-03: React Frontend - Search UI, Cytoscape.js graph visualization, Milkdown page editor, agent status dashboard
 
 ## Progress
 
@@ -77,4 +80,4 @@ Phases execute in numeric order: 1 -> 2 -> 3
 |-------|----------------|--------|-----------|
 | 1. Core Data Cycle | 3/3 | Complete | 2026-04-26 |
 | 2. Intelligence & Governance | 3/3 | Complete | 2026-04-27 |
-| 3. Collaboration & Visualization | 0/2 | Not started | - |
+| 3. Collaboration & Visualization | 0/3 | Not started | - |

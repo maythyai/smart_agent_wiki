@@ -1,10 +1,74 @@
 # Stack Research
 
 **Domain:** 智能多代理知识管理平台 (Intelligent Multi-Agent Knowledge Platform)
-**Researched:** 2026-04-26
+**Researched:** 2026-04-27 (Phase 03 additions)
 **Confidence:** HIGH
 
-## Recommended Stack
+---
+
+## Phase 03 Additions (Collaboration & Visualization)
+
+### Multi-Agent Orchestration
+
+| Technology | Version | Purpose | Why Recommended | Confidence |
+|------------|---------|---------|-----------------|------------|
+| LangGraph | 1.1.9 | Agent orchestration framework | Low-level state machine approach; explicit graph definition gives full control over agent transitions; supports persistence, streaming, and human-in-the-loop; mature ecosystem under LangChain; orchestrator-worker pattern matches 6-agent design; YAML workflow possible via structured output | HIGH |
+| A2A SDK | 1.0.2 | Agent-to-agent protocol | Linux Foundation project (Google contribution); JSON-RPC 2.0 over HTTP(S) standard protocol; Agent Cards for capability discovery; supports sync/streaming/async modes; enterprise-ready security; enables cross-framework agent interoperability | MEDIUM |
+| Pydantic | 2.13.3 | Workflow schema validation | Already in stack; define YAML workflow schema with type safety; integrates with LangGraph structured output; validates Agent Card schemas | HIGH |
+| PyYAML | 6.0.3 | Workflow definition files | Already in stack; declarative workflow definitions; human-editable agent pipelines; version-controllable configurations | HIGH |
+
+**Rationale for LangGraph over alternatives:**
+
+| Alternative | Why Not |
+|-------------|---------|
+| CrewAI 1.14.3 | Higher-level abstraction that hides state machine complexity; less control over agent transitions; "role-based" model doesn't map well to our 6 specialized agents; more opinionated about agent structure |
+| AutoGen 0.10.0 | Microsoft's framework; conversation-centric model less suited for pipeline workflows; heavier dependency chain; less mature LangChain integration |
+| Custom orchestration | Reinventing graph state machine; LangGraph provides persistence, checkpointing, and streaming out of box |
+
+### Web Frontend Stack
+
+| Technology | Version | Purpose | Why Recommended | Confidence |
+|------------|---------|---------|-----------------|------------|
+| React | 19.2.5 | UI framework | Industry standard; React 19 Actions simplify async state; concurrent rendering; mature ecosystem; integrates with existing FastAPI backend via REST/WebSocket | HIGH |
+| Zustand | 5.0.12 | Client state management | Minimal boilerplate (~1KB); hook-based API; no Provider wrapping needed; supports middleware; better DX than Redux for medium complexity; Time-travel via Zundo if needed | HIGH |
+| TanStack Query | 5.100.5 | Server state management | Declarative data fetching; automatic caching/refetching; optimistic updates; integrates with FastAPI endpoints; eliminates manual loading/error state | HIGH |
+| Cytoscape.js | 3.33.2 | Knowledge graph visualization | Battle-tested graph rendering; handles 10K+ nodes; rich layout algorithms (dagre, cola, breadthfirst); extensive styling; good performance for knowledge graphs | HIGH |
+| react-cytoscapejs | 2.0.0 | React wrapper for Cytoscape | Declarative component API; props-driven graph updates; integrates with Zustand state | HIGH |
+| Milkdown | 7.20.0 | WYSIWYG Markdown editor | ProseMirror-based; plugin-driven architecture; CommonMark + GFM support; first-class React integration; Crepe preset for drop-in WYSIWYG | HIGH |
+| Vite | 6.x | Frontend build tool | Fast HMR; native ES modules; TypeScript support; simpler than webpack; standard for React 19 projects | HIGH |
+| TypeScript | 5.x | Type safety | End-to-end type safety with FastAPI Pydantic schemas; better IDE support; catches errors at compile time | HIGH |
+
+**State Management Strategy:**
+
+```
+Client State (Zustand)        Server State (TanStack Query)
+- UI mode (edit/view)         - Wiki pages (queries)
+- Graph selection             - Search results (queries)
+- Editor content draft        - Agent status (mutations)
+- Sidebar state               - Ingestion jobs (mutations)
+- Theme/preferences           - Graph data (queries with cache)
+```
+
+### Cedar Policy Engine Integration
+
+| Technology | Version | Purpose | Why Recommended | Confidence |
+|------------|---------|---------|-----------------|------------|
+| cedar-python | 0.1.4 | Cedar policy evaluation | Amazon's official Cedar bindings for Python; RBAC + ABAC policies; audit trail for agent actions; fine-grained access control | LOW |
+| PyNaCl | 1.6.2 | Ed25519 signatures | Already in stack; agent identity verification; receipt signing for audit trail | HIGH |
+| cedar-wasm | (npm) | Browser policy preview | Optional: preview policy decisions in Web UI; same policy language as backend | LOW |
+
+**Cedar Integration Considerations:**
+
+The cedar-python 0.1.4 binding is early-stage. Fallback strategies:
+1. **Subprocess to Cedar CLI**: Invoke `cedar` binary directly for policy evaluation
+2. **cedar-wasm via Python WASM**: Load `@cedar-policy/cedar-wasm` in Python via wasmtime
+3. **Simplified policy engine**: Implement subset of Cedar semantics in pure Python for MVP
+
+For Phase 03, recommend cedar-python with fallback to subprocess CLI.
+
+---
+
+## Existing Stack (Phase 1 & 2)
 
 ### Core Technologies
 
@@ -83,7 +147,11 @@
 | ruff | 0.15.12 | Linter + Formatter | 替代 flake8 + black + isort，Rust 实现，速度极快；统一代码风格 |
 | hatchling | 1.29.0 | 构建后端 | pyproject.toml 构建系统；现代 Python 打包标准 |
 
+---
+
 ## Installation
+
+### Phase 1 & 2 (Core + Intelligence)
 
 ```bash
 # 核心框架
@@ -114,35 +182,68 @@ pip install uvicorn==0.46.0 pyarrow==24.0.0 pygit2==1.19.2 APScheduler==3.11.2
 pip install pytest==9.0.3 ruff==0.15.12 hatchling==1.29.0
 ```
 
+### Phase 03 Additions (Collaboration + Web UI)
+
+```bash
+# Multi-Agent Orchestration
+pip install langgraph==1.1.9 a2a-sdk==1.0.2
+
+# Frontend (npm/pnpm)
+npm create vite@latest saw-web -- --template react-ts
+cd saw-web
+npm install react@19 react-dom@19
+npm install zustand@5.0.12 @tanstack/react-query@5.100.5
+npm install cytoscape@3.33.2 react-cytoscapejs@2.0.0
+npm install @milkdown/react@7.20.0 @milkdown/kit@7.20.0 @milkdown/theme-nord@7.20.0
+npm install -D typescript@5 @types/react@19 @types/cytoscape@3
+```
+
+---
+
 ## Alternatives Considered
+
+### Multi-Agent Orchestration
 
 | Recommended | Alternative | When to Use Alternative |
 |-------------|-------------|-------------------------|
-| Typer | Click | Click 更成熟稳定，但 Typer 类型注解驱动开发效率更高，与 FastAPI 风格统一 |
-| Typer | Cyclopts | Cyclopts 是 Typer 的潜在替代（FastMCP 3.x 已采用），但 Typer 生态更成熟 |
-| FastAPI | Starlette | Starlette 更底层灵活，但 FastAPI 的 Pydantic 集成和自动文档对知识平台价值更大 |
-| FastAPI | Litestar | Litestar 性能略优且类型安全更好，但生态和社区规模远小于 FastAPI |
-| SQLModel | SQLAlchemy Core | SQLModel 学习曲线更平缓，SQLAlchemy Core 更灵活；当需要复杂查询优化时回退到 Core |
-| LanceDB | ChromaDB | ChromaDB 1.x 默认启动服务器进程，对本地优先架构不友好；LanceDB 纯嵌入式，零服务器 |
-| Docling | MinerU | MinerU 精度更高但依赖链重（PaddleOCR），安装复杂；Docling 是更好的默认选择 |
-| FastMCP | mcp (官方 SDK) | FastMCP 3.x 内部封装了官方 mcp SDK，提供更高层抽象；需要底层控制时直接用 mcp SDK |
-| NetworkX | iGraph | iGraph C 核心性能更高（>100K 节点），但 NetworkX 纯 Python 更易安装调试；Phase 4 可迁移 |
-| sentence-transformers | OpenAI Embeddings API | OpenAI 质量更高但需 API 调用和费用；本地优先原则下 sentence-transformers 是默认 |
-| PyNaCl | cryptography (Ed25519) | cryptography 库也支持 Ed25519 且更全面，但 PyNaCl API 更简洁；两者可共存 |
+| LangGraph | CrewAI | When you want role-based agent abstraction and don't need fine-grained state control |
+| LangGraph | AutoGen | When conversation-centric multi-agent is primary use case |
+| LangGraph | Custom State Machine | When requirements are simple enough to not need framework overhead |
+
+### Web Frontend
+
+| Recommended | Alternative | When to Use Alternative |
+|-------------|-------------|-------------------------|
+| Zustand | Redux Toolkit | When team is already proficient with Redux or needs time-travel debugging |
+| Zustand | Jotai | When atomic state model is preferred over store model |
+| TanStack Query | SWR | When team prefers Vercel's simpler API |
+| Cytoscape.js | React Flow (xyflow) | When building node-based editor UI rather than read-only graph |
+| Cytoscape.js | D3.js | When building custom visualizations from scratch |
+| Milkdown | TipTap | When more traditional rich text editor UX is preferred |
+| Milkdown | Slate.js | When building completely custom editor from scratch |
+
+### Policy Engine
+
+| Recommended | Alternative | When to Use Alternative |
+|-------------|-------------|-------------------------|
+| cedar-python | Cedar CLI subprocess | When cedar-python bindings are insufficient or broken |
+| cedar-python | Open Policy Agent (OPA) | When broader ecosystem integration needed (Kubernetes, etc.) |
+| cedar-python | Custom Python rules | When policy complexity is low and Cedar is overkill |
+
+---
 
 ## What NOT to Use
 
 | Avoid | Why | Use Instead |
 |-------|-----|-------------|
-| ChromaDB (默认) | 1.x 版本默认启动服务器进程，违背本地优先原则；依赖链重（onnxruntime, tokenizers 等） | LanceDB 作为默认，ChromaDB 仅在用户显式选择时支持 |
-| LangChain / LlamaIndex | 框架锁定风险高，抽象层过厚导致调试困难，版本更新频繁破坏兼容性 | LiteLLM 做模型接入，自建摄入/查询管线保持控制力 |
-| Elasticsearch / Meilisearch | 外部服务依赖，违背零安装本地优先原则 | SQLite FTS5 + rank-bm25 混合搜索 |
-| Neo4j / ArangoDB | 图数据库服务器依赖过重，本地优先架构不友好 | NetworkX 内存图 + SQLite 持久化 |
-| FAISS | Facebook 的向量索引库，安装依赖复杂（特别是 GPU 版本），Python API 不够 Pythonic | LanceDB 封装了 FAISS 功能且 API 更友好 |
-| Whoosh | 已停止维护（最后更新 2017），纯 Python 性能差 | SQLite FTS5（C 实现，内置标准库） |
-| newspaper3k | 已停止维护，对现代网站解析效果差 | trafilatura |
-| openai-whisper | 比 faster-whisper 慢 4x，内存占用高 | faster-whisper（CTranslate2 后端） |
-| dataclasses (stdlib) | 功能有限，不支持嵌套验证和序列化 | Pydantic 模型 |
+| LangChain / LlamaIndex | Framework locking risk; abstract layer too thick; version updates frequently break compatibility | LiteLLM for model access, LangGraph for orchestration, self-built pipelines for control |
+| Redux (for this use case) | Boilerplate overhead; Zustand sufficient for medium complexity; steeper learning curve | Zustand for client state, TanStack Query for server state |
+| GraphQL | Overkill for single-tenant local-first app; REST + TanStack Query sufficient | FastAPI REST endpoints with automatic caching |
+| MobX | Mutable state model; debugging complexity; less common in 2025 | Zustand immutable approach |
+| Monaco Editor | VS Code-level editor is overkill for Markdown; heavier bundle | Milkdown for WYSIWYG Markdown |
+| Recoil | Meta abandoned; uncertain future | Zustand |
+
+---
 
 ## Stack Patterns by Variant
 
@@ -167,6 +268,8 @@ pip install pytest==9.0.3 ruff==0.15.12 hatchling==1.29.0
 - 禁用向量搜索和 LLM 调用
 - 保留基础摄入（Markdown/文本）和查询能力
 
+---
+
 ## Version Compatibility
 
 | Package A | Compatible With | Notes |
@@ -178,14 +281,33 @@ pip install pytest==9.0.3 ruff==0.15.12 hatchling==1.29.0
 | SQLModel 0.0.38 | pydantic>=2.0 | SQLModel 正在迁移到 Pydantic v2，注意 0.0.x 的 beta 状态 |
 | LanceDB 0.30.2 | pyarrow>=16 | 向量存储依赖 PyArrow |
 | LiteLLM 1.83.x | openai>=1.0 | LiteLLM 内部使用 OpenAI SDK 格式 |
+| LangGraph 1.1.9 | langchain-core>=0.3 | LangGraph 需要 LangChain core components |
+| React 19.2.5 | TypeScript 5.x | Full type support |
+| Zustand 5.0.12 | React 18+ | Requires React hooks |
+| TanStack Query 5.100.5 | React 18+ | Requires React hooks |
+| Cytoscape.js 3.33.2 | react-cytoscapejs 2.0 | React wrapper version match |
+| Milkdown 7.20.0 | React 18+ | First-class React integration |
 | Python 3.11+ | 所有上述库 | 全部支持 Python 3.11, 3.12, 3.13 |
 
 **已知兼容性风险:**
 - SQLModel 0.0.x 仍然是 pre-release 版本，API 可能有 breaking changes；作为缓解措施，关键数据路径可直接使用 SQLAlchemy Core
-- cedar-python 0.1.4 是非常早期的绑定，功能可能不完整；备选方案是直接子进程调用 Cedar CLI 或自实现简化版策略引擎
-- Docling 2.x 的依赖链较重（涉及深度学习模型下载），首次安装后约 2-3GB 磁盘空间
+- cedar-python 0.1.4 是非常早期的绑定，功能可能不完整；备选方案是直接子进程调用 Cedar CLI
+- A2A SDK 1.0.2 是新协议，生态仍在发展；可能需要适配层与现有 FastMCP 集成
+
+---
 
 ## Sources
+
+### Phase 03 Sources
+
+- **PyPI API** — Version verification: langgraph 1.1.9, cedar-python 0.1.4, zustand 5.0.12, tanstack/react-query 5.100.5, cytoscape 3.33.2, milkdown 7.20.0, react 19.2.5, a2a-sdk 1.0.2 — HIGH
+- **Context7** — LangGraph orchestrator-worker pattern, Zustand store creation, Cedar WASM integration — HIGH
+- **A2A Protocol GitHub** (github.com/google/A2A) — JSON-RPC 2.0 protocol, Agent Cards, SDK availability — HIGH
+- **Cedar Policy Docs** (docs.cedarpolicy.com) — Policy syntax, Python bindings status — HIGH
+- **Milkdown Docs** (milkdown.dev) — React integration, Crepe editor setup — HIGH
+- **Cytoscape.js Docs** (js.cytoscape.org) — Graph initialization, react-cytoscapejs wrapper — HIGH
+
+### Phase 1 & 2 Sources
 
 - PyPI API (pypi.org/pypi/{package}/json) -- 所有版本号直接验证，2026-04-26
 - FastMCP PyPI 页面 (pypi.org/project/fastmcp) -- 确认 PrefectHQ 维护、mcp SDK 封装关系、日下载百万次 -- HIGH
@@ -195,5 +317,7 @@ pip install pytest==9.0.3 ruff==0.15.12 hatchling==1.29.0
 - 项目背景 (docs/llm_wiki_ecosystem_analysis.md) -- 181 项目生态分析，技术选型参考来源
 
 ---
+
 *Stack research for: Smart Agent Wiki (智能多代理知识平台)*
-*Researched: 2026-04-26*
+*Phase 1 & 2: 2026-04-26*
+*Phase 03 additions: 2026-04-27*

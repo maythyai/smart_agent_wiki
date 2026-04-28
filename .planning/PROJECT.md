@@ -122,5 +122,18 @@ This document evolves at phase transitions and milestone boundaries.
 3. Audit Out of Scope — reasons still valid?
 4. Update Context with current state
 
+## Current Milestone: v1.1 Collaboration & Visualization
+
+**Goal:** 用户可以通过多 Agent 协作和 Web UI 可视化管理知识库
+
+**Target features:**
+- 6 个专用 Agent（Librarian/Writer/Critic/Linker/Scholar/Guardian）按需调度
+- YAML 工作流编排 + Cedar 策略引擎
+- A2A 协议实现 Agent 间通信
+- Web UI：搜索 + 知识图谱可视化（Cytoscape.js）+ Wiki 页面编辑（Milkdown）
+
+**Completed milestones:**
+- v1.0: Core Data Cycle + Intelligence & Governance（Phase 1 & 2）
+
 ---
-*Last updated: 2026-04-26 after initialization*
+*Last updated: 2026-04-27*

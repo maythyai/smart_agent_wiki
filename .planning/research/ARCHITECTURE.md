@@ -1,7 +1,7 @@
 # Architecture Research
 
 **Domain:** Intelligent multi-agent knowledge management platform (LLM Wiki)
-**Researched:** 2026-04-26
+**Researched:** 2026-04-27 (Phase 03 Collaboration & Visualization update)
 **Confidence:** HIGH
 
 ## Standard Architecture
@@ -9,31 +9,31 @@
 ### System Overview
 
 ```
-+=====================================================================+
-|                        Driving Adapters                              |
-|  CLI (Typer)  |  MCP Server  |  Web API  |  16+ Agent Compat Layer  |
-+=======+============+==============+===========+======================+
++=========================================================================+
+|                          Driving Adapters                                 |
+|  CLI (Typer)  |  MCP Server  |  Web UI  |  16+ Agent Compat Layer       |
++=======+============+==============+===========+==========================+
         |            |              |           |
-+=======v============v==============v===========v======================+
-|                        API Gateway Layer                              |
-|    Auth | Rate Limit | Route | Context Compile | Crypto Audit         |
-+====+=======+============+==========+=========+=======================+
++=======v============v==============v===========v==========================+
+|                          API Gateway Layer                                 |
+|    Auth | Rate Limit | Route | Context Compile | Crypto Audit             |
++====+=======+============+==========+=========+===========================+
      |       |            |          |         |
-+----v--+ +--v------+ +---v-----+ +--v------+ +v---------------------+
-|Ingest | |Query    | |Govern   | |Learn    | |Collaborate           |
-|Engine | |Engine   | |Engine   | |Engine   | |Engine                |
-|       | |         | |+Cedar   | |+FSRS    | |+A2A/YAML/6 Agents    |
-+----+--+ +--+------+ +--+------+------+ +--+--+----------+----------+
++----v--+ +--v------+ +---v-----+ +--v------+ +v-------------------------+
+|Ingest | |Query    | |Govern   | |Learn    | |Collaborate [Phase 03]    |
+|Engine | |Engine   | |Engine   | |Engine   | |Engine                    |
+|       | |         | |+Cedar   | |+FSRS    | |+A2A/YAML/6 Agents        |
++----+--+ +--+------+ +--+------+------+ +--+--+----------+---------------+
      |       |            |             |        |             |
-+====v=======v============v=============v========v=============v========+
-|                    Event Bus (asyncio.Queue + SQLite)                  |
-+====+=======+============+=============+========+======================+
++====v=======v============v=============v========v=============v============+
+|                      Event Bus (asyncio.Queue + SQLite)                    |
++====+=======+============+=============+========+===========================+
      |       |            |             |        |
-+====v=======v============v=============v========v======================+
-|                    Write Queue (Outbox Pattern)                        |
-|         Durable SQLite outbox -> parallel dispatch to sinks            |
-+====+=======+============+=============+========+=============+========+
-     |       |            |             |        |             |
++====v=======v============v=============v========v===========================+
+|                      Write Queue (Outbox Pattern)                          |
+|           Durable SQLite outbox -> parallel dispatch to sinks              |
++====+=======+============+=============v========v===========================+
+     |       |            |             |        |
 +----v---+ +-v--------+ +-v----------+ +-v------+v--+ +-------v------+
 |Vault   | |Claims DB | |Wiki Pages | |FTS5    | |Vector| |WIP File |
 |(Git)   | |(SQLite)  | |(Markdown) | |Index   | |(opt) | |(.yaml)  |
@@ -42,610 +42,1240 @@
 
 The system follows a **Hexagonal (Ports and Adapters) architecture**. Driving adapters (CLI, MCP, Web) call inward through domain protocols into the five engines. Engines write outward through a single Write Queue to multiple storage sinks. This separation means the same engine logic serves all user interfaces without duplication, and storage backends can be swapped without touching business logic.
 
-### Component Responsibilities
+---
 
-| Component | Responsibility | Implementation |
-|-----------|----------------|----------------|
-| **CLI (Typer)** | Primary developer interface. `init/ingest/query/lint/verify/status/prune` commands. 5-minute onboarding target. | Typer app with Rich output formatting. Calls engine layer directly. |
-| **MCP Server (FastMCP)** | Agent integration protocol. 23 tools mapping 1:1 to engine operations. Enables Claude Code, Cursor, Copilot, Gemini CLI etc. | FastMCP 3.x `@mcp.tool` decorators wrapping engine protocols. Shares logic with CLI. |
-| **Web API (FastAPI)** | HTTP + WebSocket interface for Web UI and programmatic access. 27 REST endpoints, cursor pagination, RFC 7807 errors. | FastAPI with Pydantic v2 models, uvicorn ASGI server. Shares engine layer with CLI/MCP. |
-| **Ingest Engine** | Document intake pipeline: classify format, extract claims, fuse with existing knowledge, validate confidence, enqueue writes. | 5-stage pipeline. Structured data (code/JSON) uses zero-LLM AST parse. Unstructured data uses LiteLLM with multi-model competition. |
-| **Query Engine** | Answer questions from the knowledge base with source provenance. 5 modes: direct search, graph traversal, reasoning chain, comparison, synthesis. | LiteLLM for answer generation. FTS5 + optional vector for retrieval. NetworkX for graph traversal. Context compilation with token budget. |
-| **Govern Engine** | Trust and integrity. 4-layer confidence assessment, contradiction detection with 3 resolution strategies, 9-level freshness tracking, Cedar policy checks. | Contradiction detection via claim-to-claim comparison (temporal/factual/opinion classification). Confidence aggregation from per-claim source marks. |
-| **Learn Engine** | Self-improvement. Training-period adaptation (30 days), FSRS spaced repetition, cognitive distillation to SOPs, knowledge expiry pruning, trend sensing. | FSRS library for spaced repetition. Feedback files (approved/rejected) injected into agent prompts. Pattern mining for SOP extraction. |
-| **Collaborate Engine** | Multi-agent orchestration. 6 role-based agents (Librarian/Writer/Critic/Linker/Scholar/Guardian), A2A protocol, YAML workflow parser, gate evaluator. | YAML-defined workflows with step-by-step agent dispatch. Guardian is zero-LLM rules engine. Other agents use LiteLLM with model routing by task complexity. |
-| **Write Queue** | Single write entry point for all mutations. Durable SQLite outbox with parallel dispatch to sinks. Guarantees at-least-once delivery via op_id dedup. | Outbox pattern: engine enqueues -> outbox persists in SQLite -> dispatcher fans out to Vault/Claims/Wiki/FTS5/Graph/Vector sinks. Failed writes retry with exponential backoff. |
-| **Event Bus** | Async inter-engine communication. Decouples engines for eventual consistency. | asyncio.Queue for in-process, SQLite table for crash recovery. Events: ClaimsReady, ContradictionFound, FreshnessExpired, QueryCompleted, CoverageMiss, SOPDistilled, WriteFailed. |
-| **Vault (L0)** | Immutable original document storage. Git version controlled. Never modified after ingest. | File system: `vault/{uuid}/original.ext`, `transcript.md`, `meta.yaml`. Auto git commit on ingest. |
-| **Claims DB (L1)** | Structured knowledge assertions. 8 core tables + FTS5 virtual table. Confidence, source mark, freshness, temperature orthogonal axes. | SQLite with WAL mode, partial indexes, trigger-enforced soft delete. UUID primary keys. |
-| **Wiki Pages (L2)** | Mutable markdown synthesis. Agent-edited pages with inline claim references. Entity/concept/summary page types. | Markdown files with YAML frontmatter in `wiki/` directory. `[^claim:uuid]` inline references to L1. |
-| **Index (L3)** | Full-text and vector search indices. FTS5 default, LanceDB optional. Adaptive evolution (flat -> hierarchical -> indexed). | SQLite FTS5 with Porter stemmer + Unicode61 tokenizer for BM25. LanceDB + all-MiniLM-L6-v2 for vector. |
+## Phase 03: Collaboration & Visualization Architecture
 
-## Recommended Project Structure
+### Overview
+
+Phase 03 adds multi-agent orchestration and Web UI layers to the existing hexagonal architecture. The key integration principle is that **new components are either new driving adapters (Web UI) or extensions to existing engines (Collaborate Engine)** — no architectural changes to the core hexagon.
+
+### Integration with Existing Architecture
 
 ```
-smart_agent_wiki/
-+-- src/saw/
-|   +-- domain/                        # Core domain models + Protocol definitions
-|   |   +-- protocols.py               # Engine interface protocols (IngestPipeline, QueryEngine, Governor, etc.)
-|   |   +-- value_objects.py            # ClaimRef, WikiPageRef, Confidence, Freshness, SourceMark, etc.
-|   |   +-- events.py                  # Domain events (ClaimsReady, ContradictionFound, etc.)
-|   |   +-- exceptions.py              # Domain-specific exceptions
-|   |   +-- claims.py                  # Claim, ClaimRelation, ClaimSource entity models
-|   |   +-- wiki.py                    # WikiPage, PageType, WikiLink models
-|   |   +-- entities.py                # Entity, EntityRelation models (knowledge graph nodes)
-|   +-- engines/                       # Five engines (pure business logic, no I/O dependencies)
-|   |   +-- ingest/
-|   |   |   +-- pipeline.py            # Main IngestPipeline orchestrator
-|   |   |   +-- classifier.py          # Format detection (AST/schema/text/PDF/audio/video)
-|   |   |   +-- extractors/            # Format-specific extractors
-|   |   |   |   +-- code_ast.py        # Zero-LLM AST extraction for code
-|   |   |   |   +-- schema.py          # Zero-LLM schema extraction for JSON/tables
-|   |   |   |   +-- llm_extract.py     # LLM-based extraction for unstructured text
-|   |   |   |   +-- pdf.py             # PDF parsing with 3-tier fallback (Docling -> PyMuPDF)
-|   |   |   |   +-- audio.py           # Whisper-based audio transcription
-|   |   |   |   +-- url.py             # Web content extraction (trafilatura)
-|   |   |   +-- fuser.py               # New-vs-existing claim comparison and fusion
-|   |   |   +-- validator.py           # Post-extraction validation (dedup, completeness)
-|   |   +-- query/
-|   |   |   +-- engine.py              # Main QueryEngine with 5 query modes
-|   |   |   +-- search.py              # BM25 + vector hybrid search
-|   |   |   +-- graph_traverse.py      # NetworkX BFS/DFS traversal with 4-signal relevance
-|   |   |   +-- compiler.py            # Context compilation with token budget
-|   |   |   +-- compare.py             # Multi-page comparison logic
-|   |   |   +-- synthesizer.py         # Multi-source synthesis generation
-|   |   +-- govern/
-|   |   |   +-- governor.py            # Main Governor orchestrator
-|   |   |   +-- confidence.py          # 4-layer confidence assessment + aggregation
-|   |   |   +-- contradiction.py       # Contradiction detection + 3-strategy resolution
-|   |   |   +-- freshness.py           # 9-level freshness tracking + scoring
-|   |   |   +-- blast_radius.py        # Impact analysis for proposed changes
-|   |   |   +-- linter.py              # KB health checks (orphans, stale, broken links)
-|   |   +-- learn/
-|   |   |   +-- engine.py              # Main LearnEngine orchestrator
-|   |   |   +-- adaptive.py            # 30-day training period preference learning
-|   |   |   +-- fsrs_scheduler.py      # FSRS spaced repetition scheduling
-|   |   |   +-- distiller.py           # Cognitive distillation -> SOP extraction
-|   |   |   +-- expiry.py              # Knowledge expiry + pruning (tactical/strategic)
-|   |   |   +-- trends.py              # Growth pattern monitoring, gap detection
-|   |   |   +-- hot_cache.py           # High-frequency page pre-compilation
-|   |   +-- collaborate/
-|   |       +-- orchestrator.py        # Main CollaborateEngine orchestrator
-|   |       +-- agents/                # 6 agent role implementations
-|   |       |   +-- librarian.py       # Index + classification (Haiku)
-|   |       |   +-- writer.py          # Page creation + editing (Sonnet)
-|   |       |   +-- critic.py          # Quality review + contradiction (Sonnet)
-|   |       |   +-- linker.py          # Cross-reference discovery (Haiku)
-|   |       |   +-- scholar.py         # Deep reasoning + synthesis (Opus)
-|   |       |   +-- guardian.py        # Policy + security (zero-LLM rules)
-|   |       +-- workflow_parser.py     # YAML workflow definition parser
-|   |       +-- scheduler.py           # Step-by-step agent dispatch with gates
-|   +-- write_queue/
-|   |   +-- queue.py                   # WriteQueue protocol + SQLite outbox implementation
-|   |   +-- dispatcher.py              # Parallel sink dispatch with retry + dead letter
-|   |   +-- sinks/                     # Sink implementations (Driven Adapters)
-|   |       +-- vault_sink.py          # File system + git commit
-|   |       +-- claims_sink.py         # SQLite Claims DB writes
-|   |       +-- wiki_sink.py           # Markdown file writes
-|   |       +-- fts5_sink.py           # FTS5 index updates
-|   |       +-- graph_sink.py          # NetworkX graph persistence
-|   |       +-- vector_sink.py         # LanceDB vector indexing (optional)
-|   +-- event_bus/
-|   |   +-- bus.py                     # EventBus: asyncio.Queue + SQLite persistence
-|   |   +-- handlers.py               # Event handler registration and dispatch
-|   +-- adapters/                      # Driven Adapters (infrastructure)
-|   |   +-- storage/
-|   |   |   +-- sqlite_connection.py   # SQLite connection pool with WAL + PRAGMA
-|   |   |   +-- claims_repository.py   # Claims DB CRUD + complex queries
-|   |   |   +-- vault_repository.py    # Vault file operations
-|   |   |   +-- wiki_repository.py     # Wiki page read/write
-|   |   +-- llm/
-|   |   |   +-- router.py              # LiteLLM model routing (Haiku/Sonnet/Opus by task)
-|   |   |   +-- prompts/               # YAML prompt templates with versioning
-|   |   |   +-- cache.py               # 3-tier LLM response cache (exact/semantic/hot)
-|   |   |   +-- embeddings.py          # sentence-transformers embedding generation
-|   |   +-- parsers/
-|   |   |   +-- pdf_parser.py          # 3-tier: Docling -> PyMuPDF fallback
-|   |   |   +-- markdown_parser.py     # python-frontmatter + markdown-it-py
-|   |   |   +-- html_parser.py         # BeautifulSoup4 + trafilatura
-|   |   |   +-- code_parser.py         # AST parsing for Python/JS/TS/Rust
-|   |   +-- crypto/
-|   |       +-- ed25519.py             # PyNaCl signing and verification
-|   |       +-- cedar_policy.py        # Cedar policy evaluation (via cedar-python or CLI fallback)
-|   +-- drivers/                       # Driving Adapters (user-facing entry points)
-|   |   +-- cli/
-|   |   |   +-- main.py                # Typer app entry point
-|   |   |   +-- commands/              # init, ingest, query, search, lint, verify, status, prune
-|   |   +-- web/
-|   |   |   +-- app.py                 # FastAPI application factory
-|   |   |   +-- routes/                # API route handlers by engine
-|   |   |   +-- middleware/            # Auth, CORS, error handling
-|   |   |   +-- websocket.py           # WebSocket handler for real-time events
-|   |   +-- mcp/
-|   |       +-- server.py              # FastMCP server with 23 @mcp.tool definitions
-|   +-- plugins/
-|   |   +-- hooks.py                   # HookPoints enum for plugin extension
-|   |   +-- loader.py                  # entry_points-based plugin discovery
-|   +-- config/
-|       +-- settings.py                # Pydantic Settings (saw.yaml + env vars)
-|       +-- defaults.py                # Default configuration values
-+-- web/                               # React 19 frontend (Phase 3)
-|   +-- src/
-|   |   +-- components/                # ui/, graph/, editor/, wiki/, search/, dashboard/
-|   |   +-- stores/                    # Zustand: auth, graph, search, editor
-|   |   +-- hooks/                     # Custom React hooks
-|   |   +-- lib/                       # mcp-client.ts, api.ts
-|   |   +-- pages/                     # Route pages
-|   +-- src-tauri/                     # Tauri v2 desktop shell (Phase 4)
-+-- tests/
-|   +-- unit/                          # Engine unit tests (mocked adapters)
-|   +-- integration/                   # Multi-engine integration tests
-|   +-- e2e/                           # CLI and MCP end-to-end tests
-|   +-- fixtures/                      # Sample documents, expected claims
-+-- pyproject.toml                     # Build config, dependencies, entry points
-+-- saw.yaml                           # User configuration (generated by `saw init`)
+                         [NEW IN PHASE 03]
++=========================================================================+
+|                          Driving Adapters                                 |
+|  CLI (Typer)  |  MCP Server  |  [Web UI (React)]  |  16+ Agent Compat   |
++=======+============+==============+================+======================+
+        |            |              |                |
+        |            |              | [NEW]          |
+        |            |              v                |
+        |            |     +--------+---------+      |
+        |            |     |  FastAPI Server  |      |
+        |            |     |  (27 endpoints)  |      |
+        |            |     |  + WebSocket     |      |
+        |            |     +--------+---------+      |
+        |            |              |                |
+        |            |              | Uses same      |
+        |            |              | Engine Layer   |
+        |            |              |                |
++=======v============v==============v================v======================+
+|                          Engine Layer (Unchanged)                          |
+|   Ingest  |  Query  |  Govern  |  Learn  |  [Collaborate (Extended)]     |
++===========================================================================+
 ```
 
-### Structure Rationale
+**Integration Points:**
 
-- **domain/:** Contains pure Python Protocols and value objects with zero external dependencies. Engines depend on these protocols, not on each other's implementations. This is the innermost hexagon.
-- **engines/:** Pure business logic organized by the five engine domains. Each engine folder is internally cohesive but communicates with other engines only through the event bus or direct protocol calls. No I/O code here -- engines receive dependencies via constructor injection.
-- **write_queue/:** Isolated write path following the Outbox pattern. This is the single mutation entry point for all storage, ensuring no engine directly writes to databases or files. This boundary prevents partial writes and enables crash recovery.
-- **adapters/:** All infrastructure code lives here. Storage, LLM, parsers, and crypto are behind adapter interfaces. Swapping SQLite for PostgreSQL means writing a new claims_repository adapter, not touching engine code.
-- **drivers/:** Three driving adapters (CLI, Web, MCP) share the same engine layer. Adding a new interface (e.g., Obsidian plugin) means adding a new driver, not modifying engines.
-- **plugins/:** Entry-points-based extension system. External packages can register hooks at defined extension points (e.g., custom parsers, custom agent behaviors) without modifying core code.
+| Existing Component | Phase 03 Addition | Integration Pattern |
+|--------------------|-------------------|---------------------|
+| API Gateway Layer | FastAPI Web Server | New driving adapter, calls same engine protocols |
+| Govern Engine | Cedar Policy Engine | Policy evaluation via protocol, Guardian agent uses |
+| Write Queue | WebSocket Broadcast | New event sink for real-time UI updates |
+| Event Bus | Web UI Subscription | UI subscribes to relevant events via WebSocket |
+| MCP Server | Collaborate Tools | New `saw_workflow` tool wraps Collaborate Engine |
 
-## Architectural Patterns
+---
 
-### Pattern 1: Hexagonal Architecture (Ports and Adapters)
+### Component: FastAPI Web Server (New Driving Adapter)
 
-**What:** The core domain (engines + protocols) has no knowledge of external systems. All I/O flows through adapter interfaces (ports). Driving adapters (CLI/MCP/Web) call inward. Driven adapters (storage/LLM/parsers) are called outward.
+**Responsibility:** HTTP REST API + WebSocket server for Web UI. Third driving adapter alongside CLI and MCP.
 
-**When to use:** This pattern is the right choice for Smart Agent Wiki because the system has multiple user-facing entry points (3 confirmed, 16+ agent compat layer) and multiple storage backends (SQLite, optional PostgreSQL, optional vector DB). Without this pattern, swapping one storage backend or adding one new interface would require changes across the codebase.
-
-**Trade-offs:**
-- Pro: Each engine can be tested in complete isolation with mocked adapters.
-- Pro: New entry points (Obsidian plugin, team API) are just new drivers.
-- Pro: Storage migration (SQLite to PostgreSQL) is a new adapter, zero engine changes.
-- Con: More indirection layers than a simple script. Overkill for Phase 1A but pays off starting Phase 1B when MCP joins CLI.
-- Con: Requires discipline to keep engines pure (no `import sqlite3` in engine code).
-
-**Example:**
-```python
-# domain/protocols.py -- Port definition
-from typing import Protocol
-
-class ClaimsRepository(Protocol):
-    def get_by_id(self, uuid: str) -> Claim | None: ...
-    def search(self, query: str, limit: int) -> list[Claim]: ...
-    def insert(self, claim: Claim) -> str: ...
-
-class IngestPipeline(Protocol):
-    def ingest(self, source: Source, options: IngestOptions) -> IngestResult: ...
-
-# adapters/storage/claims_repository.py -- Adapter implementation
-import sqlite3
-class SQLiteClaimsRepository:
-    def __init__(self, db_path: Path):
-        self._conn = sqlite3.connect(str(db_path))
-    def get_by_id(self, uuid: str) -> Claim | None:
-        row = self._conn.execute("SELECT * FROM claim WHERE uuid=?", (uuid,)).fetchone()
-        return Claim.from_row(row) if row else None
-
-# engines/ingest/pipeline.py -- Engine uses port, not adapter
-class IngestPipelineImpl:
-    def __init__(self, claims: ClaimsRepository, write_queue: WriteQueue):
-        self._claims = claims
-        self._write_queue = write_queue
-```
-
-### Pattern 2: Write Queue / Outbox Pattern
-
-**What:** All mutations to storage go through a single Write Queue. The engine enqueues a write operation to a durable SQLite outbox table. A dispatcher picks up pending operations and fans them out to multiple sinks (Vault, Claims, Wiki, FTS5, Graph, Vector) in parallel. Each sink is independently retried on failure.
-
-**When to use:** Any time the system writes to more than one storage location and those writes must not be lost. In Smart Agent Wiki, every ingest creates writes to at least 3 sinks (Vault + Claims + FTS5). Without the outbox, a crash between Claims write and FTS5 update would leave the system in an inconsistent state.
-
-**Trade-offs:**
-- Pro: Crash-safe. The outbox is written to SQLite before any storage operation. If the process dies, the dispatcher resumes from the outbox on restart.
-- Pro: Sink failures are isolated. If LanceDB is down, Vault and Claims still get written. The failed operation retries independently.
-- Pro: Natural fit for the event-driven architecture -- outbox entries can also be published as domain events.
-- Con: Eventual consistency between sinks. The Claims DB might be updated before the FTS5 index. For a personal knowledge tool, this delay (typically < 1 second) is acceptable.
-- Con: Requires op_id deduplication in sinks to handle retry-at-least-once semantics.
-
-**Example:**
-```python
-# write_queue/queue.py
-@dataclass
-class WriteOp:
-    op_id: str           # UUID, used for dedup
-    session_id: str      # Groups related writes
-    sink_name: str       # "vault" | "claims" | "fts5" | ...
-    payload: dict        # Sink-specific data
-    status: str          # "pending" | "dispatched" | "done" | "failed"
-    retry_count: int
-    created_at: datetime
-
-class WriteQueueImpl:
-    def enqueue(self, ops: list[WriteOp]) -> None:
-        """Atomically insert all ops for a session. All-or-nothing."""
-        with self._conn:
-            for op in ops:
-                self._conn.execute(
-                    "INSERT INTO write_outbox (op_id, session_id, sink_name, payload, status) "
-                    "VALUES (?, ?, ?, ?, 'pending')",
-                    (op.op_id, op.session_id, op.sink_name, json.dumps(op.payload))
-                )
-
-    def enqueue_atomic(self, ops: list[WriteOp]) -> None:
-        """Same as enqueue, but also dispatches atomically."""
-        self.enqueue(ops)
-        self.dispatcher.dispatch_pending()
-```
-
-### Pattern 3: Hybrid Communication (60% Direct + 40% Event-Driven)
-
-**What:** Engines communicate via two modes. Synchronous operations that need return values use direct Python function calls through protocol interfaces. Fire-and-forget operations that trigger downstream processing use the event bus.
-
-**When to use:** Direct calls for orchestration (Collaborate -> Agent execution), validation (Ingest -> Govern confidence check), and query compilation (Query -> Learn hot cache). Events for side effects (ClaimsReady -> trigger governance evaluation, CoverageMiss -> trigger Research-on-Miss auto-ingest).
-
-**Trade-offs:**
-- Pro: Simpler than full event-driven for the 60% of calls that need synchronous responses.
-- Pro: Event bus enables loose coupling for the 40% of operations where eventual consistency is fine.
-- Pro: Engines remain independently testable. Tests use direct calls for assertions and mock the event bus for side effects.
-- Con: Two communication patterns means developers must decide which to use for each new interaction. The rule of thumb: if the caller needs the result, use direct call; if the callee just needs to eventually react, use event.
-
-**Direct call map:**
-```
-Collaborate -> Ingest/Query/Govern   (orchestration needs results)
-Query       -> Learn                 (compilation needs hot cache data)
-Ingest      -> Govern                (validation needs confidence assessment)
-Agent       -> Guardian              (policy check is synchronous gate)
-Agent       -> WriteQueue            (enqueue is synchronous write to outbox)
-```
-
-**Event flow map:**
-```
-Ingest   --[ClaimsReady]---------> Govern      (trigger confidence evaluation)
-Govern   --[ContradictionFound]--> Learn        (trigger FSRS/reinforcement update)
-Govern   --[FreshnessExpired]----> Learn        (add to review queue)
-Query    --[QueryCompleted]------> Learn        (update hot cache + query patterns)
-Query    --[CoverageMiss]--------> Ingest       (trigger Research-on-Miss)
-Learn    --[SOPDistilled]--------> Collaborate  (inject SOP into agent context)
-WriteQueue --[WriteFailed]-------> Govern       (audit log entry)
-```
-
-### Pattern 4: Local-First Progressive Degradation
-
-**What:** The system operates at three capability tiers based on available resources. Full-featured mode (LLM + embeddings + vector search). Lightweight mode (LLM only, BM25 search). Offline mode (BM25 + TF-IDF only, no LLM). The wiki never becomes a "read-only ruin" -- even fully offline, users can search, browse, and add Markdown content.
-
-**When to use:** This pattern is critical for a personal knowledge tool because users may be on airplanes, in areas with poor connectivity, or running on resource-constrained machines. The system must degrade gracefully rather than fail.
-
-**Trade-offs:**
-- Pro: User trust. Knowledge is always accessible regardless of network state.
-- Pro: Cost control. Offline mode costs $0/day. Lightweight mode can use cheaper models.
-- Pro: Natural testing strategy. Each tier can be tested independently.
-- Con: Feature parity testing. Every feature must be validated at each tier. Does search work without vector? Does ingest work without LLM? This triples the test matrix for cross-cutting features.
-- Con: Some features degrade to no-ops. Contradiction detection requires LLM, so it is skipped in offline mode. Confidence assessment degrades to automatic (no cross-validation possible).
-
-## Data Flow
-
-### Ingest Flow
-
-```
-User: saw ingest paper.pdf
-       |
-       v
-CLI Driver --> IngestPipeline.ingest(source=file, path=paper.pdf)
-       |
-       v
-Classifier: PDF detected --> choose PDF parser path
-       |
-       v
-Extractor: Docling/PyMuPDF --> raw text + structure
-       |
-       v
-LLM Extract: Sonnet extracts claims + entities + relations
-       |  (or: AST parse for code, schema parse for JSON -- zero LLM)
-       v
-Fuser: compare new claims vs existing Claims DB
-       |  -> no conflict: mark for direct insert
-       |  -> conflict found: emit ContradictionFound event
-       v
-Validator: dedup (content_hash), completeness check
-       |
-       v
-Govern.confidence: assign initial confidence (Layer 1: Unverified)
-       |
-       v
-WriteQueue.enqueue_atomic([
-   op("vault", store_original_pdf),
-   op("claims", insert_claims),
-   op("fts5", update_search_index),
-   op("graph", update_entities_and_relations),
-])
-       |
-       v
-Dispatcher -> parallel write to all sinks
-       |
-       v
-EventBus.publish(ClaimsReady, claim_ids=[...])
-       |
-       v
-[Async] Govern assesses confidence, Learns updates hot cache
-```
-
-### Query Flow
-
-```
-User: saw query "Why did Transformer replace RNN?"
-       |
-       v
-CLI Driver --> QueryEngine.query(question, mode=auto, depth=L3)
-       |
-       v
-Intent Recognition (Haiku): classify query type
-       |  -> "comparative reasoning" --> choose reasoning mode
-       v
-Context Compilation:
-  1. FTS5 search for "Transformer", "RNN" --> candidate claims
-  2. Graph traverse from Transformer entity --> related entities
-  3. Learn.hot_cache --> pre-compiled high-frequency pages
-  4. Token budget filter: prioritize high-confidence, high-relevance claims
-       |
-       v
-LLM Generate (Opus): synthesize answer from compiled context
-       |
-       v
-Response: {
-    answer: "...",
-    sources: [{claim_uuid, content, confidence, vault_uuid, page: 5, paragraph: 2}],
-    related_pages: ["transformer", "rnn", "attention-mechanism"],
-    meta: {model: "opus", tokens: 1850, cost: $0.012, coverage: 0.82}
-}
-       |
-       v
-EventBus.publish(QueryCompleted) --> Learn updates hot cache
-       |
-       v
-If coverage < 0.5: EventBus.publish(CoverageMiss) --> Ingest triggers Research-on-Miss
-```
-
-### Governance Flow (Contradiction Resolution)
-
-```
-Ingest detects new claim contradicts existing claim
-       |
-       v
-EventBus.publish(ClaimsReady) --> Govern.contradiction_detected()
-       |
-       v
-Contradiction Classifier (Sonnet): classify as temporal | factual | opinion
-       |
-       v
-Strategy Selection:
-  temporal --> Superseded (new data wins, old marked historical)
-  factual  --> Historical (both preserved, flagged for human review)
-  opinion  --> Disputed (both preserved, readers see both perspectives)
-       |
-       v
-WriteQueue.enqueue_atomic([
-    op("claims", update_claim(old, status=superseded)),
-    op("claims", update_claim(new, confidence=3)),
-    op("claims", insert_contradiction_record),
-])
-       |
-       v
-If factual: escalate to human review queue
-If temporal/opinion: auto-resolve + EventBus.publish(ContradictionFound) --> Learn
-```
-
-### Key Data Flows
-
-1. **Ingest -> Write -> Index:** The critical write path. Document enters through any driver, flows through Ingest engine's 5-stage pipeline, enqueues atomic writes to Vault+Claims+FTS5, and fires ClaimsReady event for downstream processing. Total latency target: < 30 seconds for a 10-page PDF.
-
-2. **Query -> Compile -> LLM -> Answer:** The critical read path. Query enters through any driver, triggers context compilation (FTS5 search + graph traversal + hot cache), feeds compiled context to LLM, returns answer with source provenance chain (answer -> claim -> vault document -> page number). Total latency target: < 10 seconds for a standard query.
-
-3. **Contradiction -> Classify -> Resolve -> Notify:** The governance loop. New claims are compared against existing claims during ingest. Contradictions are classified (temporal/factual/opinion) and resolved with appropriate strategy. Factual contradictions escalate to human review; others auto-resolve. The Learn engine receives the outcome for spaced repetition reinforcement.
-
-4. **Feedback -> Learn -> Adapt:** The self-improvement loop. User approves/rejects agent outputs. The Learn engine records feedback patterns, extracts SOPs via cognitive distillation, and injects learned preferences back into agent system prompts. Over 30 days, the system transitions from "asking questions" to "quietly executing."
-
-## Build Order (Dependency-Based)
-
-The build order follows the 21-week roadmap, with each phase building on capabilities from the previous phase. Components are listed in dependency order within each phase.
-
-```
-Phase 1A: Core Cycle (Weeks 1-4)
-=================================
-1. domain/ (protocols, value_objects, events, exceptions)
-   -- Everything depends on this. Pure Python, no I/O.
-2. adapters/storage/ (sqlite_connection, claims_repository)
-   -- Engines need storage to work.
-3. write_queue/ (queue, dispatcher, sinks: vault, claims, fts5)
-   -- Engines need write path to persist results.
-4. engines/ingest/ (classifier, extractors/markdown+url, fuser, validator)
-   -- First engine. Can test end-to-end with domain + storage + write_queue.
-5. engines/query/ (search, compiler)
-   -- Depends on Claims DB being populated by Ingest.
-6. engines/govern/ (confidence baseline only)
-   -- Confidence is assessed during ingest.
-7. drivers/cli/ (init, ingest, query, search, lint)
-   -- First driving adapter. Enables `saw init && saw ingest doc.md && saw query "..."`.
-   -- VERIFICATION: init -> ingest -> query < 5 minutes.
-
-Phase 1B: Infrastructure (Weeks 5-7)
-=====================================
-8. engines/ingest/extractors/pdf (Docling + PyMuPDF fallback)
-   -- Extends Ingest with PDF support.
-9. adapters/parsers/ (pdf_parser, html_parser)
-   -- Parser adapters for new formats.
-10. adapters/crypto/ (ed25519 basic)
-    -- Signing for audit trail.
-11. write_queue/ improvements (retry, dead letter queue)
-    -- Production hardening of write path.
-12. drivers/mcp/ (5 tools: ingest/query/search/lint/status)
-    -- Second driving adapter. Shares engine layer with CLI.
-    -- VERIFICATION: MCP tools work via Claude Code / Cursor.
-
-Phase 2A: Governance (Weeks 8-11)
-==================================
-13. engines/govern/ (full: confidence, contradiction, freshness, blast_radius)
-    -- Full governance engine. Depends on mature Claims DB.
-14. adapters/crypto/ (cedar_policy)
-    -- Policy engine for agent authorization.
-    -- WARNING: cedar-python binding is early-stage. May need CLI fallback.
-15. drivers/cli/ (verify, conflicts commands)
-    -- New CLI commands for governance operations.
-    -- VERIFICATION: Contradiction detection rate > 80%.
-
-Phase 2B: Learning + Full MCP (Weeks 12-15)
-============================================
-16. engines/learn/ (adaptive, fsrs_scheduler, distiller, expiry, trends)
-    -- Learning engine. Depends on having user behavior data (requires Phase 1+2 runtime).
-17. engines/ingest/extractors/llm_extract (multi-LLM competition)
-    -- Dual-LLM extraction for cross-validation.
-18. drivers/mcp/ (full 23 tools)
-    -- Complete MCP tool set.
-    -- VERIFICATION: 3 external users, 7-day retention > 40%.
-
-Phase 3: Collaboration + Visualization (Weeks 16-21)
-=====================================================
-19. engines/collaborate/ (agents/, workflow_parser, scheduler)
-    -- Multi-agent engine. Depends on all other engines being functional.
-20. adapters/llm/ (full model routing with Haiku/Sonnet/Opus)
-    -- Multi-model routing for agent roles.
-21. adapters/storage/ (vector_sink with LanceDB)
-    -- Optional vector search.
-22. web/ (React frontend)
-    -- Third driving adapter. Depends on all engines and Web API.
-23. drivers/web/ (full 27 endpoints + WebSocket)
-    -- Full Web API with real-time updates.
-    -- VERIFICATION: Multi-agent workflow runs end-to-end.
-```
-
-**Key dependency insight:** The Ingest engine is the foundation. Everything flows from the ability to take in documents and produce structured claims. Query depends on claims. Governance depends on claims. Learning depends on user interactions with claims and query results. Collaboration depends on all engines. This is why Ingest + Claims DB + Write Queue must be solid before anything else.
-
-## Scaling Considerations
-
-| Scale | Architecture Adjustments |
-|-------|--------------------------|
-| **Personal (< 1K pages, < 50K claims)** | Current architecture as designed. SQLite handles this trivially. Single-process, asyncio concurrency. FTS5 flat index mode. Total memory footprint < 200MB. |
-| **Power user (1K-10K pages, 50K-500K claims)** | Enable hierarchical index mode (auto-detected). Add LanceDB for vector search. Hot cache becomes important. Consider WAL checkpoint tuning. NetworkX graph still fine in-memory. |
-| **Small team (10K-100K pages, 500K-5M claims)** | Migrate to PostgreSQL + pgvector. SQLite -> PostgreSQL adapter swap. Add connection pooling. Consider graph partitioning for NetworkX (or evaluate iGraph). Docker Compose deployment. |
-| **Large org (> 100K pages)** | Out of scope for current design. Would need microservice decomposition, separate graph database, distributed search. This is firmly Phase 4+ territory. |
-
-### Scaling Priorities
-
-1. **First bottleneck: FTS5 search quality at > 200 pages.** Flat FTS5 index returns too many results. Mitigation: adaptive index evolution (flat -> hierarchical -> indexed with concept clustering). Auto-detected by the Learn engine's trend sensing.
-
-2. **Second bottleneck: LLM token cost at scale.** Each ingest uses LLM tokens; each query uses LLM tokens. Mitigation: zero-LLM structured extraction saves ~60% of ingest tokens. Hot cache eliminates re-compilation of frequent queries. Three-tier caching (exact match -> semantic -> session) reduces redundant LLM calls.
-
-3. **Third bottleneck: Write Queue throughput under batch ingest.** Ingesting 100 documents simultaneously creates write pressure. Mitigation: batch write_queue.enqueue_atomic() groups operations by session. SQLite WAL mode handles concurrent readers. Dispatcher parallelizes sink writes.
-
-4. **Fourth bottleneck: NetworkX graph traversal at > 100K entities.** Pure Python graph library has limits. Mitigation: Phase 4 evaluation of iGraph (C core) or dedicated graph database. For Phase 1-3, NetworkX with lazy loading of subgraphs is sufficient.
-
-## Anti-Patterns
-
-### Anti-Pattern 1: Engine-to-Engine Direct Import
-
-**What people do:** `from saw.engines.ingest import IngestEngine` inside QueryEngine code. Engine A directly imports and instantiates Engine B.
-
-**Why it is wrong:** Engines become tightly coupled. Testing Engine A requires Engine B to be real (or manually mocked). Changing Engine B's interface breaks Engine A. The hexagonal boundary is violated.
-
-**Do this instead:** Engines communicate through domain Protocols (for synchronous calls) or through the Event Bus (for async side effects). The application composition root (in drivers/) wires engines together via dependency injection.
+**Integration Pattern:**
 
 ```python
-# WRONG: direct import between engines
-# query/engine.py
-from saw.engines.learn import LearnEngine  # tight coupling
+# drivers/web/app.py - Application Factory
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
-# CORRECT: protocol-based dependency injection
+def create_app(
+    ingest: IngestPipeline,
+    query: QueryEngine,
+    govern: Governor,
+    learn: LearnEngine,
+    collaborate: CollaborateEngine,
+    event_bus: EventBus,
+) -> FastAPI:
+    app = FastAPI(title="Smart Agent Wiki", version="1.1.0")
+    
+    # Inject engine dependencies via app.state
+    app.state.engines = EngineContainer(
+        ingest=ingest,
+        query=query,
+        govern=govern,
+        learn=learn,
+        collaborate=collaborate,
+    )
+    app.state.event_bus = event_bus
+    
+    # Register routes
+    app.include_router(ingest_router, prefix="/api/ingest")
+    app.include_router(query_router, prefix="/api/query")
+    app.include_router(govern_router, prefix="/api/govern")
+    app.include_router(learn_router, prefix="/api/learn")
+    app.include_router(collaborate_router, prefix="/api/collaborate")
+    app.include_router(graph_router, prefix="/api/graph")
+    app.include_router(websocket_router, prefix="/ws")
+    
+    return app
+```
+
+**Key Design Decisions:**
+
+1. **Same Engine Layer**: Web routes call the same engine protocols as CLI and MCP — no duplication of business logic.
+2. **Dependency Injection**: Engines are injected at app creation, enabling testing with mock engines.
+3. **WebSocket Support**: Real-time updates for agent progress, query results, and knowledge graph changes.
+
+**REST Endpoints (27 total):**
+
+| Endpoint Group | Endpoints | Engine |
+|----------------|-----------|--------|
+| `/api/ingest/*` | POST /document, POST /url, GET /status/{id} | Ingest |
+| `/api/query/*` | POST /search, POST /query, POST /compile | Query |
+| `/api/govern/*` | GET /conflicts, POST /resolve, GET /lint, GET /audit | Govern |
+| `/api/learn/*` | POST /feedback, GET /status, POST /prune | Learn |
+| `/api/collaborate/*` | POST /workflow, GET /agents, POST /dispatch | Collaborate |
+| `/api/graph/*` | GET /nodes, GET /edges, GET /subgraph/{id} | Query (Graph) |
+| `/api/wiki/*` | GET /pages, GET /page/{id}, PUT /page/{id} | Query + Write Queue |
+
+---
+
+### Component: WebSocket Handler (Real-Time Updates)
+
+**Responsibility:** Push real-time events to connected Web UI clients for agent progress, query completion, and knowledge graph changes.
+
+**Architecture:**
+
+```
++----------------+     +------------------+     +------------------+
+|  Engine Layer  | --> |   Event Bus      | --> | WebSocket Manager|
+|  (publish)     |     |  (asyncio.Queue) |     | (broadcast)      |
++----------------+     +------------------+     +--------+---------+
+                                                         |
+                                                         v
+                                                +--------+---------+
+                                                |  Connected       |
+                                                |  WebSocket       |
+                                                |  Clients         |
+                                                +------------------+
+```
+
+**Implementation:**
+
+```python
+# drivers/web/websocket.py
+from fastapi import WebSocket
+from typing import Dict, Set
+import asyncio
+import json
+
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: Dict[str, Set[WebSocket]] = {}
+        # Keyed by session_id for targeted broadcasts
+    
+    async def connect(self, websocket: WebSocket, session_id: str):
+        await websocket.accept()
+        if session_id not in self.active_connections:
+            self.active_connections[session_id] = set()
+        self.active_connections[session_id].add(websocket)
+    
+    def disconnect(self, websocket: WebSocket, session_id: str):
+        self.active_connections[session_id].discard(websocket)
+    
+    async def broadcast(self, session_id: str, event: dict):
+        """Broadcast event to all connections for a session."""
+        if session_id in self.active_connections:
+            message = json.dumps(event)
+            for connection in self.active_connections[session_id]:
+                await connection.send_text(message)
+
+# Event subscription handler
+async def event_broadcaster(
+    event_bus: EventBus,
+    manager: ConnectionManager,
+    session_id: str
+):
+    """Subscribe to event bus and broadcast to WebSocket clients."""
+    async for event in event_bus.subscribe(session_id):
+        await manager.broadcast(session_id, {
+            "type": event.type,
+            "payload": event.payload,
+            "timestamp": event.timestamp.isoformat()
+        })
+```
+
+**Event Types for WebSocket:**
+
+| Event Type | Trigger | UI Action |
+|------------|---------|-----------|
+| `AgentProgress` | Agent step completion | Update progress bar |
+| `QueryCompleted` | Query finished | Display results |
+| `IngestProgress` | Document processing stage | Update status |
+| `ContradictionFound` | Governance detected conflict | Show alert |
+| `GraphUpdated` | Entity/relation changed | Refresh graph visualization |
+| `WorkflowStep` | Workflow step completed | Update workflow status |
+
+---
+
+### Component: Collaborate Engine (Extended)
+
+**Responsibility:** Multi-agent orchestration with 6 role-based agents, YAML workflow parsing, A2A protocol for inter-agent communication.
+
+**Architecture Extension:**
+
+```
+engines/collaborate/
++-- orchestrator.py        # Main CollaborateEngine orchestrator
++-- agents/                # 6 agent role implementations
+|   +-- base.py            # AgentProtocol + BaseAgent
+|   +-- librarian.py       # Index + classification (Haiku)
+|   +-- writer.py          # Page creation + editing (Sonnet)
+|   +-- critic.py          # Quality review + contradiction (Sonnet)
+|   +-- linker.py          # Cross-reference discovery (Haiku)
+|   +-- scholar.py         # Deep reasoning + synthesis (Opus)
+|   +-- guardian.py        # Policy + security (zero-LLM rules)
++-- workflow_parser.py     # YAML workflow definition parser
++-- workflow_executor.py   # Step-by-step execution with gates [NEW]
++-- a2a_protocol.py        # A2A message passing [NEW]
++-- dispatcher.py          # Agent dispatch with model routing
++-- context_builder.py     # Build agent context from KB [NEW]
+```
+
+**Protocol Definition:**
+
+```python
 # domain/protocols.py
-class LearnProvider(Protocol):
-    def get_hot_cache(self, topic: str) -> list[CompiledPage]: ...
+class AgentProtocol(Protocol):
+    """Protocol for all agent implementations."""
+    
+    @property
+    def name(self) -> str: ...
+    @property
+    def model_tier(self) -> Literal["haiku", "sonnet", "opus", "rule"]: ...
+    
+    async def execute(
+        self,
+        task: AgentTask,
+        context: AgentContext,
+        tools: list[Tool],
+    ) -> AgentResult: ...
 
-# query/engine.py
-class QueryEngineImpl:
-    def __init__(self, learn: LearnProvider):  # depends on protocol, not implementation
-        self._learn = learn
+class CollaborateEngine(Protocol):
+    """Protocol for multi-agent orchestration."""
+    
+    async def dispatch_agent(
+        self,
+        agent_name: str,
+        task: AgentTask,
+        context: AgentContext,
+    ) -> AgentResult: ...
+    
+    async def execute_workflow(
+        self,
+        workflow_path: Path,
+        inputs: dict,
+    ) -> WorkflowResult: ...
+    
+    async def check_policy(
+        self,
+        agent: str,
+        action: str,
+        resource: str,
+    ) -> PolicyDecision: ...
 ```
 
-### Anti-Pattern 2: Bypassing Write Queue
+**A2A Protocol Implementation:**
 
-**What people do:** An engine directly writes to SQLite or the filesystem because "it is faster" or "it is just one write."
+The A2A (Agent-to-Agent) protocol enables structured communication between agents. Messages are passed through the Collaborate Engine, which routes them and logs the interaction.
 
-**Why it is wrong:** The Write Queue guarantees atomicity, crash recovery, and auditability. A direct write bypasses all of these. If the process crashes between a direct Vault write and the Claims write that should accompany it, the knowledge base is in an inconsistent state. Also, direct writes are invisible to the audit layer.
+```python
+# engines/collaborate/a2a_protocol.py
+from dataclasses import dataclass
+from enum import Enum
+from datetime import datetime
+import uuid
 
-**Do this instead:** Every mutation goes through `WriteQueue.enqueue()`. The engine produces write operations; the Write Queue executes them. If latency is critical, use `enqueue_atomic()` which dispatches immediately after enqueuing.
+class MessageType(Enum):
+    REQUEST = "request"      # Request action from another agent
+    RESPONSE = "response"    # Response to a request
+    BROADCAST = "broadcast"  # One-way notification
+    QUERY = "query"          # Query for information
+    RESULT = "result"        # Result of a query
 
-### Anti-Pattern 3: Giant God Engine
+@dataclass
+class A2AMessage:
+    """Agent-to-Agent message format."""
+    message_id: str
+    from_agent: str
+    to_agent: str | list[str]  # Single agent or broadcast
+    message_type: MessageType
+    payload: dict
+    correlation_id: str | None = None  # For request/response pairing
+    timestamp: datetime = None
+    
+    def __post_init__(self):
+        if self.timestamp is None:
+            self.timestamp = datetime.utcnow()
+        if not self.message_id:
+            self.message_id = str(uuid.uuid4())
 
-**What people do:** The Ingest engine grows to include search logic, confidence assessment, and wiki page generation because "they are all related to processing a document."
+@dataclass
+class A2AResult:
+    """Result of an A2A message delivery."""
+    success: bool
+    message_id: str
+    response: A2AMessage | None = None
+    error: str | None = None
 
-**Why it is wrong:** The five engines exist for a reason. Ingest takes documents in. Govern assesses trust. Query answers questions. Learn improves the system. Collaborate orchestrates agents. Merging responsibilities creates a monolith that is impossible to test in isolation and impossible for one person to hold in their head.
+# Implementation in orchestrator
+class CollaborateEngineImpl:
+    async def send_a2a_message(self, message: A2AMessage) -> A2AResult:
+        """Route A2A message to target agent(s)."""
+        # 1. Log message for audit trail
+        await self._log_a2a_message(message)
+        
+        # 2. Route to target agent(s)
+        if isinstance(message.to_agent, list):
+            # Broadcast to multiple agents
+            results = await asyncio.gather(*[
+                self._deliver_to_agent(agent, message)
+                for agent in message.to_agent
+            ])
+            return A2AResult(success=True, message_id=message.message_id)
+        else:
+            # Direct message to single agent
+            return await self._deliver_to_agent(message.to_agent, message)
+    
+    async def _deliver_to_agent(
+        self, 
+        agent_name: str, 
+        message: A2AMessage
+    ) -> A2AResult:
+        """Deliver message to specific agent."""
+        agent = self._agents.get(agent_name)
+        if not agent:
+            return A2AResult(
+                success=False, 
+                message_id=message.message_id,
+                error=f"Agent {agent_name} not found"
+            )
+        
+        # Convert message to agent task
+        task = AgentTask(
+            type="a2a_message",
+            payload=message.payload,
+            correlation_id=message.correlation_id,
+        )
+        result = await agent.execute(task, self._build_context())
+        
+        return A2AResult(
+            success=True,
+            message_id=message.message_id,
+            response=A2AMessage(
+                message_id=str(uuid.uuid4()),
+                from_agent=agent_name,
+                to_agent=message.from_agent,
+                message_type=MessageType.RESPONSE,
+                payload=result.payload,
+                correlation_id=message.message_id,
+            )
+        )
+```
 
-**Do this instead:** Ingest produces claims and fires ClaimsReady. Govern listens to ClaimsReady and assesses confidence. If Ingest needs a synchronous confidence check (e.g., to decide whether to proceed with ingest), it calls Govern through the protocol interface. But Govern owns the confidence logic, not Ingest.
+**YAML Workflow Executor:**
 
-### Anti-Pattern 4: LLM in Every Code Path
+```python
+# engines/collaborate/workflow_executor.py
+from dataclasses import dataclass
+from typing import Any, Callable
+import yaml
+import asyncio
 
-**What people do:** Every operation calls an LLM -- search ranking, deduplication, format detection, link discovery, even counting claims.
+@dataclass
+class WorkflowStep:
+    agent: str
+    action: str
+    input_key: str
+    output_key: str
+    gates: list[dict] | None = None
+    condition: str | None = None
 
-**Why it is wrong:** LLM calls cost money, add latency, and introduce non-determinism. The design explicitly identifies 15+ operations that should never touch an LLM (AST parsing, BM25 scoring, freshness calculation, Cedar policy check, Ed25519 signing, content hash dedup, etc.). Over-using LLM also makes the system unusable in offline mode.
+@dataclass
+class WorkflowResult:
+    workflow_id: str
+    status: str  # "running", "completed", "failed"
+    steps_completed: int
+    outputs: dict[str, Any]
+    errors: list[str]
 
-**Do this instead:** Follow the "zero-LLM by default" principle. Use LLM only when structural extraction is impossible (unstructured text). Code -> AST. JSON/tables -> schema. Search -> BM25/TF-IDF. Policy -> Cedar rules. Signatures -> Ed25519. Reserve LLM for: claim extraction from prose, query answering, contradiction classification, synthesis generation, and cognitive distillation.
+class WorkflowExecutor:
+    """Execute YAML-defined workflows step by step."""
+    
+    def __init__(
+        self,
+        collaborate_engine: CollaborateEngine,
+        govern_engine: Governor,
+    ):
+        self._collaborate = collaborate_engine
+        self._govern = govern_engine
+    
+    async def execute(
+        self,
+        workflow_path: Path,
+        inputs: dict,
+    ) -> WorkflowResult:
+        """Execute a YAML workflow file."""
+        with open(workflow_path) as f:
+            workflow_def = yaml.safe_load(f)
+        
+        workflow_id = str(uuid.uuid4())
+        context = dict(inputs)  # Copy inputs as starting context
+        steps_completed = 0
+        errors = []
+        
+        for step_def in workflow_def.get("steps", []):
+            step = WorkflowStep(**step_def)
+            
+            # Check condition if present
+            if step.condition and not self._eval_condition(step.condition, context):
+                continue
+            
+            # Check gates before execution
+            if step.gates:
+                gate_result = await self._check_gates(step.gates, context)
+                if not gate_result.passed:
+                    errors.append(f"Gate failed at step {step.agent}.{step.action}: {gate_result.reason}")
+                    break
+            
+            # Execute agent action
+            try:
+                result = await self._collaborate.dispatch_agent(
+                    step.agent,
+                    AgentTask(type=step.action, payload=context.get(step.input_key, {})),
+                    self._build_agent_context(context),
+                )
+                
+                context[step.output_key] = result.payload
+                steps_completed += 1
+                
+                # Publish progress event
+                await self._event_bus.publish(WorkflowStepEvent(
+                    workflow_id=workflow_id,
+                    step=f"{step.agent}.{step.action}",
+                    status="completed",
+                    output_key=step.output_key,
+                ))
+                
+            except Exception as e:
+                errors.append(f"Error in step {step.agent}.{step.action}: {str(e)}")
+                break
+        
+        return WorkflowResult(
+            workflow_id=workflow_id,
+            status="completed" if not errors else "failed",
+            steps_completed=steps_completed,
+            outputs={k: v for k, v in context.items() if k not in inputs},
+            errors=errors,
+        )
+    
+    async def _check_gates(self, gates: list[dict], context: dict) -> GateResult:
+        """Evaluate workflow gates using Govern Engine."""
+        for gate in gates:
+            # Example gate: {"confidence": ">= 3"}
+            for key, condition in gate.items():
+                value = context.get(key)
+                if not self._eval_condition(f"{key} {condition}", context):
+                    return GateResult(passed=False, reason=f"{key} failed condition")
+        return GateResult(passed=True)
+```
 
-### Anti-Pattern 5: SQLite as Afterthought
+---
 
-**What people do:** Treat SQLite as a "simple file database" and skip proper PRAGMA configuration, index design, and migration strategy.
+### Component: Policy Engine Integration (Cedar)
 
-**Why it is wrong:** SQLite with default settings is 10-100x slower than properly configured SQLite for knowledge management workloads. Without WAL mode, concurrent reads block writes. Without mmap, large result sets are slow. Without proper indexes, FTS5 queries degrade at scale.
+**Responsibility:** Evaluate agent actions against Cedar policies before execution. Guardian agent uses policy engine for zero-LLM security checks.
 
-**Do this instead:** Apply the PRAGMA configuration from day one (WAL mode, 64MB cache, 64MB mmap, NORMAL sync, 5s lock wait). Design partial indexes for the soft-delete pattern (`WHERE deleted_at IS NULL`). Use the Claims schema DDL as the reference implementation. Test with realistic data volumes from the start.
+**Integration with Govern Engine:**
 
-## Integration Points
+```python
+# adapters/crypto/cedar_policy.py
+from typing import Protocol
+import subprocess
+import json
 
-### External Services
+class PolicyEngine(Protocol):
+    """Protocol for policy evaluation engine."""
+    
+    def is_authorized(
+        self,
+        principal: str,
+        action: str,
+        resource: str,
+        context: dict | None = None,
+    ) -> bool: ...
+    
+    def evaluate(
+        self,
+        principal: str,
+        action: str,
+        resource: str,
+        context: dict | None = None,
+    ) -> PolicyDecision: ...
 
-| Service | Integration Pattern | Notes |
-|---------|---------------------|-------|
-| **LLM APIs (100+ providers)** | LiteLLM unified interface. All engine LLM calls go through adapters/llm/router.py. Model selection by task complexity: Haiku (classify/search), Sonnet (extract/write/review), Opus (reason/synthesize). | LiteLLM handles retry, fallback, rate limiting, cost tracking. Configure in saw.yaml under `llm.models.*`. Three-tier cache prevents redundant calls. |
-| **Embedding model** | sentence-transformers local model (all-MiniLM-L6-v2, 80MB). No API required. Optional swap to OpenAI embeddings via LiteLLM. | Default model is privacy-safe (local only). Vector search is optional; system works with BM25 alone. |
-| **Git** | pygit2 (libgit2 binding) for blame-based provenance. subprocess git for Vault auto-commit. | Vault auto-commits on every ingest. Git blame links Wiki edits to processing sessions. Requires git installed on system. |
-| **Cedar Policy Engine** | cedar-python binding (PyO3 wrapper). Fallback: subprocess call to Cedar CLI if binding fails. | **RISK:** cedar-python is v0.1.4, early stage. Architecture must support graceful fallback to simpler rule engine if Cedar binding proves unreliable. |
-| **PDF Parsing** | 3-tier fallback: Docling (best quality) -> PyMuPDF (fast fallback). | Docling is primary; PyMuPDF is always available as zero-dependency fallback. MinerU reserved for Phase 4 (heavy dependency chain). |
-| **Audio/Video** | faster-whisper for transcription. Optional: not included in Phase 1-2. | CTranslate2 backend, 4x faster than openai-whisper. Audio files stored in Vault, transcript in Vault alongside original. |
+@dataclass
+class PolicyDecision:
+    allowed: bool
+    reason: str | None = None
+    policy_id: str | None = None
 
-### Internal Boundaries
+class CedarPolicyAdapter:
+    """Cedar policy engine adapter with Python binding and CLI fallback."""
+    
+    def __init__(self, policy_path: Path, schema_path: Path | None = None):
+        self._policy_path = policy_path
+        self._schema_path = schema_path
+        self._use_cli = False
+        
+        # Try cedar-python binding first
+        try:
+            from cedar import PolicySet, Authorizer
+            self._policy_set = PolicySet.from_file(str(policy_path))
+            self._authorizer = Authorizer()
+        except ImportError:
+            # Fallback to CLI
+            self._use_cli = True
+    
+    def is_authorized(
+        self,
+        principal: str,
+        action: str,
+        resource: str,
+        context: dict | None = None,
+    ) -> bool:
+        return self.evaluate(principal, action, resource, context).allowed
+    
+    def evaluate(
+        self,
+        principal: str,
+        action: str,
+        resource: str,
+        context: dict | None = None,
+    ) -> PolicyDecision:
+        if self._use_cli:
+            return self._evaluate_cli(principal, action, resource, context)
+        return self._evaluate_binding(principal, action, resource, context)
+    
+    def _evaluate_binding(
+        self,
+        principal: str,
+        action: str,
+        resource: str,
+        context: dict | None = None,
+    ) -> PolicyDecision:
+        """Use cedar-python binding."""
+        from cedar import Request, Entity
+        request = Request(
+            principal=Entity(principal),
+            action=Entity(action),
+            resource=Entity(resource),
+            context=context or {},
+        )
+        decision = self._authorizer.is_authorized(request, self._policy_set)
+        return PolicyDecision(
+            allowed=decision.decision == "Allow",
+            reason=decision.reason,
+            policy_id=decision.policy_id,
+        )
+    
+    def _evaluate_cli(
+        self,
+        principal: str,
+        action: str,
+        resource: str,
+        context: dict | None = None,
+    ) -> PolicyDecision:
+        """Fallback to Cedar CLI."""
+        import tempfile
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json') as f:
+            json.dump({
+                "principal": principal,
+                "action": action,
+                "resource": resource,
+                "context": context or {},
+            }, f)
+            f.flush()
+            
+            result = subprocess.run(
+                ["cedar", "authorize", "--policies", str(self._policy_path),
+                 "--request-json", f.name] + 
+                (["--schema", str(self._schema_path)] if self._schema_path else []),
+                capture_output=True,
+                text=True,
+            )
+            
+            return PolicyDecision(
+                allowed=result.returncode == 0,
+                reason=result.stderr if result.returncode != 0 else None,
+            )
+```
 
-| Boundary | Communication | Notes |
-|----------|---------------|-------|
-| **Drivers <-> Engines** | Direct call via Protocol interface. Drivers instantiate engines via dependency injection in composition root. | All three drivers (CLI/MCP/Web) share the same engine instances. No per-driver engine duplication. |
-| **Engines <-> Write Queue** | Direct call. Engines call `write_queue.enqueue()` synchronously. Queue persists to SQLite outbox, returns immediately. | Engines never touch storage directly. Write Queue is the single mutation path. |
-| **Engines <-> Event Bus** | Publish/subscribe. Engines publish events. Other engines subscribe to events they care about. | Fire-and-forget. No return values. Used for eventual consistency side effects. |
-| **Write Queue <-> Sinks** | Direct call via Sink protocol. Dispatcher calls each sink's `write()` method in parallel. | Each sink is independent. Failure in one sink does not block others. Retries are per-sink with exponential backoff. |
-| **Engines <-> Adapters (LLM/Parsers)** | Direct call via Protocol. Engines receive adapter instances via constructor injection. | Adapters are swappable. Mock adapters for testing. Real adapters for production. |
-| **Event Bus <-> Write Queue** | EventBus publishes WriteFailed events when a sink exhausts retries. Govern subscribes to WriteFailed for audit logging. | The event bus and write queue are complementary, not competing. Write Queue handles synchronous writes; Event Bus handles async notifications about write outcomes. |
+**Cedar Policy Examples for Agent Authorization:**
 
-## Critical Architecture Risks
+```cedar
+// policies/agent_policies.cedar
+
+// Permit Librarian to perform indexing actions
+@id("permit-librarian-index")
+permit(
+    principal == Agent::"Librarian",
+    action in [Action::"saw_ingest", Action::"saw_search"],
+    resource
+);
+
+// Permit Writer to create and edit wiki pages
+@id("permit-writer-edit")
+permit(
+    principal == Agent::"Writer",
+    action in [Action::"saw_query", Action::"saw_compile"],
+    resource
+);
+
+// Forbid Writer from verifying claims (must be Critic or Guardian)
+@id("forbid-writer-verify")
+forbid(
+    principal == Agent::"Writer",
+    action == Action::"saw_verify",
+    resource
+);
+
+// Forbid dangerous bash commands from any agent
+@id("forbid-dangerous-commands")
+forbid(
+    principal,
+    action == Action::"Bash",
+    resource
+)
+when {
+    context has parameters &&
+    context.parameters.command like "*rm -rf*" ||
+    context.parameters.command like "*mkfs*"
+};
+
+// Rate limit: forbid if step_count exceeds 100
+@id("rate-limit")
+forbid(
+    principal,
+    action,
+    resource
+)
+when {
+    resource has step_count &&
+    resource.step_count > 100
+};
+```
+
+**Integration in Guardian Agent:**
+
+```python
+# engines/collaborate/agents/guardian.py
+class GuardianAgent:
+    """Zero-LLM policy enforcement agent."""
+    
+    def __init__(self, policy_engine: PolicyEngine):
+        self._policy = policy_engine
+    
+    @property
+    def name(self) -> str:
+        return "Guardian"
+    
+    @property
+    def model_tier(self) -> Literal["rule"]:
+        return "rule"
+    
+    async def execute(
+        self,
+        task: AgentTask,
+        context: AgentContext,
+        tools: list[Tool],
+    ) -> AgentResult:
+        """Execute policy check - no LLM needed."""
+        action = task.payload.get("action")
+        resource = task.payload.get("resource", "*")
+        session_context = task.payload.get("context", {})
+        
+        decision = self._policy.evaluate(
+            principal=f'Agent::"{context.calling_agent}"',
+            action=f'Action::"{action}"',
+            resource=f'Resource::"{resource}"',
+            context=session_context,
+        )
+        
+        return AgentResult(
+            success=decision.allowed,
+            payload={
+                "allowed": decision.allowed,
+                "reason": decision.reason,
+                "policy_id": decision.policy_id,
+            },
+        )
+```
+
+---
+
+### Component: React Frontend (Web UI)
+
+**Responsibility:** Knowledge graph visualization, wiki page editing, search interface, dashboard.
+
+**Architecture:**
+
+```
+web/
++-- src/
+|   +-- components/
+|   |   +-- ui/              # Base UI components (shadcn/ui)
+|   |   +-- graph/           # Cytoscape.js graph visualization
+|   |   |   +-- KnowledgeGraph.tsx
+|   |   |   +-- GraphControls.tsx
+|   |   |   +-- NodeDetails.tsx
+|   |   +-- editor/          # Milkdown WYSIWYG editor
+|   |   |   +-- WikiEditor.tsx
+|   |   |   +-- ClaimReference.tsx
+|   |   +-- search/          # Search interface
+|   |   |   +-- SearchBar.tsx
+|   |   |   +-- SearchResults.tsx
+|   |   +-- dashboard/       # Main dashboard
+|   |   +-- workflow/        # Workflow visualization [Phase 03]
+|   +-- stores/              # Zustand state stores
+|   |   +-- authStore.ts
+|   |   +-- graphStore.ts
+|   |   +-- searchStore.ts
+|   |   +-- editorStore.ts
+|   |   +-- workflowStore.ts [Phase 03]
+|   +-- hooks/
+|   |   +-- useWebSocket.ts
+|   |   +-- useGraph.ts
+|   |   +-- useSearch.ts
+|   +-- lib/
+|   |   +-- api.ts           # FastAPI client
+|   |   +-- mcp-client.ts    # MCP client for agent integration
+|   +-- pages/
+|       +-- Dashboard.tsx
+|       +-- Search.tsx
+|       +-- Graph.tsx
+|       +-- WikiPage.tsx
+|       +-- Workflow.tsx [Phase 03]
+```
+
+**State Management (Zustand Slices Pattern):**
+
+```typescript
+// stores/graphStore.ts
+import { create, StateCreator } from 'zustand';
+
+interface GraphNode {
+  id: string;
+  label: string;
+  type: 'concept' | 'entity' | 'document';
+  confidence: number;
+}
+
+interface GraphEdge {
+  id: string;
+  source: string;
+  target: string;
+  type: 'supports' | 'contradicts' | 'relates';
+}
+
+interface GraphSlice {
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+  selectedNode: string | null;
+  setNodes: (nodes: GraphNode[]) => void;
+  setEdges: (edges: GraphEdge[]) => void;
+  selectNode: (id: string | null) => void;
+  addNode: (node: GraphNode) => void;
+}
+
+interface GraphActionsSlice {
+  fetchGraph: () => Promise<void>;
+  expandNode: (nodeId: string) => Promise<void>;
+}
+
+type GraphStore = GraphSlice & GraphActionsSlice;
+
+const createGraphSlice: StateCreator<GraphStore, [], [], GraphSlice> = (set) => ({
+  nodes: [],
+  edges: [],
+  selectedNode: null,
+  setNodes: (nodes) => set({ nodes }),
+  setEdges: (edges) => set({ edges }),
+  selectNode: (id) => set({ selectedNode: id }),
+  addNode: (node) => set((state) => ({ nodes: [...state.nodes, node] })),
+});
+
+const createGraphActionsSlice: StateCreator<GraphStore, [], [], GraphActionsSlice> = (set, get) => ({
+  fetchGraph: async () => {
+    const response = await fetch('/api/graph/nodes');
+    const data = await response.json();
+    set({ nodes: data.nodes, edges: data.edges });
+  },
+  expandNode: async (nodeId) => {
+    const response = await fetch(`/api/graph/subgraph/${nodeId}`);
+    const data = await response.json();
+    set((state) => ({
+      nodes: [...state.nodes, ...data.nodes],
+      edges: [...state.edges, ...data.edges],
+    }));
+  },
+});
+
+export const useGraphStore = create<GraphStore>()((...a) => ({
+  ...createGraphSlice(...a),
+  ...createGraphActionsSlice(...a),
+}));
+```
+
+**WebSocket Hook for Real-Time Updates:**
+
+```typescript
+// hooks/useWebSocket.ts
+import { useEffect, useRef, useCallback } from 'react';
+import { useGraphStore } from '../stores/graphStore';
+import { useWorkflowStore } from '../stores/workflowStore';
+
+interface WebSocketMessage {
+  type: string;
+  payload: any;
+  timestamp: string;
+}
+
+export function useWebSocket(sessionId: string) {
+  const wsRef = useRef<WebSocket | null>(null);
+  const addNode = useGraphStore((s) => s.addNode);
+  const updateWorkflowStep = useWorkflowStore((s) => s.updateStep);
+
+  const connect = useCallback(() => {
+    const ws = new WebSocket(`ws://localhost:8000/ws/${sessionId}`);
+    
+    ws.onmessage = (event) => {
+      const message: WebSocketMessage = JSON.parse(event.data);
+      
+      switch (message.type) {
+        case 'GraphUpdated':
+          addNode(message.payload.node);
+          break;
+        case 'WorkflowStep':
+          updateWorkflowStep(message.payload);
+          break;
+        case 'AgentProgress':
+          // Update agent progress UI
+          break;
+        case 'QueryCompleted':
+          // Display query results
+          break;
+      }
+    };
+
+    ws.onclose = () => {
+      // Reconnect after 3 seconds
+      setTimeout(connect, 3000);
+    };
+
+    wsRef.current = ws;
+  }, [sessionId, addNode, updateWorkflowStep]);
+
+  useEffect(() => {
+    connect();
+    return () => wsRef.current?.close();
+  }, [connect]);
+
+  const send = useCallback((message: any) => {
+    wsRef.current?.send(JSON.stringify(message));
+  }, []);
+
+  return { send };
+}
+```
+
+**Cytoscape.js Graph Visualization:**
+
+```typescript
+// components/graph/KnowledgeGraph.tsx
+import { useEffect, useRef } from 'react';
+import cytoscape, { Core, NodeSingular } from 'cytoscape';
+import { useGraphStore } from '../../stores/graphStore';
+
+const GRAPH_STYLE = [
+  {
+    selector: 'node',
+    style: {
+      'background-color': '#666',
+      'label': 'data(label)',
+      'font-size': 12,
+    },
+  },
+  {
+    selector: 'node[type="concept"]',
+    style: { 'background-color': '#4CAF50' },
+  },
+  {
+    selector: 'node[type="entity"]',
+    style: { 'background-color': '#2196F3' },
+  },
+  {
+    selector: 'node[type="document"]',
+    style: { 'background-color': '#9E9E9E' },
+  },
+  {
+    selector: 'edge',
+    style: {
+      'width': 2,
+      'line-color': '#ccc',
+      'curve-style': 'bezier',
+    },
+  },
+  {
+    selector: 'edge[type="contradicts"]',
+    style: { 'line-color': '#F44336', 'line-style': 'dashed' },
+  },
+];
+
+export function KnowledgeGraph() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const cyRef = useRef<Core | null>(null);
+  const { nodes, edges, selectNode, expandNode } = useGraphStore();
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    cyRef.current = cytoscape({
+      container: containerRef.current,
+      elements: { nodes, edges },
+      style: GRAPH_STYLE,
+      layout: { name: 'cose', animate: true },
+    });
+
+    // Click handler for node selection
+    cyRef.current.on('tap', 'node', (evt) => {
+      const node = evt.target as NodeSingular;
+      selectNode(node.id());
+    });
+
+    // Double-click for expansion
+    cyRef.current.on('dblclick', 'node', async (evt) => {
+      const node = evt.target as NodeSingular;
+      await expandNode(node.id());
+    });
+
+    return () => cyRef.current?.destroy();
+  }, []);
+
+  // Update elements when store changes
+  useEffect(() => {
+    if (cyRef.current) {
+      cyRef.current.batch(() => {
+        cyRef.current!.elements().remove();
+        cyRef.current!.add({ nodes, edges });
+      });
+      cyRef.current.layout({ name: 'cose', animate: true }).run();
+    }
+  }, [nodes, edges]);
+
+  return (
+    <div 
+      ref={containerRef} 
+      className="w-full h-full min-h-[600px]"
+    />
+  );
+}
+```
+
+---
+
+### Data Flow: Agent Workflow Execution
+
+```
+User triggers workflow via Web UI
+           |
+           v
++----------+-----------+
+|  WorkflowExecutor    |
+|  (orchestrates)      |
++----------+-----------+
+           |
+           v
+    Parse YAML workflow
+           |
+           v
++----------+-----------+     +------------------+
+|  For each step:      | --> | Guardian Agent   |
+|  1. Check gates      |     | (Policy Engine)  |
+|  2. Check policy     |     +------------------+
+|  3. Dispatch agent   |
++----------+-----------+
+           |
+           v
++----------+-----------+
+|  AgentDispatcher     |
+|  (model routing)     |
++----------+-----------+
+           |
+     +-----+-----+
+     |           |
+     v           v
++----+----+ +----+----+
+| Haiku   | | Sonnet  |
+| (cheap) | | (mid)   |
++----+----+ +----+----+
+     |           |
+     +-----+-----+
+           |
+           v
++----------+-----------+
+|  LLM (LiteLLM)       |
++----------+-----------+
+           |
+           v
++----------+-----------+
+|  AgentResult         |
++----------+-----------+
+           |
+           v
++----------+-----------+
+|  WriteQueue          |
+|  (if KB mutation)    |
++----------+-----------+
+           |
+           v
++----------+-----------+
+|  EventBus            |
+|  -> WebSocket        |
+|  -> UI update        |
++----------------------+
+```
+
+---
+
+### Build Order (Phase 03 Specific)
+
+Phase 03 builds on Phase 1 & 2. The following order respects dependencies:
+
+```
+Phase 03A: Multi-Agent Foundation (Weeks 16-18)
+================================================
+1. engines/collaborate/agents/base.py
+   -- AgentProtocol definition + BaseAgent class
+   -- All agents depend on this
+
+2. adapters/crypto/cedar_policy.py
+   -- PolicyEngine protocol + Cedar implementation
+   -- Guardian agent depends on this
+
+3. engines/collaborate/agents/guardian.py
+   -- Zero-LLM policy enforcement
+   -- Other agents checked by Guardian
+
+4. engines/collaborate/a2a_protocol.py
+   -- A2A message types + routing logic
+   -- Inter-agent communication
+
+5. engines/collaborate/workflow_executor.py
+   -- YAML workflow parsing + execution
+   -- Depends on agents + Guardian
+
+6. engines/collaborate/orchestrator.py (UPDATE)
+   -- Add workflow execution entry point
+   -- Wire A2A protocol
+
+   -- VERIFICATION: YAML workflow runs end-to-end
+
+Phase 03B: Web UI Foundation (Weeks 18-19)
+===========================================
+7. drivers/web/app.py
+   -- FastAPI application factory
+   -- Depends on all engines (existing)
+
+8. drivers/web/routes/*.py
+   -- REST endpoints by engine
+   -- Depend on app.py + engine protocols
+
+9. drivers/web/websocket.py
+   -- WebSocket connection manager
+   -- Depends on event bus
+
+10. drivers/web/middleware/*.py
+    -- Auth, CORS, error handling
+    -- Depend on app.py
+
+   -- VERIFICATION: REST API + WebSocket work
+
+Phase 03C: React Frontend (Weeks 19-21)
+========================================
+11. web/src/stores/*.ts
+    -- Zustand stores with slices pattern
+    -- Independent of backend
+
+12. web/src/hooks/useWebSocket.ts
+    -- WebSocket hook for real-time updates
+    -- Depends on stores
+
+13. web/src/components/graph/KnowledgeGraph.tsx
+    -- Cytoscape.js visualization
+    -- Depends on graphStore
+
+14. web/src/components/editor/WikiEditor.tsx
+    -- Milkdown WYSIWYG editor
+    -- Depends on editorStore
+
+15. web/src/components/search/*.tsx
+    -- Search interface
+    -- Depends on searchStore
+
+16. web/src/pages/*.tsx
+    -- Route pages (Dashboard, Graph, WikiPage)
+    -- Depend on all components
+
+17. drivers/web/routes/graph_router.py
+    -- Graph API endpoints for Cytoscape
+    -- Depends on Query engine
+
+   -- VERIFICATION: Full Web UI functional
+```
+
+---
+
+## Component Responsibilities (Updated)
+
+| Component | Responsibility | Implementation | Phase |
+|-----------|----------------|----------------|-------|
+| **CLI (Typer)** | Primary developer interface. `init/ingest/query/lint/verify/status/prune` commands. | Typer app with Rich output. Calls engine layer directly. | 1A |
+| **MCP Server (FastMCP)** | Agent integration protocol. 23 tools mapping 1:1 to engine operations. | FastMCP `@mcp.tool` decorators wrapping engine protocols. | 1B, 2B |
+| **Web API (FastAPI)** | HTTP + WebSocket interface for Web UI. 27 REST endpoints, cursor pagination, RFC 7807 errors. | FastAPI with Pydantic v2, uvicorn ASGI. Shares engine layer. | **3B** |
+| **WebSocket Handler** | Real-time UI updates for agent progress, query results, graph changes. | FastAPI WebSocket with ConnectionManager. Subscribes to Event Bus. | **3B** |
+| **Ingest Engine** | Document intake pipeline: classify, extract, fuse, validate, enqueue writes. | 5-stage pipeline. Zero-LLM for structured, LiteLLM for unstructured. | 1A |
+| **Query Engine** | Answer questions with source provenance. 5 modes + Tree Mode. | LiteLLM + FTS5 + NetworkX. Context compilation with token budget. | 1A |
+| **Govern Engine** | Trust and integrity. Confidence, contradiction, freshness, Cedar policy. | Contradiction detection + Cedar policy evaluation. | 2A |
+| **Learn Engine** | Self-improvement. Training period, FSRS, distillation, expiry. | FSRS library + pattern mining for SOPs. | 2B |
+| **Collaborate Engine** | Multi-agent orchestration. 6 agents, A2A protocol, YAML workflows. | WorkflowExecutor + AgentDispatcher + A2A routing. | **3A** |
+| **Policy Engine (Cedar)** | Evaluate agent actions against authorization policies. | cedar-python binding with CLI fallback. Guardian uses for checks. | **3A** |
+| **Write Queue** | Single write entry point. Durable SQLite outbox with parallel dispatch. | Outbox pattern -> multiple sinks. Guarantees at-least-once. | 1A |
+| **Event Bus** | Async inter-engine communication. Decouples engines. | asyncio.Queue + SQLite for crash recovery. | 1B |
+| **React Frontend** | Knowledge graph visualization, wiki editing, search, dashboard. | React 19 + Cytoscape.js + Milkdown + Zustand. | **3C** |
+
+---
+
+## Integration Points Summary
+
+### New Components Added in Phase 03
+
+| Component | Type | Depends On | Used By |
+|-----------|------|------------|---------|
+| FastAPI Web Server | Driving Adapter | All engines, Event Bus | Web UI |
+| WebSocket Handler | Driving Adapter | Event Bus | Web UI |
+| Collaborate Engine Extensions | Engine Extension | Govern, Query, Write Queue | MCP, Web API |
+| A2A Protocol | Internal Protocol | Collaborate Engine | Agents |
+| Workflow Executor | Engine Component | Collaborate, Govern | MCP, Web API |
+| Cedar Policy Adapter | Driven Adapter | Cedar CLI/binding | Guardian Agent |
+| React Frontend | Driving Adapter | Web API, WebSocket | End User |
+
+### Existing Components Modified
+
+| Component | Modification | Rationale |
+|-----------|--------------|-----------|
+| Collaborate Engine | Add A2A, workflow executor, context builder | Phase 03 multi-agent features |
+| Govern Engine | Policy engine integration point | Cedar policy evaluation for agents |
+| Event Bus | WebSocket sink subscription | Real-time UI updates |
+| Write Queue | WebSocket broadcast on write | Notify UI of data changes |
+
+---
+
+## Architectural Patterns (Phase 03 Additions)
+
+### Pattern 5: Agent Orchestration Pattern
+
+**What:** The Collaborate Engine orchestrates multiple agents through a dispatcher that routes tasks to the appropriate agent based on task type and model tier requirements. Guardian agent acts as a gate for all agent actions.
+
+**When to use:** Any multi-step knowledge operation requiring different capabilities (indexing, writing, reviewing, reasoning).
+
+**Trade-offs:**
+- Pro: Clear separation of agent responsibilities
+- Pro: Model cost optimization (Haiku for volume, Opus for depth)
+- Pro: Policy enforcement at orchestration layer
+- Con: Increased complexity over single-agent approach
+- Con: A2A message routing adds latency
+
+**Example:**
+```python
+# Workflow: Literature Review
+async def literature_review(topic: str) -> WikiPage:
+    # Step 1: Search (Librarian/Haiku)
+    papers = await collaborate.dispatch_agent("Librarian", 
+        AgentTask(type="search", payload={"query": topic}))
+    
+    # Step 2: Extract claims (Writer/Sonnet)
+    claims = await collaborate.dispatch_agent("Writer",
+        AgentTask(type="extract", payload={"papers": papers}))
+    
+    # Step 3: Review quality (Critic/Sonnet)
+    reviewed = await collaborate.dispatch_agent("Critic",
+        AgentTask(type="review", payload={"claims": claims}))
+    
+    # Step 4: Synthesize (Scholar/Opus)
+    synthesis = await collaborate.dispatch_agent("Scholar",
+        AgentTask(type="synthesize", payload={"claims": reviewed}))
+    
+    return synthesis
+```
+
+### Pattern 6: Real-Time UI Synchronization
+
+**What:** WebSocket connection maintains real-time sync between backend events and frontend state. Event Bus publishes events; WebSocket Manager broadcasts to connected clients; Zustand stores update on message receipt.
+
+**When to use:** Any feature requiring immediate visual feedback: agent progress, query results, graph changes.
+
+**Trade-offs:**
+- Pro: Immediate user feedback
+- Pro: No polling overhead
+- Pro: Natural fit for agent progress tracking
+- Con: WebSocket connection management complexity
+- Con: Must handle reconnection gracefully
+
+---
+
+## Critical Architecture Risks (Phase 03 Additions)
 
 | Risk | Severity | Mitigation |
 |------|----------|------------|
-| **cedar-python binding immaturity (v0.1.4)** | HIGH | Architecture must support Cedar CLI subprocess fallback or a simplified custom policy engine. Do not deeply couple Guardian agent to cedar-python API. Abstract behind PolicyEngine protocol. |
-| **SQLite write contention under batch ingest** | MEDIUM | WAL mode + 5s lock wait timeout mitigates most contention. For extreme batch loads, serialize writes through Write Queue (which already does this). |
-| **SQLModel 0.0.x beta status** | MEDIUM | Critical data paths (Claims repository) should use SQLAlchemy Core directly as fallback. SQLModel for simple CRUD, Core for complex queries. |
-| **LLM API cost escalation** | MEDIUM | Zero-LLM structured extraction for 60% of operations. Three-tier cache. Model routing (Haiku for volume, Opus only when needed). Daily cost tracking in LiteLLM. |
-| **Eventual consistency window between sinks** | LOW | For personal use, the window is sub-second. Users will not notice. If it becomes visible, add a polling-based consistency check in `saw lint`. |
+| **Cedar Python binding immaturity (v0.1.4)** | HIGH | Architecture includes CLI fallback. Guardian agent abstracts policy engine behind Protocol. |
+| **WebSocket connection scalability** | MEDIUM | ConnectionManager uses session_id for targeted broadcasts. For team mode, consider Redis pub/sub. |
+| **Cytoscape.js performance with large graphs** | MEDIUM | Use `cy.batch()` for updates. Implement lazy loading via `expandNode()`. Consider WebGL renderer for >1000 nodes. |
+| **A2A message ordering** | LOW | Messages include correlation_id for request/response pairing. Event Bus ensures ordering within session. |
+| **Agent workflow timeout** | MEDIUM | WorkflowExecutor implements step timeout. Failed steps can be retried. State persisted in workflow context. |
+
+---
 
 ## Sources
 
-- Design document: `docs/smart_agent_wiki_design.md` -- Full architecture with 5 engine specifications, 4-layer storage, 23 appendix design decisions
-- Optimization document: `docs/smart_agent_wiki_optimization.md` -- Hexagonal Architecture recommendation, engine data flow, directory structure, Protocol definitions, 21-week roadmap
-- Claims Schema: `docs/claims_schema.sql` -- SQLite DDL with PRAGMA optimization, 8 core tables, partial indexes, trigger-enforced soft delete
-- API Contract: `docs/api_contract.md` -- 27 REST endpoints, WebSocket protocol, MCP tool mapping
-- Ecosystem Analysis: `docs/llm_wiki_ecosystem_analysis.md` -- 181-project architecture pattern analysis
-- Remote Audit: `docs/remote_project_audit_findings.md` -- Deep audit of 25 reference projects
-- Stack Research: `.planning/research/STACK.md` -- Technology recommendations with version compatibility
-- Feature Research: `.planning/research/FEATURES.md` -- Feature landscape with dependencies and MVP recommendation
+- Design document: `docs/smart_agent_wiki_design.md` -- Full architecture with 5 engine specifications
+- FastAPI WebSocket documentation: https://fastapi.tiangolo.com/advanced/websockets/
+- Cytoscape.js performance: https://github.com/cytoscape/cytoscape.js/blob/unstable/documentation/md/performance.md
+- Cedar policy language: https://docs.cedarpolicy.com/
+- Sondera Harness (Cedar + Agents): https://context7.com/sondera-ai/sondera-harness-python/llms.txt
+- LangChain multi-agent orchestration: https://docs.langchain.com/oss/python/langgraph/workflows-agents
+- Zustand slices pattern: https://github.com/pmndrs/zustand/blob/main/docs/learn/guides/slices-pattern.md
 
 ---
 *Architecture research for: Smart Agent Wiki (intelligent multi-agent knowledge platform)*
-*Researched: 2026-04-26*
+*Researched: 2026-04-26 (Phase 1-2), Updated: 2026-04-27 (Phase 03)*

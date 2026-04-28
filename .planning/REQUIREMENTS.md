@@ -140,73 +140,73 @@
 
 ## Traceability
 
-| Requirement | Phase | Status |
-|-------------|-------|--------|
-| STOR-01 | Phase 1 | Pending |
-| STOR-02 | Phase 1 | Pending |
-| STOR-03 | Phase 1 | Pending |
-| STOR-04 | Phase 1 | Pending |
-| STOR-05 | Phase 1 | Pending |
-| STOR-06 | Phase 1 | Pending |
-| STOR-07 | Phase 1 | Pending |
-| INGE-01 | Phase 1 | Pending |
-| INGE-02 | Phase 1 | Pending |
-| INGE-03 | Phase 1 | Pending |
-| INGE-04 | Phase 1 | Pending |
-| INGE-05 | Phase 1 | Pending |
-| INGE-06 | Phase 1 | Pending |
-| INGE-07 | Phase 1 | Pending |
-| QUER-01 | Phase 1 | Pending |
-| QUER-02 | Phase 1 | Pending |
-| QUER-03 | Phase 1 | Pending |
-| QUER-04 | Phase 1 | Pending |
-| QUER-05 | Phase 1 | Pending |
-| QUER-06 | Phase 1 | Pending |
-| QUER-07 | Phase 1 | Pending |
-| GOVE-01 | Phase 2 | Pending |
-| GOVE-02 | Phase 2 | Pending |
-| GOVE-03 | Phase 2 | Pending |
-| GOVE-04 | Phase 2 | Pending |
-| GOVE-05 | Phase 2 | Pending |
-| GOVE-06 | Phase 2 | Pending |
-| GOVE-07 | Phase 2 | Pending |
-| GOVE-08 | Phase 2 | Pending |
-| LEARN-01 | Phase 2 | Pending |
-| LEARN-02 | Phase 2 | Pending |
-| LEARN-03 | Phase 2 | Pending |
-| LEARN-04 | Phase 2 | Pending |
-| LEARN-05 | Phase 2 | Pending |
-| LEARN-06 | Phase 2 | Pending |
-| COLL-01 | Phase 3 | Pending |
-| COLL-02 | Phase 3 | Pending |
-| COLL-03 | Phase 3 | Pending |
-| COLL-04 | Phase 3 | Pending |
-| COLL-05 | Phase 3 | Pending |
-| CLI-01 | Phase 1 | Pending |
-| CLI-02 | Phase 1 | Pending |
-| CLI-03 | Phase 1 | Pending |
-| CLI-04 | Phase 1 | Pending |
-| CLI-05 | Phase 2 | Pending |
-| CLI-06 | Phase 2 | Pending |
-| CLI-07 | Phase 1 | Pending |
-| CLI-08 | Phase 2 | Pending |
-| CLI-09 | Phase 2 | Pending |
-| CLI-10 | Phase 2 | Pending |
-| CLI-11 | Phase 2 | Pending |
-| MCP-01 | Phase 2 | Pending |
-| MCP-02 | Phase 2 | Pending |
-| MCP-03 | Phase 1 | Pending |
-| WEB-01 | Phase 3 | Pending |
-| WEB-02 | Phase 3 | Pending |
-| WEB-03 | Phase 3 | Pending |
-| XCUT-01 | Phase 1 | Pending |
-| XCUT-02 | Phase 1 | Pending |
-| XCUT-03 | Phase 1 | Pending |
-| XCUT-04 | Phase 1 | Pending |
-| XCUT-05 | Phase 2 | Pending |
-| XCUT-06 | Phase 2 | Pending |
-| XCUT-07 | Phase 1 | Pending |
-| XCUT-08 | Phase 2 | Pending |
+| Requirement | Phase | Plan | Status |
+|-------------|-------|------|--------|
+| STOR-01 | Phase 1 | 01-01 | Pending |
+| STOR-02 | Phase 1 | 01-01 | Pending |
+| STOR-03 | Phase 1 | 01-01 | Pending |
+| STOR-04 | Phase 1 | 01-01 | Pending |
+| STOR-05 | Phase 1 | 01-01 | Pending |
+| STOR-06 | Phase 1 | 01-01 | Pending |
+| STOR-07 | Phase 1 | 01-01 | Pending |
+| INGE-01 | Phase 1 | 01-02 | Pending |
+| INGE-02 | Phase 1 | 01-02 | Pending |
+| INGE-03 | Phase 1 | 01-02 | Pending |
+| INGE-04 | Phase 1 | 01-02 | Pending |
+| INGE-05 | Phase 1 | 01-02 | Pending |
+| INGE-06 | Phase 1 | 01-02 | Pending |
+| INGE-07 | Phase 1 | 01-02 | Pending |
+| QUER-01 | Phase 1 | 01-03 | Pending |
+| QUER-02 | Phase 1 | 01-03 | Pending |
+| QUER-03 | Phase 1 | 01-03 | Pending |
+| QUER-04 | Phase 1 | 01-03 | Pending |
+| QUER-05 | Phase 1 | 01-03 | Pending |
+| QUER-06 | Phase 1 | 01-03 | Pending |
+| QUER-07 | Phase 1 | 01-03 | Pending |
+| GOVE-01 | Phase 2 | 02-01 | Pending |
+| GOVE-02 | Phase 2 | 02-01 | Pending |
+| GOVE-03 | Phase 2 | 02-02 | Pending |
+| GOVE-04 | Phase 2 | 02-02 | Pending |
+| GOVE-05 | Phase 2 | 02-01 | Pending |
+| GOVE-06 | Phase 2 | 02-01 | Pending |
+| GOVE-07 | Phase 2 | 02-02 | Pending |
+| GOVE-08 | Phase 2 | 02-02 | Pending |
+| LEARN-01 | Phase 2 | 02-01 | Pending |
+| LEARN-02 | Phase 2 | 02-01 | Pending |
+| LEARN-03 | Phase 2 | 02-01 | Pending |
+| LEARN-04 | Phase 2 | 02-01 | Pending |
+| LEARN-05 | Phase 2 | 02-01 | Pending |
+| LEARN-06 | Phase 2 | 02-01 | Pending |
+| COLL-01 | Phase 3 | 03-01 | Pending |
+| COLL-02 | Phase 3 | 03-01 | Pending |
+| COLL-03 | Phase 3 | 03-01 | Pending |
+| COLL-04 | Phase 3 | 03-01 | Pending |
+| COLL-05 | Phase 3 | 03-01 | Pending |
+| CLI-01 | Phase 1 | 01-01 | Pending |
+| CLI-02 | Phase 1 | 01-02 | Pending |
+| CLI-03 | Phase 1 | 01-03 | Pending |
+| CLI-04 | Phase 1 | 01-03 | Pending |
+| CLI-05 | Phase 2 | 02-01 | Pending |
+| CLI-06 | Phase 2 | 02-01 | Pending |
+| CLI-07 | Phase 1 | 01-01 | Pending |
+| CLI-08 | Phase 2 | 02-02 | Pending |
+| CLI-09 | Phase 2 | 02-01 | Pending |
+| CLI-10 | Phase 2 | 02-01 | Pending |
+| CLI-11 | Phase 2 | 02-02 | Pending |
+| MCP-01 | Phase 2 | 02-03 | Pending |
+| MCP-02 | Phase 2 | 02-03 | Pending |
+| MCP-03 | Phase 1 | 01-01 | Pending |
+| WEB-01 | Phase 3 | 03-02, 03-03 | Pending |
+| WEB-02 | Phase 3 | 03-03 | Pending |
+| WEB-03 | Phase 3 | 03-03 | Pending |
+| XCUT-01 | Phase 1 | 01-02 | Pending |
+| XCUT-02 | Phase 1 | 01-02 | Pending |
+| XCUT-03 | Phase 1 | 01-01 | Pending |
+| XCUT-04 | Phase 1 | 01-01 | Pending |
+| XCUT-05 | Phase 2 | 02-03 | Pending |
+| XCUT-06 | Phase 2 | 02-03 | Pending |
+| XCUT-07 | Phase 1 | 01-01 | Pending |
+| XCUT-08 | Phase 2 | 02-03 | Pending |
 
 **Coverage:**
 - v1 requirements: 65 total
@@ -218,4 +218,4 @@
 
 ---
 *Requirements defined: 2026-04-26*
-*Last updated: 2026-04-26 after roadmap creation*
+*Last updated: 2026-04-27 after Phase 03 roadmap creation*

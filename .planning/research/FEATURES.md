@@ -1,8 +1,8 @@
 # Feature Landscape
 
 **Domain:** Intelligent multi-agent knowledge management platform (LLM Wiki)
-**Researched:** 2026-04-26
-**Sources:** Design document, 181-project ecosystem analysis, 25+ project deep audits, 666 user comments
+**Researched:** 2026-04-27 (Phase 03 features added)
+**Sources:** Design document, 181-project ecosystem analysis, 25+ project deep audits, 666 user comments, official documentation (Cedar, Cytoscape.js, Milkdown, CrewAI, LangGraph, A2A Protocol)
 
 ---
 
@@ -26,35 +26,219 @@ Features users expect. Missing = product feels incomplete. Derived from user pai
 | **Incremental knowledge building** | Core Karpathi concept: knowledge compounds, never re-derived. This is the fundamental paradigm shift from RAG | Med | Wiki persists across sessions; new sources update existing pages rather than creating duplicates |
 | **MCP Server** | 20+ projects expose MCP; becoming the standard protocol for agent-tool interaction | Med | 23 tools covering ingest, query, govern, learn, collaborate operations |
 
+---
+
 ## Differentiators
 
 Features that set the product apart from all 181 existing projects. Not expected by users (because no one has them), but strongly valued once discovered.
 
+### Phase 1-2 Differentiators (Already Designed)
+
 | Feature | Value Proposition | Complexity | Notes |
 |---------|-------------------|------------|-------|
-| **4-layer confidence system (Unverified -> Single Source -> Cross-Validated -> Human Verified)** | No existing project implements full confidence layering; directly addresses the #1 pain point (hallucination) | High | Page-level confidence combined with per-claim source marking (extracted/inferred/ambiguous) for orthogonal trust scoring |
-| **Contradiction detection + 3-strategy resolution (Superseded/Disputed/Historical)** | Only 3 projects attempt any contradiction handling, none with automatic resolution; users cannot manually track contradictions across 200+ pages | High | Requires: new-vs-existing claim comparison, temporal/opinion/factual classification, automated or human-reviewed resolution |
-| **Learning engine (training period adaptation + spaced repetition + cognitive distillation)** | Zero competing projects have learning capability; FSRS algorithm for knowledge freshness is borrowed from flashcard science, novel for wiki | High | Three mechanisms: 30-day training period (user preference learning), FSRS interval repetition (freshness-driven review), trend sensing (gap detection) |
-| **Structured zero-LLM extraction (AST for code, schema for JSON/tables)** | Codesight achieves 60-131x token savings; no other LLM Wiki project does this; cost control is a major differentiator | Med | Format detection -> structured path (AST/schema parse, zero LLM) vs unstructured path (LLM extraction). Saves significant cost on code and structured data |
-| **Multi-agent role-based collaboration (6 specialized agents)** | Only 1 project (Multi-Agent Wiki) has multi-agent integrity governance; most projects are single-agent | High | Librarian(Haiku/high-freq), Writer(Sonnet/balanced), Critic(Sonnet/quality), Linker(Haiku/pattern-match), Scholar(Opus/deep-reasoning), Guardian(rules/zero-LLM). Cost-controlled by model routing |
-| **Cryptographic audit layer (Ed25519 receipts + Cedar policy engine)** | Only scopeblind-gateway does this, and only for security; combining audit + policy for knowledge governance is novel | High | Every agent operation generates signed receipt; Cedar policy defines permit/forbid per agent per tool; offline-verifiable receipt chain |
-| **4-layer storage architecture (Vault -> Claims -> Wiki -> Index)** | No project combines immutable evidence + structured claims + mutable synthesis + adaptive indexing; most use 1-2 layers | Med | Vault (immutable originals), Claims (structured assertions DB), Wiki (mutable markdown synthesis), Index (FTS5 + optional vector). The dual-track approach is the key innovation |
-| **Research-on-Miss auto-research loop** | Only llm-wiki1 has this; creates positive feedback: query -> gap discovery -> auto-research -> knowledge growth -> better answers | Med | When query coverage falls below threshold, trigger parallel web/academic/code search, ingest results, answer from enriched KB |
-| **YAML workflow orchestration** | Only MindOS has this; users define multi-step agent workflows without programming; democratizes complex knowledge operations | Med | Visual YAML editor; step-by-step agent coordination with gate conditions (e.g., confidence >= 3, contradiction_count == 0) |
-| **Cross-session work momentum (WIP files)** | Only unified-memory-ai-agents has this; captures "what was I doing?" between sessions, not just static knowledge artifacts | Low | .saw/wip.yaml with active tasks, next steps, pending questions; auto-updated on each session |
-| **Knowledge lifecycle management (expiry + pruning)** | Only unified-memory-ai-agents has expiring lessons; no project has tactical/strategic classification with automatic pruning | Med | Tactical knowledge auto-expires after 30 days; strategic knowledge permanent; linked to 9-level freshness system |
-| **Adaptive index evolution (flat -> hierarchical -> indexed)** | Only Memex does this; solves the "150 pages and index breaks" pain point | Med | Automatic upgrade: flat (<=50 pages) -> hierarchical (<=200) -> indexed (>200) with concept clustering and synthesis routing |
-| **9-level freshness system** | Only llm-wiki1 has freshness levels; provides actionable intelligence about knowledge staleness | Low | Color-coded (green/yellow/orange/red); linked to review triggers and pruning decisions |
-| **Blast radius analysis** | Only codesight has this; before modifying a wiki page, show what other pages and claims will be affected | Med | Graph traversal to determine downstream impact of any edit |
-| **Multi-sink persistent write queue (Outbox)** | Only ContextLattice has fanout architecture; ensures writes never lost even if a sink is temporarily unavailable | Med | Single write entry -> durable outbox -> parallel distribution to Vault/Claims/Wiki/Graph/Index sinks |
-| **Progressive memory depth (L0/L1/L2)** | Only unified-memory-ai-agents has this; reduces boot tokens from ~20K to ~8-10K while maintaining full knowledge awareness | Low | L0: always-loaded index (~85 lines), L1: summary index (~15 recent topics), L2: full content on demand |
-| **16+ agent compatibility layer** | No project is this portable; core logic in CLI/MCP, one config file per agent (Claude Code, Cursor, Copilot, Codex, Gemini CLI, etc.) | Low | `saw init --agent <name>` generates agent-specific config; all configs reference same core instructions |
-| **Git blame dual provenance chain** | Only Agentic Wiki Builder uses git blame for provenance; more reliable than anchor cites (agents can hallucinate anchors, git cannot) | Low | Claims -> Vault (claim to original document) + git blame -> session branch (wiki edit to processing session) |
-| **Typed wiki records with namespaces** | Only blink-query has typed records; agents know how to consume each page without guessing | Low | 5 types (SUMMARY/META/SOURCE/ALIAS/COLLECTION) + namespace organization (wiki/concepts/, decisions/, people/) |
-| **Temperature-tiered retrieval (hot/warm/glacier)** | Only Cog has this; different storage/access strategy based on usage frequency, not flat treatment of all information | Low | Hot (<50 lines, always loaded) -> warm (recent, L1 indexed) -> glacier (archive, L2 only). Orthogonal to memory depth |
-| **Model comparison advisor** | Only obsidian-llm-wiki-local has this; users fear switching LLMs will degrade quality | Med | Run side-by-side comparison on user's own KB data; output accuracy/hallucination/token cost comparison |
-| **Dual feedback reinforcement (approved/rejected patterns)** | Only unified-memory-ai-agents has this; explicit positive/negative behavioral signals improve agent output over time | Low | approved.yaml + rejected.yaml injected into Writer/Scholar system prompts; linked to cognitive distillation for SOP extraction |
-| **Anti-debt compounding framework** | Only Compound Engineering Plugin has this philosophy; ensures knowledge base compounds value rather than accumulates cost | Low | Each ingest checked: does it create reusable patterns? Each query checked: does it reduce future query cost? Debt ratio > 30% triggers governance |
+| **4-layer confidence system** | No existing project implements full confidence layering; directly addresses #1 pain point | High | Page-level confidence + per-claim source marking (extracted/inferred/ambiguous) |
+| **Contradiction detection + 3-strategy resolution** | Only 3 projects attempt any contradiction handling, none with automatic resolution | High | Temporal/opinion/factual classification + automated or human-reviewed resolution |
+| **Learning engine** | Zero competing projects have learning capability | High | 30-day training period + FSRS interval repetition + trend sensing |
+| **Structured zero-LLM extraction** | Codesight achieves 60-131x token savings; no other LLM Wiki project does this | Med | AST for code, schema for JSON/tables |
+| **Cryptographic audit layer** | Combining Ed25519 audit + Cedar policy for knowledge governance is novel | High | Offline-verifiable receipt chain |
+| **4-layer storage architecture** | No project combines all four layers; most use 1-2 layers | Med | Vault -> Claims -> Wiki -> Index |
+| **Research-on-Miss** | Only llm-wiki1 has positive feedback loop | Med | Auto-research loop for knowledge gaps |
+| **Cross-session work momentum** | Only unified-memory-ai-agents captures "where was I?" | Low | .saw/wip.yaml with active tasks |
+| **Knowledge lifecycle management** | Only unified-memory-ai-agents has expiring lessons | Med | Tactical (30-day) vs strategic classification |
+
+---
+
+## Phase 03 Features: Collaboration & Visualization
+
+Features added for Phase 03 milestone. Focus on multi-agent collaboration, workflow orchestration, and Web UI.
+
+### Multi-Agent System Features
+
+| Feature | Why It Matters | Complexity | Dependencies | Expected Behavior |
+|---------|---------------|------------|--------------|-------------------|
+| **6 Specialized Agents (Librarian/Writer/Critic/Linker/Scholar/Guardian)** | Enables task-specific expertise with cost routing; Haiku for high-freq low-cost, Sonnet for quality, Opus for deep reasoning | High | LiteLLM routing, MCP Server, Claims DB | Agents are dispatched per-task: Librarian indexes/searches, Writer creates content, Critic reviews quality, Linker discovers cross-links, Scholar synthesizes, Guardian enforces rules |
+| **Agent Role Definitions** | CrewAI pattern: each agent has role/goal/backstory | Low | YAML config | Each agent defined with: role (function), goal (purpose), backstory (expertise context), tools (allowed MCP tools), model (Haiku/Sonnet/Opus/rules) |
+| **Task Delegation (allow_delegation)** | Agents can hand off work when outside expertise | Med | A2A protocol | When agent encounters task outside its role, delegates to appropriate agent. Enabled via `allow_delegation: true` in agent config |
+| **Model Routing by Task** | Cost control: 19/20 tasks use Haiku, only Scholar needs Opus | Med | LiteLLM config | Routing logic: Librarian/Linker -> Haiku, Writer/Critic -> Sonnet, Scholar -> Opus, Guardian -> Zero LLM (rules only) |
+
+**Agent Specifications:**
+
+| Agent | Model | Role | Primary Tools | Key Behavior |
+|-------|-------|------|---------------|--------------|
+| **Librarian** | Haiku | Index maintenance, search optimization | saw_search, saw_graph, saw_status | High-frequency low-cost operations; categorizes and indexes content |
+| **Writer** | Sonnet | Page creation, content synthesis | saw_ingest, saw_compile | Creates wiki drafts with proper YAML frontmatter; quality-focused |
+| **Critic** | Sonnet | Quality review, contradiction detection | saw_lint, saw_conflicts, saw_verify | Reviews Writer output; flags issues; suggests improvements |
+| **Linker** | Haiku | Cross-reference discovery | saw_graph, saw_compare | Pattern-matches entities; suggests wikilinks; updates graph |
+| **Scholar** | Opus | Deep reasoning, synthesis generation | saw_query, saw_compile, saw_compare | Most capable; handles complex queries; generates综述 pages |
+| **Guardian** | Rules (Zero LLM) | Authorization, safety checks | Cedar policy engine | No LLM calls; enforces permit/forbid rules; validates operations |
+
+### Workflow Orchestration Features
+
+| Feature | Why It Matters | Complexity | Dependencies | Expected Behavior |
+|---------|---------------|------------|--------------|-------------------|
+| **YAML Workflow Definition** | Users define multi-step workflows without programming; democratizes complex operations | Med | Agent scheduler, state machine | YAML files define: name, steps (agent+action+input+output), gate conditions. Popular pattern from MindOS and CrewAI |
+| **Step-by-Step Execution Engine** | Sequential agent coordination with state persistence | Med | Write Queue (Outbox) | Each step: 1) Dispatch agent with input, 2) Collect output, 3) Check gates, 4) Persist state, 5) Proceed or halt |
+| **Gate Conditions** | Quality gates prevent bad output from propagating | Med | Confidence system | Gates checked before next step: `confidence >= 3`, `contradiction_count == 0`, `human_approval: true`. Failed gates halt workflow or route to recovery |
+| **Conditional Routing** | Different paths based on intermediate results | High | State machine | After step, route based on output: pass -> next step, fail -> recovery agent, ambiguous -> human review |
+| **Workflow Templates** | Reusable patterns for common operations | Low | YAML files | Pre-built: literature_review.yaml, contradiction_resolution.yaml, knowledge_synthesis.yaml |
+
+**Example Workflow (literature_review.yaml):**
+
+```yaml
+name: literature_review
+description: Generate synthesis from multiple sources
+triggers:
+  - type: manual
+  - type: scheduled
+    cron: "0 9 * * 1"  # Weekly Monday 9am
+
+steps:
+  - id: search
+    agent: Librarian
+    action: search
+    input: "{{ query }}"
+    output: related_pages
+
+  - id: validate_sources
+    agent: Guardian
+    action: check_coverage
+    input: "{{ related_pages }}"
+    gates:
+      - condition: "coverage >= 0.7"
+        fail_route: need_more_sources
+
+  - id: synthesize
+    agent: Scholar
+    action: synthesize
+    input: "{{ related_pages }}"
+    output: draft_synthesis
+
+  - id: review
+    agent: Critic
+    action: review
+    input: "{{ draft_synthesis }}"
+    gates:
+      - condition: "confidence >= 3"
+      - condition: "contradiction_count == 0"
+
+  - id: publish
+    agent: Writer
+    action: publish
+    input: "{{ draft_synthesis }}"
+    output: wiki_page
+    gates:
+      - condition: "human_approval: true"
+
+recovery:
+  need_more_sources:
+    agent: Librarian
+    action: suggest_sources
+    input: "{{ query }}"
+```
+
+### A2A Protocol Features
+
+| Feature | Why It Matters | Complexity | Dependencies | Expected Behavior |
+|---------|---------------|------------|--------------|-------------------|
+| **Agent Cards (Capability Discovery)** | Agents advertise capabilities; others can discover and invoke | Med | JSON-RPC 2.0 | Each agent exposes Agent Card JSON: role, tools, model, input/output schema, connection endpoint |
+| **JSON-RPC 2.0 Communication** | Standard protocol; interop with external systems | Med | A2A spec | All agent communication via JSON-RPC: request/response pattern with standardized error handling |
+| **Task State Machine** | Long-running tasks with status tracking | High | State persistence | States: pending -> running -> completed/failed. Intermediate states stored for recovery |
+| **Streaming (SSE)** | Real-time progress updates for long operations | Med | FastAPI WebSocket | Scholar synthesis streams intermediate results; UI shows progress |
+| **Async Push Notifications** | Background completion notification | Med | Write Queue | Long tasks push notification when done; WIP file updated; UI subscription |
+
+### Cedar Policy Engine Features
+
+| Feature | Why It Matters | Complexity | Dependencies | Expected Behavior |
+|---------|---------------|------------|--------------|-------------------|
+| **Permit/Forbid Rules** | Fine-grained agent authorization; prevents unauthorized operations | Med | Cedar library | Format: `permit(agent, action, resource) when { conditions }`. `forbid(agent, action) when { conditions }`. Explicit deny override allows |
+| **Principal-Action-Resource Model** | Standard authorization pattern aligns with agent-tool-claim mapping | Low | Cedar schema | Principal = Agent (Librarian/Writer/etc), Action = Tool (saw_ingest/saw_query/etc), Resource = Target (vault_uuid/wiki_page/etc) |
+| **Context-Aware Conditions** | Policies can consider request context (time, confidence, user) | High | Context injection | Conditions like: `when { context.confidence >= 2 && context.user == "admin" }`. Enables dynamic authorization |
+| **Policy Templates** | Reusable policies for common patterns | Med | YAML policy files | Pre-built: `permit(Waiter, saw_query)`, `forbid(Critic, saw_ingest)`, `permit(Librarian, saw_*)` |
+| **Audit Trail Integration** | Every authorization decision logged with Ed25519 receipt | Med | Existing audit layer | Cedar decision + Ed25519 signature creates tamper-proof authorization log |
+
+**Example Cedar Policies:**
+
+```cedar
+// Permit Librarian to search and read
+permit(
+  principal == Agent::"Librarian",
+  action in [Action::"saw_search", Action::"saw_graph", Action::"saw_status"],
+  resource
+);
+
+// Permit Writer to create but not verify (separation of duties)
+permit(
+  principal == Agent::"Writer",
+  action in [Action::"saw_ingest", Action::"saw_compile"],
+  resource
+);
+
+// Forbid Writer from self-verification
+forbid(
+  principal == Agent::"Writer",
+  action == Action::"saw_verify",
+  resource
+);
+
+// Permit Guardian to audit but not modify
+permit(
+  principal == Agent::"Guardian",
+  action in [Action::"saw_lint", Action::"saw_audit", Action::"saw_schema_validate"],
+  resource
+);
+
+// Context-aware: only allow low-confidence edits with human approval
+permit(
+  principal == Agent::"Writer",
+  action == Action::"saw_edit",
+  resource
+) when {
+  context.confidence >= 3 || context.human_approval == true
+};
+```
+
+### Web UI Features
+
+| Feature | Why It Matters | Complexity | Dependencies | Expected Behavior |
+|---------|---------------|------------|--------------|-------------------|
+| **Search Interface** | Primary knowledge access point; Web UI alternative to CLI | Med | FastAPI backend, existing query engine | Search bar with autocomplete; results show page title, snippet, confidence badge, freshness indicator. Supports both keyword (BM25) and natural language query |
+| **Knowledge Graph Visualization** | Visual exploration of entity relationships; 10+ projects offer this | High | Cytoscape.js, existing graph index | Interactive graph: nodes = wiki pages, edges = wikilinks. Features: zoom, pan, drag, click-to-navigate, filter by type/tag/confidence |
+| **Wiki Page Editor (Milkdown)** | Human review of LLM-generated content; approve/reject/edit workflow | Med | Milkdown, React | WYSIWYG Markdown editing; side-by-side view: original LLM draft vs current; approve/reject buttons; edit mode with live preview |
+| **Review Queue** | Pending pages awaiting human approval; part of confidence workflow | Med | Claims DB, confidence system | Lists Unverified pages; shows: source count, freshness, contradictions. Actions: approve (upgrade to Verified), reject (with reason), edit then approve |
+| **Dashboard** | Knowledge base overview at-a-glance | Low | Existing saw_status | Shows: total pages, claims, freshness distribution, recent activity, health score from lint |
+
+**Cytoscape.js Graph Features:**
+
+| Feature | Implementation | User Experience |
+|---------|---------------|-----------------|
+| **Interactive gestures** | Built-in: pinch-to-zoom, box selection, panning | Mobile-friendly; natural navigation |
+| **Multiple layouts** | Circle, Concentric, Grid, CoSE (force), Dagre (hierarchical) | User selects layout based on exploration need; CoSE for organic discovery, Dagre for hierarchy |
+| **Node styling** | CSS-like selectors for size/color/shape based on data | Confidence determines color (gray=unverified, bronze=single-source, silver=cross-validated, gold=verified). Type determines shape (circle=concept, square=entity, diamond=debate) |
+| **Edge styling** | Arrow types, line styles, labels | Bidirectional links show double arrows; link strength shows in thickness |
+| **Filter/search** | Selector-based filtering + text search | Filter by: type, tag, confidence range, freshness range. Search highlights matching nodes |
+| **Performance** | hideEdgesOnViewport, textureOnViewport, batch updates | Handles 500+ nodes smoothly; edge hiding during pan/zoom prevents jank |
+| **Click actions** | tap-to-select, tap-hold-to-unselect, modifier+tap multi-select | Click node -> navigates to wiki page; click edge -> shows relationship details |
+
+**Milkdown Editor Features:**
+
+| Feature | Implementation | User Experience |
+|---------|---------------|-----------------|
+| **Plugin-driven** | Syntax, theme, UI plugins | Only needed features loaded; extensible for custom needs |
+| **Headless styling** | No built-in CSS | Matches application theme; consistent visual design |
+| **WYSIWYG Markdown** | ProseMirror + Remark | Type formatted text; see rendered output; raw Markdown toggle |
+| **Y.js collaboration** | Real-time collaborative editing | Future: multiple users edit simultaneously (Phase 4) |
+| **React integration** | @milkdown/react package | Seamless integration with existing React components |
+
+### Chrome Clipper Features (Phase 3 Optional)
+
+| Feature | Why It Matters | Complexity | Dependencies | Expected Behavior |
+|---------|---------------|------------|--------------|-------------------|
+| **One-click capture** | Frictionless web content ingestion | Med | Chrome extension API | Click extension icon -> page captured -> sent to local ingest endpoint -> confirm or edit metadata |
+| **Selection clipping** | Capture only relevant portions | Med | DOM selection API | Highlight text -> right-click "Clip to Smart Agent Wiki" -> selected text captured with source URL |
+| **Metadata extraction** | Auto-extract title, author, date | Med | DOM parsing | Extract from: `<title>`, meta tags, Open Graph, Schema.org. User can edit before ingest |
+| **Batch clip** | Capture multiple tabs | Low | Tab API | Right-click extension -> "Clip all tabs" -> batch ingest with single confirmation |
+
+---
 
 ## Anti-Features
 
@@ -62,141 +246,196 @@ Features to explicitly NOT build. Each has been considered and rejected with cle
 
 | Anti-Feature | Why Avoid | What to Do Instead |
 |--------------|-----------|-------------------|
-| **General-purpose chatbot UI** | Users already have ChatGPT, Claude, Gemini. Building another chatbot dilutes focus and creates a mediocre chatbot AND a mediocre wiki | Provide query interface only (CLI command, MCP tool, Web UI search bar); no free-form conversational UI |
-| **Real-time collaboration (Google Docs style)** | Massive engineering complexity (CRDT/OT); team mode is Phase 4; core use case is individual knowledge worker | File-lock + session branch model; Git-based conflict resolution; async collaboration via A2A protocol |
-| **Built-in LLM hosting** | Ollama, LM Studio, llama.cpp already do this well; reinventing wastes effort and creates GPU support headaches | Support local LLM via API (Ollama compatible endpoint); let users choose their hosting solution |
-| **Custom embedding model training** | Niche requirement, massive engineering effort, requires ML expertise most users don't have | Use pre-trained models (all-MiniLM-L6-v2 by default); allow users to swap embedding model via config |
-| **Visual page builder / WYSIWYG editor** | Wiki content is LLM-generated; a visual editor implies human writing, which contradicts the core paradigm | Milkdown for review/editing only; all generation is LLM-driven; humans approve/reject/edit, not create from scratch |
-| **Social features (comments, likes, sharing feeds)** | This is a personal/small-team knowledge platform, not a social platform; social features add privacy complexity and moderation burden | P2P knowledge sharing (Phase 4) for explicit opt-in knowledge exchange; no social graph, no feed |
-| **Mobile app** | Knowledge work happens at desktop; mobile requires entirely different UX paradigm and doubles maintenance cost | Responsive Web UI as sole mobile interface; Chrome clipper extension for mobile capture |
-| **Plugin/extension marketplace** | Premature optimization for ecosystem; marketplace requires curation, review process, version compatibility management | YAML workflow definitions and SOPs as the extensibility mechanism; CLI tools as integration points |
-| **Automated web scraping at scale** | Legal risk (copyright, ToS violations); scope creep into crawler territory; users want curated sources, not firehose | URL ingestion (single page); Chrome clipper for manual capture; RSS for subscribed feeds; Research-on-Miss for targeted search |
-| **Knowledge graph query language (SPARQL/Cypher)** | Over-engineered for target audience; requires graph DB expertise; Venn tried OWL-RL and even that is Phase 4 for us | Simple graph traversal APIs (BFS/DFS); visual graph exploration via Cytoscape.js; relationship queries via MCP tools |
-| **Multi-tenant SaaS** | Architecture, billing, isolation, compliance; completely different product; contradicts local-first philosophy | Three deployment modes (local / local+cloud LLM / team Docker); self-hosted only |
-| **Video/audio editing tools** | Platform is for knowledge management, not media editing; editing tools are feature creep | Extract knowledge from media (Whisper transcription -> claim extraction); store original media in Vault unmodified |
-| **Custom authentication system** | Password management, MFA, session handling, OAuth integration -- all non-trivial and not core value | Leverage existing: API keys for LLM access, Git credentials for version control, Cedar policies for agent authorization; team mode uses Docker network isolation |
+| **General-purpose chatbot UI** | Users already have ChatGPT, Claude, Gemini. Building another chatbot dilutes focus | Provide query interface only (CLI command, MCP tool, Web UI search bar); no free-form conversational UI |
+| **Real-time collaboration (Google Docs style)** | Massive engineering complexity (CRDT/OT); core use case is individual knowledge worker | File-lock + session branch model; Git-based conflict resolution; async collaboration via A2A protocol |
+| **Built-in LLM hosting** | Ollama, LM Studio, llama.cpp already do this well | Support local LLM via API (Ollama compatible endpoint); let users choose their hosting solution |
+| **Custom embedding model training** | Niche requirement, massive engineering effort | Use pre-trained models; allow users to swap embedding model via config |
+| **Visual page builder / WYSIWYG content creation** | Wiki content is LLM-generated; visual editor implies human writing | Milkdown for review/editing only; all generation is LLM-driven; humans approve/reject/edit |
+| **Social features (comments, likes, feeds)** | Personal/small-team platform; social adds privacy complexity | P2P knowledge sharing (Phase 4) for explicit opt-in exchange; no social graph |
+| **Mobile app** | Knowledge work at desktop; mobile requires different UX | Responsive Web UI; Chrome clipper for mobile capture |
+| **Plugin/extension marketplace** | Premature; marketplace requires curation, version management | YAML workflow definitions and SOPs as extensibility mechanism |
+| **Automated web scraping at scale** | Legal risk; scope creep; users want curated sources | URL ingestion; Chrome clipper for manual capture; RSS for subscribed feeds; Research-on-Miss for targeted search |
+| **Knowledge graph query language (SPARQL/Cypher)** | Over-engineered for target audience | Simple graph traversal APIs (BFS/DFS); visual exploration via Cytoscape.js |
+| **Multi-tenant SaaS** | Architecture, billing, compliance contradict local-first | Three deployment modes (local / local+cloud / team Docker); self-hosted only |
+| **Visual workflow builder (drag-and-drop)** | YAML workflows sufficient; visual builder adds maintenance burden | Text-based YAML workflows with syntax highlighting; future VS Code extension if demand exists |
 
-## Feature Dependencies
+---
+
+## Feature Dependencies (Phase 03 Additions)
 
 ```
-Vault Storage (L0) --> Claims DB (L1) --> Wiki Pages (L2) --> Index (L3)
-                                                          |
-                                                          +--> Search (FTS5)
-                                                          |
-Source Provenance --------------------------------------->+--> Confidence System
-   |                                                     |
-   +--> Git Integration --> Git Blame Provenance         |
-                                                         |
-Multi-format Ingestion --> Format Detection --> Structured Extraction (zero LLM)
-                                        |
-                                        +--> Unstructured Extraction (LLM) --> Multi-LLM Competition
-                                                                             |
-                                                                             +--> Cross-validation --> Confidence Assessment
-                                                                             |
-Contradiction Detection --> Resolution Strategies --> Human Review Queue
-        |
-        +--> Freshness System --> Review Triggers --> Spaced Repetition (FSRS)
-        |                                        |
-        |                                        +--> Knowledge Expiry --> Pruning
-        |
-CLI (init/ingest/query/lint) --> MCP Server --> Agent Compatibility Layer
-        |                              |
-        +--> Write Queue (Outbox) ---->+--> Multi-sink Persistence
-        |
-Web UI --> Graph Visualization (Cytoscape.js)
-        |
-        +--> Milkdown Editor --> Review/Approve Workflow --> Feedback Files
-                                                          |
-                                                          +--> Cognitive Distillation --> SOP Extraction
-                                                          |
-YAML Workflow Engine --> Agent Orchestration --> A2A Protocol
-        |
-        +--> Gate Conditions --> Confidence Thresholds
-        |
-Research-on-Miss --> Web/Academic Search --> Auto-ingest --> Knowledge Growth Loop
-        |
-Training Period Adaptation (30 days) --> User Preference Learning --> SOP Auto-generation
-        |
-        +--> Feedback Reinforcement (approved/rejected)
-        |
-Blast Radius --> Impact Analysis --> Pre-edit Warning
-        |
-Adaptive Index --> Scale Monitoring --> Auto-upgrade (flat/hierarchical/indexed)
-        |
-Progressive Memory (L0/L1/L2) --> Token Budget Management --> Boot Sequence Optimization
-        |
-Temperature Tiers (hot/warm/glacier) --> Storage Optimization --> Retrieval Priority
+# Phase 03 Dependencies
+
+MCP Server (Phase 2) --> Agent Tools --> Agent Definitions --> Multi-Agent System
+                                                      |
+                                                      +--> A2A Protocol --> Agent Cards
+                                                      |                        |
+                                                      |                        +--> JSON-RPC Communication
+                                                      |
+                                                      +--> Task State Machine --> Write Queue
+
+Confidence System (Phase 2) --> Gate Conditions --> Conditional Routing
+                                |
+                                +--> Workflow Engine --> YAML Workflow Definition
+                                                              |
+                                                              +--> Step Execution --> State Persistence
+
+Cedar Policy (Phase 2) --> Agent Authorization --> Permit/Forbid Rules
+                              |
+                              +--> Principal-Action-Resource Model
+                              |
+                              +--> Context-Aware Conditions --> Audit Trail
+
+Claims DB (Phase 1) --> Graph Index --> Cytoscape.js Visualization
+                                             |
+                                             +--> Layout Algorithms (CoSE, Dagre)
+                                             |
+                                             +--> Node Styling (confidence, type)
+                                             |
+                                             +--> User Interaction (click, drag, filter)
+
+Wiki Pages (Phase 1) --> Milkdown Editor --> Review/Approve Workflow
+                                    |
+                                    +--> WYSIWYG Editing --> Live Preview
+                                    |
+                                    +--> Reject with Reason --> Feedback Files
+
+LiteLLM (Phase 1) --> Model Routing --> Agent Dispatch
+                              |
+                              +--> Task Complexity Assessment
+                              |
+                              +--> Cost Control (Haiku default, Opus sparing)
 ```
 
-## MVP Recommendation
+---
 
-**Phase 1 (Core Foundation - 6 weeks):**
-Prioritize these table-stakes features that create a working product:
+## Phase 03 MVP Recommendation
 
-1. **Vault + Claims + Wiki storage layers** -- Without storage, nothing works. This is the data foundation.
-2. **Multi-format ingestion (PDF/Markdown/URL)** -- Users must be able to feed content in. Start with these three formats.
-3. **FTS5 full-text search** -- Makes ingested content findable. Include structure-aware Tree Mode as early differentiator.
-4. **CLI (init/ingest/query/lint)** -- Primary user interface; 5-minute onboarding promise depends on this.
-5. **Source provenance** -- Core value promise ("knowledge is traceable"); even basic provenance sets the product apart.
-6. **Git version control** -- Enables audit trail and branch-based processing.
-7. **Multi-LLM support (LiteLLM)** -- Users refuse vendor lock-in; must work on day one.
-8. **Write Queue (Outbox)** -- Architectural foundation; ensures no data loss; hard to retrofit later.
-9. **WIP cross-session momentum** -- Low complexity, high impact; solves the "where was I?" problem.
+**Must Have (Core Collaboration):**
+1. **6 Agent Definitions** -- Without agents, workflow engine has nothing to orchestrate. Foundation for all collaboration features.
+2. **YAML Workflow Engine + Gate Conditions** -- Enables multi-step operations. Gates ensure quality control.
+3. **Cedar Policy Engine** -- Prevents unauthorized agent actions. Required for production safety.
+4. **Web UI Search Interface** -- Primary user access point. Search + results display.
 
-**Defer to Phase 2+:**
-- Confidence system: Complex; start with simple source marking (extracted/inferred/ambiguous)
-- Contradiction detection: Requires mature Claims DB; defer
-- Learning engine: Requires user behavior data that doesn't exist yet
-- Multi-agent collaboration: Requires all five engines to be functional
-- Cryptographic audit: Important but not MVP
-- Web UI: CLI first, Web second
+**Should Have (Visualization):**
+1. **Cytoscape.js Graph Visualization** -- High-value for exploration; 10+ competing projects have this. Basic layout + interaction.
+2. **Milkdown Editor + Review Queue** -- Closes the human-approval loop. Essential for confidence system to work.
 
-**Phase 2 (Intelligence Enhancement - 4 weeks):**
-Add the trust and governance layer that differentiates:
+**Nice to Have (Polish):**
+1. **A2A Streaming (SSE)** -- Real-time progress for long operations. Enhances UX but not critical.
+2. **Chrome Clipper** -- Reduces ingestion friction. More valuable for active users.
+3. **A2A Agent Cards** -- Required for external agent interoperability. Internal agents can work without it.
 
-1. **4-layer confidence system** -- The headline differentiator
-2. **Contradiction detection + resolution** -- Completes the trust story
-3. **MCP Server (23 tools)** -- Enables agent ecosystem integration
-4. **Learning engine (training period + cognitive distillation)** -- Starts the self-improvement loop
-5. **Knowledge expiry + pruning** -- Keeps KB healthy at scale
-6. **Cryptographic audit (Ed25519 + Cedar)** -- Enterprise-grade trust
-7. **Multi-sink write architecture** -- Production-grade reliability
+**Defer to Phase 4:**
+1. **Real-time collaboration (Y.js)** -- Requires WebRTC/WebSocket infrastructure; team mode focus.
+2. **A2A Protocol External Integration** -- P2P sharing requires this; not needed for single-user.
 
-**Phase 3 (Collaboration and Scale - 4 weeks):**
-Add collaboration and visualization:
+---
 
-1. **Multi-agent role-based collaboration** -- The full agent orchestra
-2. **YAML workflow orchestration** -- User-defined knowledge workflows
-3. **Knowledge graph visualization** -- Visual exploration
-4. **Web UI** -- React + Cytoscape.js + Milkdown
-5. **Research-on-Miss** -- Auto-research loop
-6. **Chrome clipper extension** -- Easy web capture
-7. **Adaptive index evolution** -- Scale without degradation
+## Expected User Behavior by Feature
 
-## Competitive Feature Matrix
+### Multi-Agent System User Flow
 
-Based on analysis of 181 projects. Shows how Smart Agent Wiki's planned features compare to the best existing implementations.
+```
+User: saw workflow run literature_review.yaml --query "Transformer architecture evolution"
 
-| Feature Category | Best Existing Coverage | Smart Agent Wiki Coverage | Gap |
-|-----------------|----------------------|--------------------------|-----|
-| Storage architecture | 2 layers (most projects) | 4 layers | Unique |
-| Confidence/trust | None (0 projects) | 4-layer + per-claim marking | Unique |
-| Contradiction handling | Detection only (3 projects) | Detection + 3-strategy resolution | Significant |
-| Learning/adaptation | Single feature (2 projects) | 4-mechanism integrated engine | Unique |
-| Multi-agent collaboration | Basic (1 project) | 6 roles + A2A + workflows + audit | Significant |
-| Search quality | FTS5 or vector (not both) | FTS5 + Tree Mode + optional vector + Research-on-Miss | Moderate |
-| Multi-format ingestion | 6 formats (some projects) | 10+ formats with zero-LLM structured extraction | Moderate |
-| Governance | None (0 projects) | Freshness + audit + policy + blast radius | Unique |
-| Agent compatibility | 1-2 agents (most) | 16+ agents via config files | Significant |
-| Cost control | Single LLM (most) | Zero-LLM structured + multi-model routing + 3-tier degradation | Significant |
+System:
+1. Parse YAML workflow
+2. Create execution context with variables
+3. Step 1: Dispatch Librarian(Haiku) to search
+   - Librarian calls saw_search "Transformer evolution"
+   - Returns list of related pages
+4. Gate check: coverage >= 0.7?
+   - Yes -> continue
+   - No -> route to recovery (Librarian suggests more sources)
+5. Step 2: Dispatch Scholar(Opus) to synthesize
+   - Scholar reads related pages, generates synthesis
+   - Streams intermediate results (SSE if connected)
+   - Returns draft_synthesis
+6. Step 3: Dispatch Critic(Sonnet) to review
+   - Critic checks contradictions, confidence
+   - Gate check: confidence >= 3, contradiction_count == 0?
+   - Pass -> continue, Fail -> return to Scholar with feedback
+7. Step 4: Dispatch Writer(Sonnet) to publish
+   - Writer formats synthesis as wiki page
+   - Gate check: human_approval: true?
+   - Adds to Review Queue
+8. Notify user: "Synthesis ready for review: [[Transformer Evolution]]"
+```
+
+### Knowledge Graph Visualization User Flow
+
+```
+User visits /graph:
+1. Initial view: All nodes visible, CoSE layout (force-directed)
+2. User options:
+   - Filter by type: [Concept] [Entity] [Debate] (checkbox)
+   - Filter by confidence: Min [2] Max [4] (slider)
+   - Filter by freshness: [Last 30 days] (dropdown)
+   - Search: [Type to highlight matching nodes]
+3. User clicks node:
+   - Sidebar shows: title, type, confidence, freshness, summary
+   - "Open page" link navigates to wiki page
+4. User drags node:
+   - Node moves, attached edges follow
+   - Physics simulation settles nearby nodes
+5. User double-clicks node:
+   - Navigate to wiki page (/wiki/Transformer)
+6. User hovers edge:
+   - Tooltip shows: source page -> target page, relationship type
+```
+
+### Wiki Page Editor User Flow
+
+```
+LLM generates draft -> enters Review Queue
+User visits /review:
+1. Queue shows pending pages
+2. User clicks "Transformer Evolution" draft
+3. Side-by-side view:
+   - Left: Original LLM draft with citations
+   - Right: Current editable version (Milkdown)
+4. User actions:
+   - Approve: Draft becomes wiki page, confidence upgrades to Single Source
+   - Reject: Dialog for reason, stored in feedback files, confidence stays Unverified
+   - Edit: WYSIWYG editing -> Save -> confidence stays Unverified pending re-review
+   - Edit + Approve: User modifications saved, confidence upgrades to Human Verified
+5. After action: Return to queue or navigate to next pending
+```
+
+---
+
+## Competitive Feature Matrix: Phase 03
+
+| Feature | Best Existing Coverage | Smart Agent Wiki | Gap | Confidence |
+|---------|----------------------|------------------|-----|------------|
+| Multi-agent roles | CrewAI (role/goal/backstory) | 6 specialized + model routing + Cedar policy | Significant | HIGH |
+| Workflow orchestration | LangGraph (state machine), CrewAI (sequential/hierarchical) | YAML definition + gates + conditional routing | Moderate | HIGH |
+| A2A protocol | Google A2A spec, MindOS implementation | JSON-RPC + Agent Cards + Task state | Standard | MEDIUM |
+| Policy engine | Cedar (AWS), scopeblind-gateway | Cedar for agent authorization + audit trail integration | Novel combination | HIGH |
+| Graph visualization | Obsidian Graph, Cytoscape.js (library) | Cytoscape.js with confidence/freshness styling + click-to-navigate | Standard | HIGH |
+| WYSIWYG editor | Milkdown (library), Obsidian | Milkdown + review queue + approve/reject workflow | Novel combination | HIGH |
+
+---
 
 ## Sources
 
-- Design document: `docs/smart_agent_wiki_design.md` -- Full architecture with 23 appendix design decisions
-- Ecosystem analysis: `docs/llm_wiki_ecosystem_analysis.md` -- 181-project categorization and feature coverage matrix
-- Remote audit findings: `docs/remote_project_audit_findings.md` -- Deep audit of 27 projects with unique feature extraction
-- Karpathy's original LLM Wiki concept: `docs/llm-wiki.md` -- Foundational pattern and user expectations
-- User pain points: `docs/karpathy_llm_wiki_comments.md` -- 666 comments with pain point frequency analysis
-- Project list: `docs/karpathy_llm_wiki_projects.md` -- Full enumeration of 181 derivative projects
+**Phase 03 Sources (2026-04-27):**
+- Cedar Policy Language: https://docs.cedarpolicy.com/ (authorization patterns, permit/forbid syntax) -- HIGH confidence
+- Cytoscape.js: https://js.cytoscape.org/ (graph visualization features, layouts, interaction) -- HIGH confidence
+- Milkdown: https://milkdown.dev/ (WYSIWYG markdown editing, plugin architecture) -- HIGH confidence
+- Google A2A Protocol: https://github.com/google/A2A (agent-to-agent communication spec) -- MEDIUM confidence (spec evolving)
+- CrewAI Agents: https://docs.crewai.com/concepts/agents (role definition pattern, delegation) -- HIGH confidence
+- LangGraph: https://langchain-ai.github.io/langgraph/ (stateful multi-agent orchestration) -- HIGH confidence
 
-**Confidence:** HIGH -- Based on comprehensive analysis of 181 existing projects, 666 user comments, and 25 deep code audits. Feature categorization is grounded in extensive primary research.
+**Phase 1-2 Sources (from original research):**
+- Design document: `docs/smart_agent_wiki_design.md` -- Full architecture with 23 appendix design decisions
+- Ecosystem analysis: `docs/llm_wiki_ecosystem_analysis.md` -- 181-project categorization
+- Remote audit findings: `docs/remote_project_audit_findings.md` -- 27 project deep audits
+- Karpathy's LLM Wiki: `docs/llm-wiki.md` -- Foundational pattern
+- User comments: `docs/karpathy_llm_wiki_comments.md` -- 666 comments analysis
+
+---
+
+*Phase 03 features researched: 2026-04-27*
+*Original FEATURES.md: 2026-04-26*

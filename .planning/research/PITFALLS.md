@@ -418,6 +418,152 @@ Phase 2 (Governance Engine) -- when Cedar policies and Guardian are implemented.
 
 ---
 
+### Pitfall 13: Cedar Policy Binding Immaturity (Phase 03)
+
+**What goes wrong:**
+The `cedar-python 0.1.4` binding is early-stage and may lack full coverage of Cedar features or have Python-specific bugs. When the binding fails or produces incorrect authorization decisions, the entire multi-agent orchestration is blocked because Guardian can't verify if an agent is permitted to perform an action.
+
+**Why it happens:**
+- cedar-python is marked experimental by Amazon
+- Feature parity with the Rust/JS Cedar implementations is incomplete
+- Python binding may not receive updates at the same cadence as core Cedar
+
+**How to avoid:**
+1. Implement a `PolicyEngine` protocol with two adapters: `CedarPythonAdapter` and `CedarCLIAdapter`
+2. `CedarCLIAdapter` invokes the official Cedar CLI as a subprocess (slower but authoritative)
+3. At startup, run a feature detection test. If cedar-python fails, auto-fallback to CLI
+4. Log all authorization decisions for audit trail regardless of adapter used
+5. The Guardian should treat policy engine failures as "deny by default" (fail-secure)
+
+**Warning signs:**
+- cedar-python import fails or produces AttributeError
+- Authorization decisions differ between cedar-python and Cedar CLI
+- Policy parsing errors that work in the Cedar playground
+
+**Phase to address:**
+Phase 3 (Collaboration Engine) -- when Guardian and Cedar policies are first used for agent authorization.
+
+---
+
+### Pitfall 14: Cytoscape.js Performance Degradation at Scale (Phase 03)
+
+**What goes wrong:**
+Cytoscape.js renders all nodes and edges in the browser. With >500 entities, the DOM manipulation and canvas rendering becomes slow. User interactions (pan, zoom, drag) become jerky. The knowledge graph visualization that should aid exploration becomes a frustration.
+
+**Why it happens:**
+- Every node/edge is a DOM element or canvas draw call
+- Force-directed layout algorithms (CoSE) are O(n²) per iteration
+- No built-in lazy loading or clustering
+- Browser memory grows with graph size
+
+**How to avoid:**
+1. Use `cy.batch()` for all initial graph loads
+2. Enable performance optimizations: `hideEdgesOnViewport: true`, `textureOnViewport: true`
+3. Implement lazy loading: load only 2-hop neighbors on expand, not entire graph
+4. At >200 nodes, switch to community view (cluster by page type)
+5. At >500 nodes, switch to topic cluster view with drill-down
+6. Use WebWorker for layout computation (CoSE supports this)
+
+**Warning signs:**
+- Initial graph render takes >3 seconds
+- Pan/zoom feels jerky
+- Browser memory exceeds 500MB
+- User reports "graph is broken" for large knowledge bases
+
+**Phase to address:**
+Phase 3 (Web UI) -- when Cytoscape.js component is built.
+
+---
+
+### Pitfall 15: A2A Protocol Version Drift (Phase 03)
+
+**What goes wrong:**
+The A2A protocol (Google/Linux Foundation, v1.0.2) is new and evolving. Smart Agent Wiki implements the current spec, but external agents or future A2A versions may use different message formats. Interoperability breaks silently.
+
+**Why it happens:**
+- A2A spec is not yet finalized
+- Different implementations may interpret "optional" fields differently
+- Agent Cards (capability advertisements) may use different schemas
+- JSON-RPC 2.0 error codes are implementation-specific
+
+**How to avoid:**
+1. Include A2A protocol version in Agent Card metadata
+2. Implement version negotiation: reject connections from incompatible versions
+3. Log all A2A message types received; flag unknown types for investigation
+4. Monitor the A2A spec repository for changes
+5. Design the A2A adapter to be pluggable: `A2AAdapterV1`, `A2AAdapterV2`, etc.
+
+**Warning signs:**
+- External agents can't connect or produce errors
+- A2A messages with unrecognized fields
+- Agent Cards that don't match expected schema
+- Interoperability works in dev but breaks in production
+
+**Phase to address:**
+Phase 3 (Collaboration Engine) -- when A2A protocol is implemented.
+
+---
+
+### Pitfall 16: React State Desync with WebSocket (Phase 03)
+
+**What goes wrong:**
+The Web UI uses WebSocket for real-time updates. When the WebSocket disconnects and reconnects, the frontend state may have missed events. The UI shows stale data while the backend has newer state. User actions based on stale state produce incorrect results or conflicts.
+
+**Why it happens:**
+- WebSocket connections drop silently (network issues, browser sleep)
+- Reconnect doesn't automatically replay missed events
+- Zustand stores update on message receipt but don't track gaps
+- No acknowledgment mechanism for WebSocket messages
+
+**How to avoid:**
+1. On WebSocket connect, fetch current state via REST API (sync point)
+2. Implement message sequence numbers; detect gaps on reconnect
+3. Show connection status indicator (connected/connecting/disconnected)
+4. When disconnected, disable actions that require real-time data
+5. Use TanStack Query for server state; it handles refetch-on-reconnect automatically
+6. For critical operations (edits), use REST API with optimistic updates, not WebSocket
+
+**Warning signs:**
+- UI shows different data than `saw status` CLI output
+- User edits conflict with other users' changes
+- WebSocket reconnects frequently
+- Actions fail with "stale state" errors
+
+**Phase to address:**
+Phase 3 (Web UI) -- when WebSocket integration is built.
+
+---
+
+### Pitfall 17: YAML Workflow Gate Loop (Phase 03)
+
+**What goes wrong:**
+YAML workflows with gates (e.g., `confidence >= 3`) can loop infinitely when the gate cannot be satisfied. A Scholar → Critic → Writer workflow keeps retrying because the Critic always finds issues. No maximum retry limit is defined. The workflow consumes resources endlessly.
+
+**Why it happens:**
+- YAML gates don't specify `max_retries` by default
+- No fallback action when gate can't be satisfied
+- LLM variability means retrying the same step may not improve results
+- The Writer Agent lacks context about why the Critic rejected the draft
+
+**How to avoid:**
+1. Every gate MUST have `max_retries` (default: 3) and `fallback_action`
+2. `fallback_action` can be: `accept_with_flag`, `escalate_to_human`, `abort`
+3. Track retry count in workflow execution state
+4. When max retries exceeded, execute fallback and log the failure reason
+5. The Critic should provide specific, actionable feedback (not just "quality too-low")
+6. Add a workflow-level timeout: if not complete in N minutes, abort
+
+**Warning signs:**
+- Workflows stuck in "running" for >10 minutes
+- Same gate failure repeating in logs
+- Resource consumption (LLM calls) without progress
+- No completed workflows despite active ingestion
+
+**Phase to address:**
+Phase 3 (Collaboration Engine) -- when YAML workflow executor is built.
+
+---
+
 ## Technical Debt Patterns
 
 | Shortcut | Immediate Benefit | Long-term Cost | When Acceptable |
@@ -528,6 +674,11 @@ Phase 2 (Governance Engine) -- when Cedar policies and Guardian are implemented.
 | Entity resolution explosion | Phase 1 (registry) + Phase 3 (resolution) | Entity count grows sub-linearly; no duplicate entities for known test set |
 | MCP tool schema drift | Phase 2 | Schema version field in tool descriptions; test with 2+ MCP clients after schema changes |
 | Multi-agent deadlock | Phase 3 | Workflow timeout enforced; deadlock detection active; YAML gates have fallback actions |
+| Cedar policy binding immaturity | Phase 3 | PolicyEngine protocol with CLI fallback; feature detection at startup |
+| Cytoscape.js performance at scale | Phase 3 | Performance optimizations enabled; lazy loading tested at 500+ nodes |
+| A2A protocol version drift | Phase 3 | Version negotiation; pluggable adapter architecture |
+| React state desync with WebSocket | Phase 3 | REST sync on connect; message sequence tracking; connection status indicator |
+| YAML workflow gate loop | Phase 3 | Max retries enforced; fallback actions defined; workflow timeout active |
 
 ## Sources
 
