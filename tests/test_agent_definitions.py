@@ -248,3 +248,172 @@ class TestBaseAgent:
         assert messages[0]["role"] == "system"
         assert messages[0]["content"] == "You are a test agent."
         assert messages[1]["role"] == "user"
+
+
+class TestLibrarianAgent:
+    """Tests for LibrarianAgent."""
+
+    def test_librarian_has_correct_name(self):
+        """Test 1: LibrarianAgent has name='Librarian'."""
+        from saw.engines.collaborate.agents.librarian import LibrarianAgent
+
+        agent = LibrarianAgent(llm_router=None)
+        assert agent.name == "Librarian"
+
+    def test_librarian_has_haiku_model_tier(self):
+        """Test 1: LibrarianAgent has model_tier='haiku'."""
+        from saw.engines.collaborate.agents.librarian import LibrarianAgent
+
+        agent = LibrarianAgent(llm_router=None)
+        assert agent.model_tier == "haiku"
+
+    def test_librarian_has_role_specific_system_prompt(self):
+        """Test 8: LibrarianAgent has role-specific system_prompt."""
+        from saw.engines.collaborate.agents.librarian import LibrarianAgent, LIBRARIAN_PROMPT
+
+        agent = LibrarianAgent(llm_router=None)
+        assert agent._system_prompt == LIBRARIAN_PROMPT
+        assert "索引管理员" in LIBRARIAN_PROMPT
+
+
+class TestWriterAgent:
+    """Tests for WriterAgent."""
+
+    def test_writer_has_correct_name(self):
+        """Test 2: WriterAgent has name='Writer'."""
+        from saw.engines.collaborate.agents.writer import WriterAgent
+
+        agent = WriterAgent(llm_router=None)
+        assert agent.name == "Writer"
+
+    def test_writer_has_sonnet_model_tier(self):
+        """Test 2: WriterAgent has model_tier='sonnet'."""
+        from saw.engines.collaborate.agents.writer import WriterAgent
+
+        agent = WriterAgent(llm_router=None)
+        assert agent.model_tier == "sonnet"
+
+    def test_writer_has_role_specific_system_prompt(self):
+        """Test 8: WriterAgent has role-specific system_prompt."""
+        from saw.engines.collaborate.agents.writer import WriterAgent, WRITER_PROMPT
+
+        agent = WriterAgent(llm_router=None)
+        assert agent._system_prompt == WRITER_PROMPT
+        assert "内容创作者" in WRITER_PROMPT
+
+
+class TestCriticAgent:
+    """Tests for CriticAgent."""
+
+    def test_critic_has_correct_name(self):
+        """Test 3: CriticAgent has name='Critic'."""
+        from saw.engines.collaborate.agents.critic import CriticAgent
+
+        agent = CriticAgent(llm_router=None)
+        assert agent.name == "Critic"
+
+    def test_critic_has_sonnet_model_tier(self):
+        """Test 3: CriticAgent has model_tier='sonnet'."""
+        from saw.engines.collaborate.agents.critic import CriticAgent
+
+        agent = CriticAgent(llm_router=None)
+        assert agent.model_tier == "sonnet"
+
+    def test_critic_has_role_specific_system_prompt(self):
+        """Test 8: CriticAgent has role-specific system_prompt."""
+        from saw.engines.collaborate.agents.critic import CriticAgent, CRITIC_PROMPT
+
+        agent = CriticAgent(llm_router=None)
+        assert agent._system_prompt == CRITIC_PROMPT
+        assert "质量审核员" in CRITIC_PROMPT
+
+
+class TestLinkerAgent:
+    """Tests for LinkerAgent."""
+
+    def test_linker_has_correct_name(self):
+        """Test 4: LinkerAgent has name='Linker'."""
+        from saw.engines.collaborate.agents.linker import LinkerAgent
+
+        agent = LinkerAgent(llm_router=None)
+        assert agent.name == "Linker"
+
+    def test_linker_has_haiku_model_tier(self):
+        """Test 4: LinkerAgent has model_tier='haiku'."""
+        from saw.engines.collaborate.agents.linker import LinkerAgent
+
+        agent = LinkerAgent(llm_router=None)
+        assert agent.model_tier == "haiku"
+
+    def test_linker_has_role_specific_system_prompt(self):
+        """Test 8: LinkerAgent has role-specific system_prompt."""
+        from saw.engines.collaborate.agents.linker import LinkerAgent, LINKER_PROMPT
+
+        agent = LinkerAgent(llm_router=None)
+        assert agent._system_prompt == LINKER_PROMPT
+        assert "交叉链接专家" in LINKER_PROMPT
+
+
+class TestScholarAgent:
+    """Tests for ScholarAgent."""
+
+    def test_scholar_has_correct_name(self):
+        """Test 5: ScholarAgent has name='Scholar'."""
+        from saw.engines.collaborate.agents.scholar import ScholarAgent
+
+        agent = ScholarAgent(llm_router=None)
+        assert agent.name == "Scholar"
+
+    def test_scholar_has_opus_model_tier(self):
+        """Test 5: ScholarAgent has model_tier='opus'."""
+        from saw.engines.collaborate.agents.scholar import ScholarAgent
+
+        agent = ScholarAgent(llm_router=None)
+        assert agent.model_tier == "opus"
+
+    def test_scholar_has_role_specific_system_prompt(self):
+        """Test 8: ScholarAgent has role-specific system_prompt."""
+        from saw.engines.collaborate.agents.scholar import ScholarAgent, SCHOLAR_PROMPT
+
+        agent = ScholarAgent(llm_router=None)
+        assert agent._system_prompt == SCHOLAR_PROMPT
+        assert "深度推理专家" in SCHOLAR_PROMPT
+
+
+class TestGuardianAgent:
+    """Tests for GuardianAgent."""
+
+    def test_guardian_has_correct_name(self):
+        """Test 6: GuardianAgent has name='Guardian'."""
+        from saw.engines.collaborate.agents.guardian import GuardianAgent
+
+        agent = GuardianAgent()
+        assert agent.name == "Guardian"
+
+    def test_guardian_has_rule_model_tier(self):
+        """Test 6: GuardianAgent has model_tier='rule' (zero-LLM)."""
+        from saw.engines.collaborate.agents.guardian import GuardianAgent
+
+        agent = GuardianAgent()
+        assert agent.model_tier == "rule"
+
+    def test_guardian_execute_returns_success_for_permitted(self):
+        """Test 7: GuardianAgent.execute() returns success=True for permitted actions."""
+        from saw.engines.collaborate.agents.guardian import GuardianAgent
+        from saw.domain.agent import AgentTask, AgentContext
+
+        agent = GuardianAgent()
+        task = AgentTask(type="check", payload={"action": "read", "resource": "wiki/test"})
+        context = AgentContext(wiki_state={}, claims_context=[], calling_agent="Writer")
+
+        import asyncio
+        result = asyncio.run(agent.execute(task, context, []))
+        assert result.success is True
+
+    def test_guardian_has_role_specific_system_prompt(self):
+        """Test 8: GuardianAgent has role-specific system_prompt (can be empty)."""
+        from saw.engines.collaborate.agents.guardian import GuardianAgent
+
+        agent = GuardianAgent()
+        # Guardian uses rule engine, system_prompt can be empty
+        assert agent._system_prompt == ""
