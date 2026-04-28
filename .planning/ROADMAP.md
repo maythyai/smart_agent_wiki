@@ -44,7 +44,7 @@ Plans:
   2. User can run `saw conflicts` and see detected contradictions with resolution strategy (Superseded/Disputed/Historical) and blast radius analysis
   3. Each Wiki page displays a 4-tier confidence level and 9-level freshness indicator, and user can run `saw freshness` to see a freshness report
   4. User can run `saw audit` and verify Ed25519 receipt chain integrity for all agent operations
-  5. MCP server exposes 23 tools and works with Claude Code, Cursor, and other MCP-compatible agents; knowledge base learns from user behavior over time (training period, spaced repetition, cognitive distillation)
+  5. MCP server exposes 23 tools and works with Claude Code, Cursor, and other MCP-compatible agents; knowledge base learns from user behavior over time (training period, spaced repetition, cognitive distillation, feedback files)
 **Plans**: 3
 
 Plans:
@@ -67,7 +67,8 @@ Plans:
 **UI hint**: yes
 
 Plans:
-- [ ] 03-01: Multi-Agent Foundation - Agent definitions, model routing, YAML workflows, Cedar policy engine, A2A protocol
+- [ ] 03-01-01: Agent Foundation - 6 specialized agents, model routing, A2A protocol, AgentProtocol, AgentDispatcher
+- [ ] 03-01-02: Workflow + Policy - YAML workflow parser/executor, Cedar policy engine, gate conditions, fallback actions
 - [ ] 03-02: Web API Foundation - FastAPI server, WebSocket real-time, search API, graph API, page API
 - [ ] 03-03: React Frontend - Search UI, Cytoscape.js graph visualization, Milkdown page editor, agent status dashboard
 
