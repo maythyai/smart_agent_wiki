@@ -113,3 +113,39 @@ class Sink(Protocol):
     def can_handle(self, sink_name: str) -> bool:
         """Check if this sink handles the given sink name."""
         ...
+
+
+class AgentProtocol(Protocol):
+    """Protocol for specialized agents.
+
+    Per D-01: 6 specialized agents with role-specific behavior.
+    Per D-02: Agents have name, model_tier, system_prompt, tools_allowed, constraints.
+    """
+
+    @property
+    def name(self) -> str:
+        """Agent role name (e.g., 'Librarian', 'Writer', 'Scholar')."""
+        ...
+
+    @property
+    def model_tier(self) -> str:
+        """Model tier: 'haiku' | 'sonnet' | 'opus' | 'rule'."""
+        ...
+
+    async def execute(
+        self,
+        task: "AgentTask",
+        context: "AgentContext",
+        tools: list,
+    ) -> "AgentResult":
+        """Execute a task and return the result.
+
+        Args:
+            task: The task to execute.
+            context: Execution context with wiki state and claims.
+            tools: List of available tools for this agent.
+
+        Returns:
+            AgentResult with success, payload, confidence, and metadata.
+        """
+        ...
