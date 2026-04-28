@@ -1,0 +1,37 @@
+# Example workflow: Literature review generation
+# Per PLAN.md Task 3: Demonstrates multi-agent collaboration with gates
+
+name: 文献综述生成
+timeout: 600  # 10 minutes
+on_failure: abort
+
+steps:
+  # Step 1: Librarian searches for related pages
+  - agent: Librarian
+    action: search
+    input: "{{ query }}"
+    output: related_pages
+
+  # Step 2: Scholar synthesizes findings
+  - agent: Scholar
+    action: synthesize
+    input: related_pages
+    output: draft_synthesis
+    max_retries: 2
+
+  # Step 3: Critic reviews with quality gates
+  - agent: Critic
+    action: review
+    input: draft_synthesis
+    output: reviewed_synthesis
+    gates:
+      - confidence: ">= 3"
+      - contradiction_count: "== 0"
+    max_retries: 3
+    fallback_action: accept_with_flag
+
+  # Step 4: Writer publishes final page
+  - agent: Writer
+    action: publish
+    input: reviewed_synthesis
+    output: wiki_page
