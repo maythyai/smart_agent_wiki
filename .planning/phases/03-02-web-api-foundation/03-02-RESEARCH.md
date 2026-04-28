@@ -886,19 +886,22 @@ def register_exception_handlers(app: FastAPI) -> None:
 | A1 | FastAPI 0.136.1 API 稳定，无 breaking changes | Standard Stack | 低风险 — 版本已发布 |
 | A2 | Pydantic v2 API 足够稳定用于响应模型 | Standard Stack | 低风险 — 已广泛采用 |
 | A3 | WebSocket 心跳间隔 30 秒足够检测断连 | Code Examples | 中风险 — 可能需要根据网络环境调整 |
-| A4 | Event Bus 已有 subscribe 方法 | Pattern 2 | 需验证 Phase 01 实现 |
+| A4 | Event Bus 已有 subscribe 方法 | Pattern 2 | **已验证：** subscribe() 不存在，需实现回调机制 |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Event Bus 订阅机制细节**
-   - What we know: Phase 01 定义了 `ClaimsReady`、`ContradictionFound` 等事件
-   - What's unclear: `subscribe()` 返回的是否是 async generator？是否支持按 topic 过滤？
-   - Recommendation: 检查 `src/saw/domain/events.py` 和 Event Bus 实现后再确定广播逻辑
+**Resolution Date:** 2026-04-28
 
-2. **Write Queue 状态查询**
-   - What we know: Write Queue 有 `get_pending()` 方法
-   - What's unclear: API 层如何知道写入是否成功？需要轮询还是回调？
-   - Recommendation: 设计 `/api/queue/status` 端点返回队列状态，前端轮询或 WebSocket 推送
+1. **Event Bus 订阅机制细节** — RESOLVED
+   - **Finding:** Event Bus 尚未实现 subscribe() 方法。当前 domain/events.py 仅定义了事件数据类（ContradictionFound, ClaimsReady, WriteFailed, IngestCompleted）。
+   - **Decision:** WebSocket ConnectionManager 将使用轮询机制检查事件队列，或通过回调函数接收事件。Phase 03-02 实现时需在 lifespan 中初始化事件监听器。
+   - **Action:** 在 ConnectionManager 中实现 `set_event_callback()` 方法，由各 Engine 在状态变更时调用。
+
+2. **Write Queue 状态查询** — RESOLVED
+   - **Finding:** SQLiteWriteQueue 已有 `get_sink_status(op_id) -> dict[str, str]` 方法，返回每个 sink 的完成状态。
+   - **Decision:** API 层通过 `get_sink_status(op_id)` 查询写入状态。PUT/DELETE 端点返回 op_id，前端可通过轮询或 WebSocket 推送状态更新。
+   - **Action:** Page API 返回的 PageStatus 已包含 op_id，前端可用此查询状态。
+
 
 ## Environment Availability
 
