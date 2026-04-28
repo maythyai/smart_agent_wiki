@@ -20,11 +20,13 @@ class AgentTask:
     correlation_id: str | None = None
 
 
-@dataclass
+@dataclass(frozen=True)
 class AgentContext:
     """Execution context for an agent.
 
     Contains wiki state, claims context, workflow tracking.
+
+    Per T-03-01-02: frozen=True prevents tampering with context during transfer.
     """
 
     wiki_state: dict[str, Any]

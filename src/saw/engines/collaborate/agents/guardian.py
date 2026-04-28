@@ -82,6 +82,28 @@ class GuardianAgent(BaseAgent):
         resource = task.payload.get("resource", "*")
         calling_agent = context.calling_agent or "unknown"
 
+        # T-03-01-06: Check tools_allowed before execution
+        # If the calling agent has restricted tools_allowed, verify this action is permitted
+        if tools and calling_agent != "unknown":
+            # Get the calling agent's tools_allowed from the context if available
+            calling_agent_tools = context.wiki_state.get("agent_tools", {})
+            allowed_tools = calling_agent_tools.get(calling_agent, ["*"])
+
+            # If not wildcard, check if the action is in allowed tools
+            if allowed_tools != ["*"] and "*" not in allowed_tools:
+                # Extract tool name from action (e.g., "saw_search" from "search")
+                tool_name = f"saw_{action}" if not action.startswith("saw_") else action
+                if tool_name not in allowed_tools:
+                    return AgentResult(
+                        success=False,
+                        payload={
+                            "allowed": False,
+                            "reason": f"Tool '{tool_name}' not in tools_allowed for agent '{calling_agent}'",
+                            "tool_check_failed": True,
+                        },
+                        error=f"Elevation blocked: {calling_agent} cannot use {tool_name}",
+                    )
+
         # Evaluate all rules
         for rule in self._rules:
             if self._rule_matches(rule, calling_agent, action, resource):
