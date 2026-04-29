@@ -1,0 +1,92 @@
+"""RFC 7807 Problem Details error handlers.
+
+Per RESEARCH.md Pattern 5: Unified error response format.
+Per T-03-02-04: No stack traces in production error responses.
+"""
+import logging
+from typing import Any
+
+from fastapi import FastAPI, Request, status
+from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
+
+from saw.domain.exceptions import SAWError
+
+
+def register_exception_handlers(app: FastAPI) -> None:
+    """Register global exception handlers for consistent error responses.
+
+    Per D-03: All errors return RFC 7807 Problem Details format.
+
+    Args:
+        app: FastAPI application to register handlers on.
+    """
+
+    @app.exception_handler(SAWError)
+    async def saw_error_handler(request: Request, exc: SAWError) -> JSONResponse:
+        """Handle Smart Agent Wiki domain exceptions.
+
+        Args:
+            request: The request that caused the exception.
+            exc: The domain exception.
+
+        Returns:
+            RFC 7807 formatted error response.
+        """
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={
+                "type": "https://smart-agent.wiki/errors/business",
+                "title": exc.__class__.__name__,
+                "status": 400,
+                "detail": str(exc),
+            },
+        )
+
+    @app.exception_handler(RequestValidationError)
+    async def validation_error_handler(
+        request: Request, exc: RequestValidationError
+    ) -> JSONResponse:
+        """Handle Pydantic validation errors.
+
+        Args:
+            request: The request that failed validation.
+            exc: The validation error.
+
+        Returns:
+            RFC 7807 formatted validation error response.
+        """
+        return JSONResponse(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            content={
+                "type": "https://smart-agent.wiki/errors/validation",
+                "title": "Request validation failed",
+                "status": 422,
+                "detail": exc.errors(),
+            },
+        )
+
+    @app.exception_handler(Exception)
+    async def generic_error_handler(request: Request, exc: Exception) -> JSONResponse:
+        """Handle unexpected exceptions.
+
+        Per T-03-02-04: No stack traces in production.
+
+        Args:
+            request: The request that caused the exception.
+            exc: The unexpected exception.
+
+        Returns:
+            RFC 7807 formatted internal error response.
+        """
+        # Log the full exception for debugging
+        logging.exception("Unhandled exception in request %s", request.url)
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={
+                "type": "https://smart-agent.wiki/errors/internal",
+                "title": "Internal server error",
+                "status": 500,
+                "detail": "An unexpected error occurred",
+            },
+        )
