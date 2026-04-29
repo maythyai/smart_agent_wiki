@@ -222,44 +222,42 @@ class CedarCLIAdapter:
             "context": context or {},
         }
 
-        # Create temp request file
+        # Use TemporaryDirectory for atomic cleanup (fixes TOCTOU vulnerability)
         try:
-            with tempfile.NamedTemporaryFile(
-                mode="w", suffix=".json", delete=False
-            ) as f:
-                json.dump(request_data, f)
-                request_file = f.name
-        except Exception as e:
-            logger.error(f"Failed to create request file: {e}")
-            return PolicyDecision(allowed=False, reason=f"Request file error: {e}")
+            with tempfile.TemporaryDirectory() as tmpdir:
+                request_file = os.path.join(tmpdir, "request.json")
+                # Set restrictive permissions
+                os.chmod(tmpdir, 0o700)
+                with open(request_file, "w", encoding="utf-8") as f:
+                    os.chmod(request_file, 0o600)
+                    json.dump(request_data, f)
 
-        try:
-            cmd = [
-                self._cedar_bin,
-                "authorize",
-                "--policies",
-                str(self._policy_path),
-                "--request-json",
-                request_file,
-            ]
-            if self._schema_path:
-                cmd.extend(["--schema", str(self._schema_path)])
+                cmd = [
+                    self._cedar_bin,
+                    "authorize",
+                    "--policies",
+                    str(self._policy_path),
+                    "--request-json",
+                    request_file,
+                ]
+                if self._schema_path:
+                    cmd.extend(["--schema", str(self._schema_path)])
 
-            logger.debug(f"Running Cedar CLI: {' '.join(cmd)}")
-            result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                timeout=self._timeout,
-            )
+                logger.debug(f"Running Cedar CLI: {' '.join(cmd)}")
+                result = subprocess.run(
+                    cmd,
+                    capture_output=True,
+                    text=True,
+                    timeout=self._timeout,
+                )
 
-            allowed = result.returncode == 0
-            reason = result.stderr.strip() if not allowed else None
+                allowed = result.returncode == 0
+                reason = result.stderr.strip() if not allowed else None
 
-            logger.info(
-                f"Cedar CLI decision: {'Allow' if allowed else 'Deny'} for {principal}/{action}/{resource}"
-            )
-            return PolicyDecision(allowed=allowed, reason=reason)
+                logger.info(
+                    f"Cedar CLI decision: {'Allow' if allowed else 'Deny'} for {principal}/{action}/{resource}"
+                )
+                return PolicyDecision(allowed=allowed, reason=reason)
         except subprocess.TimeoutExpired:
             logger.error("Cedar CLI timeout")
             return PolicyDecision(allowed=False, reason="CLI timeout")
@@ -269,12 +267,6 @@ class CedarCLIAdapter:
         except Exception as e:
             logger.error(f"Cedar CLI error: {e}")
             return PolicyDecision(allowed=False, reason=f"CLI error: {e}")
-        finally:
-            # Clean up temp file
-            try:
-                os.unlink(request_file)
-            except Exception:
-                pass
 
 
 class CedarPolicyEngine:

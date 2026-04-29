@@ -169,8 +169,9 @@ class A2AAdapter:
                 return_exceptions=True,
             )
             # Consider success if all deliveries succeeded
+            # WR-02: Explicitly check for A2AResult type to avoid misclassifying exceptions
             all_success = all(
-                not isinstance(r, Exception) and (r.success if hasattr(r, "success") else True)
+                not isinstance(r, Exception) and isinstance(r, A2AResult) and r.success
                 for r in results
             )
             return A2AResult(

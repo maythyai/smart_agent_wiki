@@ -222,15 +222,12 @@ class WorkflowExecutor:
 
         while retry_count <= step.max_retries:
             # Check gate (pre-execution)
+            # WR-03: Gate failure should directly execute fallback action, not retry
+            # Retrying without state change leads to infinite loop until max_retries exhausted
             if step.gates:
                 gate_result = await self._check_gates(step.gates, context)
                 if not gate_result.passed:
-                    if retry_count >= step.max_retries:
-                        return await self._handle_gate_failure(
-                            step, gate_result, context
-                        )
-                    retry_count += 1
-                    continue
+                    return await self._handle_gate_failure(step, gate_result, context)
 
             # Execute Agent
             try:
@@ -396,7 +393,9 @@ class WorkflowExecutor:
             from jinja2 import Template
 
             return bool(Template(f"{{{{ {condition} }}}}").render(**context))
-        except Exception:
+        except Exception as e:
+            # WR-08: Log condition evaluation failures for debugging
+            logger.warning(f"Condition evaluation failed: {condition}, error: {e}")
             return False
 
     async def _publish_event(self, event: dict[str, Any]) -> None:

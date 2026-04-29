@@ -5,6 +5,8 @@ Per D-02: model_tier='haiku' for high-frequency low-cost operations.
 """
 from __future__ import annotations
 
+import json
+
 from saw.adapters.llm.router import LLMRouter
 from saw.domain.agent import AgentContext, AgentResult, AgentTask
 from saw.engines.collaborate.agents.base import BaseAgent
@@ -72,8 +74,6 @@ class LinkerAgent(BaseAgent):
 
     def _parse_response(self, response) -> AgentResult:
         """Parse LLM response into AgentResult."""
-        import json
-
         content = response.choices[0].message.content or "{}"
         try:
             data = json.loads(content)

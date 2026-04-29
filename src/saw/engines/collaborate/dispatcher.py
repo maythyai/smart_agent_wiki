@@ -102,6 +102,16 @@ class AgentDispatcher:
         """
         return MODEL_MAPPING.get(tier, MODEL_MAPPING[ModelTier.SONNET])
 
+    def get_registered_agents(self) -> dict[str, "AgentProtocol"]:
+        """Return a copy of the registered agents dictionary.
+
+        WR-06: Provides public access to agents instead of accessing private _agents.
+
+        Returns:
+            Dictionary of agent name -> agent instance.
+        """
+        return dict(self._agents)
+
     async def dispatch(
         self,
         agent_name: str,
@@ -141,7 +151,11 @@ class AgentDispatcher:
         last_error: Exception | None = None
         for fallback_tier in fallback_chain:
             try:
-                # Set allowed_fails to prevent aggressive cooldown
+                # TODO(WR-01): The fallback_tier is currently not used to switch models.
+                # Agent's model_tier is fixed at construction time. The metadata below
+                # records the intended tier but actual LLM calls use the original model.
+                # Future: Either pass model dynamically to agent.execute() or have
+                # LLMRouter.completion() support fallback model selection.
                 result = await agent.execute(task, context, tools or [])
                 result.metadata["model_tier_used"] = fallback_tier.value
                 return result

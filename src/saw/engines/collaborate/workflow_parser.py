@@ -14,7 +14,13 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-from jinja2 import Template
+from jinja2 import Environment, BaseLoader, select_autoescape
+
+# WR-04: Use safe Jinja2 environment to prevent template injection
+SAFE_ENV = Environment(
+    loader=BaseLoader(),
+    autoescape=select_autoescape(enabled_extensions=('html', 'xml')),
+)
 
 
 @dataclass
@@ -193,6 +199,9 @@ class WorkflowParser:
     def render_template(self, template: str, context: dict[str, Any]) -> str:
         """Render Jinja2 template variables.
 
+        WR-04: Uses safe environment to prevent template injection attacks.
+        Filters context keys to valid Python identifiers only.
+
         Args:
             template: Template string with {{ variable }} syntax
             context: Dictionary of variables
@@ -200,4 +209,6 @@ class WorkflowParser:
         Returns:
             Rendered string
         """
-        return Template(template).render(**context)
+        # Filter context to safe identifiers only
+        safe_context = {k: v for k, v in context.items() if k.isidentifier()}
+        return SAFE_ENV.from_string(template).render(**safe_context)
