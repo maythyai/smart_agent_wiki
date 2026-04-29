@@ -27,6 +27,7 @@ from saw.drivers.cli.commands.review_cmd import review  # noqa: E402
 from saw.drivers.cli.commands.conflicts_cmd import conflicts  # noqa: E402
 from saw.drivers.cli.commands.audit_cmd import audit  # noqa: E402
 from saw.drivers.cli.commands.mcp_cmd import mcp  # noqa: E402
+from saw.drivers.cli.commands.web_cmd import web  # noqa: E402
 
 app.command(name="init")(init)
 app.command(name="status")(status)
@@ -40,3 +41,4 @@ app.command(name="review")(review)
 app.command(name="conflicts")(conflicts)
 app.command(name="audit")(audit)
 app.command(name="mcp")(mcp)
+app.command(name="web")(web)

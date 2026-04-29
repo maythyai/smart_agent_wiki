@@ -100,12 +100,66 @@ def create_app(
     app.include_router(ws_router, tags=["websocket"])
 
     # Register REST API routes
+    from saw.drivers.web.routes.graph import router as graph_router
     from saw.drivers.web.routes.pages import router as pages_router
     from saw.drivers.web.routes.search import router as search_router
 
+    app.include_router(graph_router, prefix="/api", tags=["graph"])
     app.include_router(pages_router, prefix="/api", tags=["pages"])
     app.include_router(search_router, prefix="/api", tags=["search"])
-    # from saw.drivers.web.routes import graph
-    # app.include_router(graph.router, prefix="/api", tags=["graph"])
 
     return app
+
+
+def create_app_from_config(
+    cors_origins: list[str] | None = None,
+    host: str = "127.0.0.1",
+    port: int = 8000,
+) -> FastAPI:
+    """Factory for uvicorn --reload mode.
+
+    Per D-02: Default port 8000.
+    Loads configuration and creates app instance for development.
+    """
+    import sqlite3
+
+    from saw.write_queue.queue import SQLiteWriteQueue
+
+    # Try to load config from .saw/config.yaml
+    try:
+        from pathlib import Path
+
+        import yaml
+
+        config_path = Path(".saw/config.yaml")
+        if config_path.exists():
+            with open(config_path, encoding="utf-8") as f:
+                config = yaml.safe_load(f)
+            db_path = Path(config.get("path", ".")) / ".saw" / "db" / "claims.db"
+        else:
+            db_path = Path(".saw/db/claims.db")
+    except Exception:
+        # Fallback to default path
+        db_path = Path(".saw/db/claims.db")
+
+    # Create minimal write queue (engines initialized in lifespan)
+    try:
+        if db_path.exists():
+            conn = sqlite3.connect(str(db_path))
+            write_queue = SQLiteWriteQueue(conn)
+        else:
+            # Use in-memory for non-existent DB
+            conn = sqlite3.connect(":memory:")
+            write_queue = SQLiteWriteQueue(conn)
+    except Exception:
+        conn = sqlite3.connect(":memory:")
+        write_queue = SQLiteWriteQueue(conn)
+
+    return create_app(
+        query=None,  # Lazy initialization in lifespan
+        collaborate=None,
+        write_queue=write_queue,
+        cors_origins=cors_origins,
+        host=host,
+        port=port,
+    )
