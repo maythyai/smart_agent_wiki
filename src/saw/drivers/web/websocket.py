@@ -220,15 +220,16 @@ class ConnectionManager:
         Returns:
             Dictionary of event attributes.
         """
+        from enum import Enum
+
         if hasattr(event, "__dict__"):
             payload: dict[str, Any] = {}
             for key, value in event.__dict__.items():
                 # Convert non-serializable types
                 if hasattr(value, "isoformat"):
                     payload[key] = value.isoformat()
-                elif hasattr(value, "name"):
-                    payload[key] = value.name
-                elif hasattr(value, "value"):
+                elif isinstance(value, Enum):
+                    # For enums, use .value (actual string/int value)
                     payload[key] = value.value
                 else:
                     payload[key] = value
