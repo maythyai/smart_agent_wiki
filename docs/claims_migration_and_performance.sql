@@ -1,0 +1,400 @@
+-- =============================================================================
+-- Smart Agent Wiki — Claims Database: 迁移策略、性能优化与 PostgreSQL 迁移路径
+-- =============================================================================
+-- 版本: 1.0
+-- 日期: 2026-04-25
+-- =============================================================================
+
+
+-- ╔═══════════════════════════════════════════════════════════════════════════╗
+-- ║ 一、Schema Versioning 与数据迁移策略                                      ║
+-- ╚═══════════════════════════════════════════════════════════════════════════╝
+--
+-- 使用 PRAGMA user_version + schema_migration 表双重管理
+--
+-- ┌────────────────────────────────────────────────────────────────────────┐
+-- │ 迁移工作流（应用启动时执行）                                             │
+-- │                                                                        │
+-- │   1. 连接 SQLite                                                       │
+-- │   2. PRAGMA user_version → current_version                             │
+-- │   3. if current_version == 0: 执行完整 schema 初始化                   │
+-- │   4. if current_version < APP_VERSION:                                 │
+-- │      for v in range(current_version + 1, APP_VERSION + 1):            │
+-- │          BEGIN TRANSACTION                                             │
+-- │          执行 migrations/{v:03d}_*.sql                                 │
+-- │          INSERT INTO schema_migration (version, description, checksum) │
+-- │          PRAGMA user_version = v                                       │
+-- │          COMMIT                                                        │
+-- │   5. 验证: SELECT MAX(version) FROM schema_migration == user_version  │
+-- └────────────────────────────────────────────────────────────────────────┘
+--
+-- 迁移文件命名规范:
+--   migrations/
+--     001_initial_schema.sql          -- 初始 schema (对应本文件的 CREATE 语句)
+--     002_add_claim_vector_id.sql     -- 添加向量索引关联字段
+--     003_add_claim_version.sql       -- 添加版本控制字段
+--     ...
+--
+-- 每个迁移文件必须:
+--   1. 幂等: 使用 IF NOT EXISTS / IF EXISTS
+--   2. 事务性: 整个文件在一个事务内执行
+--   3. 包含回滚说明: 文件头部注释说明如何回滚（SQLite 不支持 ROLLBACK TO SAVEPOINT 跨 DDL）
+-- =============================================================================
+
+-- 示例: 迁移 v2 — 添加向量索引关联字段
+-- 文件: migrations/002_add_claim_vector_id.sql
+--
+-- -- 回滚策略: 无需回退，vector_id 为可选字段，不影响已有功能
+-- ALTER TABLE claim ADD COLUMN vector_id TEXT;
+-- CREATE INDEX IF NOT EXISTS idx_claim_vector_id
+--     ON claim (vector_id) WHERE vector_id IS NOT NULL AND deleted_at IS NULL;
+-- INSERT INTO schema_migration (version, description, checksum)
+--     VALUES (2, 'add vector_id to claim', '<sha256_of_this_file>');
+-- PRAGMA user_version = 2;
+
+-- 示例: 迁移 v3 — 添加 claim 版本链
+-- 文件: migrations/003_add_claim_version.sql
+--
+-- -- 回滚策略: 新表，可直接 DROP TABLE claim_version
+-- CREATE TABLE IF NOT EXISTS claim_version (
+--     uuid TEXT NOT NULL PRIMARY KEY,
+--     claim_uuid TEXT NOT NULL,
+--     version INTEGER NOT NULL DEFAULT 1,
+--     content TEXT NOT NULL,
+--     changed_fields TEXT NOT NULL DEFAULT '[]',
+--     change_reason TEXT,
+--     created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+--     UNIQUE (claim_uuid, version)
+-- );
+-- CREATE INDEX IF NOT EXISTS idx_claim_version_claim
+--     ON claim_version (claim_uuid);
+-- INSERT INTO schema_migration (version, description, checksum)
+--     VALUES (3, 'add claim_version table for version history', '<sha256>');
+-- PRAGMA user_version = 3;
+
+-- 应用层 Python 实现:
+--
+--   class ClaimsMigrator:
+--       APP_VERSION = 1  # 当前最新版本
+--
+--       def __init__(self, db_path: Path):
+--           self.db_path = db_path
+--
+--       def migrate(self):
+--           with sqlite3.connect(self.db_path) as conn:
+--               current = conn.execute("PRAGMA user_version").fetchone()[0]
+--               if current == 0:
+--                   self._init_schema(conn)
+--                   return
+--               for v in range(current + 1, self.APP_VERSION + 1):
+--                   self._run_migration(conn, v)
+--
+--       def _init_schema(self, conn):
+--           schema = (Path(__file__).parent / "claims_schema.sql").read_text()
+--           conn.executescript(schema)
+--               conn.execute("PRAGMA user_version = 1")
+--
+--       def _run_migration(self, conn, version):
+--               migration_file = Path(__file__).parent / f"migrations/{version:03d}_*.sql"
+--               files = sorted(Path(__file__).parent.glob(f"migrations/{version:03d}_*.sql"))
+--               for f in files:
+--                   sql = f.read_text()
+--                   checksum = hashlib.sha256(sql.encode()).hexdigest()
+--                   conn.executescript(sql)
+--               conn.commit()
+
+
+-- ╔═══════════════════════════════════════════════════════════════════════════╗
+-- ║ 二、性能优化建议                                                          ║
+-- ╚═══════════════════════════════════════════════════════════════════════════╝
+
+-- ─── 2.1 WAL 模式（已内置于 schema 头部）─────────────────────────────────────
+--
+-- WAL (Write-Ahead Logging) 的核心优势:
+--   - 读操作不阻塞写操作，写操作不阻塞读操作
+--   - 适合读多写少的知识库场景（查询频率 >> 摄入频率）
+--   - WAL 文件会在 checkpoint 时合并回主数据库
+--
+-- 重要参数:
+--   PRAGMA wal_autocheckpoint = 1000;  -- 每 1000 页自动 checkpoint
+--   -- 对于大数据库 (>100MB)，考虑手动控制 checkpoint 时机:
+--   -- 在低负载时段执行 PRAGMA wal_checkpoint(TRUNCATE);
+
+-- ─── 2.2 连接池管理 ─────────────────────────────────────────────────────────
+--
+-- SQLite 单写多读模型下的连接策略:
+--
+--   方案 A: 单连接模式（CLI 单用户场景）
+--     conn = sqlite3.connect(db_path)
+--     -- 所有操作共享一个连接，最简单
+--
+--   方案 B: 连接池模式（Web/MCP 多并发场景）
+--     -- 使用两个连接:
+--     --   write_conn: 专用写入连接（串行化所有写入操作）
+--     --   read_pool: 多个只读连接（使用 WAL 允许并发读）
+--     --
+--     -- Python 实现:
+--     --   from threading import Lock
+--     --
+--     --   write_lock = Lock()
+--     --   write_conn = sqlite3.connect(db_path, check_same_thread=False)
+--     --   write_conn.execute("PRAGMA journal_mode = WAL")
+--     --
+--     --   def get_read_conn():
+--     --       conn = sqlite3.connect(db_path, check_same_thread=True)
+--     --       conn.execute("PRAGMA journal_mode = WAL")
+--     --       conn.execute("PRAGMA read_uncommitted = ON")  -- WAL 下安全
+--     --       return conn
+--     --
+--     --   def write(fn):
+--     --       with write_lock:
+--     --           return fn(write_conn)
+--
+--   方案 C: async + aiosqlite（FastAPI 异步场景）
+--     -- 使用 aiosqlite 包装，内部仍然是同步 SQLite
+--     -- aiosqlite 内部使用线程池，等价于方案 B
+--     -- 写操作通过 asyncio.Lock 串行化
+--
+--     import aiosqlite
+--     import asyncio
+--
+--     write_lock = asyncio.Lock()
+--
+--     async def get_connection():
+--         return await aiosqlite.connect(db_path)
+--
+--     async def write_operation(conn, sql, params):
+--         async with write_lock:
+--             await conn.execute(sql, params)
+--             await conn.commit()
+
+-- ─── 2.3 索引维护 ──────────────────────────────────────────────────────────
+--
+-- SQLite 的索引是 B-tree，在大量写入后可能碎片化。
+-- 定期执行以下命令优化:
+--
+--   -- 重建所有索引（消除碎片，改善查询性能）
+--   REINDEX;
+--
+--   -- 仅重建特定索引
+--   REINDEX idx_claim_content_hash;
+--
+--   -- 分析查询计划，更新统计信息
+--   ANALYZE;
+--
+--   -- 建议频率:
+--   --   ANALYZE: 每次大批量摄入后执行
+--   --   REINDEX: 每月或每 10,000 次写入后执行
+
+-- ─── 2.4 查询性能优化技巧 ──────────────────────────────────────────────────
+--
+-- (a) 覆盖索引: 让查询只读索引不回表
+--
+--   -- 不好的写法: 需要回表获取 content
+--   SELECT * FROM claim WHERE confidence >= 3 AND deleted_at IS NULL;
+--
+--   -- 好的写法: 只查索引覆盖的字段
+--   SELECT uuid, confidence, freshness FROM claim
+--   WHERE confidence >= 3 AND deleted_at IS NULL;
+--
+-- (b) 分页优化: 避免 OFFSET 的大表扫描
+--
+--   -- 不好的写法: OFFSET 需要跳过前面所有行
+--   SELECT * FROM claim ORDER BY created_at DESC LIMIT 20 OFFSET 10000;
+--
+--   -- 好的写法: 使用 keyset pagination
+--   SELECT * FROM claim
+--   WHERE created_at < '2026-04-20T00:00:00Z' AND deleted_at IS NULL
+--   ORDER BY created_at DESC LIMIT 20;
+--
+-- (c) EXISTS 替代 IN: 避免子查询物化
+--
+--   -- 不好的写法
+--   SELECT * FROM claim WHERE uuid IN (
+--       SELECT claim_uuid FROM claim_entity WHERE entity_uuid = 'e1'
+--   );
+--
+--   -- 好的写法
+--   SELECT c.* FROM claim c
+--   WHERE EXISTS (
+--       SELECT 1 FROM claim_entity ce
+--       WHERE ce.claim_uuid = c.uuid AND ce.entity_uuid = 'e1'
+--         AND ce.deleted_at IS NULL
+--   ) AND c.deleted_at IS NULL;
+--
+-- (d) 批量写入优化
+--
+--   -- 批量插入时，用事务包裹，避免每次 INSERT 都刷盘
+--   BEGIN TRANSACTION;
+--   INSERT INTO claim ...;
+--   INSERT INTO claim ...;
+--   INSERT INTO claim ...;
+--   COMMIT;
+--
+--   -- 大批量时考虑临时关闭索引，导入后重建
+--   -- (SQLite 不支持 DISABLE INDEX，但可以先删除再重建)
+--
+-- (e) JSON 字段查询优化
+--
+--   -- json_extract 可以利用表达式索引
+--   CREATE INDEX IF NOT EXISTS idx_claim_source_loc_page
+--       ON claim (json_extract(source_location, '$.page'));
+--
+--   -- 或者使用生成列
+--   ALTER TABLE claim ADD COLUMN source_page INTEGER
+--       GENERATED ALWAYS AS (json_extract(source_location, '$.page')) STORED;
+--   CREATE INDEX IF NOT EXISTS idx_claim_source_page
+--       ON claim (source_page) WHERE deleted_at IS NULL;
+
+-- ─── 2.5 数据库文件大小管理 ─────────────────────────────────────────────────
+--
+--   -- 查看数据库大小
+--   SELECT page_count * page_size / 1024 / 1024 AS size_mb
+--   FROM pragma_page_count(), pragma_page_size();
+--
+--   -- 清理软删除数据并回收空间
+--   -- 注意: VACUUM 会锁住整个数据库
+--   DELETE FROM claim WHERE deleted_at IS NOT NULL;
+--   VACUUM;
+--
+--   -- WAL 文件大小管理
+--   PRAGMA wal_checkpoint(TRUNCATE);  -- 合并 WAL 并截断
+
+
+-- ╔═══════════════════════════════════════════════════════════════════════════╗
+-- ║ 三、从 SQLite 到 PostgreSQL 的迁移路径                                     ║
+-- ╚═══════════════════════════════════════════════════════════════════════════╝
+--
+-- ┌────────────────────────────────────────────────────────────────────────┐
+-- │ 触发迁移的信号                                                          │
+-- │                                                                        │
+-- │ 1. 数据库文件 > 2GB（SQLite 理论上限 281TB，但实际建议 < 10GB）         │
+-- │ 2. 并发写入超过 1（SQLite 只允许一个写事务）                             │
+-- │ 3. 需要实时全文搜索 + 并发写入（SQLite FTS5 写时锁表）                   │
+-- │ 4. 需要跨机器访问（SQLite 是单文件，不支持网络访问）                      │
+-- │ 5. 团队成员 > 1（需要并发读写）                                          │
+-- └────────────────────────────────────────────────────────────────────────┘
+--
+-- 迁移策略: Hexagonal Architecture 的 Driven Adapter 适配器替换
+--
+--   当前:
+--     ClaimsRepository (Protocol)
+--       └── SQLiteClaimsAdapter (实现)
+--
+--   迁移后:
+--     ClaimsRepository (Protocol)
+--       ├── SQLiteClaimsAdapter (单用户)
+--       └── PostgreSQLClaimsAdapter (团队)
+--
+--   应用层代码不感知底层存储变化
+-- ────────────────────────────────────────────────────────────────────────────
+
+-- PostgreSQL Schema 差异对照:
+--
+-- ╔═══════════════════╦═══════════════════╦═══════════════════════════════════╗
+-- ║ SQLite            ║ PostgreSQL        ║ 说明                              ║
+-- ╠═══════════════════╬═══════════════════╬═══════════════════════════════════╣
+-- ║ TEXT (UUID)       ║ UUID              ║ 原生 UUID 类型，自带验证           ║
+-- ║ TEXT (ISO 8601)   ║ TIMESTAMPTZ       ║ 原生时区感知时间戳                ║
+-- ║ INTEGER (0/1)     ║ BOOLEAN           ║ 原生布尔类型                      ║
+-- ║ TEXT (JSON)       ║ JSONB             ║ 原生 JSON，支持索引和查询          ║
+-- ║ INTEGER (enum)    ║ VARCHAR + CHECK   ║ 或使用 PostgreSQL ENUM 类型        ║
+-- ║ FTS5              ║ tsvector + GIN    ║ 全文搜索能力对等                   ║
+-- ║ TRIGGER           ║ TRIGGER / RULE    ║ 语法略有差异                       ║
+-- ║ PRAGMA user_ver   ║ schema_migrations ║ 使用专用迁移工具 (Alembic/dbt)     ║
+-- ║ WAL               ║ MVCC              ║ PostgreSQL 内建并发控制             ║
+-- ║ 软删除触发器       ║ 部分索引          ║ WHERE deleted_at IS NULL 内建支持   ║
+-- ╚═══════════════════╩═══════════════════╩═══════════════════════════════════╝
+
+-- PostgreSQL 等价 Schema 示例 (仅 claim 表，其他表类似):
+--
+--   CREATE TABLE claim (
+--       uuid            UUID        NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
+--       content         TEXT        NOT NULL,
+--       content_hash    TEXT        NOT NULL,
+--       source_uuid     UUID        NOT NULL,
+--       source_location JSONB       NOT NULL DEFAULT '{}'::jsonb,
+--       confidence      SMALLINT    NOT NULL DEFAULT 1
+--           CHECK (confidence BETWEEN 1 AND 4),
+--       source_mark     VARCHAR(20) NOT NULL DEFAULT 'extracted'
+--           CHECK (source_mark IN ('extracted', 'inferred', 'ambiguous')),
+--       freshness       SMALLINT    NOT NULL DEFAULT 0
+--           CHECK (freshness BETWEEN 0 AND 8),
+--       freshness_base  TIMESTAMPTZ NOT NULL DEFAULT now(),
+--       temperature     VARCHAR(10) NOT NULL DEFAULT 'warm'
+--           CHECK (temperature IN ('hot', 'warm', 'glacier')),
+--       lifecycle       VARCHAR(20) NOT NULL DEFAULT 'strategic'
+--           CHECK (lifecycle IN ('strategic', 'tactical')),
+--       review_status   VARCHAR(20) NOT NULL DEFAULT 'pending'
+--           CHECK (review_status IN ('pending', 'approved', 'rejected', 'needs_review')),
+--       claim_type      VARCHAR(20) NOT NULL DEFAULT 'fact'
+--           CHECK (claim_type IN ('fact', 'opinion', 'procedure', 'definition', 'relationship')),
+--       tags            JSONB       NOT NULL DEFAULT '[]'::jsonb,
+--       metadata        JSONB       NOT NULL DEFAULT '{}'::jsonb,
+--       access_count    INTEGER     NOT NULL DEFAULT 0,
+--       last_accessed   TIMESTAMPTZ,
+--       created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+--       updated_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+--       deleted_at      TIMESTAMPTZ
+--   );
+--
+--   -- PostgreSQL 原生 JSONB 索引
+--   CREATE INDEX idx_claim_tags ON claim USING GIN (tags jsonb_path_ops);
+--   CREATE INDEX idx_claim_source_loc ON claim USING GIN (source_location);
+--
+--   -- PostgreSQL 全文搜索
+--   ALTER TABLE claim ADD COLUMN search_vector tsvector
+--       GENERATED ALWAYS AS (
+--           setweight(to_tsvector('english', content), 'A') ||
+--           setweight(to_tsvector('english', array_to_string(ARRAY(SELECT jsonb_array_elements_text(tags)), ' ')), 'B')
+--       ) STORED;
+--   CREATE INDEX idx_claim_search ON claim USING GIN (search_vector);
+--
+--   -- 更新 updated_at 的触发器 (PostgreSQL 语法)
+--   CREATE OR REPLACE FUNCTION update_updated_at()
+--   RETURNS TRIGGER AS $$
+--   BEGIN
+--       NEW.updated_at = now();
+--       RETURN NEW;
+--   END;
+--   $$ LANGUAGE plpgsql;
+--
+--   CREATE TRIGGER trg_claim_updated_at
+--       BEFORE UPDATE ON claim
+--       FOR EACH ROW
+--       EXECUTE FUNCTION update_updated_at();
+--
+--   -- 行级安全 (PostgreSQL 原生支持)
+--   ALTER TABLE claim ENABLE ROW LEVEL SECURITY;
+--   CREATE POLICY team_read ON claim FOR SELECT USING (true);
+--   CREATE POLICY team_write ON claim FOR ALL
+--       USING (current_setting('app.agent_role') IN ('Writer', 'Scholar'));
+
+-- 数据迁移工具建议:
+--
+--   1. 轻量方案: Python 脚本
+--      - 读取 SQLite → 转换类型 → 批量 INSERT 到 PostgreSQL
+--      - 使用 psycopg3 的 copy() 批量写入，比 INSERT 快 10x
+--      - 预计 100 万条 claim 在 1-2 分钟内完成
+--
+--   2. 专业方案: pgloader
+--      - 专用 SQLite → PostgreSQL 迁移工具
+--      - 自动处理类型转换
+--      - 支持在线迁移（最小停机时间）
+--
+--   3. 增量同步方案 (双写过渡期):
+--      ┌────────────┐
+--      │ Application │
+--      └─────┬──────┘
+--            │
+--      ┌─────▼──────────────┐
+--      │ DualWriteAdapter    │
+--      │  ├── SQLite (主)    │ ←── 过渡期: 写入同时写入两个后端
+--      │  └── PostgreSQL (从)│ ←── 读从 PostgreSQL，验证数据一致性
+--      └─────────────────────┘
+--      │
+--      │  验证完成 → 切换到 PostgreSQL 单写
+--      ▼
+--      ┌────────────┐
+--      │ PostgreSQL │
+--      └────────────┘
