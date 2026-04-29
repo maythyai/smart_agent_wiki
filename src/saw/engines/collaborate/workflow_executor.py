@@ -393,7 +393,9 @@ class WorkflowExecutor:
             from jinja2 import Template
 
             return bool(Template(f"{{{{ {condition} }}}}").render(**context))
-        except Exception:
+        except Exception as e:
+            # WR-08: Log condition evaluation failures for debugging
+            logger.warning(f"Condition evaluation failed: {condition}, error: {e}")
             return False
 
     async def _publish_event(self, event: dict[str, Any]) -> None:
