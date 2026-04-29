@@ -5,3 +5,7 @@ venv/
 __pycache__/
 *.pyc
 .pytest_cache/
+
+# Web build output
+web/dist/
+web/tsconfig.tsbuildinfo
