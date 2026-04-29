@@ -102,6 +102,16 @@ class AgentDispatcher:
         """
         return MODEL_MAPPING.get(tier, MODEL_MAPPING[ModelTier.SONNET])
 
+    def get_registered_agents(self) -> dict[str, "AgentProtocol"]:
+        """Return a copy of the registered agents dictionary.
+
+        WR-06: Provides public access to agents instead of accessing private _agents.
+
+        Returns:
+            Dictionary of agent name -> agent instance.
+        """
+        return dict(self._agents)
+
     async def dispatch(
         self,
         agent_name: str,

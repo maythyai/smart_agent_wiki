@@ -230,10 +230,12 @@ class CollaborateEngine:
     def get_available_agents(self) -> list[str]:
         """Get list of registered agents.
 
+        WR-06: Uses public method instead of accessing private _agents.
+
         Returns:
             List of agent names
         """
-        return list(self._dispatcher._agents.keys())
+        return list(self._dispatcher.get_registered_agents().keys())
 
     def get_agent_info(self, agent_name: str) -> dict[str, Any] | None:
         """Get information about a specific agent.
@@ -244,7 +246,7 @@ class CollaborateEngine:
         Returns:
             Agent info dict or None if not found
         """
-        agent = self._dispatcher._agents.get(agent_name)
+        agent = self._dispatcher.get_registered_agents().get(agent_name)
         if agent is None:
             return None
 
