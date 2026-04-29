@@ -85,10 +85,14 @@ class BaseAgent:
     ) -> "AgentResult":
         """Execute a task. Subclasses should override this.
 
+        WR-07: The 'tools' parameter is currently unused in base implementation.
+        Future versions may support tool execution. Subclasses may ignore this
+        parameter if they don't need tool support.
+
         Args:
             task: The task to execute.
             context: Execution context.
-            tools: Available tools.
+            tools: Available tools (reserved for future tool execution support).
 
         Returns:
             AgentResult (base implementation returns empty success).
