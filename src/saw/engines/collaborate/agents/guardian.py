@@ -104,7 +104,7 @@ class GuardianAgent(BaseAgent):
                         error=f"Elevation blocked: {calling_agent} cannot use {tool_name}",
                     )
 
-        # Evaluate all rules
+        # Evaluate all rules - deny rules take precedence
         for rule in self._rules:
             if self._rule_matches(rule, calling_agent, action, resource):
                 if rule.effect == "forbid":
@@ -117,28 +117,25 @@ class GuardianAgent(BaseAgent):
                         },
                         error=f"Policy denied by rule {rule.id}",
                     )
-                elif rule.effect == "permit":
-                    # Explicit permit - continue checking for deny rules
-                    pass
 
-        # Default deny policy (D-14): If no explicit permit found, deny
-        # But if no rules exist, allow (permissive by default for new installations)
+        # Per D-14: Default deny - must have explicit permit to allow
         has_permit_rule = any(
             self._rule_matches(r, calling_agent, action, resource)
             and r.effect == "permit"
             for r in self._rules
         )
 
-        if self._rules and not has_permit_rule:
+        if has_permit_rule:
             return AgentResult(
-                success=False,
-                payload={"allowed": False, "reason": "No permit rule matched"},
-                error="Default deny policy",
+                success=True,
+                payload={"allowed": True, "reason": "Permit rule matched"},
             )
 
+        # D-14: Default deny - NO permit matched means deny
         return AgentResult(
-            success=True,
-            payload={"allowed": True, "reason": "No deny rule matched"},
+            success=False,
+            payload={"allowed": False, "reason": "No permit rule matched (default deny)"},
+            error="Default deny policy",
         )
 
     def _rule_matches(
