@@ -1,160 +1,79 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.1
-milestone_name: Collaboration & Visualization
-status: milestone_complete
-last_updated: "2026-04-28T13:16:03.492Z"
-last_activity: 2026-04-28 -- Phase 03 execution started
+milestone: null
+milestone_name: null
+status: planning
+last_updated: "2026-04-29T09:30:00.000Z"
+last_activity: 2026-04-29
 progress:
-  total_phases: 3
-  completed_phases: 4
-  total_plans: 8
-  completed_plans: 8
-  percent: 133
+  total_phases: 0
+  completed_phases: 5
+  total_plans: 0
+  completed_plans: 19
+  percent: 100
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-27)
+See: .planning/PROJECT.md (updated 2026-04-29)
 
 **Core value:** 知识可信、可溯源、可进化 — 每一条回答都可以追溯到原始文档的具体位置
-**Current focus:** Phase 03 — 01-multi-agent-foundation
+**Current focus:** Planning next milestone
 
 ## Current Position
 
-Phase: 03-01
-Plan: Not started
-Status: Milestone complete
-Last activity: 2026-04-28
+Phase: v1.1 Complete
+Plan: None
+Status: Milestone v1.1 shipped
+Last activity: 2026-04-29
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [██████████] 100%
 
-## Requirements for Phase 03
+## v1.1 Summary
 
-| Requirement | Description | Plan |
-|-------------|-------------|------|
-| COLL-01 | 6 specialized agents (Librarian/Writer/Critic/Linker/Scholar/Guardian) | 03-01 |
-| COLL-02 | Agent model routing (Haiku/Sonnet/Opus by complexity) | 03-01 |
-| COLL-03 | YAML workflow orchestration with gates | 03-01 |
-| COLL-04 | Cedar-based policy engine | 03-01 |
-| COLL-05 | A2A inter-agent communication | 03-01 |
-| WEB-01 | Web UI search interface | 03-02, 03-03 |
-| WEB-02 | Knowledge graph visualization (Cytoscape.js) | 03-03 |
-| WEB-03 | Wiki page editor (Milkdown) | 03-03 |
+**Milestone:** v1.1 Collaboration & Visualization
+**Shipped:** 2026-04-29
 
-## Phase 03 Plan Overview
+### Key Accomplishments
 
-**Plan 03-01: Multi-Agent Foundation**
+1. **四层存储架构** — Vault/Claims/Wiki/FTS5 四层存储，每条主张可溯源到原始文档
+2. **Write Queue Outbox** — 单入口持久化写入，5 个 idempotent sinks
+3. **Governance Engine** — 4 层置信度、9 级新鲜度、矛盾检测、Ed25519 审计
+4. **MCP Server 23 工具** — Claude Code/Cursor/Copilot 兼容
+5. **6 Agent 协作架构** — Librarian/Writer/Critic/Linker/Scholar/Guardian + A2A + Cedar
+6. **完整 Web UI** — React + Cytoscape.js 知识图谱 + Milkdown 编辑器 + WebSocket
 
-- Implement 6 specialized Agent definitions with role-specific prompts
-- Model routing: Haiku (high-frequency), Sonnet (quality), Opus (deep reasoning)
-- YAML workflow orchestration with gate conditions and fallback actions
-- Cedar policy engine integration with CLI subprocess fallback
-- A2A protocol for inter-agent messaging and task handoff
+### Stats
 
-**Plan 03-02: Web API Foundation**
-
-- FastAPI server with WebSocket support for real-time updates
-- Search API: BM25 + FTS5 query endpoint
-- Graph API: entity relationships, traversal endpoints
-- Page API: CRUD for Wiki pages via Write Queue
-- CLI command: `saw web` to start server
-
-**Plan 03-03: React Frontend**
-
-- Search UI with results, snippets, and inline citations
-- Cytoscape.js knowledge graph with pan/zoom/filter
-- Milkdown editor for Wiki page review and editing
-- Agent status dashboard showing active workflows
-- Real-time updates via WebSocket
-
-## Phase 02 Completion Summary
-
-**Plans:** 3/3 complete
-**Tests:** 287 passing
-**Duration:** ~105 minutes total
-
-| Plan | Duration | Key Output |
-|------|----------|------------|
-| 02-01 | 45 min | Governance Core + Learning Engine (confidence, freshness, lint, FSRS) |
-| 02-02 | 35 min | Advanced Governance (contradictions, blast radius, audit trail) |
-| 02-03 | 25 min | MCP Server + Progressive Memory + Adaptive Index |
-
-## Phase 01 Completion Summary
-
-**Plans:** 3/3 complete
-**Tests:** 105 passing
-**Duration:** ~72 minutes total
-
-| Plan | Duration | Key Output |
-|------|----------|------------|
-| 01-01 | 24 min | Domain layer, Write Queue, Storage adapters, CLI init/status |
-| 01-02 | 28 min | LLM Router, Parsers, Extractors, IngestPipeline, CLI ingest |
-| 01-03 | 20 min | FTS5 Search, Query Engine, CLI query/search |
-
-## Performance Metrics
-
-**Velocity:**
-
-- Total plans completed: 8
-- Average duration: 30 min/plan
-- Total execution time: ~3 hours
-
-**By Phase:**
-
-| Phase | Plans | Total | Avg/Plan |
-|-------|-------|-------|----------|
-| 01-core-data-cycle | 3 | 72 min | 24 min |
-| 02-intelligence-governance | 3 | 105 min | 35 min |
-| 03-01 | 2 | - | - |
-
-**Estimated for Phase 03:**
-
-| Plan | Estimated Duration |
-|------|-------------------|
-| 03-01 | 40 min (multi-agent complexity) |
-| 03-02 | 30 min (FastAPI patterns familiar) |
-| 03-03 | 45 min (React + Cytoscape + Milkdown) |
+- Phases: 5
+- Plans: 19
+- Tests: 430+
+- Python LOC: ~16,100
+- TypeScript LOC: ~3,662
+- Timeline: 3 days (2026-04-26 → 2026-04-29)
 
 ## Accumulated Context
 
 ### Decisions
 
-Decisions are logged in PROJECT.md Key Decisions table.
+All decisions logged in PROJECT.md Key Decisions table.
 
-**Phase 02 Decisions:**
+### Tech Debt
 
-- D-10: MCPConfig defaults to 127.0.0.1 per PITFALLS.md
-- D-11: All 23 tools include version field for schema drift detection
-- D-12: L0 index capped at 100 lines per unified-memory-ai-agents
-- D-13: Index thresholds at 50 and 200 pages per XCUT-06
-- D-14: Research-on-Miss threshold defaults to 0.5 per XCUT-08
-
-**Considerations for Phase 03:**
-
-- cedar-python 0.1.4 is experimental — use PolicyEngine protocol with CLI subprocess fallback
-- A2A protocol spec needs research spike during 03-01 planning
-- React 19 + Cytoscape.js + Milkdown integration patterns need research spike during 03-03 planning
-- Cytoscape.js graph hairball mitigation: full graph (<50 nodes), community view (50-200), topic clusters (>200)
-
-### Pending Todos
-
-Phase 03 ready for execution:
-
-- [ ] Plan 03-01: Multi-Agent Foundation
-- [ ] Plan 03-02: Web API Foundation
-- [ ] Plan 03-03: React Frontend
+1. Phase VERIFICATION.md files missing — non-blocking
+2. React frontend tests deferred — non-blocking
+3. Bundle size 1.36MB — acceptable
 
 ### Blockers/Concerns
 
-None — foundation from Phase 01 and Phase 02 is solid.
+None — v1.1 shipped successfully.
 
 ## Session Continuity
 
-Last session: 2026-04-27T02:00:00Z
-Next action: Execute `/gsd-plan-phase 03-01` to plan Multi-Agent Foundation
+Last session: 2026-04-29T09:30:00.000Z
+Next action: Run `/gsd-new-milestone` to start v2 planning
 
 ---
-*Last updated: 2026-04-27*
+*Last updated: 2026-04-29*

@@ -1,86 +1,55 @@
 # Roadmap: Smart Agent Wiki
 
-## Overview
+## Milestones
 
-Build a local-first intelligent multi-agent knowledge platform in 3 phases. Phase 1 establishes the core data cycle: users can initialize a wiki, ingest documents (Markdown/PDF/URL), query them with natural language and keyword search, and trust that every answer traces back to its source. Phase 2 adds intelligence on top of that foundation: confidence scoring, contradiction detection, freshness tracking, learning from user behavior, and full MCP server integration with 23 tools. Phase 3 connects multiple specialized agents into collaborative workflows and provides a visual Web UI for graph exploration and page editing. Each phase delivers standalone, verifiable value.
+- ✅ **v1.1 Collaboration & Visualization** — Phases 1-3 (shipped 2026-04-29) — [Details](milestones/v1.1-ROADMAP.md)
 
 ## Phases
 
-**Phase Numbering:**
-- Integer phases (1, 2, 3): Planned milestone work
-- Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
+<details>
+<summary>✅ v1.1 Collaboration & Visualization (Phases 1-3) — SHIPPED 2026-04-29</summary>
 
-Decimal phases appear between their surrounding integers in numeric order.
+- [x] Phase 1: Core Data Cycle (3/3 plans) — completed 2026-04-26
+- [x] Phase 2: Intelligence & Governance (3/3 plans) — completed 2026-04-27
+- [x] Phase 3-01: Multi-Agent Foundation (2/2 plans) — completed 2026-04-28
+- [x] Phase 3-02: Web API Foundation (3/3 plans) — completed 2026-04-29
+- [x] Phase 3-03: React Frontend (8/8 plans) — completed 2026-04-29
 
-- [x] **Phase 1: Core Data Cycle** - Ingest documents, extract claims, query with search and natural language, all via CLI (completed 2026-04-26)
-- [x] **Phase 2: Intelligence & Governance** - Confidence scoring, contradiction detection, learning, MCP server, audit trail (completed 2026-04-27)
-- [ ] **Phase 3: Collaboration & Visualization** - Multi-agent workflows, Web UI, knowledge graph, page editing
-
-## Phase Details
-
-### Phase 1: Core Data Cycle
-**Goal**: Users can create a wiki, ingest documents into a trusted four-layer storage system, and query their knowledge base via CLI with full source provenance
-**Depends on**: Nothing (first phase)
-**Requirements**: STOR-01, STOR-02, STOR-03, STOR-04, STOR-05, STOR-06, STOR-07, INGE-01, INGE-02, INGE-03, INGE-04, INGE-05, INGE-06, INGE-07, QUER-01, QUER-02, QUER-03, QUER-04, QUER-05, QUER-06, QUER-07, CLI-01, CLI-02, CLI-03, CLI-04, CLI-07, MCP-03, XCUT-01, XCUT-02, XCUT-03, XCUT-04, XCUT-07
-**Success Criteria** (what must be TRUE):
-  1. User can run `saw init`, then `saw ingest paper.pdf`, then `saw query "what are the key findings"` and receive a sourced answer with inline citations linking to the original document
-  2. User can run `saw search "entity resolution"` and get BM25-ranked results with snippet context from FTS5
-  3. Every claim in the knowledge base traces back to the exact Vault source (document UUID + page/line number), verifiable by inspection
-  4. User can ingest Markdown, PDF (3-tier fallback), and URL sources, and each produces structured claims, entity Wiki drafts, and graph updates
-  5. User can run `saw status` and see knowledge base overview (pages, claims, storage health) and `saw init --agent claude-code` generates agent-specific config
-**Plans**: 3
-
-Plans:
-- [x] 01-01: Foundation: Domain + Write Queue + Storage + CLI Init
-- [x] 01-02: Ingestion Engine: Document Parsing + LLM Extraction + Git Provenance
-- [x] 01-03: Query Engine: Search + Context Compilation + NL Query + Graph
-
-### Phase 2: Intelligence & Governance
-**Goal**: Users can trust the quality of their knowledge base through confidence scoring, contradiction detection, freshness tracking, and learning from their own usage patterns, all accessible via CLI and MCP server
-**Depends on**: Phase 1
-**Requirements**: GOVE-01, GOVE-02, GOVE-03, GOVE-04, GOVE-05, GOVE-06, GOVE-07, GOVE-08, LEARN-01, LEARN-02, LEARN-03, LEARN-04, LEARN-05, LEARN-06, CLI-05, CLI-06, CLI-08, CLI-09, CLI-10, CLI-11, MCP-01, MCP-02, XCUT-05, XCUT-06, XCUT-08
-**Success Criteria** (what must be TRUE):
-  1. User can run `saw lint` and see a health report identifying contradictions, orphan pages, broken links, missing metadata, and stale claims
-  2. User can run `saw conflicts` and see detected contradictions with resolution strategy (Superseded/Disputed/Historical) and blast radius analysis
-  3. Each Wiki page displays a 4-tier confidence level and 9-level freshness indicator, and user can run `saw freshness` to see a freshness report
-  4. User can run `saw audit` and verify Ed25519 receipt chain integrity for all agent operations
-  5. MCP server exposes 23 tools and works with Claude Code, Cursor, and other MCP-compatible agents; knowledge base learns from user behavior over time (training period, spaced repetition, cognitive distillation, feedback files)
-**Plans**: 3
-
-Plans:
-- [x] 02-01: Governance Core + Learning Engine - Confidence, freshness, lint, verify, review, training period, FSRS, distillation, feedback files
-- [x] 02-02: Advanced Governance - Contradiction detection, blast radius, Ed25519 audit trail, conflicts and audit CLI
-- [x] 02-03: MCP Server + Cross-Cutting - 23 MCP tools, progressive memory depth, adaptive index, research-on-miss
-
-### Phase 3: Collaboration & Visualization
-**Goal**: Users can orchestrate multiple specialized agents to collaboratively manage knowledge and explore their knowledge base visually through a Web UI with graph visualization and page editing
-**Depends on**: Phase 2
-**Requirements**: COLL-01, COLL-02, COLL-03, COLL-04, COLL-05, WEB-01, WEB-02, WEB-03
-**Success Criteria** (what must be TRUE):
-  1. User can define a YAML workflow that dispatches tasks to 6 specialized agents (Librarian, Writer, Critic, Linker, Scholar, Guardian) with automatic model routing based on task complexity
-  2. User can configure Cedar-based policies that permit or forbid specific agents from using specific tools, enforced at runtime
-  3. Agents can communicate and hand off tasks to each other via A2A protocol within orchestrated workflows with gate conditions
-  4. User can open Web UI in browser, search the knowledge base, and get BM25-ranked results with inline citations
-  5. User can explore entity relationships visually via Cytoscape.js knowledge graph with pan/zoom/filter capabilities
-  6. User can review, approve, reject, and edit LLM-generated Wiki pages in the Milkdown editor within the Web UI, with changes persisted via Write Queue
-**Plans**: 3
-**UI hint**: yes
-
-Plans:
-- [x] 03-01-01: Agent Foundation - 6 specialized agents, model routing, A2A protocol, AgentProtocol, AgentDispatcher
-- [x] 03-01-02: Workflow + Policy - YAML workflow parser/executor, Cedar policy engine, gate conditions, fallback actions
-- [ ] 03-02-01: FastAPI Foundation - Application Factory, WebSocket, Middleware (Wave 1)
-- [ ] 03-02-02: Search + Graph API - BM25 search, Cytoscape-compatible graph (Wave 2)
-- [ ] 03-02-03: Page API + CLI - CRUD via Write Queue, `saw web` command (Wave 2)
-- [ ] 03-03: React Frontend - Search UI, Cytoscape.js graph visualization, Milkdown page editor, agent status dashboard
+</details>
 
 ## Progress
 
-**Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3
+| Phase | Milestone | Plans Complete | Status | Completed |
+|-------|-----------|----------------|--------|-----------|
+| 1. Core Data Cycle | v1.1 | 3/3 | Complete | 2026-04-26 |
+| 2. Intelligence & Governance | v1.1 | 3/3 | Complete | 2026-04-27 |
+| 3-01. Multi-Agent Foundation | v1.1 | 2/2 | Complete | 2026-04-28 |
+| 3-02. Web API Foundation | v1.1 | 3/3 | Complete | 2026-04-29 |
+| 3-03. React Frontend | v1.1 | 8/8 | Complete | 2026-04-29 |
 
-| Phase | Plans Complete | Status | Completed |
-|-------|----------------|--------|-----------|
-| 1. Core Data Cycle | 3/3 | Complete | 2026-04-26 |
-| 2. Intelligence & Governance | 3/3 | Complete | 2026-04-27 |
-| 3. Collaboration & Visualization | 0/3 | Not started | - |
+## v2 Requirements (Future)
+
+### Extended Ingestion
+
+- **INGE-08**: Video ingestion with audio extraction via Whisper transcription
+- **INGE-09**: Audio ingestion (podcasts, lectures) with Whisper transcription
+- **INGE-10**: Chrome clipper extension for one-click web page capture
+- **INGE-11**: RSS feed subscription for automated periodic ingestion
+- **INGE-12**: Real-time meeting transcription (Soniox/Whisper)
+
+### Extended Collaboration
+
+- **COLL-06**: Obsidian plugin for bidirectional sync with Obsidian vaults
+- **COLL-07**: Tauri desktop application for cross-platform native experience
+- **COLL-08**: P2P knowledge sharing between Smart Agent Wiki instances
+- **COLL-09**: Team deployment mode (Docker Compose + PostgreSQL + Redis)
+
+### Extended Platform
+
+- **PLAT-01**: API开放平台 for third-party integrations
+- **PLAT-02**: Multi-language support (English / 中文 / 日本語)
+- **PLAT-03**: OWL-RL ontology reasoning for advanced knowledge inference
+
+---
+
+*Last updated: 2026-04-29 after v1.1 milestone*
