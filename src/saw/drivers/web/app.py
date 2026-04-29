@@ -99,10 +99,13 @@ def create_app(
 
     app.include_router(ws_router, tags=["websocket"])
 
-    # Register REST API routes (added in subsequent tasks)
-    # from saw.drivers.web.routes import search, graph, pages
-    # app.include_router(search.router, prefix="/api", tags=["search"])
+    # Register REST API routes
+    from saw.drivers.web.routes.pages import router as pages_router
+    from saw.drivers.web.routes.search import router as search_router
+
+    app.include_router(pages_router, prefix="/api", tags=["pages"])
+    app.include_router(search_router, prefix="/api", tags=["search"])
+    # from saw.drivers.web.routes import graph
     # app.include_router(graph.router, prefix="/api", tags=["graph"])
-    # app.include_router(pages.router, prefix="/api", tags=["pages"])
 
     return app
