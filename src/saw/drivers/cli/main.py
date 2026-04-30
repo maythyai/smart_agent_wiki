@@ -28,10 +28,14 @@ from saw.drivers.cli.commands.conflicts_cmd import conflicts  # noqa: E402
 from saw.drivers.cli.commands.audit_cmd import audit  # noqa: E402
 from saw.drivers.cli.commands.mcp_cmd import mcp  # noqa: E402
 from saw.drivers.cli.commands.web_cmd import web  # noqa: E402
+from saw.drivers.cli.commands.ingest_media_cmd import ingest_media, preview_app  # noqa: E402
 
 app.command(name="init")(init)
 app.command(name="status")(status)
 app.command(name="ingest")(ingest)
+app.command(name="ingest-media")(ingest_media)
+app.add_typer(preview_app, name="preview")
+app.command(name="query")(query)
 app.command(name="query")(query)
 app.command(name="search")(search)
 app.command(name="lint")(lint)

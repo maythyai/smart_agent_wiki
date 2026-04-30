@@ -20,6 +20,7 @@ from saw.domain.protocols import ClaimsRepository, VaultRepository, WikiReposito
 from saw.engines.ingest.classifier import DocumentFormat, classify
 from saw.engines.ingest.extractors.code_ast import CodeASTExtractor
 from saw.engines.ingest.extractors.markdown import ExtractionResult, MarkdownExtractor
+from saw.engines.ingest.extractors.media import MediaExtractor, MediaIngestConfig
 from saw.engines.ingest.extractors.pdf import PDFExtractor
 from saw.engines.ingest.extractors.url import URLExtractor
 from saw.engines.ingest.fuser import Fuser
@@ -37,6 +38,7 @@ class IngestResult:
     errors: list[str] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
     parser: str = "unknown"
+    preview_id: str | None = None  # For media previews
 
 
 class IngestPipeline:
@@ -73,9 +75,24 @@ class IngestPipeline:
             llm=llm_router,
         )
         self._code_extractor = CodeASTExtractor()
+        self._media_extractor: MediaExtractor | None = None  # Lazy init
 
         self._fuser = Fuser()
         self._validator = Validator()
+
+    def _get_media_extractor(self, options: dict | None = None) -> MediaExtractor:
+        """Get or create media extractor with config."""
+        if self._media_extractor is None:
+            config = MediaIngestConfig()
+            if options:
+                if "whisper_model" in options:
+                    config.whisper_model = options["whisper_model"]
+                if "whisper_device" in options:
+                    config.whisper_device = options["whisper_device"]
+                if "api_fallback" in options:
+                    config.api_fallback = options["api_fallback"]
+            self._media_extractor = MediaExtractor(config)
+        return self._media_extractor
 
     def ingest(self, source: str, options: dict | None = None) -> IngestResult:
         """Ingest a document source.
@@ -135,6 +152,14 @@ class IngestPipeline:
                     classified.path, source_uuid
                 )
                 parser_used = "ast"
+
+            elif classified.format in (DocumentFormat.VIDEO, DocumentFormat.AUDIO) and classified.path:
+                # Phase 4: Media Ingestion
+                media_extractor = self._get_media_extractor(options)
+                extraction_result = media_extractor.extract(
+                    classified.path, source_uuid
+                )
+                parser_used = "whisper"
 
             else:
                 errors.append(f"No extractor for format: {classified.format}")

@@ -18,6 +18,8 @@ class DocumentFormat(Enum):
     CODE = "code"
     JSON = "json"
     TABLE = "table"
+    VIDEO = "video"  # MP4, WebM, MOV
+    AUDIO = "audio"  # MP3, WAV, M4A, OGG
     UNKNOWN = "unknown"
 
 
@@ -54,6 +56,12 @@ JSON_EXTENSIONS: set[str] = {".json", ".jsonl"}
 # PDF extensions
 PDF_EXTENSIONS: set[str] = {".pdf"}
 
+# Video extensions (Phase 4: Media Ingestion)
+VIDEO_EXTENSIONS: set[str] = {".mp4", ".webm", ".mov"}
+
+# Audio extensions (Phase 4: Media Ingestion)
+AUDIO_EXTENSIONS: set[str] = {".mp3", ".wav", ".m4a", ".ogg"}
+
 
 @dataclass
 class ClassifiedSource:
@@ -62,6 +70,7 @@ class ClassifiedSource:
     path: Path | None = None
     url: str | None = None
     language: str | None = None  # For code files
+    media_type: str | None = None  # For video/audio: "video" or "audio"
 
 
 def classify(source: str) -> ClassifiedSource:
@@ -118,6 +127,22 @@ def classify(source: str) -> ClassifiedSource:
         return ClassifiedSource(
             format=DocumentFormat.TABLE,
             path=source_path,
+        )
+
+    # Video (Phase 4: Media Ingestion)
+    if ext in VIDEO_EXTENSIONS:
+        return ClassifiedSource(
+            format=DocumentFormat.VIDEO,
+            path=source_path,
+            media_type="video",
+        )
+
+    # Audio (Phase 4: Media Ingestion)
+    if ext in AUDIO_EXTENSIONS:
+        return ClassifiedSource(
+            format=DocumentFormat.AUDIO,
+            path=source_path,
+            media_type="audio",
         )
 
     # Directory - detect from first supported file

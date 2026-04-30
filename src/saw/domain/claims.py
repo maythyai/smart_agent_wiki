@@ -26,6 +26,9 @@ class Claim:
     tags: list[str] = field(default_factory=list)
     entities: list[str] = field(default_factory=list)
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    # Phase 4: Media Ingestion — timestamp for video/audio source
+    media_timestamp: tuple[float, float] | None = None  # (start_seconds, end_seconds)
+    media_vault_id: str | None = None  # Reference to media vault entry
 
     @classmethod
     def compute_hash(cls, content: str) -> str:
