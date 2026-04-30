@@ -114,11 +114,21 @@ Smart Agent Wiki 是一个下一代智能多代理知识平台，集百家之长
 | Cedar 策略引擎 | 实验性 cedar-python + CLI fallback | ✓ Acceptable |
 | React 19 + Zustand | 前端技术栈现代且稳定 | ✓ Good |
 
+## Current Milestone: v2.0 Extended Ingestion & Team Platform
+
+**Goal:** 扩展知识摄入渠道（视频/音频）并支持团队协作部署模式
+
+**Target features:**
+- **Video/Audio Ingestion** — 使用 Whisper 转录视频和音频内容，扩展知识来源
+- **Team Deployment** — Docker Compose + PostgreSQL + Redis 支持多用户团队模式
+- **API Platform** — 开放 API 供第三方集成
+
 ## Current State
 
 **Shipped Version:** v1.1 (2026-04-29)
+**Current Milestone:** v2.0 (Planning)
 
-**Stats:**
+**v1.1 Stats:**
 - Phases: 5 (01, 02, 03-01, 03-02, 03-03)
 - Plans: 19
 - Tests: 430+ passing

@@ -1,66 +1,52 @@
 ---
 gsd_state_version: 1.0
-milestone: null
-milestone_name: null
+milestone: v2.0
+milestone_name: Extended Ingestion & Team Platform
 status: planning
-last_updated: "2026-04-29T09:30:00.000Z"
-last_activity: 2026-04-29
+last_updated: "2026-04-30T00:00:00.000Z"
+last_activity: 2026-04-30
 progress:
   total_phases: 0
-  completed_phases: 5
+  completed_phases: 0
   total_plans: 0
-  completed_plans: 19
-  percent: 100
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-29)
+See: .planning/PROJECT.md (updated 2026-04-30)
 
 **Core value:** 知识可信、可溯源、可进化 — 每一条回答都可以追溯到原始文档的具体位置
-**Current focus:** Planning next milestone
+**Current focus:** Planning v2.0 milestone
 
 ## Current Position
 
-Phase: v1.1 Complete
-Plan: None
-Status: Milestone v1.1 shipped
-Last activity: 2026-04-29
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-04-30 — Milestone v2.0 started
 
-Progress: [██████████] 100%
+Progress: [░░░░░░░░░░] 0%
 
-## v1.1 Summary
+## Milestone v2.0 Context
 
-**Milestone:** v1.1 Collaboration & Visualization
-**Shipped:** 2026-04-29
+**Goal:** 扩展知识摄入渠道（视频/音频）并支持团队协作部署模式
 
-### Key Accomplishments
-
-1. **四层存储架构** — Vault/Claims/Wiki/FTS5 四层存储，每条主张可溯源到原始文档
-2. **Write Queue Outbox** — 单入口持久化写入，5 个 idempotent sinks
-3. **Governance Engine** — 4 层置信度、9 级新鲜度、矛盾检测、Ed25519 审计
-4. **MCP Server 23 工具** — Claude Code/Cursor/Copilot 兼容
-5. **6 Agent 协作架构** — Librarian/Writer/Critic/Linker/Scholar/Guardian + A2A + Cedar
-6. **完整 Web UI** — React + Cytoscape.js 知识图谱 + Milkdown 编辑器 + WebSocket
-
-### Stats
-
-- Phases: 5
-- Plans: 19
-- Tests: 430+
-- Python LOC: ~16,100
-- TypeScript LOC: ~3,662
-- Timeline: 3 days (2026-04-26 → 2026-04-29)
+**Target Features:**
+1. Video/Audio Ingestion (Whisper 转录)
+2. Team Deployment (Docker Compose + PostgreSQL + Redis)
+3. API Platform (开放 API)
 
 ## Accumulated Context
 
 ### Decisions
 
-All decisions logged in PROJECT.md Key Decisions table.
+(None yet for v2.0)
 
-### Tech Debt
+### Tech Debt (from v1.1)
 
 1. Phase VERIFICATION.md files missing — non-blocking
 2. React frontend tests deferred — non-blocking
@@ -68,12 +54,12 @@ All decisions logged in PROJECT.md Key Decisions table.
 
 ### Blockers/Concerns
 
-None — v1.1 shipped successfully.
+None — milestone planning in progress.
 
 ## Session Continuity
 
-Last session: 2026-04-29T09:30:00.000Z
-Next action: Run `/gsd-new-milestone` to start v2 planning
+Last session: 2026-04-30T00:00:00.000Z
+Next action: Define requirements for v2.0
 
 ---
-*Last updated: 2026-04-29*
+*Last updated: 2026-04-30*
