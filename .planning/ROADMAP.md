@@ -3,7 +3,7 @@
 ## Milestones
 
 - ✅ **v1.1 Collaboration & Visualization** — Phases 1-3 (shipped 2026-04-29) — [Details](milestones/v1.1-ROADMAP.md)
-- 🔄 **v2.0 Extended Ingestion & Team Platform** — Phases 4-6 (active)
+- ✅ **v2.0 Extended Ingestion & Team Platform** — Phases 4-6 (shipped 2026-04-30) — [Details](milestones/v2.0-ROADMAP.md)
 
 ## Phases
 
@@ -121,4 +121,4 @@
 
 ---
 
-*Last updated: 2026-04-30 after v2.0 milestone planning*
+*Last updated: 2026-04-30 — v2.0 milestone shipped*
