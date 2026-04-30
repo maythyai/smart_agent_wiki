@@ -2,6 +2,7 @@
 
 **Domain:** Intelligent multi-agent knowledge platform (Smart Agent Wiki)
 **Researched:** 2026-04-26
+**Updated:** 2026-04-30 (Ecosystem Integration)
 **Confidence:** HIGH (based on official documentation for SQLite FTS5, LiteLLM, FastMCP, plus 181-project ecosystem audit)
 
 ## Critical Pitfalls
@@ -452,7 +453,7 @@ Cytoscape.js renders all nodes and edges in the browser. With >500 entities, the
 
 **Why it happens:**
 - Every node/edge is a DOM element or canvas draw call
-- Force-directed layout algorithms (CoSE) are O(n²) per iteration
+- Force-directed layout algorithms (CoSE) are O(n squared) per iteration
 - No built-in lazy loading or clustering
 - Browser memory grows with graph size
 
@@ -537,7 +538,7 @@ Phase 3 (Web UI) -- when WebSocket integration is built.
 ### Pitfall 17: YAML Workflow Gate Loop (Phase 03)
 
 **What goes wrong:**
-YAML workflows with gates (e.g., `confidence >= 3`) can loop infinitely when the gate cannot be satisfied. A Scholar → Critic → Writer workflow keeps retrying because the Critic always finds issues. No maximum retry limit is defined. The workflow consumes resources endlessly.
+YAML workflows with gates (e.g., `confidence >= 3`) can loop infinitely when the gate cannot be satisfied. A Scholar to Critic to Writer workflow keeps retrying because the Critic always finds issues. No maximum retry limit is defined. The workflow consumes resources endlessly.
 
 **Why it happens:**
 - YAML gates don't specify `max_retries` by default
@@ -561,6 +562,564 @@ YAML workflows with gates (e.g., `confidence >= 3`) can loop infinitely when the
 
 **Phase to address:**
 Phase 3 (Collaboration Engine) -- when YAML workflow executor is built.
+
+---
+
+## Ecosystem Integration Pitfalls (v3.0)
+
+*The following pitfalls are specific to adding Obsidian Plugin, Chrome Extension, and RSS Subscription features to the existing Smart Agent Wiki system.*
+
+---
+
+### Pitfall 18: Obsidian Plugin Race Condition on File Operations (Vault.read vs Vault.cachedRead)
+
+**What goes wrong:**
+Using `cachedRead()` when intending to modify the file causes overwrites with stale data. Another concurrent modification between your read and write will be lost.
+
+**Why it happens:**
+Developers default to `cachedRead()` for performance, but it returns cached content that may not reflect current disk state. The Obsidian documentation explicitly warns: "Use this if you intend to modify the file content afterwards. Use Vault.cachedRead() otherwise for better performance."
+
+**Consequences:**
+- Data loss when two operations modify the same file
+- Sync conflicts with Obsidian Sync
+- User edits silently overwritten by plugin background operations
+
+**How to avoid:**
+1. Use `Vault.read()` when you intend to modify and rewrite the file
+2. Use `Vault.process()` for atomic read-modify-write operations
+3. Never use `cachedRead()` before modifications
+
+```typescript
+// WRONG: Race condition risk
+const content = await this.app.vault.cachedRead(file);
+await this.app.vault.modify(file, modifyContent(content));
+
+// RIGHT: Atomic operation
+await this.app.vault.process(file, (content) => modifyContent(content));
+```
+
+**Warning signs:**
+- Sync conflict files appearing in vault
+- User reports of lost edits
+- File modification timestamps change unexpectedly
+
+**Phase to address:** Phase 07 (Obsidian Plugin Core)
+
+---
+
+### Pitfall 19: Obsidian Event Listener Memory Leaks on Plugin Unload
+
+**What goes wrong:**
+Event listeners registered with `app.vault.on()` or `app.workspace.on()` continue firing after plugin unload, causing errors and memory leaks.
+
+**Why it happens:**
+Developers forget that plugins can be disabled and reloaded; raw event subscriptions are not automatically cleaned up. The Obsidian Developer Docs state: "It is crucial to detach registered event handlers when a plugin unloads to prevent memory leaks."
+
+**Consequences:**
+- Console errors flooding the UI
+- Stale callback execution after plugin disabled
+- Crashes when unloaded plugin tries to update UI elements
+- Memory consumption grows over time
+
+**How to avoid:**
+Always use `this.registerEvent()` inside plugin class:
+
+```typescript
+// WRONG: Never cleaned up
+this.app.vault.on('modify', (file) => this.handleModify(file));
+
+// RIGHT: Auto-cleaned on plugin unload
+this.registerEvent(
+  this.app.vault.on('modify', (file) => this.handleModify(file))
+);
+
+// For DOM events
+this.registerDomEvent(element, 'click', (evt) => this.handleClick(evt));
+
+// For intervals
+this.registerInterval(window.setInterval(() => this.poll(), 60000));
+```
+
+**Warning signs:**
+- DevTools showing event listeners after plugin disable
+- Console errors referencing disposed plugin
+- Memory not released after plugin unload
+
+**Phase to address:** Phase 07 (Obsidian Plugin Core)
+
+---
+
+### Pitfall 20: Incorrect File Type Checking (TFile vs TFolder vs TAbstractFile)
+
+**What goes wrong:**
+Operations like `Vault.read()` or `MetadataCache.getFileCache()` crash when passed a TFolder instead of TFile.
+
+**Why it happens:**
+Methods like `Vault.getAbstractFileByPath()` return `TAbstractFile` which could be either file or folder. The Obsidian API docs show: "Determines if a TAbstractFile object is a file or a folder using instanceof."
+
+**Consequences:**
+- Plugin crashes on vaults with folders matching expected file paths
+- Confusing error messages for users
+- Plugin appears "broken" on certain vault structures
+
+**How to avoid:**
+Always check with `instanceof` before file-specific operations:
+
+```typescript
+const abstractFile = this.app.vault.getAbstractFileByPath('some/path');
+if (abstractFile instanceof TFile) {
+  const content = await this.app.vault.read(abstractFile);
+} else if (abstractFile instanceof TFolder) {
+  // Handle folder case
+}
+```
+
+**Warning signs:**
+- Plugin crashes on startup for certain vault structures
+- Errors mentioning "TFile" type mismatches
+- Works on some vaults, fails on others
+
+**Phase to address:** Phase 07 (Obsidian Plugin Core)
+
+---
+
+### Pitfall 21: Chrome Extension Manifest V3 Remote Code Prohibition
+
+**What goes wrong:**
+Extension rejected by Chrome Web Store or crashes because it tries to load external JavaScript.
+
+**Why it happens:**
+Manifest V3 prohibits remotely hosted code - no CDN scripts, no dynamically fetched code execution. Chrome documentation states: "In Manifest V3, all of your extension's logic must be part of the extension package. You can no longer load and execute remotely hosted files."
+
+**Consequences:**
+- Extension cannot be published
+- Users cannot install
+- Complete architecture rewrite needed after discovering limitation
+
+**How to avoid:**
+1. Bundle all JavaScript with the extension package
+2. Use web APIs directly instead of loading libraries from CDN
+3. If you need external data, fetch JSON/configuration, not code
+4. Use declarativeNetRequest instead of dynamic webRequest blocking
+
+```json
+// WRONG: Remote script
+"content_scripts": [{
+  "js": ["https://cdn.example.com/library.js"]
+}]
+
+// RIGHT: Bundled script
+"content_scripts": [{
+  "js": ["bundled-library.js"]
+}]
+```
+
+**Warning signs:**
+- Chrome Web Store rejection email
+- Console errors about CSP violations
+- Extension fails to load after manifest changes
+
+**Phase to address:** Phase 08 (Chrome Extension) - architecture decision before implementation
+
+---
+
+### Pitfall 22: Chrome Service Worker Lifecycle Breaks State
+
+**What goes wrong:**
+Background state (variables, connections, timers) disappears because MV3 service workers terminate after ~30 seconds of inactivity.
+
+**Why it happens:**
+MV3 replaced persistent background pages with event-driven service workers that can be terminated at any time. Chrome documentation: "Service workers do not have direct DOM access... Service workers are designed to run only when needed."
+
+**Consequences:**
+- Lost authentication tokens
+- Broken WebSocket connections
+- Incomplete background tasks
+- Timers stop firing unexpectedly
+
+**How to avoid:**
+1. Persist all state to `chrome.storage.local` or `chrome.storage.session`
+2. Use IndexedDB for complex data structures
+3. Re-establish connections on service worker wake (`chrome.runtime.onStartup`)
+4. Use `chrome.alarms` for scheduled tasks instead of `setInterval`
+
+```javascript
+// WRONG: Lost when service worker terminates
+let authToken = null;
+setInterval(() => poll(), 60000);
+
+// RIGHT: Persisted state
+chrome.storage.local.get(['authToken'], (result) => {
+  // Always read from storage
+});
+chrome.alarms.create('poll', { periodInMinutes: 1 });
+```
+
+**Warning signs:**
+- Extension loses state after idle period
+- WebSocket connections drop silently
+- Timers stop working after browser idle
+- Background tasks incomplete after resume
+
+**Phase to address:** Phase 08 (Chrome Extension) - fundamental MV3 architecture
+
+---
+
+### Pitfall 23: Chrome Content Script Isolation Blocking
+
+**What goes wrong:**
+Content script cannot access page JavaScript variables or functions; page cannot directly call extension functions.
+
+**Why it happens:**
+Content scripts run in isolated "island" context - separate from page JavaScript for security. Chrome docs: "Content scripts and their host pages have isolated execution environments but share access to the page's DOM."
+
+**Consequences:**
+- Cannot directly interact with page application state
+- Complex message passing workarounds needed
+- Authentication state from page inaccessible
+- Cannot call page JavaScript libraries
+
+**How to avoid:**
+1. Use `window.postMessage` for page-to-content-script communication
+2. Inject script tags into page DOM for direct page access (but loses extension APIs)
+3. Use custom events with `CustomEvent` for structured data
+
+```javascript
+// Content script - receives from page
+window.addEventListener('message', (event) => {
+  if (event.source !== window) return;
+  if (event.data.type === 'FROM_PAGE') {
+    chrome.runtime.sendMessage(event.data.payload);
+  }
+});
+
+// Page script - sends to content script
+window.postMessage({ type: 'FROM_PAGE', payload: data }, '*');
+```
+
+**Warning signs:**
+- Content script sees `undefined` for page variables
+- Direct function calls fail silently
+- Console shows "not defined" errors for page globals
+- Extension cannot read page's authentication state
+
+**Phase to address:** Phase 08 (Chrome Extension) - affects integration design
+
+---
+
+### Pitfall 24: Chrome Storage Sync Quota Exceeded
+
+**What goes wrong:**
+`chrome.storage.sync.set()` silently fails or throws quota exceeded errors.
+
+**Why it happens:**
+`storage.sync` has strict limits per Chrome documentation:
+- 100KB total (QUOTA_BYTES)
+- 8KB per item (QUOTA_BYTES_PER_ITEM)
+- 120 writes per hour (MAX_WRITE_OPERATIONS_PER_HOUR)
+- 10 writes per minute (MAX_WRITE_OPERATIONS_PER_MINUTE)
+- 512 maximum items (MAX_ITEMS)
+
+**Consequences:**
+- Settings not persisting
+- Sync failing silently
+- User frustration when preferences lost
+- Cross-device state desynchronized
+
+**How to avoid:**
+1. Use `storage.local` for large data (10MB default, unlimited with permission)
+2. Only use `storage.sync` for settings that need cross-device sync
+3. Implement quota-aware write batching
+4. Check `chrome.runtime.lastError` after storage operations
+
+```javascript
+// Check limits first
+const QUOTA_BYTES = chrome.storage.sync.QUOTA_BYTES; // ~100KB
+
+// For large data, use local storage
+chrome.storage.local.set({ largeData: data }, () => {
+  if (chrome.runtime.lastError) {
+    console.error(chrome.runtime.lastError);
+  }
+});
+```
+
+**Warning signs:**
+- Settings not syncing across devices
+- `QUOTA_BYTES_EXCEEDED` errors in console
+- Write operations silently failing
+- Partial data saved
+
+**Phase to address:** Phase 08 (Chrome Extension) - affects data model design
+
+---
+
+### Pitfall 25: RSS Feed GUID Changes Breaking Deduplication
+
+**What goes wrong:**
+RSS items appear as duplicates because feed publisher changed the GUID format or domain.
+
+**Why it happens:**
+GUIDs are often URL-based; when sites migrate or restructure, GUIDs change while content remains the same. Many feed readers only use GUID for deduplication.
+
+**Consequences:**
+- Duplicate entries in knowledge base
+- Broken "read" state tracking
+- User confusion seeing same content twice
+- Ingestion history polluted
+
+**How to avoid:**
+1. Use multiple deduplication keys: GUID + title hash + content hash
+2. Implement fuzzy matching for similar titles (edit distance)
+3. Store historical GUIDs for each source and match against all
+4. Normalize URLs before comparison (remove tracking parameters)
+
+```python
+# Multi-key deduplication
+def get_item_hash(item):
+    title_hash = hashlib.md5(item.title.encode()).hexdigest()[:8]
+    # Strip HTML, normalize whitespace for content hash
+    content_clean = re.sub(r'\s+', ' ', strip_html(item.description or ''))
+    content_hash = hashlib.md5(content_clean.encode()).hexdigest()[:8]
+    return f"{item.guid}:{title_hash}:{content_hash}"
+```
+
+**Warning signs:**
+- Sudden spike in "new" items that are clearly old content
+- Users reporting duplicates
+- Feed ingestion count jumps unexpectedly
+- Same content with different GUIDs
+
+**Phase to address:** Phase 09 (RSS Subscription) - core ingestion logic
+
+---
+
+### Pitfall 26: RSS Feed Parsing Encoding Issues
+
+**What goes wrong:**
+Text appears garbled (Mojibake) - accented characters broken, quotes replaced with question marks.
+
+**Why it happens:**
+Some feeds declare wrong encoding in XML header; others don't declare encoding at all; HTTP headers conflict with XML declaration.
+
+**Consequences:**
+- Unreadable content
+- Broken search indexing
+- User frustration with non-English content
+- Metadata extraction failures
+
+**How to avoid:**
+1. Use robust parsing library (Python: feedparser handles encoding detection)
+2. Normalize all content to UTF-8 after parsing
+3. Log encoding warnings for manual review
+4. Fallback to HTTP Content-Type header encoding if XML parsing fails
+
+```python
+import feedparser
+
+# feedparser handles most encoding issues automatically
+feed = feedparser.parse(url, request_headers={'Accept': 'application/xml'})
+
+# Check for encoding problems
+if feed.bozo:  # bozo bit indicates parsing issue
+    logger.warning(f"Feed {url} has encoding issues: {feed.bozo_exception}")
+    # Attempt recovery strategies
+```
+
+**Warning signs:**
+- Garbled text in ingested content
+- `feed.bozo` flag true during parsing
+- Missing or corrupted special characters
+- Non-ASCII content malformed
+
+**Phase to address:** Phase 09 (RSS Subscription) - ingestion robustness
+
+---
+
+### Pitfall 27: RSS Aggressive Polling Leading to IP Blocks
+
+**What goes wrong:**
+Feed sources block your IP or return 429 errors; feeds stop updating.
+
+**Why it happens:**
+Polling every feed every hour for hundreds of sources looks like a DDoS attack.
+
+**Consequences:**
+- Missing new content
+- IP bans affecting other features
+- Reputation damage to the service
+- All feeds appear "stuck"
+
+**How to avoid:**
+1. Implement adaptive polling intervals based on feed update frequency
+2. Use conditional GET with `If-Modified-Since` and `If-None-Match` headers
+3. Respect `ttl` and `sy:updatePeriod` elements in feeds
+4. Exponential backoff for failing feeds
+5. Stagger polling across time windows, not all at once
+
+```python
+import datetime
+
+headers = {}
+if last_modified:
+    headers['If-Modified-Since'] = last_modified
+if etag:
+    headers['If-None-Match'] = etag
+
+response = requests.get(url, headers=headers)
+if response.status_code == 304:
+    # Not modified, skip parsing
+    return None
+
+# Store new last_modified and etag for next request
+```
+
+**Warning signs:**
+- 429 responses in logs
+- Feeds showing old entries despite known updates
+- IP blocks reported by other users on same IP
+- All feeds return same timestamp
+
+**Phase to address:** Phase 09 (RSS Subscription) - scheduler design
+
+---
+
+### Pitfall 28: Bidirectional Sync State Corruption (Obsidian + Wiki)
+
+**What goes wrong:**
+Changes made in Obsidian and Smart Agent Wiki simultaneously cause unresolvable conflicts.
+
+**Why it happens:**
+No clear authority model; both systems think they're the source of truth.
+
+**Consequences:**
+- Data divergence between systems
+- User confusion about which version is correct
+- Potential data loss during conflict resolution
+- Sync loop (changes never stabilizing)
+
+**How to avoid:**
+1. Establish clear authority model: Vault is source of truth for content, Wiki for metadata
+2. Use last-write-wins with conflict file generation for unresolvable cases
+3. Implement change vectors (similar to vector clocks) for conflict detection
+4. Consider CRDT for specific fields like tags
+5. User must explicitly resolve conflicts before sync continues
+
+```typescript
+// Conflict detection
+interface ChangeVector {
+  source: 'obsidian' | 'saw';
+  timestamp: number;
+  hash: string;
+}
+
+// Detect conflicting changes
+function detectConflict(local: ChangeVector, remote: ChangeVector): boolean {
+  return local.hash !== remote.hash && 
+         local.timestamp > remote.timestamp &&
+         remote.source !== local.source;
+}
+```
+
+**Warning signs:**
+- Users seeing different content in different views
+- Sync loop detected (changes never stabilizing)
+- Conflict files accumulating without resolution
+- Data reverting after sync completes
+
+**Phase to address:** Phase 07 (Obsidian Plugin Core) - sync strategy is foundational
+
+---
+
+### Pitfall 29: Chrome Extension CORS Blocking to Local Server
+
+**What goes wrong:**
+Chrome extension cannot communicate with local Smart Agent Wiki API server.
+
+**Why it happens:**
+CORS policy blocks cross-origin requests; local server may not have proper headers configured for extension origin.
+
+**Consequences:**
+- Extension cannot save clipped content
+- Broken user workflow
+- "Network error" messages
+- Extension appears non-functional
+
+**How to avoid:**
+1. Add extension ID to CORS allowed origins in local server
+2. Use `chrome.runtime.sendMessage` to background script for API calls (bypasses CORS)
+3. Consider native messaging for deep local integration
+4. Configure FastAPI CORS middleware to allow extension origin
+
+```python
+# FastAPI CORS configuration
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "chrome-extension://YOUR_EXTENSION_ID",
+        "http://localhost:*",  # Development
+    ],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+```
+
+**Warning signs:**
+- Network errors in extension DevTools
+- "CORS policy" errors in console
+- Extension works for external sites but not local API
+- Requests show as "(failed)" in network tab
+
+**Phase to address:** Phase 08 (Chrome Extension) - requires server configuration changes
+
+---
+
+### Pitfall 30: Schema Mismatch Between Sources (Obsidian + Chrome + RSS)
+
+**What goes wrong:**
+Data from Obsidian, Chrome, and RSS have incompatible structures when stored in the same database.
+
+**Why it happens:**
+Each source has different metadata, content formats, and reference models.
+
+**Consequences:**
+- Query failures when joining across sources
+- Lost metadata during ingestion
+- Complex workarounds in code
+- Inconsistent search results
+
+**How to avoid:**
+1. Design a unified source-agnostic schema with source-specific extensions
+2. Use content-addressed storage for deduplication across sources
+3. Implement source adapters that normalize to common format
+
+```python
+# Unified schema with source extensions
+class UnifiedDocument:
+    id: str  # content hash
+    title: str
+    content: str
+    source_type: Literal['obsidian', 'web_clip', 'rss']
+    source_id: str
+    source_metadata: dict  # Source-specific fields
+    created_at: datetime
+    updated_at: datetime
+
+# Source-specific adapter pattern
+class SourceAdapter(Protocol):
+    def normalize(self, raw_data: Any) -> UnifiedDocument: ...
+    def denormalize(self, doc: UnifiedDocument) -> Any: ...
+```
+
+**Warning signs:**
+- Query errors when joining across sources
+- Missing fields in UI for certain source types
+- Duplicate content appearing from different sources
+- Metadata not preserved after sync
+
+**Phase to address:** Phase 07 (Obsidian Plugin Core) - must be designed before any source implementation
 
 ---
 
@@ -679,6 +1238,19 @@ Phase 3 (Collaboration Engine) -- when YAML workflow executor is built.
 | A2A protocol version drift | Phase 3 | Version negotiation; pluggable adapter architecture |
 | React state desync with WebSocket | Phase 3 | REST sync on connect; message sequence tracking; connection status indicator |
 | YAML workflow gate loop | Phase 3 | Max retries enforced; fallback actions defined; workflow timeout active |
+| Obsidian file race condition | Phase 07 | Use Vault.process() exclusively |
+| Obsidian event listener leaks | Phase 07 | Use registerEvent() pattern |
+| Obsidian type checking | Phase 07 | instanceof checks before operations |
+| Chrome MV3 remote code | Phase 08 | Bundle all dependencies |
+| Chrome service worker state | Phase 08 | Persist to storage APIs |
+| Chrome content script isolation | Phase 08 | window.postMessage pattern |
+| Chrome storage quota | Phase 08 | Use storage.local for large data |
+| RSS GUID changes | Phase 09 | Multi-key deduplication |
+| RSS encoding issues | Phase 09 | Use feedparser, normalize UTF-8 |
+| RSS polling blocks | Phase 09 | Adaptive polling intervals |
+| Bidirectional sync corruption | Phase 07 | Define clear authority model |
+| Chrome CORS blocking | Phase 08 | Configure server CORS headers |
+| Schema mismatch between sources | Phase 07 | Unified source-agnostic schema |
 
 ## Sources
 
@@ -697,6 +1269,27 @@ Phase 3 (Collaboration Engine) -- when YAML workflow executor is built.
 - MindOS project audit -- Echo cognitive distillation, A2A protocol, YAML workflows
 - codesight project audit -- AST zero-LLM extraction, blast radius analysis
 
+### Ecosystem Integration Sources
+
+- Obsidian Developer Documentation (Context7) -- HIGH confidence
+  - [Vault.read()](https://github.com/obsidianmd/obsidian-developer-docs/blob/main/en/Reference/TypeScript%20API/Vault/read.md) -- use read() before modify
+  - [Vault.process()](https://github.com/obsidianmd/obsidian-developer-docs/blob/main/en/Reference/TypeScript%20API/Vault/process.md) -- atomic read-modify-write
+  - [registerEvent()](https://github.com/obsidianmd/obsidian-developer-docs/blob/main/en/Plugins/Events.md) -- auto-cleanup on unload
+  - [TFile/TFolder](https://github.com/obsidianmd/obsidian-developer-docs/blob/main/en/Plugins/Vault.md) -- instanceof type checking
+- Obsidian Help Documentation (Context7) -- HIGH confidence
+  - [Sync conflict resolution](https://github.com/obsidianmd/obsidian-help/blob/master/en/Obsidian%20Sync/Troubleshoot%20Obsidian%20Sync.md) -- conflict handling behavior
+- Chrome Extensions Documentation (Context7) -- HIGH confidence
+  - [Storage API](https://developer.chrome.com/docs/extensions/reference/api/storage) -- sync vs local limits
+  - [Service worker lifecycle](https://developer.chrome.com/docs/extensions/develop/migrate/to-service-workers) -- state persistence
+  - [Content script isolation](https://developer.chrome.com/docs/extensions/develop/concepts/content-scripts) -- message passing patterns
+  - [Remote code prohibition](https://developer.chrome.com/docs/extensions/develop/migrate/improve-security) -- bundled code only
+  - [Offscreen documents](https://developer.chrome.com/docs/extensions/how-to/web-platform/geolocation) -- DOM access workaround
+- RSS Parsing (MEDIUM confidence -- general Python patterns)
+  - feedparser library documentation -- encoding detection, bozo bit
+  - Conditional GET patterns -- If-Modified-Since, ETag
+
 ---
+
 *Pitfalls research for: Smart Agent Wiki (intelligent multi-agent knowledge platform)*
 *Researched: 2026-04-26*
+*Ecosystem Integration pitfalls added: 2026-04-30*

@@ -36,34 +36,28 @@
 
 ## v2.0: Extended Ingestion & Team Platform
 
-**Status:** Complete (Design)
-**Design Completed:** 2026-04-30
-**Audited:** 2026-04-30
+**Shipped:** 2026-04-30
 **Phases:** 3 (04, 05, 06)
 **Plans:** 10
-**Requirements:** 26
+**Tests:** 408+
 
 ### Summary
 
 扩展知识摄入渠道（视频/音频）并支持多用户团队协作部署。包含完整的 API 开放平台供第三方集成。
 
-### Key Features Designed
+### Key Accomplishments
 
 1. **Media Ingestion** — Whisper 转录视频/音频，批量处理，预览确认
-2. **Team Deployment** — Docker Compose，PostgreSQL，Redis，多用户认证
-3. **API Platform** — RESTful API，API Key，速率限制，GraphQL，Webhook
+2. **Team Deployment** — Docker Compose，PostgreSQL，Redis，多用户 JWT 认证，RBAC
+3. **API Platform** — RESTful API，API Key，Redis 速率限制，GraphQL，Webhook，批量导入导出
+4. **Ed25519 审计签名** — 所有写入操作密码审计收据
+5. **408 单元测试** — 所有功能通过验证
 
-### Design Documents
+### Artifacts
 
-- [Media Ingestion Design](../docs/media_ingestion_design.md)
-- [Team Deployment Design](../docs/team_deployment_design.md)
-- [API Platform Design](../docs/api_platform_design.md)
-
-### Requirements Covered
-
-- MING-01 ~ MING-08 (Media Ingestion)
-- TEAM-01 ~ TEAM-10 (Team Deployment)
-- APIP-01 ~ APIP-08 (API Platform)
+- [Roadmap Archive](milestones/v2.0-ROADMAP.md)
+- [Requirements Archive](milestones/v2.0-REQUIREMENTS.md)
+- [Audit Report](milestones/v2.0-MILESTONE-AUDIT.md)
 
 ---
 

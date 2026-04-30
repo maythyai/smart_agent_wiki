@@ -1,8 +1,8 @@
 # Feature Landscape
 
 **Domain:** Intelligent multi-agent knowledge management platform (LLM Wiki)
-**Researched:** 2026-04-27 (Phase 03 features added)
-**Sources:** Design document, 181-project ecosystem analysis, 25+ project deep audits, 666 user comments, official documentation (Cedar, Cytoscape.js, Milkdown, CrewAI, LangGraph, A2A Protocol)
+**Researched:** 2026-04-27 (Phase 03 features added), 2026-04-30 (v3.0 Ecosystem Integration added)
+**Sources:** Design document, 181-project ecosystem analysis, 25+ project deep audits, 666 user comments, official documentation (Cedar, Cytoscape.js, Milkdown, CrewAI, LangGraph, A2A Protocol, Obsidian API, Mozilla Readability, Feedparser, Chrome Extensions API)
 
 ---
 
@@ -57,7 +57,7 @@ Features added for Phase 03 milestone. Focus on multi-agent collaboration, workf
 | Feature | Why It Matters | Complexity | Dependencies | Expected Behavior |
 |---------|---------------|------------|--------------|-------------------|
 | **6 Specialized Agents (Librarian/Writer/Critic/Linker/Scholar/Guardian)** | Enables task-specific expertise with cost routing; Haiku for high-freq low-cost, Sonnet for quality, Opus for deep reasoning | High | LiteLLM routing, MCP Server, Claims DB | Agents are dispatched per-task: Librarian indexes/searches, Writer creates content, Critic reviews quality, Linker discovers cross-links, Scholar synthesizes, Guardian enforces rules |
-| **Agent Role Definitions** | CrewAI pattern: each agent has role/goal/backstory | Low | YAML config | Each agent defined with: role (function), goal (purpose), backstory (expertise context), tools (allowed MCP tools), model (Haiku/Sonnet/Opus/rules) |
+| **Agent Role Definitions** | CrewAI pattern: each agent has role/goal/backstory | Low | YAML config | Each agent defined with: role (function), goal (purpose), backstory (expertise context), tools (allowed MCP tools), model (Haiku/Sonnet/Opus) |
 | **Task Delegation (allow_delegation)** | Agents can hand off work when outside expertise | Med | A2A protocol | When agent encounters task outside its role, delegates to appropriate agent. Enabled via `allow_delegation: true` in agent config |
 | **Model Routing by Task** | Cost control: 19/20 tasks use Haiku, only Scholar needs Opus | Med | LiteLLM config | Routing logic: Librarian/Linker -> Haiku, Writer/Critic -> Sonnet, Scholar -> Opus, Guardian -> Zero LLM (rules only) |
 
@@ -418,24 +418,373 @@ User visits /review:
 
 ---
 
+## v3.0 Features: Ecosystem Integration
+
+Features for extending Smart Agent Wiki's reach into user workflows. Each integration connects SAW to a key touchpoint in the knowledge worker's daily environment.
+
+---
+
+### Obsidian Plugin
+
+**Context:** Obsidian is a popular knowledge management app with a plugin ecosystem. Users store knowledge in Markdown files within a "vault" directory.
+
+#### Table Stakes (Obsidian Plugin)
+
+Features users expect from any Obsidian knowledge management plugin.
+
+| Feature | Why Expected | Complexity | Dependency on SAW | Notes |
+|---------|--------------|------------|-------------------|-------|
+| **Bidirectional Sync** | Obsidian users expect vault files to sync with external systems | High | Claims DB <-> Markdown | Must handle conflict resolution |
+| **Vault File Read/Write** | Core Obsidian API -- plugin must read/write `.md` files | Medium | Vault -> Stored Documents | Use `app.vault.read()`, `app.vault.create()`, `app.vault.modify()` |
+| **Frontmatter Parsing** | Metadata in YAML frontmatter is standard Obsidian pattern | Low | Metadata Cache | `app.metadataCache.getFileCache(file).frontmatter` |
+| **Real-time Change Listener** | Users expect immediate sync when files change | Medium | Event System | `app.vault.on('modify', ...)`, `app.vault.on('create', ...)` |
+| **State Persistence** | Plugin settings must survive restarts | Low | Plugin Config | `data.json` via `saveData()`/`loadData()` API |
+| **Graph Visualization** | Obsidian users expect graph view integration | Medium | Claims Graph | Leverage Obsidian's built-in graph CSS variables |
+| **Settings Panel** | All Obsidian plugins have settings UI | Low | None | Standard `addSettingTab()` pattern |
+
+#### Differentiators (Obsidian Plugin)
+
+Features unique to Smart Agent Wiki's Obsidian integration.
+
+| Feature | Value Proposition | Complexity | Dependency on SAW | Notes |
+|---------|-------------------|------------|-------------------|-------|
+| **Confidence Badge Display** | Visual indicator of knowledge trustworthiness in file explorer/graph | Medium | Governance Engine (4-tier confidence) | Unique to SAW -- no other plugin does trust visualization |
+| **Freshness Coloring** | Age-based visual cues (9-level freshness -> 5 colors) | Low | Governance Engine (freshness system) | Built on existing v1.1 freshness |
+| **Source Attribution Links** | Click-through from claims to original source location | Medium | Vault (immutable layer) | `[^src-*]` style references -> Vault documents |
+| **Contradiction Marking** | Show disputed/superseded claims inline | High | Governance Engine (conflict detection) | Leverage 3-strategy conflict handling |
+| **One-click Ingest** | Context menu to ingest current file into SAW | Low | Ingest Engine | Right-click -> `saw-ingest` command |
+| **Paginated Query** | Query SAW knowledge base from Obsidian command palette | Medium | Query Engine (5 modes) | Use MCP Server or direct API |
+| **Agent Attribution** | Show which Agent last modified a claim | Low | Collaborate Engine | Signature receipt visualization |
+
+#### Anti-Features (Obsidian Plugin)
+
+| Anti-Feature | Why Avoid | What to Do Instead |
+|--------------|-----------|-------------------|
+| **Custom Graph Engine** | Obsidian has excellent built-in graph; reinventing wastes effort | Style existing graph with CSS variables; embed SAW's subgraph as overlay |
+| **Offline-first Storage** | SAW's four-layer architecture already handles storage; doubling creates sync complexity | Treat Obsidian vault as one of many SAW frontends, not primary storage |
+| **Custom Markdown Parser** | Obsidian's parser handles edge cases; custom parser causes compatibility issues | Use Obsidian's `MetadataCache` and `cachedRead()` for reliable parsing |
+| **Sync Lock Files** | Obsidian Sync/other plugins may conflict; lock files cause race conditions | Use conflict markers + manual resolution UI |
+
+#### Conflict Resolution Patterns
+
+**Key Design Consideration:** Bidirectional sync requires handling three conflict scenarios:
+
+| Conflict Type | Detection | Resolution Strategy |
+|---------------|-----------|---------------------|
+| **Concurrent Edit** | Last-write-wins with timestamp + manual resolution prompt | Show diff, user chooses winner or merge |
+| **Delete-Update** | File deleted in Obsidian but updated in SAW | Soft delete (archive) + notification |
+| **Structure Mismatch** | Frontmatter schema changes | Preserve both versions, flag for review |
+
+**Recommended Pattern from Obsidian API:**
+
+```typescript
+// Use Vault.process() for atomic modifications
+vault.process(file, (content) => {
+  // Modify content safely
+  return modifiedContent;
+});
+```
+
+```typescript
+// Handle external changes
+onExternalSettingsChange(): void {
+  // Reload plugin data when data.json modified externally
+  this.loadData().then(data => { /* reinitialize */ });
+}
+```
+
+#### Technical Dependencies
+
+| Existing SAW Feature | Plugin Requirement |
+|---------------------|-------------------|
+| MCP Server (23 tools) | HTTP/WebSocket connection to local/remote SAW instance |
+| REST API (v2.0) | Alternative sync path |
+| Claims DB | Primary sync target for structured knowledge |
+| Vault Layer | Source documents (read-only in plugin) |
+| Governance Engine | Confidence tiers, freshness, conflict status |
+
+---
+
+### Chrome Extension
+
+**Context:** Browser extension for capturing web content during research. Users browse the web and want to save relevant content to their knowledge base with minimal friction.
+
+#### Table Stakes (Chrome Extension)
+
+Features users expect from any web clipping/knowledge capture extension.
+
+| Feature | Why Expected | Complexity | Dependency on SAW | Notes |
+|---------|--------------|------------|-------------------|-------|
+| **One-click Clip** | Single-click capture is standard UX | Low | Ingest Engine | Browser action button + keyboard shortcut |
+| **Article Extraction** | Users want clean content, not ads/navigation | Medium | Ingest Engine | Use Mozilla Readability for article extraction |
+| **Source URL Preservation** | Must preserve original URL for citation | Low | Vault (metadata) | Standard practice |
+| **Page Title Capture** | Auto-detect title for organization | Low | Vault (metadata) | `document.title` + Readability.title |
+| **Keyboard Shortcuts** | Power users expect keyboard shortcuts | Low | None | Chrome `commands` API |
+| **Popup Interface** | Quick preview before saving | Medium | None | `action` popup with form |
+| **Clip History** | Users want to see what they've clipped | Medium | Query Engine | Local `chrome.storage.local` + SAW sync |
+
+#### Differentiators (Chrome Extension)
+
+Features unique to SAW's Chrome extension.
+
+| Feature | Value Proposition | Complexity | Dependency on SAW | Notes |
+|---------|-------------------|------------|-------------------|-------|
+| **Auto Summary Generation** | One-sentence summary auto-generated | Medium | Ingest Engine (LLM) | Display in popup before save |
+| **Smart Tag Suggestion** | ML-suggested tags based on content | Medium | Learn Engine + Index | Use existing embedding model |
+| **Confidence Preview** | Show predicted confidence tier before ingest | High | Governance Engine | Novel feature -- preview trust |
+| **Batch Clip** | Capture all open tabs | Low | Ingest Engine | Chrome `tabs.query()` API |
+| **Selection Clipping** | Highlight text -> clip selection only | Medium | Vault (partial doc) | Context menu integration |
+| **PDF Extraction** | Extract content from PDF URLs | High | Ingest Engine (Docling) | Requires content script for PDF viewer |
+| **Duplicate Detection** | Compare current clip to similar existing knowledge | High | Query Engine (similarity) | Surface duplicates before saving |
+| **Video Timestamp** | Capture current timestamp from YouTube/etc | Medium | Vault (time metadata) | Parse video player state |
+
+#### Anti-Features (Chrome Extension)
+
+| Anti-Feature | Why Avoid | What to Do Instead |
+|--------------|-----------|-------------------|
+| **Full-text Index in Chrome Storage** | Storage quota (10MB) too limiting for full content | Store metadata locally; full content sent directly to SAW |
+| **Custom Reader Mode** | Readability.js handles this; reinventing is wasted effort | Use `isProbablyReaderable()` check before parsing |
+| **Ad Blocking** | Not the extension's purpose; privacy implications | Let Readability strip clutter; don't add blockers |
+| **Auto-publish** | Surprises users; may leak private content | Require explicit save action |
+
+#### Content Extraction Algorithm
+
+**Recommended: Mozilla Readability.js**
+
+Based on Context7 documentation, Readability provides:
+
+```javascript
+// Check if page is suitable for extraction
+if (isProbablyReaderable(document)) {
+  const reader = new Readability(document);
+  const article = reader.parse();
+
+  // Returns:
+  // - article.title: Page title
+  // - article.content: Cleaned HTML content
+  // - article.textContent: Plain text
+  // - article.excerpt: Auto-generated summary
+  // - article.byline: Author info
+  // - article.publishedTime: Publication date
+  // - article.siteName: Source site
+}
+```
+
+**Fallback Strategy:**
+1. If `isProbablyReaderable()` -> use Readability
+2. If not readerable -> capture `document.body.innerText` with URL metadata
+3. If PDF -> use SAW's Docling backend (no client-side PDF parse)
+
+#### Technical Architecture
+
+```
+Chrome Extension Architecture:
+
+[Content Script] <-> [Background Service Worker] <-> [SAW API]
+      |                      |                          |
+      +-- Readability.js     +-- chrome.storage         +-- REST API
+      +-- DOM extraction     +-- Message routing        +-- WebSocket
+      +-- Selection API      +-- Tab management         +-- MCP Server
+```
+
+**Chrome Storage Usage:**
+- `storage.local`: Clip history (up to 10MB, unlimitedStorage for more)
+- `storage.sync`: User preferences synced across devices (100KB limit)
+- `storage.session`: Temporary state during clip (cleared on browser close)
+
+#### Message Flow
+
+```javascript
+// Content Script -> Background
+chrome.runtime.sendMessage({ action: 'clip', content: article }, (response) => {
+  // Handle response from SAW
+});
+
+// Background -> SAW API
+fetch('http://localhost:8000/api/ingest', {
+  method: 'POST',
+  body: JSON.stringify(article)
+});
+```
+
+---
+
+### RSS Subscription
+
+**Context:** Automated ingestion of regularly-updated content sources. Users subscribe to blogs, news sites, academic feeds, and want new content automatically added to their knowledge base.
+
+#### Table Stakes (RSS)
+
+Features users expect from any RSS integration.
+
+| Feature | Why Expected | Complexity | Dependency on SAW | Notes |
+|---------|-------------|------------|-------------------|-------|
+| **RSS/Atom Parsing** | Must parse both major feed formats | Low | Ingest Engine | Feedparser handles RSS 0.90-2.0, Atom 0.3-1.0 |
+| **Subscription Management** | Add/remove/feed list | Low | Vault (metadata) | Simple CRUD on feed URLs |
+| **Incremental Sync** | Don't re-download existing entries | Medium | Vault (SHA256 cache) | ETag/Last-Modified headers |
+| **Scheduled Pull** | Periodic checks for new content | Medium | None | `asyncio` scheduler or cron |
+| **Deduplication** | Same entry shouldn't create duplicates | Medium | Claims DB | Use entry ID or URL hash |
+| **Error Handling** | Failed feeds shouldn't crash system | Low | None | Retry logic with backoff |
+
+#### Differentiators (RSS)
+
+Features unique to SAW's RSS integration.
+
+| Feature | Value Proposition | Complexity | Dependency on SAW | Notes |
+|---------|-------------------|------------|-------------------|-------|
+| **Confidence Inheritance** | Feed source trust -> entry confidence baseline | Medium | Governance Engine | RSS from arXiv -> higher confidence |
+| **Freshness-driven Pull** | Prioritize feeds with stale content | Medium | Governance Engine | 9-level freshness -> pull urgency |
+| **Change Detection** | Detect when entry is updated, not just new | High | Vault (versioning) | Compare content hash on update |
+| **Smart Filtering** | Skip entries matching exclusion rules | Medium | Governance Engine | Apply Cedar policies to ingestion |
+| **Feed Grouping** | Organize feeds by topic/source | Low | Metadata | Folder/category system |
+| **Auto Summary + Tags** | LLM-generated metadata on each entry | Medium | Learn Engine | Same as other ingestion |
+| **OPML Import/Export** | Bulk feed management | Low | None | Standard OPML format |
+
+#### Anti-Features (RSS)
+
+| Anti-Feature | Why Avoid | What to Do Instead |
+|--------------|-----------|-------------------|
+| **Real-time Push** | Requires WebSub/PubSubHubbub infrastructure; most feeds don't support | Polling with configurable intervals (5min-24hr) |
+| **In-feed Search** | SAW's query engine already provides search; duplication | Direct users to SAW query interface |
+| **Custom Feed Rendering** | RSS entries become SAW documents; no separate viewer needed | Integrate with existing Web UI |
+| **Feed Analytics** | Not core to knowledge management mission | Optional future feature; not MVP |
+
+#### Incremental Sync Pattern
+
+**Based on Feedparser documentation:**
+
+```python
+import feedparser
+
+# First request - capture ETag and Last-Modified
+d = feedparser.parse('https://example.com/feed.xml')
+etag = d.get('etag')        # e.g., '"6c132-941-ad7e3080"'
+modified = d.get('modified')  # e.g., 'Fri, 11 Jun 2024 23:00:34 GMT'
+
+# Store in database for next request
+
+# Subsequent request - use conditional GET
+d2 = feedparser.parse(
+    'https://example.com/feed.xml',
+    etag=etag,
+    modified=modified
+)
+
+if d2.status == 304:
+    # Feed unchanged - use cached data
+    pass
+elif d2.status == 200:
+    # Feed updated - process new entries
+    for entry in d2.entries:
+        # Process entry
+        pass
+```
+
+**Change Detection Strategy:**
+
+| Scenario | Detection Method | Action |
+|----------|------------------|--------|
+| New entry | Entry ID not in Vault | Create new document |
+| Entry updated | `entry.updated_parsed` > stored timestamp | Version existing claim |
+| Entry deleted | Entry ID missing from feed | Mark as historical |
+| Content changed | SHA256 hash differs | Update with change attribution |
+
+#### Technical Architecture
+
+```
+RSS Integration Architecture:
+
+[Feed Parser] -> [Change Detector] -> [Ingest Engine] -> [Claims DB]
+      |                |                    |
+      +-- Feedparser   +-- ETag/Modified     +-- Standard SAW ingestion
+      +-- Schedule     +-- Entry ID lookup   +-- Confidence inheritance
+      +-- Error retry  +-- Content hash
+```
+
+#### Scheduling Recommendations
+
+| Feed Type | Poll Interval | Rationale |
+|-----------|---------------|-----------|
+| News sites | 15-30 min | High velocity content |
+| Blogs | 1-6 hours | Lower update frequency |
+| Academic (arXiv) | 6-12 hours | Daily batch updates |
+| Podcasts | 12-24 hours | Episodic content |
+
+---
+
+## Feature Dependencies Summary
+
+### Cross-Feature Shared Dependencies
+
+| SAW Component | Obsidian Plugin | Chrome Ext | RSS |
+|---------------|-----------------|------------|-----|
+| Ingest Engine | Full intake pipeline | Content extraction + metadata | Feed entry processing |
+| Query Engine | Knowledge queries | Similarity search for dupes | None (optional) |
+| Governance Engine | Confidence/freshness display | Preview confidence | Confidence inheritance |
+| Vault Layer | Source document sync | Metadata-only (full doc via API) | Entry storage |
+| Claims DB | Primary sync target | Structured claims storage | Claim creation |
+| MCP Server | Alternative API path | API communication | Background sync |
+| REST API | API communication | Primary endpoint | Feed management |
+
+### Integration Points with Existing v1.1-v2.0 Features
+
+| v1.1 Feature | v3.0 Integration |
+|--------------|-------------------|
+| 4-tier confidence | Display in Obsidian, preview in Chrome, inherit in RSS |
+| 9-level freshness | Visual cues in Obsidian, priority calculation for RSS pull |
+| SHA256 file cache | Duplicate detection for Chrome clips, RSS change detection |
+| Multiple ingestion formats | Chrome: HTML -> Markdown, RSS: Entry -> Document |
+| Cedar policy engine | Apply policies to RSS ingestion rules |
+| Write Queue (Outbox) | Queue clips/sync events for async processing |
+
+---
+
+## v3.0 MVP Recommendation
+
+### Phase Priority
+
+| Priority | Feature | Rationale |
+|----------|---------|-----------|
+| **P0 (MVP)** | Chrome Extension basic clip | Highest user value per effort; immediate knowledge capture |
+| **P0 (MVP)** | RSS basic subscription | Low complexity, high automation value |
+| **P1** | Obsidian bidirectional sync | High complexity; defer until Chrome validated |
+| **P1** | Obsidian graph confidence visualization | Differentiator, but depends on sync working |
+| **P2** | Chrome smart tagging | Requires embedding model integration |
+| **P2** | RSS change detection versioning | Requires Vault versioning enhancement |
+
+### Deferred Features
+
+1. **Obsidian Plugin full sync** -- Conflict resolution complexity requires careful design
+2. **Chrome Extension PDF extraction** -- Requires content script for PDF viewer
+3. **RSS real-time push** -- Infrastructure heavy; polling sufficient for MVP
+
+---
+
 ## Sources
 
+**v3.0 Ecosystem Integration Sources (2026-04-30):**
+- **Obsidian Plugin API**: Context7 `/obsidianmd/obsidian-developer-docs` -- Vault API, Events, MetadataCache, Graph CSS variables -- HIGH confidence
+- **Mozilla Readability**: Context7 `/mozilla/readability` -- parse(), isProbablyReaderable(), article structure -- HIGH confidence
+- **Feedparser**: Context7 `/kurtmckee/feedparser` -- ETag, Last-Modified, RSS/Atom parsing -- HIGH confidence
+- **Chrome Extensions**: Context7 `/websites/developer_chrome_extensions` -- storage API, tabs.sendMessage, content scripts -- HIGH confidence
+
 **Phase 03 Sources (2026-04-27):**
-- Cedar Policy Language: https://docs.cedarpolicy.com/ (authorization patterns, permit/forbid syntax) -- HIGH confidence
-- Cytoscape.js: https://js.cytoscape.org/ (graph visualization features, layouts, interaction) -- HIGH confidence
-- Milkdown: https://milkdown.dev/ (WYSIWYG markdown editing, plugin architecture) -- HIGH confidence
-- Google A2A Protocol: https://github.com/google/A2A (agent-to-agent communication spec) -- MEDIUM confidence (spec evolving)
-- CrewAI Agents: https://docs.crewai.com/concepts/agents (role definition pattern, delegation) -- HIGH confidence
-- LangGraph: https://langchain-ai.github.io/langgraph/ (stateful multi-agent orchestration) -- HIGH confidence
+- Cedar Policy Language: https://docs.cedarpolicy.com/ -- HIGH confidence
+- Cytoscape.js: https://js.cytoscape.org/ -- HIGH confidence
+- Milkdown: https://milkdown.dev/ -- HIGH confidence
+- Google A2A Protocol: https://github.com/google/A2A -- MEDIUM confidence (spec evolving)
+- CrewAI Agents: https://docs.crewai.com/concepts/agents -- HIGH confidence
+- LangGraph: https://langchain-ai.github.io/langgraph/ -- HIGH confidence
 
 **Phase 1-2 Sources (from original research):**
-- Design document: `docs/smart_agent_wiki_design.md` -- Full architecture with 23 appendix design decisions
-- Ecosystem analysis: `docs/llm_wiki_ecosystem_analysis.md` -- 181-project categorization
-- Remote audit findings: `docs/remote_project_audit_findings.md` -- 27 project deep audits
-- Karpathy's LLM Wiki: `docs/llm-wiki.md` -- Foundational pattern
-- User comments: `docs/karpathy_llm_wiki_comments.md` -- 666 comments analysis
+- Design document: `docs/smart_agent_wiki_design.md`
+- Ecosystem analysis: `docs/llm_wiki_ecosystem_analysis.md`
+- Remote audit findings: `docs/remote_project_audit_findings.md`
+- Karpathy's LLM Wiki: `docs/llm-wiki.md`
+- User comments: `docs/karpathy_llm_wiki_comments.md`
 
 ---
 
 *Phase 03 features researched: 2026-04-27*
+*v3.0 Ecosystem Integration researched: 2026-04-30*
 *Original FEATURES.md: 2026-04-26*

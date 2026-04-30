@@ -114,28 +114,27 @@ Smart Agent Wiki 是一个下一代智能多代理知识平台，集百家之长
 | Cedar 策略引擎 | 实验性 cedar-python + CLI fallback | ✓ Acceptable |
 | React 19 + Zustand | 前端技术栈现代且稳定 | ✓ Good |
 
-## Current Milestone: v2.0 Extended Ingestion & Team Platform
+## Current Milestone: v3.0 Ecosystem Integration
 
-**Goal:** 扩展知识摄入渠道（视频/音频）并支持团队协作部署模式
+**Goal:** 扩展 Smart Agent Wiki 的生态集成能力，让用户可以从更多渠道摄入知识并在更多工具中使用知识库。
 
 **Target features:**
-- **Video/Audio Ingestion** — 使用 Whisper 转录视频和音频内容，扩展知识来源
-- **Team Deployment** — Docker Compose + PostgreSQL + Redis 支持多用户团队模式
-- **API Platform** — 开放 API 供第三方集成
+- **Obsidian Plugin** — 双向同步、图谱可视化、本地读写
+- **Chrome Extension** — 一键剪藏、自动提取正文、标签分类
+- **RSS Subscription** — 订阅更新、自动摄入、增量同步
 
-**Status:** Complete (Design) — 2026-04-30
+**Status:** Planning — 2026-04-30
 
 ## Current State
 
-**Shipped Version:** v1.1 (2026-04-29)
-**Current Milestone:** v2.0 (Planning)
+**Shipped Version:** v2.0 (2026-04-30)
+**Current Milestone:** v3.0 (Planning)
 
-**v1.1 Stats:**
-- Phases: 5 (01, 02, 03-01, 03-02, 03-03)
-- Plans: 19
-- Tests: 430+ passing
-- Python LOC: ~16,100
-- TypeScript LOC: ~3,662
+**v2.0 Stats:**
+- Phases: 3 (04, 05, 06)
+- Plans: 10
+- Tests: 408+ passing
+- Python LOC: ~19,000
 
 **Tech Debt:**
 1. Phase VERIFICATION.md files missing (Phase 02, 03-01, 03-02, 03-03) — non-blocking
@@ -146,14 +145,13 @@ Smart Agent Wiki 是一个下一代智能多代理知识平台，集百家之长
 
 This document evolves at phase transitions and milestone boundaries.
 
-**v1.1 Milestone Review (2026-04-29):**
-- All 65 v1 requirements shipped and validated
-- Core value (知识可信、可溯源、可进化) achieved
-- Multi-agent collaboration working with 6 specialized agents
-- Web UI fully functional with search, graph, editor, dashboard
-- MCP Server exposing 23 tools for agent integration
-- Next: v2 planning for extended features
+**v2.0 Milestone Review (2026-04-30):**
+- Media Ingestion: Whisper 转录、批量处理、预览机制
+- Team Deployment: Docker Compose、PostgreSQL、Redis、JWT 认证、RBAC
+- API Platform: RESTful API、GraphQL、Webhooks、批量操作
+- 408 单元测试全部通过
+- Next: v3.0 Ecosystem Integration
 
 ---
 
-*Last updated: 2026-04-29 after v1.1 milestone*
+*Last updated: 2026-04-30 after v2.0 milestone shipped*
