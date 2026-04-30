@@ -123,6 +123,8 @@ Smart Agent Wiki 是一个下一代智能多代理知识平台，集百家之长
 - **Team Deployment** — Docker Compose + PostgreSQL + Redis 支持多用户团队模式
 - **API Platform** — 开放 API 供第三方集成
 
+**Status:** Complete (Design) — 2026-04-30
+
 ## Current State
 
 **Shipped Version:** v1.1 (2026-04-29)

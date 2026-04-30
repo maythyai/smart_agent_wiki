@@ -34,4 +34,35 @@
 
 ---
 
-*Last updated: 2026-04-29*
+## v2.0: Extended Ingestion & Team Platform
+
+**Status:** Complete (Design)
+**Design Completed:** 2026-04-30
+**Phases:** 3 (04, 05, 06)
+**Plans:** 10
+
+### Summary
+
+扩展知识摄入渠道（视频/音频）并支持多用户团队协作部署。包含完整的 API 开放平台供第三方集成。
+
+### Key Features Designed
+
+1. **Media Ingestion** — Whisper 转录视频/音频，批量处理，预览确认
+2. **Team Deployment** — Docker Compose，PostgreSQL，Redis，多用户认证
+3. **API Platform** — RESTful API，API Key，速率限制，GraphQL，Webhook
+
+### Design Documents
+
+- [Media Ingestion Design](../docs/media_ingestion_design.md)
+- [Team Deployment Design](../docs/team_deployment_design.md)
+- [API Platform Design](../docs/api_platform_design.md)
+
+### Requirements Covered
+
+- MING-01 ~ MING-08 (Media Ingestion)
+- TEAM-01 ~ TEAM-10 (Team Deployment)
+- APIP-01 ~ APIP-08 (API Platform)
+
+---
+
+*Last updated: 2026-04-30*
