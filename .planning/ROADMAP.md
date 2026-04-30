@@ -117,7 +117,7 @@
 | 3-03. React Frontend | v1.1 | 8/8 | Complete | 2026-04-29 |
 | **4. Media Ingestion** | **v2.0** | **3/3** | **Implemented** | **2026-04-30** |
 | **5. Team Deployment** | **v2.0** | **4/4** | **Implemented** | **2026-04-30** |
-| **6. API Platform** | **v2.0** | **3/3** | **Complete (Design)** | **2026-04-30** |
+| **6. API Platform** | **v2.0** | **3/3** | **Implemented** | **2026-04-30** |
 
 ---
 
