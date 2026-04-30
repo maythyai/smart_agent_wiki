@@ -23,6 +23,8 @@ dependencies = [
     "PyYAML>=6.0",
     "platformdirs>=3.0",
     "httpx>=0.25",
+    "fastapi>=0.100",
+    "pynacl>=1.5",
 ]
 
 [project.scripts]
@@ -30,7 +32,7 @@ saw = "saw.drivers.cli.main:app"
 
 [project.optional-dependencies]
 pdf = ["docling>=2.0", "PyMuPDF>=1.24"]
-dev = ["pytest>=8.0", "ruff>=0.4"]
+dev = ["pytest>=8.0", "pytest-asyncio>=1.0", "ruff>=0.4"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/saw"]
