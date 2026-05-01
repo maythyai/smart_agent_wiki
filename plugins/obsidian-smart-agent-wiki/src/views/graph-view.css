@@ -1,0 +1,113 @@
+/* Graph container */
+.saw-graph-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+}
+
+.saw-graph-canvas {
+  flex: 1;
+  min-height: 200px;
+}
+
+/* Controls panel */
+.saw-graph-controls {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--background-modifier-border);
+  background: var(--background-secondary);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.saw-graph-controls .setting-item {
+  border: none;
+  padding: 4px 0;
+}
+
+.saw-graph-controls .setting-item-info {
+  flex: 0 0 auto;
+  margin-right: 12px;
+}
+
+.saw-graph-controls .setting-item-name {
+  font-size: 12px;
+}
+
+.saw-graph-controls .setting-item-control {
+  flex: 1;
+}
+
+.saw-graph-controls select,
+.saw-graph-controls input[type="range"] {
+  width: 100%;
+  max-width: 150px;
+}
+
+/* Tooltip */
+.saw-tooltip {
+  position: absolute;
+  background: var(--background-primary-alt);
+  border: 1px solid var(--background-modifier-border);
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  max-width: 250px;
+  z-index: 1000;
+  pointer-events: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.saw-tooltip strong {
+  color: var(--text-normal);
+}
+
+.saw-tooltip em {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+/* Loading indicator */
+.saw-graph-loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--text-muted);
+}
+
+/* Legend */
+.saw-graph-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--background-secondary);
+  border-top: 1px solid var(--background-modifier-border);
+  font-size: 11px;
+}
+
+.saw-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.saw-legend-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+/* Conflict indicators */
+.saw-conflict-indicator {
+  position: absolute;
+  background: #F44336;
+  color: white;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  top: 4px;
+  right: 4px;
+}
