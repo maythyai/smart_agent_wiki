@@ -17,6 +17,12 @@ import {
   createDefaultHandlers,
   MessageHandlers,
 } from './messaging';
+import { setupCommands } from './commands';
+import { setupContextMenu, handleContextMenuClick } from './context-menu';
+import { Clipper, extractFromTab } from './clipper';
+import { BatchClipper } from './batch-clipper';
+import { SyncQueue } from './sync-queue';
+import { getAPIClient } from '../api/client';
 import type { ExtensionSettings, ClippedContent } from '../types';
 
 /**
@@ -26,6 +32,7 @@ export default class BackgroundWorker {
   private storage: StorageManager;
   private settings: ExtensionSettings | null = null;
   private isInitialized = false;
+  private syncQueue: SyncQueue | null = null;
 
   constructor() {
     this.storage = new StorageManager();
@@ -47,52 +54,32 @@ export default class BackgroundWorker {
     // 1. Restore state from storage (Pitfall 22)
     this.settings = await this.storage.getSettings();
 
-    // 2. Setup message handlers
-    const handlers: MessageHandlers = {
-      ...createDefaultHandlers(this.storage),
+    // 2. Initialize API client if configured
+    if (this.settings.apiToken) {
+      const apiClient = getAPIClient({
+        apiUrl: this.settings.apiUrl,
+        apiToken: this.settings.apiToken,
+      });
+      this.syncQueue = new SyncQueue(this.storage, apiClient);
+    }
 
-      // Add custom handlers for clipping operations
-      // These will be implemented in Plan 08-04
-      'clip-page': async (data: unknown) => {
-        const content = data as ClippedContent;
-        // TODO: Implement in Plan 08-04
-        console.log('Clip page requested:', content.url);
-        return { status: 'pending', message: 'Clipping not yet implemented' };
-      },
-
-      'get-tag-suggestions': async (data: unknown) => {
-        // TODO: Implement in Plan 08-04
-        console.log('Tag suggestions requested');
-        return { tags: [], confidence: 0 };
-      },
-
-      'context-clip-page': async (data: unknown) => {
-        const { tabId } = data as { tabId: number };
-        console.log('Context menu clip page:', tabId);
-        return { status: 'pending' };
-      },
-
-      'context-clip-selection': async (data: unknown) => {
-        const { tabId, selectionText } = data as { tabId: number; selectionText: string };
-        console.log('Context menu clip selection:', tabId, selectionText?.slice(0, 50));
-        return { status: 'pending' };
-      },
-
-      'context-clip-all-tabs': async () => {
-        console.log('Context menu clip all tabs');
-        return { status: 'pending' };
-      },
-    };
-
+    // 3. Setup message handlers
+    const handlers = this.createMessageHandlers();
     setupMessaging(handlers, this.storage);
 
-    // 3. Setup context menus
-    this.setupContextMenus();
+    // 4. Setup keyboard commands
+    setupCommands(this.storage);
 
-    // 4. Setup alarms for periodic sync
+    // 5. Setup context menus
+    setupContextMenu();
+    chrome.contextMenus.onClicked.addListener((info, tab) => {
+      handleContextMenuClick(info, tab);
+    });
+
+    // 6. Setup alarms for periodic sync
     this.setupAlarms();
 
-    // 5. Listen for tab removal to clean up content-ready tracking
+    // 7. Listen for tab removal to clean up content-ready tracking
     chrome.tabs.onRemoved.addListener((tabId) => {
       this.storage.removeContentReadyTab(tabId);
     });
@@ -102,78 +89,211 @@ export default class BackgroundWorker {
   }
 
   /**
-   * Setup context menu items
+   * Create message handlers for extension operations
    */
-  private setupContextMenus(): void {
-    // Remove existing menus first
-    chrome.contextMenus.removeAll(() => {
-      // Clip current page
-      chrome.contextMenus.create({
-        id: 'saw-clip-page',
-        title: 'Clip to SAW',
-        contexts: ['page'],
-      });
+  private createMessageHandlers(): MessageHandlers {
+    return {
+      ...createDefaultHandlers(this.storage),
 
-      // Clip selected text
-      chrome.contextMenus.create({
-        id: 'saw-clip-selection',
-        title: 'Clip selection to SAW',
-        contexts: ['selection'],
-      });
+      // Handle clip-page request from popup
+      'clip-page': async (data: unknown) => {
+        const content = data as ClippedContent;
+        return await this.handleClipPage(content);
+      },
 
-      // Separator
-      chrome.contextMenus.create({
-        id: 'saw-separator',
-        type: 'separator',
-        contexts: ['page', 'selection'],
-      });
+      // Handle tag suggestions request
+      'get-tag-suggestions': async (data: unknown) => {
+        return await this.handleGetTagSuggestions(data);
+      },
 
-      // Clip all tabs
-      chrome.contextMenus.create({
-        id: 'saw-clip-all-tabs',
-        title: 'Clip all tabs to SAW',
-        contexts: ['action'],
-      });
+      // Handle context menu clip page
+      'context-clip-page': async (data: unknown) => {
+        const { tabId } = data as { tabId: number };
+        return await this.handleContextClipPage(tabId);
+      },
 
-      // Handle context menu clicks
-      chrome.contextMenus.onClicked.addListener((info, tab) => {
-        this.handleContextMenuClick(info, tab);
-      });
+      // Handle context menu clip selection
+      'context-clip-selection': async (data: unknown) => {
+        const { tabId } = data as { tabId: number };
+        return await this.handleContextClipSelection(tabId);
+      },
 
-      console.log('SAW Clipper: Context menus created');
-    });
+      // Handle context menu clip all tabs
+      'context-clip-all-tabs': async () => {
+        return await this.handleClipAllTabs();
+      },
+    };
   }
 
   /**
-   * Handle context menu item clicks
+   * Handle clip page request
    */
-  private handleContextMenuClick(
-    info: chrome.contextMenus.OnClickData,
-    tab: chrome.tabs.Tab | undefined
-  ): void {
-    switch (info.menuItemId) {
-      case 'saw-clip-page':
-        if (tab?.id) {
-          chrome.runtime.sendMessage({
-            type: 'context-clip-page',
-            tabId: tab.id,
-          });
-        }
-        break;
+  private async handleClipPage(content: ClippedContent): Promise<{ status: string; id?: string; error?: string }> {
+    if (!this.settings?.apiToken) {
+      return { status: 'error', error: 'API token not configured' };
+    }
 
-      case 'saw-clip-selection':
-        if (tab?.id) {
-          chrome.runtime.sendMessage({
-            type: 'context-clip-selection',
-            tabId: tab.id,
-            selectionText: info.selectionText,
-          });
-        }
-        break;
+    try {
+      const apiClient = getAPIClient({
+        apiUrl: this.settings.apiUrl,
+        apiToken: this.settings.apiToken,
+      });
 
-      case 'saw-clip-all-tabs':
-        chrome.runtime.sendMessage({ type: 'context-clip-all-tabs' });
-        break;
+      const result = await apiClient.clipPage(content);
+
+      if (result.status === 'success') {
+        await this.storage.addToHistory(content, true, result.id);
+        return { status: 'success', id: result.id };
+      } else {
+        // Add to sync queue for retry
+        await this.storage.addToPendingSync(content);
+        return { status: 'error', error: 'API returned error status' };
+      }
+    } catch (error) {
+      // Add to sync queue for offline retry
+      await this.storage.addToPendingSync(content);
+      return { status: 'error', error: String(error) };
+    }
+  }
+
+  /**
+   * Handle tag suggestions request
+   */
+  private async handleGetTagSuggestions(data: unknown): Promise<{ tags: string[]; confidence: number }> {
+    if (!this.settings?.apiToken) {
+      return { tags: [], confidence: 0 };
+    }
+
+    try {
+      const { content } = data as { content: string };
+      const apiClient = getAPIClient({
+        apiUrl: this.settings.apiUrl,
+        apiToken: this.settings.apiToken,
+      });
+
+      const result = await apiClient.getTagSuggestions(content);
+      return result;
+    } catch (error) {
+      console.warn('Failed to get tag suggestions:', error);
+      return { tags: [], confidence: 0 };
+    }
+  }
+
+  /**
+   * Handle context menu clip page
+   */
+  private async handleContextClipPage(tabId: number): Promise<{ status: string }> {
+    if (!this.settings?.apiToken) {
+      this.showNotification('SAW Clipper', 'Please configure API token in settings');
+      return { status: 'error' };
+    }
+
+    try {
+      const apiClient = getAPIClient({
+        apiUrl: this.settings.apiUrl,
+        apiToken: this.settings.apiToken,
+      });
+
+      const { page } = await extractFromTab(tabId, 'page');
+      if (!page) {
+        throw new Error('Failed to extract page content');
+      }
+
+      const clipper = new Clipper(this.storage);
+      const content = await clipper.clipPage(tabId, page);
+
+      const result = await apiClient.clipPage(content);
+
+      if (result.status === 'success') {
+        await this.storage.addToHistory(content, true, result.id);
+        this.showNotification('SAW Clipper', `Clipped: ${content.title}`);
+        return { status: 'success' };
+      } else {
+        throw new Error('API returned error status');
+      }
+    } catch (error) {
+      this.showNotification('SAW Clipper', `Error: ${String(error)}`);
+      return { status: 'error' };
+    }
+  }
+
+  /**
+   * Handle context menu clip selection
+   */
+  private async handleContextClipSelection(tabId: number): Promise<{ status: string }> {
+    if (!this.settings?.apiToken) {
+      this.showNotification('SAW Clipper', 'Please configure API token in settings');
+      return { status: 'error' };
+    }
+
+    try {
+      const apiClient = getAPIClient({
+        apiUrl: this.settings.apiUrl,
+        apiToken: this.settings.apiToken,
+      });
+
+      const { selection } = await extractFromTab(tabId, 'selection');
+      if (!selection || !selection.text) {
+        this.showNotification('SAW Clipper', 'No selection found');
+        return { status: 'error' };
+      }
+
+      const tab = await chrome.tabs.get(tabId);
+      const clipper = new Clipper(this.storage);
+      const content = await clipper.clipSelection(
+        tabId,
+        selection,
+        tab.title || 'Untitled',
+        tab.url || ''
+      );
+
+      const result = await apiClient.clipPage(content);
+
+      if (result.status === 'success') {
+        await this.storage.addToHistory(content, true, result.id);
+        this.showNotification('SAW Clipper', `Clipped selection: ${content.title}`);
+        return { status: 'success' };
+      } else {
+        throw new Error('API returned error status');
+      }
+    } catch (error) {
+      this.showNotification('SAW Clipper', `Error: ${String(error)}`);
+      return { status: 'error' };
+    }
+  }
+
+  /**
+   * Handle clip all tabs
+   */
+  private async handleClipAllTabs(): Promise<{ status: string; succeeded?: number; failed?: number }> {
+    if (!this.settings?.apiToken) {
+      this.showNotification('SAW Clipper', 'Please configure API token in settings');
+      return { status: 'error' };
+    }
+
+    try {
+      const apiClient = getAPIClient({
+        apiUrl: this.settings.apiUrl,
+        apiToken: this.settings.apiToken,
+      });
+
+      const batchClipper = new BatchClipper(this.storage, apiClient);
+
+      this.showNotification('SAW Clipper', 'Starting batch clip...');
+
+      const { succeeded, failed } = await batchClipper.clipAllTabs((progress) => {
+        console.log(`Batch progress: ${progress.completed}/${progress.total}`);
+      });
+
+      this.showNotification(
+        'SAW Clipper',
+        `Batch complete: ${succeeded.length} succeeded, ${failed.length} failed`
+      );
+
+      return { status: 'success', succeeded: succeeded.length, failed: failed.length };
+    } catch (error) {
+      this.showNotification('SAW Clipper', `Batch error: ${String(error)}`);
+      return { status: 'error' };
     }
   }
 
@@ -207,16 +327,25 @@ export default class BackgroundWorker {
    * Process pending sync queue
    */
   private async processSyncQueue(): Promise<void> {
-    const pending = await this.storage.getPendingSync();
+    if (!this.syncQueue) {
+      return;
+    }
 
+    const pending = await this.storage.getPendingSync();
     if (pending.length === 0) {
       return;
     }
 
     console.log(`SAW Clipper: Processing ${pending.length} pending clips`);
 
-    // TODO: Implement actual sync in Plan 08-04
-    // For now, just log that we would process them
+    const { processed, failed } = await this.syncQueue.processQueue();
+
+    if (processed > 0) {
+      console.log(`SAW Clipper: Synced ${processed} clips`);
+    }
+    if (failed > 0) {
+      console.warn(`SAW Clipper: Failed to sync ${failed} clips`);
+    }
   }
 
   /**
@@ -230,12 +359,31 @@ export default class BackgroundWorker {
     if (stats.used > stats.quota * 0.8) {
       const history = await this.storage.getClipHistory();
       if (history.length > 50) {
-        // Trim to 50 entries
-        const trimmed = history.slice(0, 50);
-        // Note: We'd need to add a method to set history directly
-        console.log('SAW Clipper: Would trim history from', history.length, 'to 50');
+        // Clear and keep only recent 50
+        await this.storage.clearHistory();
+        for (const entry of history.slice(0, 50)) {
+          await this.storage.addToHistory(
+            entry,
+            entry.success,
+            entry.apiId,
+            entry.errorMessage
+          );
+        }
+        console.log('SAW Clipper: Trimmed history to 50 entries');
       }
     }
+  }
+
+  /**
+   * Show system notification
+   */
+  private showNotification(title: string, message: string): void {
+    chrome.notifications.create({
+      type: 'basic',
+      iconUrl: 'icons/icon48.png',
+      title,
+      message,
+    });
   }
 }
 

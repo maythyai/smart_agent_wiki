@@ -8,7 +8,8 @@
     "activeTab",
     "offscreen",
     "tabs",
-    "contextMenus"
+    "contextMenus",
+    "notifications"
   ],
   "host_permissions": [
     "http://localhost:8000/*",
