@@ -1,6 +1,7 @@
 """API package for Smart Agent Wiki.
 
 Phase 6: API Platform — RESTful API and integrations.
+Phase 9: RSS Subscription — Feed management endpoints.
 """
 
 from saw.api.keys import (
@@ -30,6 +31,7 @@ from saw.api.bulk import (
     BulkImportService,
     BulkExportService,
 )
+from saw.api.feeds import router as feeds_router
 
 __all__ = [
     # API Keys
@@ -55,4 +57,6 @@ __all__ = [
     "ExportFormat",
     "BulkImportService",
     "BulkExportService",
+    # Phase 9: RSS Feeds
+    "feeds_router",
 ]
