@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clip to SAW</title>
+  <link rel="stylesheet" href="../styles/popup.css">
+</head>
+<body>
+  <div class="popup-container">
+    <!-- Header with connection status -->
+    <header class="popup-header">
+      <img src="../icons/icon48.png" alt="SAW" class="logo">
+      <h1>Clip to SAW</h1>
+      <span id="connection-status" class="status-indicator" title="Connection status">
+        <span class="status-dot"></span>
+      </span>
+    </header>
+
+    <!-- Loading state -->
+    <div id="loading-state" class="loading-state">
+      <div class="spinner"></div>
+      <span>Extracting content...</span>
+    </div>
+
+    <!-- Main content (hidden until extracted) -->
+    <main id="main-content" class="main-content hidden">
+      <!-- URL display -->
+      <div class="url-display">
+        <img id="favicon" src="" alt="" class="favicon">
+        <a id="page-url" href="#" target="_blank" title="Open original page"></a>
+      </div>
+
+      <!-- Editable title -->
+      <div class="title-input">
+        <input type="text" id="page-title" placeholder="Page Title">
+      </div>
+
+      <!-- Content preview -->
+      <div class="preview-section">
+        <label>Preview</label>
+        <div id="content-preview" class="content-preview">
+          <p class="preview-text"></p>
+        </div>
+      </div>
+
+      <!-- Selection indicator (if applicable) -->
+      <div id="selection-indicator" class="selection-indicator hidden">
+        <span class="icon">&#x270E;</span>
+        <span>Selection mode - only selected text will be clipped</span>
+      </div>
+
+      <!-- Tags input with suggestions -->
+      <div class="tags-section">
+        <label>Tags</label>
+        <div class="tags-container">
+          <div id="tags-list" class="tags-list"></div>
+          <input type="text" id="tag-input" placeholder="Add tag...">
+        </div>
+        <div id="tag-suggestions" class="tag-suggestions hidden">
+          <span class="suggestions-label">Suggestions:</span>
+          <div class="suggestions-list"></div>
+        </div>
+      </div>
+
+      <!-- Notes textarea -->
+      <div class="notes-section">
+        <label for="notes">Notes</label>
+        <textarea id="notes" placeholder="Add notes..." rows="3"></textarea>
+      </div>
+
+      <!-- Action buttons -->
+      <div class="actions">
+        <button id="clip-btn" class="btn btn-primary">
+          <span class="btn-icon">&#x1F4CB;</span>
+          Clip to SAW
+        </button>
+        <button id="cancel-btn" class="btn btn-secondary">Cancel</button>
+      </div>
+    </main>
+
+    <!-- Error state -->
+    <div id="error-state" class="error-state hidden">
+      <span class="error-icon">&#x26A0;</span>
+      <p id="error-message">Unable to extract content from this page.</p>
+      <button id="retry-btn" class="btn btn-secondary">Retry</button>
+    </div>
+  </div>
+  <script type="module" src="../dist/popup.js"></script>
+</body>
+</html>

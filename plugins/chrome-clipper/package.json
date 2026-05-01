@@ -1,0 +1,29 @@
+{
+  "name": "smart-agent-wiki-clipper",
+  "version": "1.0.0",
+  "description": "Clip web pages to Smart Agent Wiki knowledge base",
+  "type": "module",
+  "scripts": {
+    "build": "node esbuild.config.mjs",
+    "dev": "node esbuild.config.mjs --watch",
+    "clean": "rm -rf dist/"
+  },
+  "dependencies": {
+    "@mozilla/readability": "^0.6.0",
+    "@webext-core/messaging": "^1.4.0",
+    "jsdom": "^26.0.0"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.268",
+    "@types/node": "^22.0.0",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.6.0"
+  },
+  "keywords": [
+    "chrome-extension",
+    "knowledge-management",
+    "web-clipper"
+  ],
+  "author": "SAW Team",
+  "license": "MIT"
+}

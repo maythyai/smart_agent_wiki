@@ -1,0 +1,55 @@
+{
+  "manifest_version": 3,
+  "name": "Smart Agent Wiki Clipper",
+  "version": "1.0.0",
+  "description": "Clip web pages to Smart Agent Wiki knowledge base",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "offscreen",
+    "tabs",
+    "contextMenus"
+  ],
+  "host_permissions": [
+    "http://localhost:8000/*",
+    "https://*/"
+  ],
+  "background": {
+    "service_worker": "dist/background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["dist/content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Alt+S"
+      },
+      "description": "Open SAW Clipper popup"
+    },
+    "clip-page": {
+      "suggested_key": {
+        "default": "Alt+Shift+S"
+      },
+      "description": "Quick clip current page to SAW"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
