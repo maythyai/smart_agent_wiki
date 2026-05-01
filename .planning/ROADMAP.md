@@ -55,7 +55,13 @@
 5. Manifest V3 合规，可发布到 Chrome Web Store
 6. 智能分类建议基于内容分析
 
-**Plans:** TBD
+**Plans:** 4 plans in 4 waves
+
+Plans:
+- [ ] 08-01-PLAN.md — Extension core (manifest.json, service worker, storage)
+- [ ] 08-02-PLAN.md — Content extraction (content script, offscreen document, Readability)
+- [ ] 08-03-PLAN.md — Popup UI (preview, tags, notes, notifications)
+- [ ] 08-04-PLAN.md — API client, commands, and batch operations
 
 **UI hint:** yes
 
@@ -94,9 +100,9 @@
 | 5. Team Deployment | v2.0 | 4/4 | Complete | 2026-04-30 |
 | 6. API Platform | v2.0 | 3/3 | Complete | 2026-04-30 |
 | **7. Obsidian Plugin** | **v3.0** | **4/4** | **Planned** | **-** |
-| **8. Chrome Extension** | **v3.0** | **0/0** | **Not started** | **-** |
+| **8. Chrome Extension** | **v3.0** | **0/4** | **Not started** | **-** |
 | **9. RSS Subscription** | **v3.0** | **0/0** | **Not started** | **-** |
 
 ---
 
-*Last updated: 2026-05-01 — Phase 7 plans created*
+*Last updated: 2026-05-01 — Phase 8 plans created*
