@@ -61,4 +61,29 @@
 
 ---
 
-*Last updated: 2026-04-30*
+## v3.0: Ecosystem Integration
+
+**Shipped:** 2026-05-01
+**Phases:** 3 (07, 08, 09)
+**Plans:** 12
+**Tests:** 106+
+
+### Summary
+
+扩展 Smart Agent Wiki 的生态集成能力，让用户可以从更多渠道摄入知识并在更多工具中使用知识库。包含 Obsidian 插件、Chrome 扩展和 RSS 订阅三大功能模块。
+
+### Key Accomplishments
+
+1. **Obsidian Plugin** — 双向同步、图谱可视化、置信度徽章
+2. **Chrome Extension** — Manifest V3 合规、一键剪藏、批量标签页
+3. **RSS Subscription** — fastfeedparser 25x 加速、多键去重、条件 GET
+4. **57 个新文件** — 约 7,000 行代码
+5. **106+ 测试通过** — 所有单元测试验证通过
+
+### Artifacts
+
+- [Audit Report](milestones/v3.0-MILESTONE-AUDIT.md)
+
+---
+
+*Last updated: 2026-05-01*
