@@ -2,9 +2,9 @@
 
 ## Milestones
 
-- ✅ **v1.1 Collaboration & Visualization** — Phases 1-3 (shipped 2026-04-29) — [Details](milestones/v1.1-ROADMAP.md)
-- ✅ **v2.0 Extended Ingestion & Team Platform** — Phases 4-6 (shipped 2026-04-30) — [Details](milestones/v2.0-ROADMAP.md)
-- 🔄 **v3.0 Ecosystem Integration** — Phases 7-9 (planning) — Obsidian Plugin, Chrome Extension, RSS Subscription
+- **v1.1 Collaboration & Visualization** — Phases 1-3 (shipped 2026-04-29) — [Details](milestones/v1.1-ROADMAP.md)
+- **v2.0 Extended Ingestion & Team Platform** — Phases 4-6 (shipped 2026-04-30) — [Details](milestones/v2.0-ROADMAP.md)
+- **v3.0 Ecosystem Integration** — Phases 7-9 (planning) — Obsidian Plugin, Chrome Extension, RSS Subscription
 
 ## Phases
 
@@ -29,7 +29,11 @@
 4. 插件可通过 SAW API 认证
 5. 知识图谱可视化展示置信度徽章
 
-**Plans:** TBD
+**Plans:**
+- [ ] 07-01-PLAN.md — Plugin core implementation (manifest, entry point, build config)
+- [ ] 07-02-PLAN.md — API client and bidirectional sync logic
+- [ ] 07-03-PLAN.md — Graph view and confidence badges
+- [ ] 07-04-PLAN.md — Settings panel and commands
 
 **UI hint:** yes
 
@@ -89,10 +93,10 @@
 | 4. Media Ingestion | v2.0 | 3/3 | Complete | 2026-04-30 |
 | 5. Team Deployment | v2.0 | 4/4 | Complete | 2026-04-30 |
 | 6. API Platform | v2.0 | 3/3 | Complete | 2026-04-30 |
-| **7. Obsidian Plugin** | **v3.0** | **0/0** | **Not started** | **-** |
+| **7. Obsidian Plugin** | **v3.0** | **4/4** | **Planned** | **-** |
 | **8. Chrome Extension** | **v3.0** | **0/0** | **Not started** | **-** |
 | **9. RSS Subscription** | **v3.0** | **0/0** | **Not started** | **-** |
 
 ---
 
-*Last updated: 2026-04-30 — v3.0 roadmap created*
+*Last updated: 2026-05-01 — Phase 7 plans created*
