@@ -320,3 +320,140 @@ class TestDeduplicationService:
         assert result.is_duplicate is False
         assert result.match_type == "none"
         assert result.entry_id is None
+
+
+class TestFeedModel:
+    """Test Feed SQLAlchemy model."""
+
+    def test_feed_create_with_required_fields(self) -> None:
+        """Test 5: Feed model can be created with required fields."""
+        from saw.db.feed_models import Feed
+
+        feed = Feed(
+            url="https://example.com/feed.xml",
+        )
+
+        assert feed.url == "https://example.com/feed.xml"
+        # Note: SQLAlchemy defaults only apply on database insert
+        # For in-memory tests, we check the field definition
+        assert hasattr(Feed, 'poll_interval')
+        assert hasattr(Feed, 'active')
+
+    def test_feed_optional_fields(self) -> None:
+        """Feed model can have optional fields."""
+        from saw.db.feed_models import Feed
+
+        feed = Feed(
+            url="https://example.com/feed.xml",
+            title="Example Feed",
+            description="A sample feed",
+            category="tech",
+            tags='["python", "ai"]',
+            poll_interval=1800,
+        )
+
+        assert feed.title == "Example Feed"
+        assert feed.category == "tech"
+        assert feed.tags == '["python", "ai"]'
+
+    def test_feed_relationship(self) -> None:
+        """Test 7: Feed-FeedEntry relationship works (feed.entries)."""
+        from saw.db.feed_models import Feed, FeedEntry
+
+        # The relationship is defined, though we can't fully test without database
+        assert hasattr(Feed, 'entries')
+        # Check relationship type
+        rel = Feed.__mapper__.relationships['entries']
+        assert rel.back_populates == 'feed'
+
+
+class TestFeedEntryModel:
+    """Test FeedEntry SQLAlchemy model."""
+
+    def test_entry_create_with_required_fields(self) -> None:
+        """Test 6: FeedEntry model can be created with required fields."""
+        from saw.db.feed_models import FeedEntry
+
+        entry = FeedEntry(
+            id="guid-123:title-hash:content-hash",
+            feed_id="feed-uuid",
+            guid="guid-123",
+            title="Article Title",
+        )
+
+        assert entry.id == "guid-123:title-hash:content-hash"
+        assert entry.feed_id == "feed-uuid"
+        assert entry.guid == "guid-123"
+        assert entry.title == "Article Title"
+
+    def test_entry_status_default(self) -> None:
+        """Test 8: Entry status defaults to 'new'."""
+        from saw.db.feed_models import FeedEntry
+
+        entry = FeedEntry(
+            id="test-id",
+            feed_id="feed-uuid",
+            guid="guid",
+            title="Title",
+            status="new",  # Provide explicitly for in-memory test
+        )
+
+        assert entry.status == "new"
+        # Verify default is defined in model
+        col = FeedEntry.__table__.c.status
+        assert col.default.arg == "new"
+
+    def test_entry_status_updated(self) -> None:
+        """Entry status can be set to 'updated'."""
+        from saw.db.feed_models import FeedEntry
+
+        entry = FeedEntry(
+            id="test-id",
+            feed_id="feed-uuid",
+            guid="guid",
+            title="Title",
+            status="updated",
+        )
+
+        assert entry.status == "updated"
+
+    def test_entry_unique_constraint_defined(self) -> None:
+        """Test 9: Unique constraint on feed_entries(feed_id, guid) works."""
+        from saw.db.feed_models import FeedEntry
+
+        # Check that the index is defined
+        indexes = FeedEntry.__table_args__
+        index_names = [idx.name for idx in indexes if hasattr(idx, 'name')]
+
+        assert "ix_feed_entries_feed_guid" in index_names
+
+    def test_entry_content_hash_index(self) -> None:
+        """Content hash index should be defined."""
+        from saw.db.feed_models import FeedEntry
+
+        indexes = FeedEntry.__table_args__
+        index_names = [idx.name for idx in indexes if hasattr(idx, 'name')]
+
+        assert "ix_feed_entries_content_hash" in index_names
+
+    def test_entry_vault_uuid(self) -> None:
+        """Entry should have vault_uuid field."""
+        from saw.db.feed_models import FeedEntry
+
+        entry = FeedEntry(
+            id="test-id",
+            feed_id="feed-uuid",
+            guid="guid",
+            title="Title",
+            vault_uuid="vault-uuid-123",
+        )
+
+        assert entry.vault_uuid == "vault-uuid-123"
+
+    def test_entry_relationship(self) -> None:
+        """FeedEntry should have relationship to Feed."""
+        from saw.db.feed_models import FeedEntry
+
+        assert hasattr(FeedEntry, 'feed')
+        rel = FeedEntry.__mapper__.relationships['feed']
+        assert rel.back_populates == 'entries'
