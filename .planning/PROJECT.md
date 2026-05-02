@@ -43,21 +43,21 @@ Smart Agent Wiki 是一个下一代智能多代理知识平台，集百家之长
 
 ### Active
 
-(None — all v1 requirements shipped)
+(None — to be defined in v3.1 requirements gathering)
 
 ### Out of Scope
 
-- **Obsidian 插件** — v2 生态完善阶段
-- **Tauri 桌面应用** — v2 生态完善阶段
-- **P2P 知识共享** — v2 生态完善阶段
-- **团队部署模式 (Docker Compose + PostgreSQL)** — v2
-- **API 开放平台** — v2
-- **多语言支持 (EN/中文/日本語)** — v2
-- **OWL-RL 本体推理** — v2
+- **Notion Integration** — v3.1 (now active)
+- **Logseq Integration** — v3.1 (now active)
+- **IM Integration (Slack/Discord/飞书)** — v3.1 (now active)
+- **GitHub Integration** — v3.1 (now active)
+- **Tauri 桌面应用** — v3.3 生态完善阶段
+- **P2P 知识共享** — v4 生态完善阶段
+- **多语言支持 (EN/中文/日本語)** — v3.2
+- **OWL-RL 本体推理** — v4
 - **实时会议转写 (Soniox)** — 需要特定硬件/服务，后期考虑
-- **Video/Audio ingestion (Whisper)** — v2
-- **Chrome 剪藏扩展** — v2
-- **RSS feed 订阅** — v2
+- **GitLab Integration** — v3.1+ 后续扩展
+- **其他 IM 平台** — v3.1+ 后续扩展
 
 ## Context
 
@@ -114,27 +114,35 @@ Smart Agent Wiki 是一个下一代智能多代理知识平台，集百家之长
 | Cedar 策略引擎 | 实验性 cedar-python + CLI fallback | ✓ Acceptable |
 | React 19 + Zustand | 前端技术栈现代且稳定 | ✓ Good |
 
-## Current Milestone: v3.0 Ecosystem Integration
+## Current Milestone: v3.1 Third-Party Integrations
 
-**Goal:** 扩展 Smart Agent Wiki 的生态集成能力，让用户可以从更多渠道摄入知识并在更多工具中使用知识库。
+**Goal:** 扩展 Smart Agent Wiki 的第三方平台集成能力，实现知识的多平台互通。
 
 **Target features:**
-- **Obsidian Plugin** — 双向同步、图谱可视化、本地读写
-- **Chrome Extension** — 一键剪藏、自动提取正文、标签分类
-- **RSS Subscription** — 订阅更新、自动摄入、增量同步
+- **Notion Integration** — 数据库同步、页面编辑、双向更新、完整属性映射
+- **Logseq Integration** — 图谱同步、block 级别映射、本地文件双向更新
+- **IM Integration** — Slack/Discord/企业微信/飞书消息摄入、Webhook 支持、可扩展架构
+- **GitHub Integration** — Issues/Discussions/PR 同步、开发工作流集成
 
-**Status:** Planning — 2026-04-30
+**Key decisions:**
+- 认证方式：OAuth (Notion/Slack/GitHub) + API Token (Logseq 本地)
+- 同步策略：SAW 作为知识枢纽，各平台为数据源/消费端
+- 冲突处理：时间戳优先 + 可配置策略
+- 阶段编号：继续从 Phase 10 开始
+
+**Status:** Planning — 2026-05-02
 
 ## Current State
 
-**Shipped Version:** v2.0 (2026-04-30)
-**Current Milestone:** v3.0 (Planning)
+**Shipped Version:** v3.0 (2026-05-01)
+**Current Milestone:** v3.1 (Planning)
 
-**v2.0 Stats:**
-- Phases: 3 (04, 05, 06)
-- Plans: 10
-- Tests: 408+ passing
-- Python LOC: ~19,000
+**v3.0 Stats:**
+- Phases: 3 (07, 08, 09)
+- Plans: 12
+- Tests: 106+ passing
+- TypeScript LOC: ~5,000 (plugins)
+- Python LOC: ~1,966 (RSS)
 
 **Tech Debt:**
 1. Phase VERIFICATION.md files missing (Phase 02, 03-01, 03-02, 03-03) — non-blocking
@@ -145,13 +153,13 @@ Smart Agent Wiki 是一个下一代智能多代理知识平台，集百家之长
 
 This document evolves at phase transitions and milestone boundaries.
 
-**v2.0 Milestone Review (2026-04-30):**
-- Media Ingestion: Whisper 转录、批量处理、预览机制
-- Team Deployment: Docker Compose、PostgreSQL、Redis、JWT 认证、RBAC
-- API Platform: RESTful API、GraphQL、Webhooks、批量操作
-- 408 单元测试全部通过
-- Next: v3.0 Ecosystem Integration
+**v3.0 Milestone Review (2026-05-01):**
+- Obsidian Plugin: 双向同步、图谱可视化、置信度徽章
+- Chrome Extension: Manifest V3 合规、一键剪藏、批量标签页
+- RSS Subscription: fastfeedparser 25x 加速、多键去重、条件 GET
+- 106+ 测试通过
+- Next: v3.1 Third-Party Integrations
 
 ---
 
-*Last updated: 2026-04-30 after v2.0 milestone shipped*
+*Last updated: 2026-05-02 — starting v3.1 milestone planning*
