@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v3.1
 milestone_name: Third-Party Integrations
-status: phase_11_planned
-last_updated: "2026-05-02T11:00:00.000Z"
+status: phase_12_complete
+last_updated: "2026-05-02T19:30:00.000Z"
 last_activity: 2026-05-02
 progress:
   total_phases: 6
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 20
-  completed_plans: 3
-  percent: 20
+  completed_plans: 6
+  percent: 30
 ---
 
 # Project State
@@ -20,29 +20,74 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-02)
 
 **Core value:** 知识可信、可溯源、可进化 — 每一条回答都可以追溯到原始文档的具体位置
-**Current focus:** v3.1 Third-Party Integrations — Phase 11 planned, ready for execution
+**Current focus:** v3.1 Third-Party Integrations — Phase 12 (Notion Connector) complete
 
 ## Current Position
 
-Phase: 11 — Sync Engine
-Plan: 11-01-PLAN.md (Wave 1)
-Status: Phase 11 planned, ready for execution
-Last activity: 2026-05-02 — Phase 11 planned (3 plans)
+Phase: 12 — Notion Connector
+Plan: All 3 plans complete
+Status: Phase 12 complete
+Last activity: 2026-05-02 — Phase 12 complete (3 plans, 157 tests passing)
 
-Progress: [███░░░░░░░] 20%
+Progress: [███░░░░░░░] 30%
 
 ## v3.1 Roadmap Summary
 
 | Phase | Goal | Requirements | Status |
 |-------|------|--------------|--------|
 | 10 | Connector Framework | AUTH-01~04, IM-01,02,06 (7) | Complete |
-| 11 | Sync Engine | SYNC-01~05, ERRO-01~04, IM-03~05,07 (13) | Planned |
-| 12 | Notion Connector | NOTI-01~10 (10) | Not started |
+| 11 | Sync Engine | SYNC-01~05, ERRO-01~04, IM-03~05,07 (13) | Complete |
+| 12 | Notion Connector | NOTI-01~10 (10) | Complete |
 | 13 | Logseq + IM | LOGS-01~10, SLAK-01~06, DISC-01~05, FEIS-01~05, WECO-01~04 (30) | Not started |
 | 14 | GitHub Connector | GITH-01~11 (11) | Not started |
 | 15 | Dashboard + Polish | Cross-cutting (4) | Not started |
 
 **Coverage:** 65/65 requirements mapped (100%)
+
+## Phase 12 Plan Summary
+
+| Plan | Wave | Requirements | Description | Status |
+|------|------|--------------|-------------|--------|
+| 12-01 | 1 | NOTI-01, NOTI-02, NOTI-09, NOTI-10 | Notion connector core and OAuth | Complete |
+| 12-02 | 2 | NOTI-03, NOTI-04, NOTI-07 | Property mapping and block transformation | Complete |
+| 12-03 | 3 | NOTI-05, NOTI-06, NOTI-08 | Bidirectional sync and polling | Complete |
+
+**Total:** 3 plans, 3 waves, 10 requirements — All complete
+
+## Phase 12 Deliverables
+
+### Plan 12-01: Notion Connector Core and OAuth
+- NotionConnector implementing UnifiedConnectorInterface
+- NotionOAuthHandler for workspace connection (NOTI-01)
+- NotionPage, NotionDatabase, NotionProperty Pydantic models
+- NotionSyncCursorModel for cursor persistence (NOTI-10)
+- NotionDatabaseConfigModel for database selection (NOTI-02)
+- Rate limiting via notion-client SDK (NOTI-09)
+
+### Plan 12-02: Property Mapping and Block Transformation
+- BlockRenderer for all common Notion block types (NOTI-03)
+- RichTextRenderer for text formatting
+- PropertyMapper for property-to-field extraction (NOTI-04)
+- PropertyMappingConfig for customizable mappings
+- NotionTransformer for bidirectional conversion
+- Property type change handling (NOTI-07)
+
+### Plan 12-03: Bidirectional Sync and Polling
+- NotionSyncManager for orchestration (NOTI-05)
+- NotionConflictHandler for concurrent edit detection (NOTI-06)
+- NotionSyncConfig with configurable polling (NOTI-08)
+- FastAPI sync endpoints
+- Typer CLI commands
+
+## Phase 11 Plan Summary
+
+| Plan | Wave | Requirements | Description | Status |
+|------|------|--------------|-------------|--------|
+| 11-01 | 1 | SYNC-02, SYNC-03, SYNC-05, ERRO-04 | Sync engine core with conflict detection | Complete |
+| 11-02 | 2 | SYNC-01, ERRO-01, ERRO-02, ERRO-03, IM-07 | Backpressure, retry, and health status | Complete |
+| 11-03 | 3 | SYNC-04, IM-03, IM-04, IM-05 | IM message handling and sync API endpoints | Complete |
+
+**Total:** 3 plans, 3 waves, 13 requirements — All complete
 
 ## Phase 10 Plan Summary
 
@@ -54,142 +99,31 @@ Progress: [███░░░░░░░] 20%
 
 **Total:** 3 plans, 3 waves, 7 requirements — All complete
 
-## Phase 11 Plan Summary
+## Architecture Patterns (Phase 12)
 
-| Plan | Wave | Requirements | Description | Status |
-|------|------|--------------|-------------|--------|
-| 11-01 | 1 | SYNC-02, SYNC-03, SYNC-05, ERRO-04 | Sync engine core with conflict detection | Planned |
-| 11-02 | 2 | SYNC-01, ERRO-01, ERRO-02, ERRO-03, IM-07 | Backpressure, retry, and health status | Planned |
-| 11-03 | 3 | SYNC-04, IM-03, IM-04, IM-05 | IM message handling and sync API endpoints | Planned |
+- NotionConnector (connector implementation)
+- NotionOAuthHandler (OAuth specifics)
+- BlockRenderer (block to markdown)
+- PropertyMapper (property extraction)
+- NotionTransformer (bidirectional conversion)
+- NotionSyncManager (sync orchestration)
+- NotionConflictHandler (conflict resolution)
 
-**Total:** 3 plans, 3 waves, 13 requirements — Planned
+## Tech Stack Additions (Phase 12)
 
-## Phase 11 Components (New)
+- notion-client 2.0.0+
 
-### Plan 11-01: Sync Engine Core
-- SyncEngine: Bidirectional sync orchestration
-- ConflictResolver: Conflict detection and resolution (last_modified_wins)
-- SyncStatusTracker: Per-connector sync state tracking
-- SyncLogger: Audit logging for all sync operations
-- SQLAlchemy models: SyncStateModel, SyncLogModel, ConflictRecordModel
+## Decisions (Phase 12)
 
-### Plan 11-02: Backpressure, Retry, and Health
-- BackpressureManager: Write Queue backpressure handling (pause at 1000, resume at 500)
-- RetryHandler: Exponential backoff (1s→2s→4s→8s→16s, max 5 retries)
-- HealthMonitor: Three-tier health status (healthy/degraded/unhealthy)
-- Health API endpoints: `/api/v1/health`, `/api/v1/health/{connector_id}`
-
-### Plan 11-03: IM Message Handling and Sync API
-- MessageHandler: IM message extraction (content, author, timestamp, channel)
-- ReactionProcessor: Message reactions to confidence signals
-- Sync API endpoints: `/api/v1/sync/status`, `/api/v1/sync/{connector_id}/trigger`
-- CLI sync commands: `saw sync status`, `saw sync trigger <connector>`
-- ConnectorSink: Write Queue sink for connector operations
-
-## Phase 10 Deliverables
-
-### Plan 10-01: Core Connector Protocol
-- UnifiedConnectorInterface Protocol with all required methods
-- TokenMasker for AUTH-04 (last 4 chars only)
-- RateLimitManager with token bucket for IM-06
-- ConnectorRegistry singleton
-- SQLAlchemy models: ConnectorConfigModel, ConnectorSyncLog
-
-### Plan 10-02: OAuth Handler and Token Encryption
-- TokenEncryption with Fernet for AUTH-02
-- OAuthHandler with state management for AUTH-01
-- TokenRefreshManager with mutex for AUTH-03
-- FastAPI OAuth callback endpoints
-
-### Plan 10-03: Webhook Endpoints and Rate Limiting
-- WebhookVerifier with HMAC-SHA256 for IM-02
-- WebhookRateLimiter for inbound rate limiting
-- WebhookLogger with token masking for audit trail
-- Unified webhook endpoint for IM-01
-
-## Previous Milestone Context (v3.0)
-
-**Completed:** 2026-05-01
-**Phases:** 3 (07, 08, 09)
-**Key deliverables:**
-- Obsidian Plugin — 双向同步、图谱可视化
-- Chrome Extension — Manifest V3、一键剪藏
-- RSS Subscription — fastfeedparser、多键去重
-
-## Accumulated Context
-
-### Decisions (v3.1)
-
-1. **Milestone scope:** 4 platforms (Notion, Logseq, IM, GitHub) all in v3.1
-2. **Authentication:** OAuth for Notion/Slack/GitHub, API Token for Logseq
-3. **Sync strategy:** SAW as knowledge hub, platforms as sources/consumers
-4. **Conflict handling:** Timestamp priority + configurable strategy
-5. **Phase numbering:** Continue from Phase 10 (v3.0 ended at Phase 9)
-6. **Granularity:** Coarse — 6 phases, aggressive grouping
-
-### Phase 10 Design Decisions
-
-1. **Token encryption:** Fernet with env var `SAW_ENCRYPTION_KEY`
-2. **OAuth state:** Redis-based with 10-min TTL for CSRF protection
-3. **Rate limiting:** Token bucket per platform (Notion 3/s, GitHub 5000/hr, Slack 60/min, Discord 50/s)
-4. **Webhook verification:** Platform-specific HMAC (Slack v0, GitHub sha256=)
-5. **Token refresh mutex:** Redis distributed lock (team), asyncio.Lock (single-user)
-
-### Phase 11 Design Decisions (Auto-decided)
-
-1. **Sync loop detection:** Track `source_platform` and `source_id` in Claim metadata
-2. **Conflict resolution:** `last_modified_wins` default, store `last_sync_at` per connector
-3. **Backpressure:** Pause sync_pull when queue depth > 1000, resume at < 500
-4. **Retry:** Exponential backoff 1s→2s→4s→8s→16s (max 5), use `tenacity`
-5. **Health status:** `healthy`, `degraded`, `unhealthy` states
-6. **Thread context:** Store `thread_parent_id` in Claim metadata
-7. **Reactions:** Map to `reactions: {"👍": 5}` in metadata, use as confidence signal
-
-### Architecture Patterns (implemented in Phase 10)
-
-- UnifiedConnectorInterface (Protocol)
-- RateLimitManager (per-platform limiting)
-- OAuthHandler (unified flow management)
-- WebhookVerifier (signature verification)
-- WebhookLogger (audit trail)
-
-### New Architecture Patterns (Phase 11)
-
-- SyncEngine (bidirectional orchestration)
-- ConflictResolver (timestamp-based resolution)
-- BackpressureManager (hysteresis-based throttling)
-- RetryHandler (exponential backoff with tenacity)
-- HealthMonitor (three-tier status tracking)
-- ConnectorSink (Write Queue integration)
-
-### Tech Stack Additions (v3.1)
-
-- notion-client 3.0.0
-- slack-sdk 3.41.0 + slack-bolt 1.28.0
-- discord.py 2.7.1
-- lark-oapi 1.5.5
-- PyGithub 2.9.1
-- edn-format 0.7.5
-- svix 1.92.2
-- cryptography 44.0.0
-- tenacity (for retry handling)
-
-### Tech Debt (from previous milestones)
-
-1. Integration tests needed for Docker Compose deployment (v2.0)
-2. OpenAPI documentation can be auto-generated (v2.0)
-3. Performance benchmarks for rate limiter (v2.0)
-4. Phase VERIFICATION.md files missing for some phases (v1.1)
-5. React frontend tests deferred (v1.1)
-
-### Blockers/Concerns
-
-None — Phase 11 planned, ready for execution.
+1. **notion-client SDK**: Official SDK handles rate limiting (3 req/s) automatically
+2. **Discriminated union**: Pydantic discriminated union for type-safe property handling
+3. **Conflict resolution**: LAST_MODIFIED_WINS as default strategy
+4. **Polling interval**: Default 1 hour (3600s), minimum 60s
 
 ## Session Continuity
 
-Last session: 2026-05-02T11:00:00.000Z
-Next action: `/gsd-execute-phase 11` to execute Phase 11 (Sync Engine)
+Last session: 2026-05-02T19:30:00.000Z
+Next action: Continue with Phase 13 (Logseq + IM connectors)
 
 ---
-*Last updated: 2026-05-02 — Phase 11 planned*
+*Last updated: 2026-05-02 — Phase 12 complete*
