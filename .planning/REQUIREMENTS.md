@@ -1,118 +1,218 @@
 # Requirements: Smart Agent Wiki
 
-**Defined:** 2026-04-30
+**Defined:** 2026-05-02
 **Core Value:** 知识可信、可溯源、可进化 — 每一条回答都可以追溯到原始文档的具体位置
-
-## v3.0 Requirements (Ecosystem Integration)
-
-### Obsidian Plugin (OBSP)
-
-**Table Stakes:**
-
-- [ ] **OBSP-01**: 用户可通过 Obsidian 插件浏览 SAW 知识库内容
-- [ ] **OBSP-02**: Wiki 页面在 Obsidian 中可编辑并可同步回 SAW
-- [ ] **OBSP-03**: 支持 Obsidian 的双向链接 [[]] 语法
-- [ ] **OBSP-04**: 插件可通过 SAW API 认证
-
-**Differentiators:**
-
-- [ ] **OBSP-05**: 知识图谱可视化（Cytoscape 风格）
-- [ ] **OBSP-06**: 置信度徽章显示在页面标题旁
-- [ ] **OBSP-07**: 矛盾检测提示（高亮冲突的 Claims）
-
-### Chrome Extension (CHRE)
-
-**Table Stakes:**
-
-- [ ] **CHRE-01**: 一键剪藏当前页面到 SAW Vault
-- [ ] **CHRE-02**: 自动提取正文（去除导航/广告）
-- [ ] **CHRE-03**: 支持选择剪藏范围（全文/选中）
-- [ ] **CHRE-04**: 添加标签和备注
-- [ ] **CHRE-05**: Manifest V3 合规
-
-**Differentiators:**
-
-- [ ] **CHRE-06**: 智能分类建议（基于内容分析）
-- [ ] **CHRE-07**: 批量剪藏多个标签页
-- [ ] **CHRE-08**: 与 Obsidian 插件协同（剪藏后自动同步）
-
-### RSS Subscription (RSSS)
-
-**Table Stakes:**
-
-- [ ] **RSSS-01**: 订阅 RSS/Atom Feed
-- [ ] **RSSS-02**: 自动摄入新文章到 Vault
-- [ ] **RSSS-03**: 增量同步（只处理新条目）
-- [ ] **RSSS-04**: 配置同步频率
-
-**Differentiators:**
-
-- [ ] **RSSS-05**: 内容变更检测（文章更新时触发重新摄入）
-- [ ] **RSSS-06**: Feed 分类管理
-- [ ] **RSSS-07**: 按关键词过滤订阅
 
 ---
 
-## v2.0 Requirements (Shipped)
+## v3.1 Requirements (Third-Party Integrations)
+
+### Notion Integration (NOTI)
+
+**Core:**
+
+- [ ] **NOTI-01**: User can connect Notion workspace via OAuth 2.0
+- [ ] **NOTI-02**: User can select Notion databases to sync with SAW
+- [ ] **NOTI-03**: System automatically ingests new/modified pages from connected databases
+- [ ] **NOTI-04**: System maps Notion properties to SAW Claim fields (title, content, confidence, freshness)
+- [ ] **NOTI-05**: User can edit pages in SAW and sync changes back to Notion
+- [ ] **NOTI-06**: System detects conflicts when both sides modified (timestamp-based resolution)
+- [ ] **NOTI-07**: System handles Notion property type changes gracefully
+- [ ] **NOTI-08**: System polls for changes at configurable intervals
+- [ ] **NOTI-09**: System respects Notion rate limits (3 req/s) with token bucket limiter
+- [ ] **NOTI-10**: System persists sync cursor for resume after interruption
+
+### Logseq Integration (LOGS)
+
+**Core:**
+
+- [ ] **LOGS-01**: User can configure Logseq graph path (local directory)
+- [ ] **LOGS-02**: System parses Markdown files and extracts blocks as Claims
+- [ ] **LOGS-03**: System handles property drawers as Claim metadata
+- [ ] **LOGS-04**: System watches Logseq directory for file changes
+- [ ] **LOGS-05**: User can edit in SAW and sync changes back to Logseq files
+- [ ] **LOGS-06**: System detects concurrent edits (file hash comparison)
+- [ ] **LOGS-07**: System creates conflict copies when edits collide
+- [ ] **LOGS-08**: System handles EDN format for Logseq configuration
+- [ ] **LOGS-09**: System maps Logseq namespaces to SAW Wiki page hierarchy
+- [ ] **LOGS-10**: System preserves Logseq wikilink syntax during sync
+
+### IM Integration
+
+**Shared (IM):**
+
+- [ ] **IM-01**: System provides unified webhook endpoint `/api/v1/webhooks/{platform}`
+- [ ] **IM-02**: System verifies webhook signatures (HMAC-SHA256)
+- [ ] **IM-03**: System extracts message content, author, timestamp, channel
+- [ ] **IM-04**: System captures thread context for threaded messages
+- [ ] **IM-05**: System handles message reactions as confidence signals
+- [ ] **IM-06**: System respects per-platform rate limits
+- [ ] **IM-07**: System provides graceful degradation when platforms unavailable
+
+**Slack (SLAK):**
+
+- [ ] **SLAK-01**: User can install Slack app via OAuth 2.0
+- [ ] **SLAK-02**: System receives events via Slack Events API
+- [ ] **SLAK-03**: System handles message events (message.channels, message.groups)
+- [ ] **SLAK-04**: System captures thread replies with parent message context
+- [ ] **SLAK-05**: System handles Slack's URL unfurling and attachments
+- [ ] **SLAK-06**: System respects Slack's tier-based rate limits
+
+**Discord (DISC):**
+
+- [ ] **DISC-01**: User can add Discord bot to server
+- [ ] **DISC-02**: System receives messages via Discord Gateway (WebSocket)
+- [ ] **DISC-03**: System handles reconnection with resume sequence
+- [ ] **DISC-04**: System captures embeds and attachments
+- [ ] **DISC-05**: System respects Discord's 50 req/sec global rate limit
+
+**Feishu (FEIS):**
+
+- [ ] **FEIS-01**: User can install Feishu app via OAuth 2.0
+- [ ] **FEIS-02**: System receives messages via Feishu webhook events
+- [ ] **FEIS-03**: System handles multi-tenant token (app_token + tenant_token)
+- [ ] **FEIS-04**: System captures Feishu Wiki docs as content source
+- [ ] **FEIS-05**: System handles Chinese content encoding correctly
+
+**WeCom/企业微信 (WECO):**
+
+- [ ] **WECO-01**: User can configure WeCom bot webhook URL
+- [ ] **WECO-02**: System receives messages via WeCom webhook
+- [ ] **WECO-03**: System handles WeCom's message encryption (AES-256-CBC)
+- [ ] **WECO-04**: System respects WeCom's API rate limits
+
+### GitHub Integration (GITH)
+
+**Core:**
+
+- [ ] **GITH-01**: User can connect GitHub account via OAuth 2.0 or GitHub App
+- [ ] **GITH-02**: User can select repositories to sync
+- [ ] **GITH-03**: System ingests Issues as Claims with proper field mapping
+- [ ] **GITH-04**: System ingests Discussions as Claims (GraphQL API)
+- [ ] **GITH-05**: System receives real-time updates via GitHub webhooks
+- [ ] **GITH-06**: System handles webhook delivery failures with reconciliation
+- [ ] **GITH-07**: System maps Issue labels to SAW tags
+- [ ] **GITH-08**: System captures Issue/Discussion comments as related Claims
+- [ ] **GITH-09**: System handles GitHub's 5000 req/hr rate limit
+- [ ] **GITH-10**: System uses conditional requests (ETag/Last-Modified)
+- [ ] **GITH-11**: System handles pagination via Link header correctly
+
+### Cross-Cutting (AUTH, SYNC, ERRO)
+
+**OAuth & Authentication:**
+
+- [ ] **AUTH-01**: System provides unified OAuth flow for all OAuth platforms
+- [ ] **AUTH-02**: System stores tokens encrypted at rest
+- [ ] **AUTH-03**: System handles token refresh with mutex
+- [ ] **AUTH-04**: System masks tokens in logs and API responses
+
+**Sync Engine:**
+
+- [ ] **SYNC-01**: System provides unified sync status dashboard
+- [ ] **SYNC-02**: System prevents sync loops (source metadata tracking)
+- [ ] **SYNC-03**: System logs all sync operations for audit
+- [ ] **SYNC-04**: System provides manual sync trigger per connector
+- [ ] **SYNC-05**: System handles backpressure via Write Queue
+
+**Error Handling:**
+
+- [ ] **ERRO-01**: System retries transient failures with exponential backoff
+- [ ] **ERRO-02**: System alerts on persistent failures
+- [ ] **ERRO-03**: System provides per-connector health status
+- [ ] **ERRO-04**: System preserves data integrity on partial failures
+
+---
+
+## v3.0 Requirements (Shipped ✓)
+
+All v3.0 requirements have been implemented and verified.
+
+### Obsidian Plugin (OBSP) — ✓ Shipped
+
+- [x] **OBSP-01**: 用户可通过 Obsidian 插件浏览 SAW 知识库内容
+- [x] **OBSP-02**: Wiki 页面在 Obsidian 中可编辑并可同步回 SAW
+- [x] **OBSP-03**: 支持 Obsidian 的双向链接 [[]] 语法
+- [x] **OBSP-04**: 插件可通过 SAW API 认证
+- [x] **OBSP-05**: 知识图谱可视化（Cytoscape 风格）
+- [x] **OBSP-06**: 置信度徽章显示在页面标题旁
+- [x] **OBSP-07**: 矛盾检测提示（高亮冲突的 Claims）
+
+### Chrome Extension (CHRE) — ✓ Shipped
+
+- [x] **CHRE-01**: 一键剪藏当前页面到 SAW Vault
+- [x] **CHRE-02**: 自动提取正文（去除导航/广告）
+- [x] **CHRE-03**: 支持选择剪藏范围（全文/选中）
+- [x] **CHRE-04**: 添加标签和备注
+- [x] **CHRE-05**: Manifest V3 合规
+- [x] **CHRE-06**: 智能分类建议（基于内容分析）
+- [x] **CHRE-07**: 批量剪藏多个标签页
+- [x] **CHRE-08**: 与 Obsidian 插件协同（剪藏后自动同步）
+
+### RSS Subscription (RSSS) — ✓ Shipped
+
+- [x] **RSSS-01**: 订阅 RSS/Atom Feed
+- [x] **RSSS-02**: 自动摄入新文章到 Vault
+- [x] **RSSS-03**: 增量同步（只处理新条目）
+- [x] **RSSS-04**: 配置同步频率
+- [x] **RSSS-05**: 内容变更检测（文章更新时触发重新摄入）
+- [x] **RSSS-06**: Feed 分类管理
+- [x] **RSSS-07**: 按关键词过滤订阅
+
+---
+
+## v2.0 Requirements (Shipped ✓)
 
 All v2.0 requirements have been implemented and verified.
 
-### Media Ingestion (Video/Audio) — ✓ Shipped
+### Media Ingestion (MING) — ✓ Shipped
 
-- [x] **MING-01**: User can upload video files (MP4, WebM, MOV) for transcription
-- [x] **MING-02**: User can upload audio files (MP3, WAV, M4A, OGG) for transcription
-- [x] **MING-03**: System transcribes video/audio using Whisper (local or API)
-- [x] **MING-04**: System extracts metadata from media files (duration, format, bitrate)
-- [x] **MING-05**: User can configure Whisper model size (tiny/base/small/medium/large)
-- [x] **MING-06**: Transcribed content integrates with existing Claims/Wiki pipeline
-- [x] **MING-07**: System supports batch transcription of multiple media files
-- [x] **MING-08**: User can preview transcription before finalizing ingest
+- [x] **MING-01**: User can upload video files for transcription
+- [x] **MING-02**: User can upload audio files for transcription
+- [x] **MING-03**: System transcribes video/audio using Whisper
+- [x] **MING-04**: System extracts metadata from media files
+- [x] **MING-05**: User can configure Whisper model size
+- [x] **MING-06**: Transcribed content integrates with Claims/Wiki pipeline
+- [x] **MING-07**: System supports batch transcription
+- [x] **MING-08**: User can preview transcription before finalizing
 
-### Team Deployment — ✓ Shipped
+### Team Deployment (TEAM) — ✓ Shipped
 
-- [x] **TEAM-01**: Administrator can deploy via Docker Compose with single command
-- [x] **TEAM-02**: System supports PostgreSQL as primary database (replacing SQLite)
-- [x] **TEAM-03**: System uses Redis for caching and session management
-- [x] **TEAM-04**: Multiple users can register and authenticate
-- [x] **TEAM-05**: User roles supported (Admin, Editor, Viewer)
-- [x] **TEAM-06**: Knowledge base supports per-user private vaults
-- [x] **TEAM-07**: Shared team vaults with configurable permissions
-- [x] **TEAM-08**: Audit logs track all user actions
-- [x] **TEAM-09**: Data backup and restore functionality
-- [x] **TEAM-10**: Health check endpoints for monitoring
+- [x] **TEAM-01**: Docker Compose deployment
+- [x] **TEAM-02**: PostgreSQL support
+- [x] **TEAM-03**: Redis for caching and sessions
+- [x] **TEAM-04**: Multi-user authentication
+- [x] **TEAM-05**: User roles (Admin, Editor, Viewer)
+- [x] **TEAM-06**: Per-user private vaults
+- [x] **TEAM-07**: Shared team vaults
+- [x] **TEAM-08**: Audit logs
+- [x] **TEAM-09**: Backup and restore
+- [x] **TEAM-10**: Health check endpoints
 
-### API Platform — ✓ Shipped
+### API Platform (APIP) — ✓ Shipped
 
-- [x] **APIP-01**: RESTful API for all CRUD operations on knowledge items
-- [x] **APIP-02**: API key authentication for third-party integrations
+- [x] **APIP-01**: RESTful API for CRUD operations
+- [x] **APIP-02**: API key authentication
 - [x] **APIP-03**: Rate limiting per API key
-- [x] **APIP-04**: OpenAPI/Swagger documentation auto-generated
-- [x] **APIP-05**: Webhook support for ingestion events
-- [x] **APIP-06**: Bulk import/export via API
-- [x] **APIP-07**: GraphQL endpoint for flexible queries
-- [x] **APIP-08**: API versioning support (v1/ prefix)
+- [x] **APIP-04**: OpenAPI documentation
+- [x] **APIP-05**: Webhook support
+- [x] **APIP-06**: Bulk import/export
+- [x] **APIP-07**: GraphQL endpoint
+- [x] **APIP-08**: API versioning
 
 ---
 
-## Future Requirements (v3.1+)
-
-| Feature | Target Milestone |
-|---------|------------------|
-| 第三方集成 (Notion/Logsync) | v3.1+ |
-| WebSub 实时推送 | v3.1+ |
-| 移动端应用 | v3.3 |
-| Tauri 桌面应用 | v3.3 |
-| 本体推理 (OWL-RL) | v3.1 |
-| 多语言支持 (EN/中文/日语) | v3.1 |
-
----
-
-## Out of Scope
+## Out of Scope (v3.1)
 
 | Feature | Reason |
 |---------|--------|
-| P2P 知识共享 | Complex networking, defer to v3.3+ |
-| Serverless 部署 | Requires significant architecture changes |
+| Notion block-level sync | Page-level only for v3.1 |
+| Logseq plugin development | Outbound sync only |
+| IM message sending | Read-only ingestion |
+| GitHub PR creation | Read + webhook only |
+| GitLab integration | Deferred to v3.1+ |
+| Twitter/X integration | Not in scope |
+| Jira integration | Not in scope |
+| Real-time collaborative editing | No OT/CRDT support |
 
 ---
 
@@ -120,34 +220,13 @@ All v2.0 requirements have been implemented and verified.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| OBSP-01 | Phase 7 | Pending |
-| OBSP-02 | Phase 7 | Pending |
-| OBSP-03 | Phase 7 | Pending |
-| OBSP-04 | Phase 7 | Pending |
-| OBSP-05 | Phase 7 | Pending |
-| OBSP-06 | Phase 7 | Pending |
-| OBSP-07 | Phase 7 | Pending |
-| CHRE-01 | Phase 8 | Pending |
-| CHRE-02 | Phase 8 | Pending |
-| CHRE-03 | Phase 8 | Pending |
-| CHRE-04 | Phase 8 | Pending |
-| CHRE-05 | Phase 8 | Pending |
-| CHRE-06 | Phase 8 | Pending |
-| CHRE-07 | Phase 8 | Pending |
-| CHRE-08 | Phase 8 | Pending |
-| RSSS-01 | Phase 9 | Pending |
-| RSSS-02 | Phase 9 | Pending |
-| RSSS-03 | Phase 9 | Pending |
-| RSSS-04 | Phase 9 | Pending |
-| RSSS-05 | Phase 9 | Pending |
-| RSSS-06 | Phase 9 | Pending |
-| RSSS-07 | Phase 9 | Pending |
+| (v3.1 requirements to be mapped by roadmap) | | |
 
 **Coverage:**
-- v3.0 requirements: 22 total
-- Mapped to phases: 22
-- Unmapped: 0 ✓
+- v3.1 requirements: 65 total (NOTI:10 + LOGS:10 + IM:7 + SLAK:6 + DISC:5 + FEIS:5 + WECO:4 + GITH:11 + AUTH:4 + SYNC:5 + ERRO:4)
+- Mapped to phases: TBD
+- Unmapped: 65
 
 ---
-*Requirements defined: 2026-04-30*
-*Last updated: 2026-04-30 after v3.0 roadmap creation*
+*Requirements defined: 2026-05-02*
+*Last updated: 2026-05-02 — v3.1 requirements defined*
