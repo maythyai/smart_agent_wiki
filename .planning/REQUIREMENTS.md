@@ -195,7 +195,7 @@ All v2.0 requirements have been implemented and verified.
 - [x] **APIP-03**: Rate limiting per API key
 - [x] **APIP-04**: OpenAPI documentation
 - [x] **APIP-05**: Webhook support
-- [x] **APIP-06**: Bulk import/export
+- [x] **APIP-06": Bulk import/export
 - [x] **APIP-07**: GraphQL endpoint
 - [x] **APIP-08**: API versioning
 
@@ -220,13 +220,84 @@ All v2.0 requirements have been implemented and verified.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| (v3.1 requirements to be mapped by roadmap) | | |
+| AUTH-01 | Phase 10 | Pending |
+| AUTH-02 | Phase 10 | Pending |
+| AUTH-03 | Phase 10 | Pending |
+| AUTH-04 | Phase 10 | Pending |
+| IM-01 | Phase 10 | Pending |
+| IM-02 | Phase 10 | Pending |
+| IM-06 | Phase 10 | Pending |
+| SYNC-01 | Phase 11 | Pending |
+| SYNC-02 | Phase 11 | Pending |
+| SYNC-03 | Phase 11 | Pending |
+| SYNC-04 | Phase 11 | Pending |
+| SYNC-05 | Phase 11 | Pending |
+| ERRO-01 | Phase 11 | Pending |
+| ERRO-02 | Phase 11 | Pending |
+| ERRO-03 | Phase 11 | Pending |
+| ERRO-04 | Phase 11 | Pending |
+| IM-03 | Phase 11 | Pending |
+| IM-04 | Phase 11 | Pending |
+| IM-05 | Phase 11 | Pending |
+| IM-07 | Phase 11 | Pending |
+| NOTI-01 | Phase 12 | Pending |
+| NOTI-02 | Phase 12 | Pending |
+| NOTI-03 | Phase 12 | Pending |
+| NOTI-04 | Phase 12 | Pending |
+| NOTI-05 | Phase 12 | Pending |
+| NOTI-06 | Phase 12 | Pending |
+| NOTI-07 | Phase 12 | Pending |
+| NOTI-08 | Phase 12 | Pending |
+| NOTI-09 | Phase 12 | Pending |
+| NOTI-10 | Phase 12 | Pending |
+| LOGS-01 | Phase 13 | Pending |
+| LOGS-02 | Phase 13 | Pending |
+| LOGS-03 | Phase 13 | Pending |
+| LOGS-04 | Phase 13 | Pending |
+| LOGS-05 | Phase 13 | Pending |
+| LOGS-06 | Phase 13 | Pending |
+| LOGS-07 | Phase 13 | Pending |
+| LOGS-08 | Phase 13 | Pending |
+| LOGS-09 | Phase 13 | Pending |
+| LOGS-10 | Phase 13 | Pending |
+| SLAK-01 | Phase 13 | Pending |
+| SLAK-02 | Phase 13 | Pending |
+| SLAK-03 | Phase 13 | Pending |
+| SLAK-04 | Phase 13 | Pending |
+| SLAK-05 | Phase 13 | Pending |
+| SLAK-06 | Phase 13 | Pending |
+| DISC-01 | Phase 13 | Pending |
+| DISC-02 | Phase 13 | Pending |
+| DISC-03 | Phase 13 | Pending |
+| DISC-04 | Phase 13 | Pending |
+| DISC-05 | Phase 13 | Pending |
+| FEIS-01 | Phase 13 | Pending |
+| FEIS-02 | Phase 13 | Pending |
+| FEIS-03 | Phase 13 | Pending |
+| FEIS-04 | Phase 13 | Pending |
+| FEIS-05 | Phase 13 | Pending |
+| WECO-01 | Phase 13 | Pending |
+| WECO-02 | Phase 13 | Pending |
+| WECO-03 | Phase 13 | Pending |
+| WECO-04 | Phase 13 | Pending |
+| GITH-01 | Phase 14 | Pending |
+| GITH-02 | Phase 14 | Pending |
+| GITH-03 | Phase 14 | Pending |
+| GITH-04 | Phase 14 | Pending |
+| GITH-05 | Phase 14 | Pending |
+| GITH-06 | Phase 14 | Pending |
+| GITH-07 | Phase 14 | Pending |
+| GITH-08 | Phase 14 | Pending |
+| GITH-09 | Phase 14 | Pending |
+| GITH-10 | Phase 14 | Pending |
+| GITH-11 | Phase 14 | Pending |
 
 **Coverage:**
-- v3.1 requirements: 65 total (NOTI:10 + LOGS:10 + IM:7 + SLAK:6 + DISC:5 + FEIS:5 + WECO:4 + GITH:11 + AUTH:4 + SYNC:5 + ERRO:4)
-- Mapped to phases: TBD
-- Unmapped: 65
+- v3.1 requirements: 65 total
+- Mapped to phases: 65/65 (100%)
+- Unmapped: 0
 
 ---
+
 *Requirements defined: 2026-05-02*
-*Last updated: 2026-05-02 — v3.1 requirements defined*
+*Last updated: 2026-05-01 — Traceability updated with phase mappings*
