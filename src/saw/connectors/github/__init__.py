@@ -20,6 +20,7 @@ from saw.connectors.github.models import (
     GitHubAuthType,
     GitHubAppInstallation,
 )
+from saw.connectors.github.connector import GitHubConnector
 
 __all__ = [
     "GitHubUser",
@@ -35,4 +36,5 @@ __all__ = [
     "GitHubWebhookEvent",
     "GitHubAuthType",
     "GitHubAppInstallation",
+    "GitHubConnector",
 ]
