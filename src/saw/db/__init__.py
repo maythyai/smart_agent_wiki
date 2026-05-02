@@ -24,6 +24,13 @@ from saw.db.connector_models import ConnectorConfigModel, ConnectorSyncLog
 from saw.db.sync_models import SyncStateModel, SyncLogModel, ConflictRecordModel
 from saw.db.notion_models import NotionSyncCursorModel, NotionDatabaseConfigModel, SyncDirection
 from saw.db.logseq_models import LogseqFileHashModel, LogseqSyncStateModel
+from saw.db.github_models import (
+    GitHubSyncCursorModel,
+    GitHubRepositoryConfigModel,
+    GitHubRateLimitStateModel,
+    GitHubWebhookDeliveryModel,
+    GitHubSyncType,
+)
 
 __all__ = [
     "DatabaseConfig",
@@ -57,4 +64,10 @@ __all__ = [
     # Phase 13: Logseq Connector
     "LogseqFileHashModel",
     "LogseqSyncStateModel",
+    # Phase 14: GitHub Connector
+    "GitHubSyncCursorModel",
+    "GitHubRepositoryConfigModel",
+    "GitHubRateLimitStateModel",
+    "GitHubWebhookDeliveryModel",
+    "GitHubSyncType",
 ]
