@@ -23,6 +23,7 @@ from saw.db.feed_models import Feed, FeedEntry
 from saw.db.connector_models import ConnectorConfigModel, ConnectorSyncLog
 from saw.db.sync_models import SyncStateModel, SyncLogModel, ConflictRecordModel
 from saw.db.notion_models import NotionSyncCursorModel, NotionDatabaseConfigModel, SyncDirection
+from saw.db.logseq_models import LogseqFileHashModel, LogseqSyncStateModel
 
 __all__ = [
     "DatabaseConfig",
@@ -53,4 +54,7 @@ __all__ = [
     "NotionSyncCursorModel",
     "NotionDatabaseConfigModel",
     "SyncDirection",
+    # Phase 13: Logseq Connector
+    "LogseqFileHashModel",
+    "LogseqSyncStateModel",
 ]
