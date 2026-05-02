@@ -22,6 +22,21 @@ from saw.connectors.rate_limiter import (
     RateLimitManager,
     PlatformRateLimit,
 )
+from saw.connectors.token_encryption import (
+    TokenEncryption,
+    EncryptionError,
+)
+from saw.connectors.oauth_handler import (
+    OAuthHandler,
+    OAuthConfig,
+    OAuthState,
+    OAuthError,
+)
+from saw.connectors.token_refresh import (
+    TokenRefreshManager,
+    RefreshMutex,
+    TokenRefreshError,
+)
 
 __all__ = [
     # Protocol
@@ -43,4 +58,14 @@ __all__ = [
     # Rate limiting
     "RateLimitManager",
     "PlatformRateLimit",
+    # OAuth & Encryption (Phase 10-02)
+    "TokenEncryption",
+    "EncryptionError",
+    "OAuthHandler",
+    "OAuthConfig",
+    "OAuthState",
+    "OAuthError",
+    "TokenRefreshManager",
+    "RefreshMutex",
+    "TokenRefreshError",
 ]

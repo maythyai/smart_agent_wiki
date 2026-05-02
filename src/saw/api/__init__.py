@@ -32,6 +32,7 @@ from saw.api.bulk import (
     BulkExportService,
 )
 from saw.api.feeds import router as feeds_router
+from saw.api.oauth_callback import router as oauth_router
 
 __all__ = [
     # API Keys
@@ -59,4 +60,6 @@ __all__ = [
     "BulkExportService",
     # Phase 9: RSS Feeds
     "feeds_router",
+    # Phase 10: OAuth Callback
+    "oauth_router",
 ]
