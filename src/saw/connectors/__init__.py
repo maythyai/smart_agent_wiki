@@ -21,6 +21,8 @@ from saw.connectors.base_connector import BaseConnector
 from saw.connectors.rate_limiter import (
     RateLimitManager,
     PlatformRateLimit,
+    WebhookRateLimiter,
+    WebhookRateLimit,
 )
 from saw.connectors.token_encryption import (
     TokenEncryption,
@@ -36,6 +38,14 @@ from saw.connectors.token_refresh import (
     TokenRefreshManager,
     RefreshMutex,
     TokenRefreshError,
+)
+from saw.connectors.webhook_verifier import (
+    WebhookVerifier,
+    SignatureVerificationError,
+)
+from saw.connectors.webhook_log import (
+    WebhookLogger,
+    WebhookLogEntry,
 )
 
 __all__ = [
@@ -58,6 +68,8 @@ __all__ = [
     # Rate limiting
     "RateLimitManager",
     "PlatformRateLimit",
+    "WebhookRateLimiter",
+    "WebhookRateLimit",
     # OAuth & Encryption (Phase 10-02)
     "TokenEncryption",
     "EncryptionError",
@@ -68,4 +80,9 @@ __all__ = [
     "TokenRefreshManager",
     "RefreshMutex",
     "TokenRefreshError",
+    # Webhook (Phase 10-03)
+    "WebhookVerifier",
+    "SignatureVerificationError",
+    "WebhookLogger",
+    "WebhookLogEntry",
 ]

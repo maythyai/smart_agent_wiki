@@ -33,6 +33,7 @@ from saw.api.bulk import (
 )
 from saw.api.feeds import router as feeds_router
 from saw.api.oauth_callback import router as oauth_router
+from saw.api.webhook_inbound import router as webhook_inbound_router
 
 __all__ = [
     # API Keys
@@ -60,6 +61,7 @@ __all__ = [
     "BulkExportService",
     # Phase 9: RSS Feeds
     "feeds_router",
-    # Phase 10: OAuth Callback
+    # Phase 10: OAuth Callback & Webhooks
     "oauth_router",
+    "webhook_inbound_router",
 ]
