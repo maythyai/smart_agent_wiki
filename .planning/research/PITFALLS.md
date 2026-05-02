@@ -2,7 +2,7 @@
 
 **Domain:** Intelligent multi-agent knowledge platform (Smart Agent Wiki)
 **Researched:** 2026-04-26
-**Updated:** 2026-04-30 (Ecosystem Integration)
+**Updated:** 2026-05-01 (Third-Party Integrations v3.1)
 **Confidence:** HIGH (based on official documentation for SQLite FTS5, LiteLLM, FastMCP, plus 181-project ecosystem audit)
 
 ## Critical Pitfalls
@@ -551,7 +551,7 @@ YAML workflows with gates (e.g., `confidence >= 3`) can loop infinitely when the
 2. `fallback_action` can be: `accept_with_flag`, `escalate_to_human`, `abort`
 3. Track retry count in workflow execution state
 4. When max retries exceeded, execute fallback and log the failure reason
-5. The Critic should provide specific, actionable feedback (not just "quality too-low")
+5. The Critic should provide specific, actionable feedback (not just "quality too low")
 6. Add a workflow-level timeout: if not complete in N minutes, abort
 
 **Warning signs:**
@@ -1123,6 +1123,1011 @@ class SourceAdapter(Protocol):
 
 ---
 
+## Third-Party Integration Pitfalls (v3.1)
+
+*The following pitfalls are specific to adding Notion, Logseq, IM (Slack/Discord/Feishu), and GitHub integrations to the existing Smart Agent Wiki system.*
+
+---
+
+### Pitfall 31: Notion API Rate Limit Underestimation
+
+**What goes wrong:**
+Developers assume Notion's rate limits are generous, then hit "429 Too Many Requests" during bulk sync operations, causing data loss or incomplete syncs.
+
+**Why it happens:**
+- Notion API has per-integration rate limits (approximately 3 requests per second)
+- Rate limits vary by endpoint type (search is more restricted than read)
+- Bulk operations accumulate requests faster than expected
+- Error responses don't always include proper retry-after headers
+
+**Consequences:**
+- Incomplete database syncs
+- Data loss during initial setup
+- Timeout errors on large queries
+- User frustration with sync failures
+
+**How to avoid:**
+1. Implement exponential backoff with jitter starting at 1 second
+2. Use request queue with configurable rate limiting (max 2-3 req/s)
+3. Batch operations: prefer `query` with larger `page_size` over many small requests
+4. Store sync cursor before processing to enable resume after rate limit recovery
+5. Monitor 429 responses and adjust rate limit budget accordingly
+
+```python
+import time
+import random
+
+def with_rate_limit(func, max_retries=5):
+    for attempt in range(max_retries):
+        try:
+            return func()
+        except RateLimitError as e:
+            wait_time = (2 ** attempt) + random.uniform(0, 1)
+            time.sleep(wait_time)
+    raise MaxRetriesExceeded()
+```
+
+**Warning signs:**
+- Intermittent 429 errors during initial sync
+- Timeout errors on large database queries
+- Sync operations taking progressively longer
+- API responses with increasing latency
+
+**Phase to address:** Phase 10-01 (Notion Integration Core)
+
+---
+
+### Pitfall 32: Notion Property Type Mutation
+
+**What goes wrong:**
+Notion allows users to change property types (e.g., "Select" to "Multi-select", "Number" to "Text"), causing integration code to crash or silently corrupt data.
+
+**Why it happens:**
+- Notion API doesn't enforce property type stability
+- Property schema changes happen outside integration control
+- Type coercion logic is often incomplete (e.g., handling null values in converted properties)
+- Select-to-Multi-select conversion duplicates values with commas
+
+**Consequences:**
+- Sync crashes on schema change
+- Data appearing in wrong format after sync
+- Missing values that existed before
+- User confusion about data integrity
+
+**How to avoid:**
+1. Store property type at first discovery, validate on each sync
+2. Implement defensive type coercion layer per property type
+3. Log schema changes for manual review (don't auto-migrate without confirmation)
+4. Maintain property type mapping table in local config
+5. Support common type transitions: Select<->Multi-select, Number<->Text
+
+```python
+def coerce_property(value, from_type, to_type):
+    if from_type == 'select' and to_type == 'multi_select':
+        if value is None:
+            return []
+        # Single select becomes single-item array
+        return [value] if isinstance(value, str) else []
+    # ... handle other transitions
+```
+
+**Warning signs:**
+- API errors mentioning "property type mismatch"
+- Data appearing in wrong format after sync
+- Missing values that existed before
+- Property names returning different types
+
+**Phase to address:** Phase 10-01 (Notion Integration Core)
+
+---
+
+### Pitfall 33: Notion Pagination Cursor Loss
+
+**What goes wrong:**
+Paginated queries return incomplete results because developers assume `has_more: false` or missing `next_cursor` is the only termination condition, missing edge cases.
+
+**Why it happens:**
+- Notion pagination uses base64-encoded cursors that can expire
+- `next_cursor` may be null even when `has_more: true` during rate limiting
+- Empty results don't always mean "no more data" (could be filtered out)
+- Cursor format changes between API versions
+
+**Consequences:**
+- Incomplete data sync
+- Missing pages in knowledge base
+- Inconsistent results between syncs
+- User reports of missing content
+
+**How to avoid:**
+1. Always check `has_more` AND `next_cursor` exists AND is non-empty
+2. Implement cursor persistence for long-running syncs (enable resume)
+3. Set explicit `page_size` (default is 100, max 100)
+4. Track total results returned vs. expected for verification
+5. Store last successful cursor for recovery
+
+```python
+def fetch_all_pages(query_fn, page_size=100):
+    results = []
+    has_more = True
+    next_cursor = None
+    
+    while has_more:
+        response = query_fn(page_size=page_size, start_cursor=next_cursor)
+        results.extend(response.results)
+        has_more = response.has_more
+        next_cursor = response.next_cursor
+        
+        # Guard against missing cursor with has_more
+        if has_more and not next_cursor:
+            logger.warning("has_more=true but no cursor, stopping")
+            break
+    
+    return results
+```
+
+**Warning signs:**
+- Fewer results than expected from large databases
+- Sync completes but data is incomplete
+- Different result counts on repeated syncs
+- Pagination stopping at 100 items
+
+**Phase to address:** Phase 10-01 (Notion Integration Core)
+
+---
+
+### Pitfall 34: Logseq File Format Breaking Changes
+
+**What goes wrong:**
+Logseq's `.edn` config and `.md` file format can break between versions, causing parsing failures or data corruption.
+
+**Why it happens:**
+- Logseq is in active development with frequent format changes
+- Block ID format is not stable across versions
+- Metadata in file headers can change structure
+- Custom properties may use reserved keywords in newer versions
+
+**Consequences:**
+- Parse errors after Logseq update
+- Missing block references
+- Corrupted metadata fields
+- Sync failures between Logseq versions
+
+**How to avoid:**
+1. Pin Logseq version in documentation (recommend specific version)
+2. Implement format version detection on file read
+3. Parse defensively: skip unknown fields rather than crash
+4. Maintain backup of files before any modification
+5. Test integration against multiple Logseq versions
+
+```python
+LOGSEQ_FORMAT_VERSIONS = {
+    '0.9.0': parse_v090,
+    '0.10.0': parse_v010,
+}
+
+def detect_logseq_version(config_path):
+    # Parse config.edn to extract version
+    pass
+
+def parse_logseq_file(content, version):
+    parser = LOGSEQ_FORMAT_VERSIONS.get(version, parse_latest)
+    return parser(content)
+```
+
+**Warning signs:**
+- Parse errors after Logseq update
+- Missing block references
+- Corrupted metadata fields
+- Unknown property warnings in logs
+
+**Phase to address:** Phase 10-02 (Logseq Integration Core)
+
+---
+
+### Pitfall 35: Logseq Concurrent Edit Conflicts
+
+**What goes wrong:**
+When SAW and user both edit Logseq files, or multiple devices sync, changes are lost or files corrupted.
+
+**Why it happens:**
+- Logseq uses file-based storage without built-in conflict resolution
+- No atomic file locking mechanism across devices
+- Block UUIDs can collide if generated independently
+- Git-based sync doesn't handle conflicts well
+
+**Consequences:**
+- User reports missing content
+- Duplicate blocks appearing after sync
+- File corruption requiring restoration from backup
+- Lost work for users
+
+**How to avoid:**
+1. Implement file locking using `.lock` files or similar mechanism
+2. Use last-write-wins with timestamp comparison as fallback
+3. Never modify blocks created by user manually (mark SAW blocks with special property)
+4. Create conflict backup files before overwriting (`file.conflict.md`)
+5. Detect concurrent modification by comparing modification timestamps
+
+```python
+import os
+import time
+
+def safe_write_file(path, content, timeout=30):
+    lock_path = path + '.lock'
+    
+    # Try to acquire lock
+    start = time.time()
+    while os.path.exists(lock_path):
+        if time.time() - start > timeout:
+            raise LockTimeout()
+        time.sleep(0.1)
+    
+    try:
+        # Create lock
+        with open(lock_path, 'w') as f:
+            f.write(str(os.getpid()))
+        
+        # Check for concurrent modification
+        if file_modified_since_read(path):
+            create_conflict_backup(path)
+        
+        # Write file
+        with open(path, 'w') as f:
+            f.write(content)
+    finally:
+        os.remove(lock_path)
+```
+
+**Warning signs:**
+- User reports missing content
+- Duplicate blocks appearing after sync
+- File corruption requiring restoration
+- Conflict files accumulating
+
+**Phase to address:** Phase 10-02 (Logseq Integration Core)
+
+---
+
+### Pitfall 36: Slack/Discord Webhook Signature Verification Bypass
+
+**What goes wrong:**
+Webhook endpoints accept forged requests because signature verification is missing or implemented incorrectly.
+
+**Why it happens:**
+- Developers skip verification in development and forget to enable in production
+- Timing attacks in string comparison leak information
+- Using `==` instead of constant-time comparison
+- Not validating timestamp to prevent replay attacks
+
+**Consequences:**
+- Forged webhook requests processed
+- Data injection from malicious actors
+- Unauthorized actions on behalf of users
+- Security breach
+
+**How to avoid:**
+1. Always verify HMAC-SHA256 signature using constant-time comparison
+2. Use platform SDK's built-in verification (don't roll your own)
+3. Reject requests older than 5 minutes (timestamp validation)
+4. Log all verification failures for security audit
+5. Test signature verification with invalid signatures
+
+```python
+import hmac
+import hashlib
+import time
+
+def verify_slack_signature(body: bytes, timestamp: str, signature: str, signing_secret: str) -> bool:
+    # Check timestamp to prevent replay attacks
+    if abs(time.time() - float(timestamp)) > 300:  # 5 minutes
+        return False
+    
+    # Create signature base
+    sig_basestring = f"v0:{timestamp}:{body.decode()}"
+    
+    # Calculate expected signature
+    expected_sig = 'v0=' + hmac.new(
+        signing_secret.encode(),
+        sig_basestring.encode(),
+        hashlib.sha256
+    ).hexdigest()
+    
+    # Constant-time comparison
+    return hmac.compare_digest(expected_sig, signature)
+```
+
+**Warning signs:**
+- Webhooks processing without `X-Hub-Signature` header
+- Requests from unexpected IP addresses
+- Duplicate message processing
+- Unusual activity in webhook logs
+
+**Phase to address:** Phase 10-03 (IM Integration Core)
+
+---
+
+### Pitfall 37: Slack/Discord Message Format Parsing Fragility
+
+**What goes wrong:**
+Integration breaks when message formats change or contain unexpected content types (attachments, threads, blocks).
+
+**Why it happens:**
+- Message payloads have many optional fields
+- New message types added without warning (e.g., Slack Blocks, Discord Embeds)
+- Thread messages have different structure than channel messages
+- Bot messages vs user messages have different fields
+
+**Consequences:**
+- KeyError/AttributeError on message parsing
+- Missing content in stored messages
+- Crashes on specific message types
+- Incomplete message ingestion
+
+**How to avoid:**
+1. Parse only fields you need, ignore unknown fields gracefully
+2. Implement message type dispatcher (handle each type separately)
+3. Store original JSON alongside extracted content for future re-parsing
+4. Write tests for edge cases: empty messages, deleted messages, edited messages
+5. Version your message parsing logic
+
+```python
+def parse_slack_message(message: dict) -> ParsedMessage:
+    # Extract core fields safely
+    msg_type = message.get('type', 'unknown')
+    text = message.get('text', '')
+    user = message.get('user', message.get('bot_id', 'unknown'))
+    ts = message.get('ts', '')
+    
+    # Handle thread messages
+    thread_ts = message.get('thread_ts')
+    is_thread_reply = thread_ts is not None and thread_ts != ts
+    
+    # Handle attachments
+    attachments = message.get('attachments', [])
+    files = message.get('files', [])
+    
+    # Handle blocks (rich formatting)
+    blocks = message.get('blocks', [])
+    block_text = extract_text_from_blocks(blocks) if blocks else ''
+    
+    return ParsedMessage(
+        text=text or block_text,
+        user=user,
+        timestamp=ts,
+        is_thread_reply=is_thread_reply,
+        attachments=attachments,
+        files=files,
+        raw=message  # Keep for future re-parsing
+    )
+```
+
+**Warning signs:**
+- KeyError/AttributeError on message parsing
+- Missing content in stored messages
+- Crashes on specific message types
+- Incomplete message history
+
+**Phase to address:** Phase 10-03 (IM Integration Core)
+
+---
+
+### Pitfall 38: Slack/Discord Rate Limit Cascade Failure
+
+**What goes wrong:**
+Rate limiting on one API call triggers retry logic that compounds the problem, eventually exhausting all rate limits and blocking the integration.
+
+**Why it happens:**
+- Slack has tiered rate limits (Tier 1-4) with different limits per method
+- Discord uses bucket-based rate limiting with per-route limits
+- Retrying without backoff consumes remaining quota
+- Different rate limit headers for different API versions
+
+**Consequences:**
+- 429 errors increasing in frequency
+- Integration falling behind real-time messages
+- Rate limit exhaustion blocking all operations
+- Complete integration shutdown
+
+**How to avoid:**
+1. Implement per-route rate limit tracking
+2. Use exponential backoff with jitter (start at 1s, max 60s)
+3. Parse `Retry-After` header for precise wait times
+4. Maintain rate limit budget: track usage, pause before hitting limits
+5. Prioritize critical operations when rate limited
+
+```python
+import time
+import random
+from collections import defaultdict
+
+class RateLimitManager:
+    def __init__(self):
+        self.route_buckets = defaultdict(lambda: {'remaining': 100, 'reset': 0})
+    
+    def wait_if_needed(self, route: str, response_headers: dict):
+        bucket = self.route_buckets[route]
+        
+        # Update bucket info from headers
+        bucket['remaining'] = int(response_headers.get('X-RateLimit-Remaining', 1))
+        bucket['reset'] = float(response_headers.get('X-RateLimit-Reset', 0))
+        
+        if bucket['remaining'] <= 1:
+            wait_time = max(0, bucket['reset'] - time.time())
+            time.sleep(wait_time + random.uniform(0, 0.5))
+    
+    def handle_rate_limit(self, retry_after: float):
+        wait_time = retry_after + random.uniform(0, 1)
+        time.sleep(wait_time)
+```
+
+**Warning signs:**
+- 429 errors increasing in frequency
+- Integration falling behind real-time messages
+- Rate limit exhaustion blocking all operations
+- API latency increasing
+
+**Phase to address:** Phase 10-03 (IM Integration Core)
+
+---
+
+### Pitfall 39: GitHub API Pagination Exhaustion
+
+**What goes wrong:**
+Large repositories return incomplete results because pagination stops early or hits rate limits.
+
+**Why it happens:**
+- GitHub uses `Link` header for pagination (not cursor-based)
+- Different pagination for different endpoints (cursor vs offset vs link)
+- Search API has different pagination limits than REST API
+- Rate limits reset hourly (5000 requests for authenticated, 60 for unauthenticated)
+
+**Consequences:**
+- Missing issues/PRs in search results
+- Incomplete repository scans
+- Rate limit errors during pagination
+- Data inconsistency
+
+**How to avoid:**
+1. Parse `Link` header correctly (`rel="next"` pattern)
+2. Use conditional requests with `If-None-Match` / ETag for efficiency
+3. Implement cursor persistence for long-running operations
+4. Prefer GraphQL API for complex queries (single request, precise fields)
+5. Track pagination progress for resume capability
+
+```python
+import re
+import requests
+
+def parse_link_header(link_header: str) -> dict:
+    """Parse GitHub Link header for pagination URLs."""
+    links = {}
+    for part in link_header.split(','):
+        match = re.match(r'\s*<([^>]+)>;\s*rel="([^"]+)"', part)
+        if match:
+            links[match.group(2)] = match.group(1)
+    return links
+
+def fetch_all_issues(owner: str, repo: str, token: str):
+    url = f"https://api.github.com/repos/{owner}/{repo}/issues"
+    headers = {
+        'Authorization': f'token {token}',
+        'Accept': 'application/vnd.github.v3+json'
+    }
+    
+    all_issues = []
+    while url:
+        response = requests.get(url, headers=headers, params={'state': 'all', 'per_page': 100})
+        all_issues.extend(response.json())
+        
+        # Check rate limit
+        remaining = int(response.headers.get('X-RateLimit-Remaining', 1))
+        if remaining <= 1:
+            reset_time = int(response.headers.get('X-RateLimit-Reset', 0))
+            wait_time = max(0, reset_time - time.time())
+            time.sleep(wait_time)
+        
+        # Get next page from Link header
+        link_header = response.headers.get('Link', '')
+        links = parse_link_header(link_header)
+        url = links.get('next')
+    
+    return all_issues
+```
+
+**Warning signs:**
+- Missing issues/PRs in search results
+- Incomplete repository scans
+- Rate limit errors during pagination
+- Fewer results than expected
+
+**Phase to address:** Phase 10-04 (GitHub Integration Core)
+
+---
+
+### Pitfall 40: GitHub Webhook Delivery Failure Handling
+
+**What goes wrong:**
+Webhook deliveries fail silently, causing sync to diverge from actual repository state.
+
+**Why it happens:**
+- GitHub retries failed webhooks with exponential backoff (up to ~24 hours)
+- Delivery failures don't always notify the integration owner
+- Network issues can cause partial delivery
+- Large payloads may timeout
+
+**Consequences:**
+- Missing events in sync log
+- Webhook delivery showing "failure" in GitHub settings
+- State divergence between SAW and GitHub
+- Missing critical updates
+
+**How to avoid:**
+1. Implement idempotent webhook handlers (safe to process same event twice)
+2. Acknowledge quickly (return 200, process asynchronously)
+3. Use webhook secret verification before processing
+4. Implement manual sync trigger as fallback (full reconciliation)
+5. Track last processed event ID for gap detection
+
+```python
+import hmac
+import hashlib
+
+def verify_github_webhook(payload: bytes, signature: str, secret: str) -> bool:
+    expected_sig = 'sha256=' + hmac.new(
+        secret.encode(),
+        payload,
+        hashlib.sha256
+    ).hexdigest()
+    return hmac.compare_digest(expected_sig, signature)
+
+def handle_webhook_event(event_id: str, event_type: str, payload: dict):
+    # Check if already processed (idempotency)
+    if event_already_processed(event_id):
+        return {'status': 'already_processed'}
+    
+    # Quick ack - process in background
+    queue_task(process_webhook_event, event_id, event_type, payload)
+    
+    return {'status': 'accepted'}
+
+def process_webhook_event(event_id: str, event_type: str, payload: dict):
+    try:
+        # Process based on event type
+        handlers = {
+            'issues': handle_issue_event,
+            'pull_request': handle_pr_event,
+            'push': handle_push_event,
+        }
+        handler = handlers.get(event_type, handle_generic_event)
+        handler(payload)
+        
+        # Mark as processed
+        mark_event_processed(event_id)
+    except Exception as e:
+        log_webhook_error(event_id, e)
+        raise
+```
+
+**Warning signs:**
+- Missing events in sync log
+- Webhook delivery showing "failure" in GitHub settings
+- State divergence between SAW and GitHub
+- Missing critical updates
+
+**Phase to address:** Phase 10-04 (GitHub Integration Core)
+
+---
+
+### Pitfall 41: OAuth Token Refresh Race Condition
+
+**What goes wrong:**
+Multiple concurrent requests using the same OAuth token trigger multiple refresh attempts, causing token revocation or race conditions.
+
+**Why it happens:**
+- Token refresh isn't atomic
+- Multiple sync operations can start before first refresh completes
+- Some APIs revoke old tokens immediately on refresh
+- Refresh response race condition with pending requests
+
+**Consequences:**
+- "Invalid token" errors after successful refresh
+- Multiple refresh requests in logs
+- Authentication failures on concurrent operations
+- Cascading sync failures
+
+**How to avoid:**
+1. Implement token lock/mutex before refresh
+2. Use single token manager with refresh coordination
+3. Queue requests during active refresh
+4. Store refresh token separately from access token
+5. Handle "invalid_token" errors by forcing re-authentication
+
+```python
+import threading
+from datetime import datetime, timedelta
+
+class TokenManager:
+    def __init__(self):
+        self._lock = threading.Lock()
+        self._access_token = None
+        self._refresh_token = None
+        self._expires_at = None
+        self._refreshing = False
+    
+    def get_valid_token(self) -> str:
+        with self._lock:
+            # Check if token needs refresh
+            if self._needs_refresh():
+                self._refresh_token_sync()
+            return self._access_token
+    
+    def _needs_refresh(self) -> bool:
+        if not self._access_token or not self._expires_at:
+            return True
+        # Refresh 5 minutes before expiry
+        return datetime.now() >= self._expires_at - timedelta(minutes=5)
+    
+    def _refresh_token_sync(self):
+        # Only one thread should refresh
+        if self._refreshing:
+            # Wait for refresh to complete
+            while self._refreshing:
+                time.sleep(0.1)
+            return
+        
+        self._refreshing = True
+        try:
+            new_tokens = oauth_refresh(self._refresh_token)
+            self._access_token = new_tokens['access_token']
+            self._refresh_token = new_tokens.get('refresh_token', self._refresh_token)
+            self._expires_at = datetime.now() + timedelta(seconds=new_tokens['expires_in'])
+        finally:
+            self._refreshing = False
+```
+
+**Warning signs:**
+- "Invalid token" errors after successful refresh
+- Multiple refresh requests in logs
+- Authentication failures on concurrent operations
+- Token appearing invalid after refresh
+
+**Phase to address:** Phase 10-01/10-03/10-04 (All OAuth-based integrations)
+
+---
+
+### Pitfall 42: OAuth Token Storage Security Breach
+
+**What goes wrong:**
+OAuth tokens stored in plaintext in config files or databases are exposed in logs, backups, or git repositories.
+
+**Why it happens:**
+- Convenience over security during development
+- Config files accidentally committed to git
+- Tokens appearing in error logs or debug output
+- Backup systems capturing plaintext tokens
+
+**Consequences:**
+- Unauthorized API access
+- Data breach
+- Account compromise
+- Compliance violations
+
+**How to avoid:**
+1. Encrypt tokens at rest using OS keychain or environment-based encryption
+2. Never log full tokens (mask after first 8 characters)
+3. Use `.gitignore` for token files, use templates for examples
+4. Rotate tokens regularly (every 90 days)
+5. Use short-lived tokens when possible (refresh token pattern)
+
+```python
+import os
+import json
+from cryptography.fernet import Fernet
+
+class SecureTokenStorage:
+    def __init__(self, key: bytes = None):
+        if key is None:
+            # Get or generate key from OS keychain
+            key = self._get_or_create_key()
+        self._fernet = Fernet(key)
+    
+    def _get_or_create_key(self) -> bytes:
+        """Get key from OS keychain or generate new one."""
+        import keyring
+        key = keyring.get_password('saw', 'token_key')
+        if key is None:
+            key = Fernet.generate_key()
+            keyring.set_password('saw', 'token_key', key.decode())
+        else:
+            key = key.encode()
+        return key
+    
+    def store_token(self, service: str, token: str):
+        encrypted = self._fernet.encrypt(token.encode())
+        # Store in secure location (not in git)
+        token_file = self._get_token_path(service)
+        with open(token_file, 'wb') as f:
+            f.write(encrypted)
+    
+    def get_token(self, service: str) -> str:
+        token_file = self._get_token_path(service)
+        with open(token_file, 'rb') as f:
+            encrypted = f.read()
+        return self._fernet.decrypt(encrypted).decode()
+```
+
+**Warning signs:**
+- Tokens visible in git history
+- Tokens in log files
+- Unauthorized API access detected
+- Tokens in backup archives
+
+**Phase to address:** Phase 10-01 (Shared Auth Infrastructure)
+
+---
+
+### Pitfall 43: Sync Loop (Infinite Update Cycle)
+
+**What goes wrong:**
+Integration enters infinite loop: SAW updates Notion -> Notion webhook triggers SAW -> SAW updates Notion again -> ...
+
+**Why it happens:**
+- Webhook triggers on all changes, including changes made by integration
+- No origin tracking for "who made this change"
+- Timestamp precision insufficient to distinguish cause vs effect
+- Conflict resolution triggers update that triggers webhook again
+
+**Consequences:**
+- Same record updated hundreds of times
+- API quota exhaustion
+- User confusion about "who changed this"
+- Performance degradation
+
+**How to avoid:**
+1. Add `source: "saw"` metadata to all outbound updates
+2. Ignore webhooks from own integration (check `bot_id` or `author`)
+3. Use idempotency keys for updates
+4. Implement circuit breaker: stop after N updates to same record in M minutes
+5. Track update origin in metadata
+
+```python
+import time
+from collections import defaultdict
+
+class SyncLoopDetector:
+    def __init__(self, max_updates_per_record=3, window_minutes=5):
+        self.max_updates = max_updates_per_record
+        self.window = window_minutes * 60
+        self.update_history = defaultdict(list)
+    
+    def should_skip_update(self, record_id: str, source: str) -> bool:
+        if source == 'saw':
+            return False  # Never skip our own updates
+        
+        now = time.time()
+        history = self.update_history[record_id]
+        
+        # Remove old entries
+        history[:] = [t for t in history if now - t < self.window]
+        
+        # Check threshold
+        if len(history) >= self.max_updates:
+            return True  # Skip to prevent loop
+        
+        history.append(now)
+        return False
+
+def apply_update(record_id: str, changes: dict, source: str = 'unknown'):
+    if sync_detector.should_skip_update(record_id, source):
+        logger.warning(f"Skipping update to {record_id} - possible sync loop")
+        return
+    
+    # Apply update with source metadata
+    changes['_source'] = source
+    changes['_timestamp'] = time.time()
+    
+    # ... apply changes to platform
+```
+
+**Warning signs:**
+- Same record updated hundreds of times
+- API quota exhaustion
+- User confusion about "who changed this"
+- Webhook logs showing repeated updates
+
+**Phase to address:** Phase 10-05 (Sync Orchestration)
+
+---
+
+### Pitfall 44: Data Loss During Conflict Resolution
+
+**What goes wrong:**
+Conflict resolution logic incorrectly chooses wrong version, causing user data loss.
+
+**Why it happens:**
+- Timestamp comparison fails when clocks are not synchronized
+- "Last write wins" discards important changes
+- Merge logic doesn't understand field semantics
+- No audit trail of what was discarded
+
+**Consequences:**
+- User reports missing data
+- One-sided conflict resolution
+- Unexplained data inconsistencies
+- Loss of user trust
+
+**How to avoid:**
+1. Never auto-delete user data without confirmation
+2. Implement conflict backup before resolution
+3. Use field-level merging (don't replace entire record)
+4. Log all conflict resolutions with before/after state
+5. Provide UI for user to review conflicts
+
+```python
+import json
+from datetime import datetime
+from typing import Optional
+
+class ConflictResolver:
+    def __init__(self, backup_dir: str):
+        self.backup_dir = backup_dir
+    
+    def resolve(self, local: dict, remote: dict, strategy: str = 'merge') -> dict:
+        # Create backup of both versions
+        self._backup_conflict(local, remote)
+        
+        if strategy == 'last_write_wins':
+            return self._lww_resolve(local, remote)
+        elif strategy == 'merge':
+            return self._merge_resolve(local, remote)
+        else:
+            raise ValueError(f"Unknown strategy: {strategy}")
+    
+    def _backup_conflict(self, local: dict, remote: dict):
+        timestamp = datetime.now().isoformat()
+        record_id = local.get('id', 'unknown')
+        
+        backup = {
+            'timestamp': timestamp,
+            'record_id': record_id,
+            'local': local,
+            'remote': remote
+        }
+        
+        path = f"{self.backup_dir}/{record_id}_{timestamp}.json"
+        with open(path, 'w') as f:
+            json.dump(backup, f, indent=2)
+    
+    def _merge_resolve(self, local: dict, remote: dict) -> dict:
+        """Field-level merge with conflict tracking."""
+        merged = {}
+        conflicts = []
+        
+        all_keys = set(local.keys()) | set(remote.keys())
+        
+        for key in all_keys:
+            local_val = local.get(key)
+            remote_val = remote.get(key)
+            
+            if local_val == remote_val:
+                merged[key] = local_val
+            elif local_val is None:
+                merged[key] = remote_val
+            elif remote_val is None:
+                merged[key] = local_val
+            else:
+                # Both have different values - need resolution
+                conflicts.append(key)
+                # Default to remote (last write wins per field)
+                merged[key] = remote_val
+        
+        if conflicts:
+            merged['_conflict_fields'] = conflicts
+            merged['_needs_review'] = True
+        
+        return merged
+```
+
+**Warning signs:**
+- User reports missing data
+- One-sided conflict resolution
+- Unexplained data inconsistencies
+- No conflict audit trail
+
+**Phase to address:** Phase 10-05 (Sync Orchestration)
+
+---
+
+### Pitfall 45: Feishu/Lark API Token Type Confusion
+
+**What goes wrong:**
+Using wrong token type causes "permission denied" errors or access to wrong tenant data.
+
+**Why it happens:**
+- Feishu has app_access_token, tenant_access_token, and user_access_token
+- Different endpoints require different token types
+- Token types have different permissions and expiry
+- Multi-tenant apps need to track which tenant each token belongs to
+
+**Consequences:**
+- "Permission denied" on valid requests
+- Access to wrong tenant's data
+- Token expiry causing cascading failures
+- Security issues with wrong permissions
+
+**How to avoid:**
+1. Clear token type constants and documentation
+2. Token manager that returns correct token type per endpoint
+3. Validate token type before API call
+4. Store tenant_id alongside tenant token
+5. Implement token type auto-selection based on endpoint
+
+```python
+from enum import Enum
+from typing import Optional
+
+class TokenType(Enum):
+    APP = 'app_access_token'
+    TENANT = 'tenant_access_token'
+    USER = 'user_access_token'
+
+class FeishuTokenManager:
+    def __init__(self, app_id: str, app_secret: str):
+        self.app_id = app_id
+        self.app_secret = app_secret
+        self._tokens = {
+            TokenType.APP: None,
+            TokenType.TENANT: None,
+            TokenType.USER: None,
+        }
+        self._tenant_id = None
+    
+    def get_token(self, token_type: TokenType, tenant_id: Optional[str] = None) -> str:
+        if token_type == TokenType.USER:
+            raise ValueError("User token requires OAuth flow")
+        
+        cached = self._tokens.get(token_type)
+        if cached and not cached.is_expired():
+            return cached.value
+        
+        if token_type == TokenType.APP:
+            return self._get_app_token()
+        elif token_type == TokenType.TENANT:
+            return self._get_tenant_token(tenant_id)
+    
+    def _get_app_token(self) -> str:
+        # API call to get app_access_token
+        pass
+    
+    def _get_tenant_token(self, tenant_id: str) -> str:
+        # API call to get tenant_access_token
+        self._tenant_id = tenant_id
+        pass
+
+# Endpoint token requirements
+ENDPOINT_TOKEN_MAP = {
+    '/openapi/contact/v3/users': TokenType.TENANT,
+    '/openapi/bot/v3/info': TokenType.APP,
+    '/openapi/drive/v1/files': TokenType.TENANT,
+}
+
+def get_token_for_endpoint(endpoint: str) -> TokenType:
+    for path, token_type in ENDPOINT_TOKEN_MAP.items():
+        if endpoint.startswith(path):
+            return token_type
+    return TokenType.TENANT  # Default
+```
+
+**Warning signs:**
+- "Permission denied" on valid requests
+- Access to wrong tenant's data
+- Token expiry causing cascading failures
+- Token type mismatch errors
+
+**Phase to address:** Phase 10-03 (IM Integration Core)
+
+---
+
 ## Technical Debt Patterns
 
 | Shortcut | Immediate Benefit | Long-term Cost | When Acceptable |
@@ -1137,6 +2142,12 @@ class SourceAdapter(Protocol):
 | Use MiniLM for all content types | One model, simple config | Technical/code content poorly represented | Phase 1 offline mode only; add domain-specific models in Phase 3 |
 | Direct FTS5 writes (no batching) | Simpler code, immediate indexing | Segment proliferation, slow queries at scale | Phase 1 <100 documents only |
 | Hard-code confidence thresholds | No configuration complexity | Cannot tune for different domains or user preferences | Phase 2 initial implementation; make configurable by Phase 3 |
+| Skip pagination, use default limit | Faster initial development | Missing data on large datasets | Never acceptable |
+| Store OAuth tokens in plaintext | Simpler config management | Security breach risk | Never acceptable |
+| Skip webhook verification | Faster local testing | Security vulnerability in production | Only in isolated dev environment |
+| Assume property types stable | Less validation code | Crashes on user schema changes | Never acceptable |
+| Last-write-wins without backup | Simpler conflict handling | Silent data loss | Never acceptable |
+| Hard-code API rate limits | Avoids config complexity | Breaks when limits change | Acceptable for MVP with TODO |
 
 ## Integration Gotchas
 
@@ -1150,6 +2161,17 @@ class SourceAdapter(Protocol):
 | MinerU + Docling | Assuming MinerU always produces better output than Docling | Run both on a test set and compare; MinerU excels at layout but Docling may be better for specific PDF types |
 | Cedar policies + Agent capabilities | Overlapping permit/forbid rules creating ambiguous authorization | Test policy combinations with `saw_lint --rules`; ensure deny rules are explicit and permit rules are scoped |
 | FSRS interval repetition + 9-level freshness | Treating FSRS intervals and freshness levels as independent | FSRS determines review schedule; freshness level determines priority. A page at freshness 7 with low FSRS stability should be reviewed before a page at freshness 5 with high stability |
+| Notion | Assuming all databases have same schema | Query and cache schema per database |
+| Notion | Using title property name directly | Title property can be renamed, use `type: "title"` to find it |
+| Logseq | Modifying files without backup | Create `.backup` files before any modification |
+| Logseq | Assuming block IDs are unique globally | Block IDs are only unique per page |
+| Slack | Processing webhooks synchronously | Return 200 immediately, process in background queue |
+| Slack | Using same token for all workspaces | Each workspace needs its own token |
+| Discord | Ignoring rate limit buckets | Track per-route rate limits separately |
+| GitHub | Using unauthenticated API | Always use authenticated requests (5000 vs 60 req/hour) |
+| GitHub | Polling instead of webhooks | Use webhooks for real-time, poll only for reconciliation |
+| All OAuth | Storing tokens in config files | Use encrypted storage (OS keychain or environment variables) |
+| Feishu | Using app token for tenant endpoints | Use tenant_access_token for most API calls |
 
 ## Performance Traps
 
@@ -1162,6 +2184,11 @@ class SourceAdapter(Protocol):
 | LiteLLM synchronous calls in async context | Event loop blocked, all requests queue up | Always use `litellM.acompletion` in FastAPI/MCP async handlers | Immediately with any concurrent usage |
 | Embedding computation during ingestion | Ingestion blocked by embedding model inference | Compute embeddings async in Write Queue, not in the ingestion hot path | >50 documents per ingestion batch |
 | All-hot L0 memory index | Boot tokens grow beyond 8K target | Hard cap L0 at 100 lines; auto-condense when exceeded; use L1 for overflow | >500 wiki pages |
+| Sequential API calls | Sync taking hours | Batch requests, parallel execution | >100 records |
+| No pagination | Incomplete data | Always implement pagination from day one | >100 records |
+| In-memory sync state | Memory exhaustion | Persist sync state to database | >10K records |
+| Full sync every time | API quota exhaustion | Incremental sync with cursors | >1K records |
+| No rate limiting | 429 errors | Request queue with rate limiting | Immediately on bulk operations |
 
 ## Security Mistakes
 
@@ -1173,6 +2200,13 @@ class SourceAdapter(Protocol):
 | MCP server binding to 0.0.0.0 | Remote code execution via MCP tools from any network | Default to `127.0.0.1` (localhost only); require explicit opt-in for network access |
 | Claims DB injection via crafted document names | SQL injection through unsanitized document metadata | Use parameterized queries exclusively; never concatenate user input into SQL |
 | Cross-agent context leaking | Agent A sees Agent B's private scratch data | Each agent gets isolated scratch space; shared state goes through Claims DB with proper access control |
+| Plaintext token storage | Credential theft, unauthorized access | Encrypt at rest, use OS keychain |
+| Missing webhook signature verification | Request forgery, data injection | Always verify HMAC signature |
+| Timing attack on signature comparison | Signature bypass | Use constant-time comparison |
+| Tokens in logs | Credential exposure | Mask tokens, audit log output |
+| No token expiry handling | Expired token causing cascading failures | Track expiry, proactively refresh |
+| Missing HTTPS validation | MITM attacks | Always validate SSL certificates |
+| Accepting unvalidated redirect URIs | Open redirect, OAuth phishing | Whitelist allowed redirect URIs |
 
 ## UX Pitfalls
 
@@ -1185,6 +2219,11 @@ class SourceAdapter(Protocol):
 | Agent role opacity | Users don't know which agent did what | Tag every claim and wiki edit with the agent role that created it: "[Librarian/Haiku] extracted metadata" |
 | YAML workflow errors without context | Workflow fails with "gate not satisfied" and user has no idea why | Show gate evaluation details: "Critic rejected: confidence 2 < threshold 3. Reason: ambiguous claim about X. Retrying (2/3)." |
 | Graph visualization hairball at scale | Knowledge graph becomes an unreadable mess past 100 nodes | Use adaptive visualization: <50 nodes = full graph, 50-200 = community view, >200 = topic clusters with drill-down |
+| Silent sync failures | Data inconsistency, trust loss | Show sync status in UI, notify on failures |
+| No conflict visibility | User confused about what changed | Conflict review UI with before/after |
+| Missing progress indicator | User thinks sync is stuck | Progress bar with estimated time |
+| Auto-delete conflicts | Data loss, user frustration | Move to "conflict" folder, don't delete |
+| No undo for sync actions | Mistakes are permanent | Implement sync history with rollback |
 
 ## "Looks Done But Isn't" Checklist
 
@@ -1200,6 +2239,15 @@ class SourceAdapter(Protocol):
 - [ ] **FSRS freshness review**: Often missing integration with contradiction detection -- verify freshness reviews trigger governance checks
 - [ ] **Git blame traceability**: Often missing session branch cleanup -- verify old session branches are pruned after merge
 - [ ] **Chrome clipper**: Often missing content-type detection -- verify clipped pages are correctly categorized (article vs. video vs. code)
+- [ ] **Notion Integration**: Often missing property type validation -- verify schema check on every sync
+- [ ] **Notion Integration**: Often missing pagination handling -- verify all paginated endpoints
+- [ ] **Logseq Integration**: Often missing concurrent edit protection -- verify file locking
+- [ ] **Slack Integration**: Often missing thread message handling -- verify thread parsing
+- [ ] **Discord Integration**: Often missing embed formatting -- verify all message types
+- [ ] **GitHub Integration**: Often missing Link header pagination -- verify pagination implementation
+- [ ] **All Integrations**: Often missing rate limit handling -- verify exponential backoff
+- [ ] **All OAuth**: Often missing token refresh -- verify refresh before expiry
+- [ ] **All Webhooks**: Often missing signature verification -- verify production has verification enabled
 
 ## Recovery Strategies
 
@@ -1216,6 +2264,12 @@ class SourceAdapter(Protocol):
 | Knowledge graph corruption | HIGH | Rebuild graph from Claims DB (source of truth); re-run entity resolution; re-compute association signals |
 | Guardian rule conflicts | MEDIUM | `saw_lint --rules` to detect conflicts; remove conflicting rules; test remaining rules against historical operations |
 | Agent deadlock | LOW | Abort stuck workflows; release all file locks; restart agent processes. No data loss if Write Queue is durable. |
+| Rate limit exhaustion | LOW | Wait for reset, implement proper rate limiting |
+| Token exposure | HIGH | Revoke tokens, rotate all credentials, audit access logs |
+| Sync loop | MEDIUM | Identify loop source, add source tracking, manually resolve |
+| Data loss from conflict | HIGH | Restore from conflict backup, implement proper backup |
+| Incomplete sync | MEDIUM | Trigger full sync, verify pagination cursors |
+| Webhook verification bypass | HIGH | Enable verification, audit processed requests for forgery |
 
 ## Pitfall-to-Phase Mapping
 
@@ -1251,6 +2305,21 @@ class SourceAdapter(Protocol):
 | Bidirectional sync corruption | Phase 07 | Define clear authority model |
 | Chrome CORS blocking | Phase 08 | Configure server CORS headers |
 | Schema mismatch between sources | Phase 07 | Unified source-agnostic schema |
+| Notion Rate Limits | Phase 10-01 | Test with 1000+ record database |
+| Notion Property Types | Phase 10-01 | Test schema change during sync |
+| Notion Pagination | Phase 10-01 | Test with database > 1000 pages |
+| Logseq Format Changes | Phase 10-02 | Test with different Logseq versions |
+| Logseq Concurrent Edits | Phase 10-02 | Test simultaneous edits |
+| Webhook Signature Verification | Phase 10-03 | Security audit of webhook endpoints |
+| Message Format Parsing | Phase 10-03 | Test with all message types |
+| IM Rate Limits | Phase 10-03 | Load test with high message volume |
+| GitHub Pagination | Phase 10-04 | Test with repository > 1000 issues |
+| GitHub Webhook Failures | Phase 10-04 | Test webhook delivery failure |
+| OAuth Token Race | Phase 10-01 (Shared) | Test concurrent token refresh |
+| OAuth Token Security | Phase 10-01 (Shared) | Security audit of token storage |
+| Sync Loop | Phase 10-05 | Test bidirectional sync |
+| Data Loss from Conflict | Phase 10-05 | Test conflict resolution with audit |
+| Feishu Token Types | Phase 10-03 | Test multi-tenant scenarios |
 
 ## Sources
 
@@ -1288,8 +2357,20 @@ class SourceAdapter(Protocol):
   - feedparser library documentation -- encoding detection, bozo bit
   - Conditional GET patterns -- If-Modified-Since, ETag
 
+### Third-Party Integration Sources
+
+- GitHub API rate limit endpoint direct query (60 req/hour unauthenticated, 5000 req/hour authenticated)
+- Notion OpenAPI specification (page_size default 100, max 100)
+- Slack webhook verification documentation (HMAC-SHA256)
+- Discord rate limit documentation (bucket-based)
+- Logseq file format documentation (EDN + Markdown)
+- OAuth 2.0 Security Best Current Practice (RFC draft)
+- Community discussions on API integration pitfalls (WebSearch)
+- Platform-specific developer forums and Stack Overflow
+
 ---
 
 *Pitfalls research for: Smart Agent Wiki (intelligent multi-agent knowledge platform)*
 *Researched: 2026-04-26*
 *Ecosystem Integration pitfalls added: 2026-04-30*
+*Third-Party Integration pitfalls added: 2026-05-01*
