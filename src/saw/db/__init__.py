@@ -18,6 +18,7 @@ from saw.db.models import (
     drop_db,
 )
 from saw.db.feed_models import Feed, FeedEntry
+from saw.db.connector_models import ConnectorConfigModel, ConnectorSyncLog
 
 __all__ = [
     "DatabaseConfig",
@@ -37,4 +38,7 @@ __all__ = [
     # Phase 9: RSS Subscription
     "Feed",
     "FeedEntry",
+    # Phase 10: Connector Framework
+    "ConnectorConfigModel",
+    "ConnectorSyncLog",
 ]
