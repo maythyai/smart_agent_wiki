@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v3.1
 milestone_name: Third-Party Integrations
-status: phase_12_complete
-last_updated: "2026-05-02T19:30:00.000Z"
+status: phase_15_complete
+last_updated: "2026-05-02T13:50:00.000Z"
 last_activity: 2026-05-02
 progress:
   total_phases: 6
-  completed_phases: 2
+  completed_phases: 6
   total_plans: 20
-  completed_plans: 6
-  percent: 30
+  completed_plans: 20
+  percent: 100
 ---
 
 # Project State
@@ -20,16 +20,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-02)
 
 **Core value:** 知识可信、可溯源、可进化 — 每一条回答都可以追溯到原始文档的具体位置
-**Current focus:** v3.1 Third-Party Integrations — Phase 12 (Notion Connector) complete
+**Current focus:** v3.1 Third-Party Integrations — COMPLETE
 
 ## Current Position
 
-Phase: 12 — Notion Connector
-Plan: All 3 plans complete
-Status: Phase 12 complete
-Last activity: 2026-05-02 — Phase 12 complete (3 plans, 157 tests passing)
+Phase: 15 — Dashboard + Polish
+Plan: All 2 plans complete
+Status: Phase 15 complete (MILESTONE COMPLETE)
+Last activity: 2026-05-02 — Phase 15 complete (2 plans, 26 tests passing)
 
-Progress: [███░░░░░░░] 30%
+Progress: [██████████] 100%
 
 ## v3.1 Roadmap Summary
 
@@ -38,92 +38,56 @@ Progress: [███░░░░░░░] 30%
 | 10 | Connector Framework | AUTH-01~04, IM-01,02,06 (7) | Complete |
 | 11 | Sync Engine | SYNC-01~05, ERRO-01~04, IM-03~05,07 (13) | Complete |
 | 12 | Notion Connector | NOTI-01~10 (10) | Complete |
-| 13 | Logseq + IM | LOGS-01~10, SLAK-01~06, DISC-01~05, FEIS-01~05, WECO-01~04 (30) | Not started |
-| 14 | GitHub Connector | GITH-01~11 (11) | Not started |
-| 15 | Dashboard + Polish | Cross-cutting (4) | Not started |
+| 13 | Logseq + IM | LOGS-01~10, SLAK-01~06, DISC-01~05, FEIS-01~05, WECO-01~04 (30) | Complete |
+| 14 | GitHub Connector | GITH-01~11 (11) | Complete |
+| 15 | Dashboard + Polish | Cross-cutting (4) | Complete |
 
 **Coverage:** 65/65 requirements mapped (100%)
 
-## Phase 12 Plan Summary
+## Phase 15 Plan Summary
 
 | Plan | Wave | Requirements | Description | Status |
 |------|------|--------------|-------------|--------|
-| 12-01 | 1 | NOTI-01, NOTI-02, NOTI-09, NOTI-10 | Notion connector core and OAuth | Complete |
-| 12-02 | 2 | NOTI-03, NOTI-04, NOTI-07 | Property mapping and block transformation | Complete |
-| 12-03 | 3 | NOTI-05, NOTI-06, NOTI-08 | Bidirectional sync and polling | Complete |
+| 15-01 | 1 | Dashboard | Dashboard API and UI components | Complete |
+| 15-02 | 2 | Docs + Tests | Documentation and integration testing | Complete |
 
-**Total:** 3 plans, 3 waves, 10 requirements — All complete
+**Total:** 2 plans, 2 waves — All complete
 
-## Phase 12 Deliverables
+## Phase 15 Deliverables
 
-### Plan 12-01: Notion Connector Core and OAuth
-- NotionConnector implementing UnifiedConnectorInterface
-- NotionOAuthHandler for workspace connection (NOTI-01)
-- NotionPage, NotionDatabase, NotionProperty Pydantic models
-- NotionSyncCursorModel for cursor persistence (NOTI-10)
-- NotionDatabaseConfigModel for database selection (NOTI-02)
-- Rate limiting via notion-client SDK (NOTI-09)
+### Plan 15-01: Dashboard API and UI Components
+- Dashboard API endpoints (GET /api/v1/integrations/dashboard)
+- React UI components (Integrations page, IntegrationCard, IntegrationList)
+- Zustand store with persistence and auto-refresh
+- 14 API tests passing
 
-### Plan 12-02: Property Mapping and Block Transformation
-- BlockRenderer for all common Notion block types (NOTI-03)
-- RichTextRenderer for text formatting
-- PropertyMapper for property-to-field extraction (NOTI-04)
-- PropertyMappingConfig for customizable mappings
-- NotionTransformer for bidirectional conversion
-- Property type change handling (NOTI-07)
+### Plan 15-02: Documentation and Integration Testing
+- 8 connector documentation files (Notion, Logseq, Slack, Discord, Feishu, WeCom, GitHub)
+- Integration test suite (12 tests across 5 categories)
+- Cross-connector behavior verification
 
-### Plan 12-03: Bidirectional Sync and Polling
-- NotionSyncManager for orchestration (NOTI-05)
-- NotionConflictHandler for concurrent edit detection (NOTI-06)
-- NotionSyncConfig with configurable polling (NOTI-08)
-- FastAPI sync endpoints
-- Typer CLI commands
+## Architecture Patterns (Phase 15)
 
-## Phase 11 Plan Summary
+- Dashboard API aggregation (HealthMonitor + SyncStatusTracker + Registry)
+- React component structure (Card, List, Actions pattern)
+- Zustand persist middleware for offline resilience
+- Auto-refresh polling (30s interval, visibility-aware)
 
-| Plan | Wave | Requirements | Description | Status |
-|------|------|--------------|-------------|--------|
-| 11-01 | 1 | SYNC-02, SYNC-03, SYNC-05, ERRO-04 | Sync engine core with conflict detection | Complete |
-| 11-02 | 2 | SYNC-01, ERRO-01, ERRO-02, ERRO-03, IM-07 | Backpressure, retry, and health status | Complete |
-| 11-03 | 3 | SYNC-04, IM-03, IM-04, IM-05 | IM message handling and sync API endpoints | Complete |
+## Tech Stack Additions (Phase 15)
 
-**Total:** 3 plans, 3 waves, 13 requirements — All complete
+- None (uses existing FastAPI, React, Zustand)
 
-## Phase 10 Plan Summary
+## Decisions (Phase 15)
 
-| Plan | Wave | Requirements | Description | Status |
-|------|------|--------------|-------------|--------|
-| 10-01 | 1 | AUTH-04, IM-06 | Core connector protocol, models, and registry | Complete |
-| 10-02 | 2 | AUTH-01, AUTH-02, AUTH-03 | OAuth handler and token encryption | Complete |
-| 10-03 | 3 | IM-01, IM-02, IM-06 | Webhook endpoints and rate limiting | Complete |
-
-**Total:** 3 plans, 3 waves, 7 requirements — All complete
-
-## Architecture Patterns (Phase 12)
-
-- NotionConnector (connector implementation)
-- NotionOAuthHandler (OAuth specifics)
-- BlockRenderer (block to markdown)
-- PropertyMapper (property extraction)
-- NotionTransformer (bidirectional conversion)
-- NotionSyncManager (sync orchestration)
-- NotionConflictHandler (conflict resolution)
-
-## Tech Stack Additions (Phase 12)
-
-- notion-client 2.0.0+
-
-## Decisions (Phase 12)
-
-1. **notion-client SDK**: Official SDK handles rate limiting (3 req/s) automatically
-2. **Discriminated union**: Pydantic discriminated union for type-safe property handling
-3. **Conflict resolution**: LAST_MODIFIED_WINS as default strategy
-4. **Polling interval**: Default 1 hour (3600s), minimum 60s
+1. **Dashboard API design**: Aggregated endpoint reduces client requests
+2. **UI state management**: Zustand with persistence for offline resilience
+3. **Health visualization**: Color-coded dots + status badges for clarity
+4. **Documentation language**: Chinese primary (project convention)
 
 ## Session Continuity
 
-Last session: 2026-05-02T19:30:00.000Z
-Next action: Continue with Phase 13 (Logseq + IM connectors)
+Last session: 2026-05-02T13:50:00.000Z
+Next action: v3.1 Milestone Complete - Ready for release
 
 ---
-*Last updated: 2026-05-02 — Phase 12 complete*
+*Last updated: 2026-05-02 — Phase 15 complete, v3.1 milestone complete*
