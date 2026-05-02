@@ -38,6 +38,7 @@ from saw.api.oauth_callback import router as oauth_router
 from saw.api.webhook_inbound import router as webhook_inbound_router
 from saw.api.health import router as health_router
 from saw.api.sync import router as sync_router
+from saw.api.integrations import router as integrations_router
 
 __all__ = [
     # API Keys
@@ -71,4 +72,6 @@ __all__ = [
     # Phase 11: Health Status & Sync
     "health_router",
     "sync_router",
+    # Phase 15: Integration Dashboard
+    "integrations_router",
 ]
