@@ -115,6 +115,7 @@ class SyncResult:
         started_at: When sync started.
         completed_at: When sync completed.
         duration_ms: Duration in milliseconds.
+        success: Whether sync completed without errors.
     """
     connector_id: str
     direction: SyncDirection
@@ -125,3 +126,8 @@ class SyncResult:
     started_at: datetime = field(default_factory=utcnow)
     completed_at: datetime | None = None
     duration_ms: int | None = None
+
+    @property
+    def success(self) -> bool:
+        """Return True if sync completed without errors."""
+        return len(self.errors) == 0
