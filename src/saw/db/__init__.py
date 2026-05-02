@@ -22,6 +22,7 @@ from saw.db.models import (
 from saw.db.feed_models import Feed, FeedEntry
 from saw.db.connector_models import ConnectorConfigModel, ConnectorSyncLog
 from saw.db.sync_models import SyncStateModel, SyncLogModel, ConflictRecordModel
+from saw.db.notion_models import NotionSyncCursorModel, NotionDatabaseConfigModel, SyncDirection
 
 __all__ = [
     "DatabaseConfig",
@@ -48,4 +49,8 @@ __all__ = [
     "SyncStateModel",
     "SyncLogModel",
     "ConflictRecordModel",
+    # Phase 12: Notion Connector
+    "NotionSyncCursorModel",
+    "NotionDatabaseConfigModel",
+    "SyncDirection",
 ]

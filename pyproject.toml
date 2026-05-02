@@ -28,6 +28,8 @@ dependencies = [
     # Phase 9: RSS Subscription
     "fastfeedparser>=0.6.0",
     "apscheduler>=3.11.0",
+    # Phase 12: Notion Connector
+    "notion-client>=2.0.0",
 ]
 
 [project.scripts]
