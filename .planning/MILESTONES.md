@@ -86,4 +86,31 @@
 
 ---
 
-*Last updated: 2026-05-01*
+## v3.1: Third-Party Integrations
+
+**Shipped:** 2026-05-02
+**Phases:** 6 (10, 11, 12, 13, 14, 15)
+**Plans:** 20
+**Tests:** 546+
+
+### Summary
+
+扩展 Smart Agent Wiki 的第三方平台集成能力，实现知识的多平台互通。包含 Notion、Logseq、Slack、Discord、飞书、企业微信、GitHub 七大平台的完整集成。
+
+### Key Accomplishments
+
+1. **Unified Connector Framework** — 统一连接器协议，支持 OAuth 2.0 和 API Token 认证
+2. **Sync Engine** — 双向同步引擎，冲突检测，背压处理
+3. **Notion Integration** — 数据库同步，属性映射，双向更新
+4. **Logseq Integration** — 本地文件同步，Markdown 解析，文件监控
+5. **IM Integrations** — Slack/Discord/飞书/企业微信消息摄入
+6. **GitHub Integration** — Issues/Discussions 同步，Webhook 事件
+7. **Integration Dashboard** — 统一管理界面，健康监控
+
+### Artifacts
+
+- [Audit Report](milestones/v3.1-MILESTONE-AUDIT.md)
+
+---
+
+*Last updated: 2026-05-02*

@@ -5,7 +5,7 @@
 - ✅ **v1.1 Collaboration & Visualization** — Phases 1-3 (shipped 2026-04-29) — [Details](milestones/v1.1-ROADMAP.md)
 - ✅ **v2.0 Extended Ingestion & Team Platform** — Phases 4-6 (shipped 2026-04-30) — [Details](milestones/v2.0-ROADMAP.md)
 - ✅ **v3.0 Ecosystem Integration** — Phases 7-9 (shipped 2026-05-01) — [Details](milestones/v3.0-MILESTONE-AUDIT.md)
-- 🔄 **v3.1 Third-Party Integrations** — Phases 10-15 (planning)
+- ✅ **v3.1 Third-Party Integrations** — Phases 10-15 (shipped 2026-05-02) — [Details](milestones/v3.1-MILESTONE-AUDIT.md)
 
 ## Phases
 
@@ -15,14 +15,14 @@
 - [x] **Phase 8: Chrome Extension** — 一键剪藏与智能分类 — COMPLETE
 - [x] **Phase 9: RSS Subscription** — 自动订阅与增量同步 — COMPLETE
 
-### Active (v3.1)
+### Completed (v3.1)
 
-- [ ] **Phase 10: Connector Framework Foundation** — OAuth infrastructure, unified connector protocol, rate limiting
-- [ ] **Phase 11: Sync Engine + Write Queue Integration** — Bidirectional sync, conflict resolution, connector sinks
-- [ ] **Phase 12: Notion Connector** — OAuth workspace connection, database sync, property mapping
-- [ ] **Phase 13: Logseq + IM Connectors** — Local file sync, Slack/Discord/Feishu/WeCom message ingestion
-- [ ] **Phase 14: GitHub Connector** — Issues/Discussions sync, webhook events, repo selection
-- [ ] **Phase 15: Integration Dashboard + Polish** — Unified status dashboard, health monitoring, error alerting
+- [x] **Phase 10: Connector Framework Foundation** — OAuth infrastructure, unified connector protocol, rate limiting — COMPLETE
+- [x] **Phase 11: Sync Engine + Write Queue Integration** — Bidirectional sync, conflict resolution, connector sinks — COMPLETE
+- [x] **Phase 12: Notion Connector** — OAuth workspace connection, database sync, property mapping — COMPLETE
+- [x] **Phase 13: Logseq + IM Connectors** — Local file sync, Slack/Discord/Feishu/WeCom message ingestion — COMPLETE
+- [x] **Phase 14: GitHub Connector** — Issues/Discussions sync, webhook events, repo selection — COMPLETE
+- [x] **Phase 15: Integration Dashboard + Polish** — Unified status dashboard, health monitoring, error alerting — COMPLETE
 
 ## Phase Details
 
@@ -163,9 +163,9 @@ Plans:
 **Plans:** 3 plans in 3 waves
 
 Plans:
-- [ ] 11-01-PLAN.md — Sync engine core with conflict detection (SYNC-02, SYNC-03, SYNC-05, ERRO-04)
-- [ ] 11-02-PLAN.md — Backpressure, retry, and health status (SYNC-01, ERRO-01, ERRO-02, ERRO-03, IM-07)
-- [ ] 11-03-PLAN.md — IM message handling and sync API endpoints (SYNC-04, IM-03, IM-04, IM-05)
+- [ ] 12-01-PLAN.md — Notion connector core, OAuth, and database selection (NOTI-01, NOTI-02, NOTI-09, NOTI-10)
+- [ ] 12-02-PLAN.md — Property mapping and block transformation (NOTI-03, NOTI-04, NOTI-07)
+- [ ] 12-03-PLAN.md — Bidirectional sync, conflict detection, and polling (NOTI-05, NOTI-06, NOTI-08)
 
 ---
 
@@ -198,12 +198,13 @@ Plans:
 14. System handles message reactions as confidence signals
 15. System gracefully degrades when platforms are unavailable
 
-**Plans:** 3 plans in 3 waves
+**Plans:** 4 plans in 3 waves
 
 Plans:
-- [ ] 11-01-PLAN.md — Sync engine core with conflict detection (SYNC-02, SYNC-03, SYNC-05, ERRO-04)
-- [ ] 11-02-PLAN.md — Backpressure, retry, and health status (SYNC-01, ERRO-01, ERRO-02, ERRO-03, IM-07)
-- [ ] 11-03-PLAN.md — IM message handling and sync API endpoints (SYNC-04, IM-03, IM-04, IM-05)
+- [ ] 13-01-PLAN.md — Logseq connector (local file sync, block parsing, file watching) — LOGS-01~10
+- [ ] 13-02-PLAN.md — Slack connector (OAuth, Events API, messages) — SLAK-01~06
+- [ ] 13-03-PLAN.md — Discord connector (Gateway, reconnection, embeds) — DISC-01~05
+- [ ] 13-04-PLAN.md — Feishu + WeCom connectors (webhooks, encryption, Chinese content) — FEIS-01~05, WECO-01~04
 
 ---
 
@@ -231,9 +232,9 @@ Plans:
 **Plans:** 3 plans in 3 waves
 
 Plans:
-- [ ] 11-01-PLAN.md — Sync engine core with conflict detection (SYNC-02, SYNC-03, SYNC-05, ERRO-04)
-- [ ] 11-02-PLAN.md — Backpressure, retry, and health status (SYNC-01, ERRO-01, ERRO-02, ERRO-03, IM-07)
-- [ ] 11-03-PLAN.md — IM message handling and sync API endpoints (SYNC-04, IM-03, IM-04, IM-05)
+- [ ] 14-01-PLAN.md — GitHub connector core and OAuth (GITH-01, GITH-02, GITH-09)
+- [ ] 14-02-PLAN.md — Issues and Discussions sync (GITH-03, GITH-04, GITH-07, GITH-08)
+- [ ] 14-03-PLAN.md — Webhooks and reconciliation (GITH-05, GITH-06, GITH-10, GITH-11)
 
 ---
 
@@ -253,12 +254,11 @@ Plans:
 5. System provides clear error messages when sync fails
 6. All connector documentation is complete
 
-**Plans:** 3 plans in 3 waves
+**Plans:** 2 plans in 2 waves
 
 Plans:
-- [ ] 11-01-PLAN.md — Sync engine core with conflict detection (SYNC-02, SYNC-03, SYNC-05, ERRO-04)
-- [ ] 11-02-PLAN.md — Backpressure, retry, and health status (SYNC-01, ERRO-01, ERRO-02, ERRO-03, IM-07)
-- [ ] 11-03-PLAN.md — IM message handling and sync API endpoints (SYNC-04, IM-03, IM-04, IM-05)
+- [ ] 15-01-PLAN.md — Unified dashboard UI and API
+- [ ] 15-02-PLAN.md — Documentation and polish
 
 **UI hint:** yes
 
@@ -280,9 +280,9 @@ Plans:
 | 8. Chrome Extension | v3.0 | 4/4 | Complete | 2026-05-01 |
 | 9. RSS Subscription | v3.0 | 4/4 | Complete | 2026-05-01 |
 | 10. Connector Framework | v3.1 | 3/3 | Complete | 2026-05-02 |
-| 11. Sync Engine | v3.1 | 3/3 | Planned | - |
-| 12. Notion Connector | v3.1 | 0/3 | Not started | - |
-| 13. Logseq + IM | v3.1 | 0/3 | Not started | - |
+| 11. Sync Engine | v3.1 | 3/3 | Complete | 2026-05-02 |
+| 12. Notion Connector | v3.1 | 3/3 | Complete | 2026-05-02 |
+| 13. Logseq + IM | v3.1 | 0/4 | Planned | - |
 | 14. GitHub Connector | v3.1 | 0/3 | Not started | - |
 | 15. Dashboard + Polish | v3.1 | 0/2 | Not started | - |
 
@@ -312,4 +312,4 @@ Phase 12     Phase 13     Phase 14
 
 ---
 
-*Last updated: 2026-05-02 — Phase 10 plans created*
+*Last updated: 2026-05-02 — Phase 13 plans created (4 plans)*
