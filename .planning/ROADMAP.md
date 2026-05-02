@@ -105,7 +105,12 @@
 4. Tokens are masked in logs and API responses (showing only last 4 characters)
 5. Unified webhook endpoint `/api/v1/webhooks/{platform}` receives and verifies HMAC signatures
 
-**Plans:** TBD
+**Plans:** 3 plans in 3 waves
+
+Plans:
+- [ ] 10-01-PLAN.md — Core connector protocol, models, and registry (AUTH-04, IM-06)
+- [ ] 10-02-PLAN.md — OAuth handler and token encryption (AUTH-01, AUTH-02, AUTH-03)
+- [ ] 10-03-PLAN.md — Webhook endpoints and rate limiting (IM-01, IM-02, IM-06)
 
 ---
 
@@ -127,7 +132,12 @@
 7. Persistent failures trigger alerts and mark connector as unhealthy
 8. Per-connector health status is visible in dashboard
 
-**Plans:** TBD
+**Plans:** 3 plans in 3 waves
+
+Plans:
+- [ ] 11-01-PLAN.md — Sync engine core with conflict detection (SYNC-02, SYNC-03, SYNC-05, ERRO-04)
+- [ ] 11-02-PLAN.md — Backpressure, retry, and health status (SYNC-01, ERRO-01, ERRO-02, ERRO-03, IM-07)
+- [ ] 11-03-PLAN.md — IM message handling and sync API endpoints (SYNC-04, IM-03, IM-04, IM-05)
 
 ---
 
@@ -150,7 +160,12 @@
 8. System respects Notion rate limits (3 req/s) with token bucket limiter
 9. System resumes sync after interruption using persisted sync cursor
 
-**Plans:** TBD
+**Plans:** 3 plans in 3 waves
+
+Plans:
+- [ ] 11-01-PLAN.md — Sync engine core with conflict detection (SYNC-02, SYNC-03, SYNC-05, ERRO-04)
+- [ ] 11-02-PLAN.md — Backpressure, retry, and health status (SYNC-01, ERRO-01, ERRO-02, ERRO-03, IM-07)
+- [ ] 11-03-PLAN.md — IM message handling and sync API endpoints (SYNC-04, IM-03, IM-04, IM-05)
 
 ---
 
@@ -183,7 +198,12 @@
 14. System handles message reactions as confidence signals
 15. System gracefully degrades when platforms are unavailable
 
-**Plans:** TBD
+**Plans:** 3 plans in 3 waves
+
+Plans:
+- [ ] 11-01-PLAN.md — Sync engine core with conflict detection (SYNC-02, SYNC-03, SYNC-05, ERRO-04)
+- [ ] 11-02-PLAN.md — Backpressure, retry, and health status (SYNC-01, ERRO-01, ERRO-02, ERRO-03, IM-07)
+- [ ] 11-03-PLAN.md — IM message handling and sync API endpoints (SYNC-04, IM-03, IM-04, IM-05)
 
 ---
 
@@ -208,7 +228,12 @@
 10. System uses conditional requests (ETag/Last-Modified) for efficiency
 11. System handles pagination via Link header correctly
 
-**Plans:** TBD
+**Plans:** 3 plans in 3 waves
+
+Plans:
+- [ ] 11-01-PLAN.md — Sync engine core with conflict detection (SYNC-02, SYNC-03, SYNC-05, ERRO-04)
+- [ ] 11-02-PLAN.md — Backpressure, retry, and health status (SYNC-01, ERRO-01, ERRO-02, ERRO-03, IM-07)
+- [ ] 11-03-PLAN.md — IM message handling and sync API endpoints (SYNC-04, IM-03, IM-04, IM-05)
 
 ---
 
@@ -228,7 +253,12 @@
 5. System provides clear error messages when sync fails
 6. All connector documentation is complete
 
-**Plans:** TBD
+**Plans:** 3 plans in 3 waves
+
+Plans:
+- [ ] 11-01-PLAN.md — Sync engine core with conflict detection (SYNC-02, SYNC-03, SYNC-05, ERRO-04)
+- [ ] 11-02-PLAN.md — Backpressure, retry, and health status (SYNC-01, ERRO-01, ERRO-02, ERRO-03, IM-07)
+- [ ] 11-03-PLAN.md — IM message handling and sync API endpoints (SYNC-04, IM-03, IM-04, IM-05)
 
 **UI hint:** yes
 
@@ -249,8 +279,8 @@
 | 7. Obsidian Plugin | v3.0 | 4/4 | Complete | 2026-05-01 |
 | 8. Chrome Extension | v3.0 | 4/4 | Complete | 2026-05-01 |
 | 9. RSS Subscription | v3.0 | 4/4 | Complete | 2026-05-01 |
-| 10. Connector Framework | v3.1 | 0/3 | Not started | - |
-| 11. Sync Engine | v3.1 | 0/3 | Not started | - |
+| 10. Connector Framework | v3.1 | 3/3 | Complete | 2026-05-02 |
+| 11. Sync Engine | v3.1 | 3/3 | Planned | - |
 | 12. Notion Connector | v3.1 | 0/3 | Not started | - |
 | 13. Logseq + IM | v3.1 | 0/3 | Not started | - |
 | 14. GitHub Connector | v3.1 | 0/3 | Not started | - |
@@ -282,4 +312,4 @@ Phase 12     Phase 13     Phase 14
 
 ---
 
-*Last updated: 2026-05-01 — v3.1 roadmap created*
+*Last updated: 2026-05-02 — Phase 10 plans created*

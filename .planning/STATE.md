@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v3.1
 milestone_name: Third-Party Integrations
-status: phase_10_complete
-last_updated: "2026-05-02T10:30:00.000Z"
+status: phase_11_planned
+last_updated: "2026-05-02T11:00:00.000Z"
 last_activity: 2026-05-02
 progress:
   total_phases: 6
   completed_phases: 1
-  total_plans: 17
+  total_plans: 20
   completed_plans: 3
-  percent: 18
+  percent: 20
 ---
 
 # Project State
@@ -20,23 +20,23 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-02)
 
 **Core value:** 知识可信、可溯源、可进化 — 每一条回答都可以追溯到原始文档的具体位置
-**Current focus:** v3.1 Third-Party Integrations — Phase 10 complete, Phase 11 ready
+**Current focus:** v3.1 Third-Party Integrations — Phase 11 planned, ready for execution
 
 ## Current Position
 
 Phase: 11 — Sync Engine
 Plan: 11-01-PLAN.md (Wave 1)
-Status: Phase 10 complete, Phase 11 ready for planning
-Last activity: 2026-05-02 — Phase 10 executed (3 plans, 81 tests)
+Status: Phase 11 planned, ready for execution
+Last activity: 2026-05-02 — Phase 11 planned (3 plans)
 
-Progress: [███░░░░░░░] 18%
+Progress: [███░░░░░░░] 20%
 
 ## v3.1 Roadmap Summary
 
 | Phase | Goal | Requirements | Status |
 |-------|------|--------------|--------|
 | 10 | Connector Framework | AUTH-01~04, IM-01,02,06 (7) | Complete |
-| 11 | Sync Engine | SYNC-01~05, ERRO-01~04, IM-03~05,07 (13) | Not started |
+| 11 | Sync Engine | SYNC-01~05, ERRO-01~04, IM-03~05,07 (13) | Planned |
 | 12 | Notion Connector | NOTI-01~10 (10) | Not started |
 | 13 | Logseq + IM | LOGS-01~10, SLAK-01~06, DISC-01~05, FEIS-01~05, WECO-01~04 (30) | Not started |
 | 14 | GitHub Connector | GITH-01~11 (11) | Not started |
@@ -53,6 +53,38 @@ Progress: [███░░░░░░░] 18%
 | 10-03 | 3 | IM-01, IM-02, IM-06 | Webhook endpoints and rate limiting | Complete |
 
 **Total:** 3 plans, 3 waves, 7 requirements — All complete
+
+## Phase 11 Plan Summary
+
+| Plan | Wave | Requirements | Description | Status |
+|------|------|--------------|-------------|--------|
+| 11-01 | 1 | SYNC-02, SYNC-03, SYNC-05, ERRO-04 | Sync engine core with conflict detection | Planned |
+| 11-02 | 2 | SYNC-01, ERRO-01, ERRO-02, ERRO-03, IM-07 | Backpressure, retry, and health status | Planned |
+| 11-03 | 3 | SYNC-04, IM-03, IM-04, IM-05 | IM message handling and sync API endpoints | Planned |
+
+**Total:** 3 plans, 3 waves, 13 requirements — Planned
+
+## Phase 11 Components (New)
+
+### Plan 11-01: Sync Engine Core
+- SyncEngine: Bidirectional sync orchestration
+- ConflictResolver: Conflict detection and resolution (last_modified_wins)
+- SyncStatusTracker: Per-connector sync state tracking
+- SyncLogger: Audit logging for all sync operations
+- SQLAlchemy models: SyncStateModel, SyncLogModel, ConflictRecordModel
+
+### Plan 11-02: Backpressure, Retry, and Health
+- BackpressureManager: Write Queue backpressure handling (pause at 1000, resume at 500)
+- RetryHandler: Exponential backoff (1s→2s→4s→8s→16s, max 5 retries)
+- HealthMonitor: Three-tier health status (healthy/degraded/unhealthy)
+- Health API endpoints: `/api/v1/health`, `/api/v1/health/{connector_id}`
+
+### Plan 11-03: IM Message Handling and Sync API
+- MessageHandler: IM message extraction (content, author, timestamp, channel)
+- ReactionProcessor: Message reactions to confidence signals
+- Sync API endpoints: `/api/v1/sync/status`, `/api/v1/sync/{connector_id}/trigger`
+- CLI sync commands: `saw sync status`, `saw sync trigger <connector>`
+- ConnectorSink: Write Queue sink for connector operations
 
 ## Phase 10 Deliverables
 
@@ -103,6 +135,16 @@ Progress: [███░░░░░░░] 18%
 4. **Webhook verification:** Platform-specific HMAC (Slack v0, GitHub sha256=)
 5. **Token refresh mutex:** Redis distributed lock (team), asyncio.Lock (single-user)
 
+### Phase 11 Design Decisions (Auto-decided)
+
+1. **Sync loop detection:** Track `source_platform` and `source_id` in Claim metadata
+2. **Conflict resolution:** `last_modified_wins` default, store `last_sync_at` per connector
+3. **Backpressure:** Pause sync_pull when queue depth > 1000, resume at < 500
+4. **Retry:** Exponential backoff 1s→2s→4s→8s→16s (max 5), use `tenacity`
+5. **Health status:** `healthy`, `degraded`, `unhealthy` states
+6. **Thread context:** Store `thread_parent_id` in Claim metadata
+7. **Reactions:** Map to `reactions: {"👍": 5}` in metadata, use as confidence signal
+
 ### Architecture Patterns (implemented in Phase 10)
 
 - UnifiedConnectorInterface (Protocol)
@@ -110,6 +152,15 @@ Progress: [███░░░░░░░] 18%
 - OAuthHandler (unified flow management)
 - WebhookVerifier (signature verification)
 - WebhookLogger (audit trail)
+
+### New Architecture Patterns (Phase 11)
+
+- SyncEngine (bidirectional orchestration)
+- ConflictResolver (timestamp-based resolution)
+- BackpressureManager (hysteresis-based throttling)
+- RetryHandler (exponential backoff with tenacity)
+- HealthMonitor (three-tier status tracking)
+- ConnectorSink (Write Queue integration)
 
 ### Tech Stack Additions (v3.1)
 
@@ -121,6 +172,7 @@ Progress: [███░░░░░░░] 18%
 - edn-format 0.7.5
 - svix 1.92.2
 - cryptography 44.0.0
+- tenacity (for retry handling)
 
 ### Tech Debt (from previous milestones)
 
@@ -132,12 +184,12 @@ Progress: [███░░░░░░░] 18%
 
 ### Blockers/Concerns
 
-None — Phase 10 complete, Phase 11 ready for planning.
+None — Phase 11 planned, ready for execution.
 
 ## Session Continuity
 
-Last session: 2026-05-02T10:30:00.000Z
-Next action: `/gsd-plan-phase 11` to plan Phase 11 (Sync Engine)
+Last session: 2026-05-02T11:00:00.000Z
+Next action: `/gsd-execute-phase 11` to execute Phase 11 (Sync Engine)
 
 ---
-*Last updated: 2026-05-02 — Phase 10 complete*
+*Last updated: 2026-05-02 — Phase 11 planned*
