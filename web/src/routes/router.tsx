@@ -5,6 +5,7 @@ import Search from '../pages/Search';
 import Graph from '../pages/Graph';
 import Page from '../pages/Page';
 import Dashboard from '../pages/Dashboard';
+import Integrations from '../pages/Integrations';
 
 export const router = createBrowserRouter([
   {
@@ -16,6 +17,8 @@ export const router = createBrowserRouter([
       { path: 'graph', element: <Graph /> },
       { path: 'page/:slug', element: <Page /> },
       { path: 'dashboard', element: <Dashboard /> },
+      { path: 'integrations', element: <Integrations /> },
+      { path: 'integrations/:platform', element: <Integrations /> },
     ],
   },
 ]);
