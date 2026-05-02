@@ -2,6 +2,8 @@
 
 Phase 5: Team Deployment — Database layer.
 Phase 9: RSS Subscription — Feed models.
+Phase 10: Connector Framework — Connector models.
+Phase 11: Sync Engine — Sync state and log models.
 """
 
 from saw.db.config import DatabaseConfig, get_engine, get_async_engine, get_session_factory
@@ -19,6 +21,7 @@ from saw.db.models import (
 )
 from saw.db.feed_models import Feed, FeedEntry
 from saw.db.connector_models import ConnectorConfigModel, ConnectorSyncLog
+from saw.db.sync_models import SyncStateModel, SyncLogModel, ConflictRecordModel
 
 __all__ = [
     "DatabaseConfig",
@@ -41,4 +44,8 @@ __all__ = [
     # Phase 10: Connector Framework
     "ConnectorConfigModel",
     "ConnectorSyncLog",
+    # Phase 11: Sync Engine
+    "SyncStateModel",
+    "SyncLogModel",
+    "ConflictRecordModel",
 ]
