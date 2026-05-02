@@ -2,6 +2,8 @@
 
 Phase 6: API Platform — RESTful API and integrations.
 Phase 9: RSS Subscription — Feed management endpoints.
+Phase 10: OAuth Callback & Webhooks.
+Phase 11: Health status endpoints.
 """
 
 from saw.api.keys import (
@@ -34,6 +36,7 @@ from saw.api.bulk import (
 from saw.api.feeds import router as feeds_router
 from saw.api.oauth_callback import router as oauth_router
 from saw.api.webhook_inbound import router as webhook_inbound_router
+from saw.api.health import router as health_router
 
 __all__ = [
     # API Keys
@@ -64,4 +67,6 @@ __all__ = [
     # Phase 10: OAuth Callback & Webhooks
     "oauth_router",
     "webhook_inbound_router",
+    # Phase 11: Health Status
+    "health_router",
 ]
