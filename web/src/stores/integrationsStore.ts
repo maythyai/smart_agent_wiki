@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { DashboardConnector, DashboardResponse, ConnectorError, SyncTriggerResponse } from '../types/integrations';
+import type { ConnectorHealthData, SyncProgressData } from '../types/websocket';
 
 interface IntegrationsState {
   connectors: DashboardConnector[];
@@ -8,6 +9,7 @@ interface IntegrationsState {
   loading: boolean;
   error: string | null;
   lastUpdate: string | null;
+  wsConnected: boolean;
 
   // Actions
   fetchDashboard: () => Promise<void>;
@@ -15,6 +17,10 @@ interface IntegrationsState {
   triggerSync: (platform: string) => Promise<SyncTriggerResponse>;
   getErrors: (platform: string) => Promise<ConnectorError[]>;
   clearErrors: () => void;
+  // WebSocket actions
+  updateConnectorHealth: (platform: string, data: ConnectorHealthData) => void;
+  updateSyncProgress: (platform: string, data: SyncProgressData) => void;
+  setWsConnected: (connected: boolean) => void;
 }
 
 const API_BASE = '/api/v1/integrations';
@@ -27,6 +33,7 @@ export const useIntegrationsStore = create<IntegrationsState>()(
       loading: false,
       error: null,
       lastUpdate: null,
+      wsConnected: false,
 
       fetchDashboard: async () => {
         set({ loading: true, error: null });
@@ -113,6 +120,44 @@ export const useIntegrationsStore = create<IntegrationsState>()(
 
       clearErrors: () => {
         set({ error: null });
+      },
+
+      // WebSocket actions for real-time updates
+      updateConnectorHealth: (platform, data) => {
+        set((state) => ({
+          connectors: state.connectors.map((c) =>
+            c.platform === platform
+              ? {
+                  ...c,
+                  health_status: data.status,
+                  last_error: data.last_error,
+                  // Note: consecutive_failures not in DashboardConnector, but health_status reflects it
+                }
+              : c
+          ),
+          lastUpdate: new Date().toISOString(),
+        }));
+      },
+
+      updateSyncProgress: (platform, data) => {
+        set((state) => ({
+          connectors: state.connectors.map((c) =>
+            c.platform === platform
+              ? {
+                  ...c,
+                  sync_state: data.state,
+                  items_synced: data.items_synced,
+                  // Note: items_total and completion_percent not in DashboardConnector
+                  // but items_synced provides progress indication
+                }
+              : c
+          ),
+          lastUpdate: new Date().toISOString(),
+        }));
+      },
+
+      setWsConnected: (connected) => {
+        set({ wsConnected: connected });
       },
     }),
     {

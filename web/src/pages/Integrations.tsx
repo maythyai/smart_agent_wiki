@@ -1,9 +1,12 @@
 import { useIntegrations } from '../hooks/useIntegrations';
+import { useIntegrationWebSocket } from '../hooks/useIntegrationWebSocket';
 import { IntegrationList } from '../components/integrations/IntegrationList';
+import { ConnectionIndicator } from '../components/integrations/ConnectionIndicator';
 
 /**
  * Integration Dashboard page.
  * Per 15-01: Unified visibility into all connector health and management controls.
+ * Per 16-02: Real-time updates via WebSocket.
  */
 export default function Integrations() {
   const {
@@ -19,14 +22,21 @@ export default function Integrations() {
     refresh,
   } = useIntegrations();
 
+  // WebSocket for real-time updates
+  const platforms = connectors.map((c) => c.platform);
+  const wsStatus = useIntegrationWebSocket({ platforms });
+
   return (
     <div className="max-w-6xl mx-auto">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Integration Dashboard</h1>
-        <p className="text-gray-600 mt-1">
-          Manage platform connections and monitor sync status
-        </p>
+      {/* Header with WebSocket status */}
+      <div className="mb-6 flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Integration Dashboard</h1>
+          <p className="text-gray-600 mt-1">
+            Manage platform connections and monitor sync status
+          </p>
+        </div>
+        <ConnectionIndicator status={wsStatus.status} />
       </div>
 
       {/* Error banner */}

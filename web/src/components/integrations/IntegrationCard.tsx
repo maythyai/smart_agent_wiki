@@ -10,7 +10,7 @@ interface IntegrationCardProps {
   onReauth: (platform: string) => void;
 }
 
-// Health indicator colors
+// Health indicator colors with transition support
 const healthColors: Record<string, string> = {
   healthy: 'bg-green-500',
   degraded: 'bg-yellow-500',
@@ -100,7 +100,8 @@ function PlatformIcon({ platform }: { platform: string }) {
 /**
  * IntegrationCard displays per-connector status with:
  * - Platform icon and name
- * - Health indicator (color dot)
+ * - Health indicator (color dot) with transition animation
+ * - Sync progress bar when syncing
  * - Connection status badge
  * - Last sync time, items synced count, error count
  * - Action buttons (disconnect, sync, reauthorize)
@@ -120,6 +121,8 @@ export function IntegrationCard({
   const needsReauth = connector.health_status === 'unhealthy' &&
     connector.last_error?.toLowerCase().includes('token');
 
+  const isSyncing = connector.sync_state === 'syncing';
+
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow">
       {/* Header: Platform icon + name + health dot */}
@@ -131,9 +134,9 @@ export function IntegrationCard({
           <div>
             <h3 className="font-semibold text-gray-900">{config.name}</h3>
             <div className="flex items-center gap-2 mt-1">
-              {/* Health indicator */}
+              {/* Health indicator with transition animation */}
               <span
-                className={`w-2 h-2 rounded-full ${healthColors[connector.health_status]}`}
+                className={`w-2 h-2 rounded-full transition-all duration-300 ${healthColors[connector.health_status]}`}
                 title={`Health: ${connector.health_status}`}
               />
               {/* Sync state badge */}
@@ -157,6 +160,22 @@ export function IntegrationCard({
           </span>
         )}
       </div>
+
+      {/* Sync progress bar (only when syncing) */}
+      {isSyncing && (
+        <div className="mb-3">
+          <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
+            <span>Syncing...</span>
+            <span>{connector.items_synced.toLocaleString()} items</span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+            <div
+              className="bg-blue-500 h-2 rounded-full transition-all duration-500 animate-pulse"
+              style={{ width: '60%' }}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Stats row */}
       <div className="grid grid-cols-3 gap-2 mb-4 text-center">
