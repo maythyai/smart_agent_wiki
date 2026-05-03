@@ -10,6 +10,7 @@
     "fs:default",
     "store:default",
     "global-shortcut:allow-register",
+    "global-shortcut:allow-unregister",
     "os:default",
     "clipboard-manager:default",
     "process:default"
