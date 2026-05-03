@@ -2,6 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod menu;
+mod tray;
 
 fn main() {
     tauri::Builder::default()
@@ -24,6 +25,9 @@ fn main() {
                     let _ = window.emit("menu-event", event.id.as_ref());
                 }
             });
+
+            // Setup system tray
+            let _tray = tray::setup_tray(app)?;
 
             Ok(())
         })

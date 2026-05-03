@@ -4,6 +4,6 @@
 //! including IPC commands, menu handling, and tray management.
 
 pub mod menu;
+pub mod tray;
 // pub mod commands;
-// pub mod tray;
 // pub mod theme;
