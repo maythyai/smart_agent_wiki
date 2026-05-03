@@ -114,52 +114,65 @@ Smart Agent Wiki 是一个下一代智能多代理知识平台，集百家之长
 | Cedar 策略引擎 | 实验性 cedar-python + CLI fallback | ✓ Acceptable |
 | React 19 + Zustand | 前端技术栈现代且稳定 | ✓ Good |
 
-## Current Milestone: v3.1 Third-Party Integrations
+## Current Milestone: v3.1 Third-Party Integrations — ✓ COMPLETE
 
-**Goal:** 扩展 Smart Agent Wiki 的第三方平台集成能力，实现知识的多平台互通。
+**Shipped:** 2026-05-02
 
-**Target features:**
-- **Notion Integration** — 数据库同步、页面编辑、双向更新、完整属性映射
-- **Logseq Integration** — 图谱同步、block 级别映射、本地文件双向更新
-- **IM Integration** — Slack/Discord/企业微信/飞书消息摄入、Webhook 支持、可扩展架构
-- **GitHub Integration** — Issues/Discussions/PR 同步、开发工作流集成
+**Delivered features:**
+- ✓ **Notion Integration** — OAuth、数据库同步、双向更新、属性映射
+- ✓ **Logseq Integration** — 本地文件同步、Markdown解析、文件监控
+- ✓ **Slack Integration** — Events API、消息摄入、线程上下文
+- ✓ **Discord Integration** — Gateway WebSocket、RESUME重连
+- ✓ **Feishu Integration** — Webhooks、多租户Token、中文支持
+- ✓ **WeCom Integration** — Webhooks、AES-256-CBC加密
+- ✓ **GitHub Integration** — OAuth/App、Issues/Discussions、Webhook
+
+**Implementation:**
+- 65 requirements implemented (100% coverage)
+- 6 phases executed (10-15)
+- 546+ tests passing
+- Unified connector framework with consistent auth, sync, health monitoring
 
 **Key decisions:**
-- 认证方式：OAuth (Notion/Slack/GitHub) + API Token (Logseq 本地)
-- 同步策略：SAW 作为知识枢纽，各平台为数据源/消费端
-- 冲突处理：时间戳优先 + 可配置策略
-- 阶段编号：继续从 Phase 10 开始
+- 统一连接器协议 (UnifiedConnectorInterface)
+- 双向同步引擎 (SyncEngine + ConflictResolver)
+- 三级健康监控 (HEALTHY/DEGRADED/UNHEALTHY)
+- 集成仪表盘 (Integration Dashboard)
 
-**Status:** Planning — 2026-05-02
+**Status:** Complete — 2026-05-02
 
 ## Current State
 
-**Shipped Version:** v3.0 (2026-05-01)
-**Current Milestone:** v3.1 (Planning)
+**Shipped Version:** v3.1 (2026-05-02)
+**Current Milestone:** None — Ready for v3.2 planning
 
-**v3.0 Stats:**
-- Phases: 3 (07, 08, 09)
-- Plans: 12
-- Tests: 106+ passing
-- TypeScript LOC: ~5,000 (plugins)
-- Python LOC: ~1,966 (RSS)
+**v3.1 Stats:**
+- Phases: 6 (10, 11, 12, 13, 14, 15)
+- Plans: 20
+- Tests: 546+ passing
+- Platforms: 7 (Notion, Logseq, Slack, Discord, Feishu, WeCom, GitHub)
 
 **Tech Debt:**
 1. Phase VERIFICATION.md files missing (Phase 02, 03-01, 03-02, 03-03) — non-blocking
 2. React frontend tests deferred (vitest not installed) — non-blocking
 3. Bundle size 1.36MB (Milkdown adds significant weight) — acceptable
+4. Dashboard real-time WebSocket updates — deferred to v3.2
+5. Performance benchmarks for rate limiter — outstanding
 
 ## Evolution
 
 This document evolves at phase transitions and milestone boundaries.
 
-**v3.0 Milestone Review (2026-05-01):**
-- Obsidian Plugin: 双向同步、图谱可视化、置信度徽章
-- Chrome Extension: Manifest V3 合规、一键剪藏、批量标签页
-- RSS Subscription: fastfeedparser 25x 加速、多键去重、条件 GET
-- 106+ 测试通过
-- Next: v3.1 Third-Party Integrations
+**v3.1 Milestone Review (2026-05-02):**
+- Unified Connector Framework: 7平台统一集成架构
+- Notion: OAuth、数据库同步、双向更新
+- Logseq: 本地文件同步、Markdown解析
+- Slack/Discord/Feishu/WeCom: IM消息摄入
+- GitHub: Issues/Discussions同步
+- Integration Dashboard: 统一管理界面
+- 546+ 测试通过
+- Next: v3.2 Platform Enhancements 或后续版本规划
 
 ---
 
-*Last updated: 2026-05-02 — starting v3.1 milestone planning*
+*Last updated: 2026-05-03 — v3.1 complete, ready for next milestone*

@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v3.1
 milestone_name: Third-Party Integrations
-status: phase_15_complete
-last_updated: "2026-05-02T13:50:00.000Z"
-last_activity: 2026-05-02
+status: milestone_complete
+last_updated: "2026-05-03T00:00:00.000Z"
+last_activity: 2026-05-03
 progress:
   total_phases: 6
   completed_phases: 6
@@ -17,17 +17,14 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-05-02)
+See: .planning/PROJECT.md (updated 2026-05-03)
 
 **Core value:** 知识可信、可溯源、可进化 — 每一条回答都可以追溯到原始文档的具体位置
-**Current focus:** v3.1 Third-Party Integrations — COMPLETE
+**Current focus:** v3.1 complete — Ready for v3.2 planning
 
-## Current Position
+## Milestone Status
 
-Phase: 15 — Dashboard + Polish
-Plan: All 2 plans complete
-Status: Phase 15 complete (MILESTONE COMPLETE)
-Last activity: 2026-05-02 — Phase 15 complete (2 plans, 26 tests passing)
+**v3.1 Third-Party Integrations: ✓ COMPLETE**
 
 Progress: [██████████] 100%
 
@@ -35,59 +32,90 @@ Progress: [██████████] 100%
 
 | Phase | Goal | Requirements | Status |
 |-------|------|--------------|--------|
-| 10 | Connector Framework | AUTH-01~04, IM-01,02,06 (7) | Complete |
-| 11 | Sync Engine | SYNC-01~05, ERRO-01~04, IM-03~05,07 (13) | Complete |
-| 12 | Notion Connector | NOTI-01~10 (10) | Complete |
-| 13 | Logseq + IM | LOGS-01~10, SLAK-01~06, DISC-01~05, FEIS-01~05, WECO-01~04 (30) | Complete |
-| 14 | GitHub Connector | GITH-01~11 (11) | Complete |
-| 15 | Dashboard + Polish | Cross-cutting (4) | Complete |
+| 10 | Connector Framework | AUTH-01~04, IM-01,02,06 (7) | ✓ Complete |
+| 11 | Sync Engine | SYNC-01~05, ERRO-01~04, IM-03~05,07 (13) | ✓ Complete |
+| 12 | Notion Connector | NOTI-01~10 (10) | ✓ Complete |
+| 13 | Logseq + IM | LOGS-01~10, SLAK-01~06, DISC-01~05, FEIS-01~05, WECO-01~04 (30) | ✓ Complete |
+| 14 | GitHub Connector | GITH-01~11 (11) | ✓ Complete |
+| 15 | Dashboard + Polish | Cross-cutting (4) | ✓ Complete |
 
-**Coverage:** 65/65 requirements mapped (100%)
+**Coverage:** 65/65 requirements implemented (100%)
 
-## Phase 15 Plan Summary
+## Key Deliverables
 
-| Plan | Wave | Requirements | Description | Status |
-|------|------|--------------|-------------|--------|
-| 15-01 | 1 | Dashboard | Dashboard API and UI components | Complete |
-| 15-02 | 2 | Docs + Tests | Documentation and integration testing | Complete |
+### Core Framework (Phase 10-11)
+- `UnifiedConnectorInterface` — Protocol for all connectors
+- `ConnectorRegistry` — Singleton registry
+- `RateLimitManager` — Token bucket rate limiting
+- `TokenEncryption` — Fernet encryption for credentials
+- `OAuthHandler` — Unified OAuth 2.0 flow
+- `WebhookVerifier` — HMAC-SHA256 verification
+- `SyncEngine` — Bidirectional sync orchestration
+- `ConflictResolver` — LAST_MODIFIED_WINS resolution
+- `BackpressureManager` — Hysteresis-based throttling
+- `HealthMonitor` — Three-tier health status
 
-**Total:** 2 plans, 2 waves — All complete
+### Connectors (Phase 12-14)
+- `NotionConnector` — OAuth, database sync, bidirectional
+- `LogseqConnector` — Local file sync, file watching
+- `SlackConnector` — Events API, message ingestion
+- `DiscordConnector` — Gateway WebSocket, RESUME reconnect
+- `FeishuConnector` — Webhooks, multi-tenant tokens
+- `WeComConnector` — Webhooks, AES-256-CBC encryption
+- `GitHubConnector` — OAuth/App, Issues/Discussions, webhooks
 
-## Phase 15 Deliverables
+### Dashboard (Phase 15)
+- Integration status API endpoints
+- React UI components (IntegrationCard, IntegrationList)
+- Zustand store with persistence
+- 8 connector documentation guides
 
-### Plan 15-01: Dashboard API and UI Components
-- Dashboard API endpoints (GET /api/v1/integrations/dashboard)
-- React UI components (Integrations page, IntegrationCard, IntegrationList)
-- Zustand store with persistence and auto-refresh
-- 14 API tests passing
+## Test Coverage
 
-### Plan 15-02: Documentation and Integration Testing
-- 8 connector documentation files (Notion, Logseq, Slack, Discord, Feishu, WeCom, GitHub)
-- Integration test suite (12 tests across 5 categories)
-- Cross-connector behavior verification
+| Category | Tests |
+|----------|-------|
+| Unit Tests | 534+ |
+| Integration Tests | 12 |
+| **Total** | **546+** |
 
-## Architecture Patterns (Phase 15)
+## Architecture Patterns
 
-- Dashboard API aggregation (HealthMonitor + SyncStatusTracker + Registry)
-- React component structure (Card, List, Actions pattern)
-- Zustand persist middleware for offline resilience
-- Auto-refresh polling (30s interval, visibility-aware)
+- UnifiedConnectorInterface (Protocol)
+- ConnectorSink (Write Queue)
+- Token Bucket Rate Limiting
+- Hysteresis Backpressure
+- Exponential Backoff Retry
+- Three-Tier Health Status
+- HMAC Webhook Verification
+- Fernet Token Encryption
+- Multi-Tenant Token Management
+- Gateway RESUME Reconnection
 
-## Tech Stack Additions (Phase 15)
+## Tech Stack Additions
 
-- None (uses existing FastAPI, React, Zustand)
+- `notion-client 3.0.0`
+- `slack-sdk 3.41.0` + `slack-bolt 1.28.0`
+- `discord.py 2.7.1`
+- `lark-oapi 1.5.5`
+- `PyGithub 2.9.1`
+- `edn-format 0.7.5`
+- `svix 1.92.2`
+- `cryptography 44.0.0`
 
-## Decisions (Phase 15)
+## Tech Debt
 
-1. **Dashboard API design**: Aggregated endpoint reduces client requests
-2. **UI state management**: Zustand with persistence for offline resilience
-3. **Health visualization**: Color-coded dots + status badges for clarity
-4. **Documentation language**: Chinese primary (project convention)
+1. Phase VERIFICATION.md files missing (Phase 02, 03-01, 03-02, 03-03) — non-blocking
+2. React frontend tests deferred (vitest not installed) — non-blocking
+3. Bundle size 1.36MB (Milkdown adds significant weight) — acceptable
+4. Dashboard real-time WebSocket updates — deferred to v3.2
+5. Performance benchmarks for rate limiter — outstanding
 
 ## Session Continuity
 
-Last session: 2026-05-02T13:50:00.000Z
-Next action: v3.1 Milestone Complete - Ready for release
+Last session: 2026-05-03T00:00:00.000Z
+Milestone status: Complete
+Next action: Start v3.2 milestone planning (if needed)
 
 ---
-*Last updated: 2026-05-02 — Phase 15 complete, v3.1 milestone complete*
+
+*Last updated: 2026-05-03 — v3.1 milestone complete*
