@@ -1,11 +1,81 @@
 # Requirements: Smart Agent Wiki
 
-**Defined:** 2026-05-02
+**Defined:** 2026-05-03
 **Core Value:** 知识可信、可溯源、可进化 — 每一条回答都可以追溯到原始文档的具体位置
 
 ---
 
-## v3.1 Requirements (Third-Party Integrations)
+## v3.2 Requirements (Platform Enhancements)
+
+### Dashboard Real-Time (DASH)
+
+**WebSocket Updates:**
+
+- [ ] **DASH-01**: User can see real-time connector status updates without page refresh
+- [ ] **DASH-02**: System pushes connector health changes via WebSocket within 1 second of detection
+- [ ] **DASH-03**: User can see sync progress in real-time (items synced, errors, completion percentage)
+- [ ] **DASH-04**: WebSocket connection gracefully reconnects on disconnect with visual indicator
+- [ ] **DASH-05**: User can toggle WebSocket updates on/off per connector to control bandwidth
+
+### Mobile Responsive (MOB)
+
+**Layout Adaptation:**
+
+- [ ] **MOB-01**: Dashboard renders correctly on screens 320px-768px wide
+- [ ] **MOB-02**: Integration cards collapse to compact view on mobile with expand-on-tap
+- [ ] **MOB-03**: Navigation menu collapses to hamburger menu on screens <768px
+- [ ] **MOB-04**: Touch gestures work correctly (swipe to dismiss, tap to expand)
+- [ ] **MOB-05**: Font sizes and spacing follow mobile accessibility guidelines (WCAG 2.1)
+
+### Connector Settings (CONF)
+
+**Per-Connector Configuration:**
+
+- [ ] **CONF-01**: User can access per-connector settings page from dashboard
+- [ ] **CONF-02**: User can configure sync interval per connector (5min/15min/1hr/6hr/manual)
+- [ ] **CONF-03**: User can enable/disable specific sync directions (inbound only, outbound only, bidirectional)
+- [ ] **CONF-04**: User can view and edit property mappings for Notion/Logseq connectors
+- [ ] **CONF-05**: User can configure rate limit overrides per connector (with safety bounds)
+- [ ] **CONF-06**: User can re-authorize expired OAuth tokens from settings page
+- [ ] **CONF-07**: Settings changes are persisted and survive server restart
+
+### Performance Benchmarks (PERF)
+
+**Rate Limiter Validation:**
+
+- [ ] **PERF-01**: System demonstrates rate limiter correctly throttles at configured limits under 10x load
+- [ ] **PERF-02**: System demonstrates token bucket refill behavior matches specification
+- [ ] **PERF-03**: Benchmark report documents latency distribution (p50, p90, p99) under various loads
+- [ ] **PERF-04**: Benchmark report documents throughput ceiling and bottleneck analysis
+
+**Sync Engine Validation:**
+
+- [ ] **PERF-05**: System demonstrates sync engine handles 1000+ items without memory issues
+- [ ] **PERF-06**: Benchmark report documents sync throughput (items/second) per connector
+- [ ] **PERF-07**: System demonstrates backpressure manager correctly throttles at queue thresholds
+
+### Tech Debt Cleanup (DEBT)
+
+**Verification Files:**
+
+- [ ] **DEBT-01**: Phase 02 VERIFICATION.md created and committed
+- [ ] **DEBT-02**: Phase 03-01 VERIFICATION.md created and committed
+- [ ] **DEBT-03**: Phase 03-02 VERIFICATION.md created and committed
+- [ ] **DEBT-04**: Phase 03-03 VERIFICATION.md created and committed
+
+**Frontend Tests:**
+
+- [ ] **DEBT-05**: Vitest installed and configured for React frontend
+- [ ] **DEBT-06**: Critical integration components have basic test coverage (IntegrationCard, IntegrationList)
+
+**Bundle Optimization:**
+
+- [ ] **DEBT-07**: Bundle analysis report generated and documented
+- [ ] **DEBT-08**: Milkdown lazy-loading implemented if bundle exceeds 1MB threshold
+
+---
+
+## v3.1 Requirements (Third-Party Integrations) — ✓ Shipped
 
 ### Notion Integration (NOTI)
 
@@ -201,18 +271,16 @@ All v2.0 requirements have been implemented and verified.
 
 ---
 
-## Out of Scope (v3.1)
+## Out of Scope (v3.2)
 
 | Feature | Reason |
 |---------|--------|
-| Notion block-level sync | Page-level only for v3.1 |
-| Logseq plugin development | Outbound sync only |
-| IM message sending | Read-only ingestion |
-| GitHub PR creation | Read + webhook only |
-| GitLab integration | Deferred to v3.1+ |
-| Twitter/X integration | Not in scope |
-| Jira integration | Not in scope |
-| Real-time collaborative editing | No OT/CRDT support |
+| Message sending to IM platforms | Deferred to v3.3+ |
+| GitLab integration | Deferred to v3.3+ |
+| Advanced analytics dashboard | Deferred to v3.3+ |
+| Custom connector SDK | Deferred to v4.0+ |
+| Tauri desktop application | v3.3 milestone |
+| Multi-language support | v3.3+ milestone |
 
 ---
 
@@ -220,84 +288,45 @@ All v2.0 requirements have been implemented and verified.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AUTH-01 | Phase 10 | Pending |
-| AUTH-02 | Phase 10 | Pending |
-| AUTH-03 | Phase 10 | Pending |
-| AUTH-04 | Phase 10 | Pending |
-| IM-01 | Phase 10 | Pending |
-| IM-02 | Phase 10 | Pending |
-| IM-06 | Phase 10 | Pending |
-| SYNC-01 | Phase 11 | Pending |
-| SYNC-02 | Phase 11 | Pending |
-| SYNC-03 | Phase 11 | Pending |
-| SYNC-04 | Phase 11 | Pending |
-| SYNC-05 | Phase 11 | Pending |
-| ERRO-01 | Phase 11 | Pending |
-| ERRO-02 | Phase 11 | Pending |
-| ERRO-03 | Phase 11 | Pending |
-| ERRO-04 | Phase 11 | Pending |
-| IM-03 | Phase 11 | Pending |
-| IM-04 | Phase 11 | Pending |
-| IM-05 | Phase 11 | Pending |
-| IM-07 | Phase 11 | Pending |
-| NOTI-01 | Phase 12 | Pending |
-| NOTI-02 | Phase 12 | Pending |
-| NOTI-03 | Phase 12 | Pending |
-| NOTI-04 | Phase 12 | Pending |
-| NOTI-05 | Phase 12 | Pending |
-| NOTI-06 | Phase 12 | Pending |
-| NOTI-07 | Phase 12 | Pending |
-| NOTI-08 | Phase 12 | Pending |
-| NOTI-09 | Phase 12 | Pending |
-| NOTI-10 | Phase 12 | Pending |
-| LOGS-01 | Phase 13 | Pending |
-| LOGS-02 | Phase 13 | Pending |
-| LOGS-03 | Phase 13 | Pending |
-| LOGS-04 | Phase 13 | Pending |
-| LOGS-05 | Phase 13 | Pending |
-| LOGS-06 | Phase 13 | Pending |
-| LOGS-07 | Phase 13 | Pending |
-| LOGS-08 | Phase 13 | Pending |
-| LOGS-09 | Phase 13 | Pending |
-| LOGS-10 | Phase 13 | Pending |
-| SLAK-01 | Phase 13 | Pending |
-| SLAK-02 | Phase 13 | Pending |
-| SLAK-03 | Phase 13 | Pending |
-| SLAK-04 | Phase 13 | Pending |
-| SLAK-05 | Phase 13 | Pending |
-| SLAK-06 | Phase 13 | Pending |
-| DISC-01 | Phase 13 | Pending |
-| DISC-02 | Phase 13 | Pending |
-| DISC-03 | Phase 13 | Pending |
-| DISC-04 | Phase 13 | Pending |
-| DISC-05 | Phase 13 | Pending |
-| FEIS-01 | Phase 13 | Pending |
-| FEIS-02 | Phase 13 | Pending |
-| FEIS-03 | Phase 13 | Pending |
-| FEIS-04 | Phase 13 | Pending |
-| FEIS-05 | Phase 13 | Pending |
-| WECO-01 | Phase 13 | Pending |
-| WECO-02 | Phase 13 | Pending |
-| WECO-03 | Phase 13 | Pending |
-| WECO-04 | Phase 13 | Pending |
-| GITH-01 | Phase 14 | Pending |
-| GITH-02 | Phase 14 | Pending |
-| GITH-03 | Phase 14 | Pending |
-| GITH-04 | Phase 14 | Pending |
-| GITH-05 | Phase 14 | Pending |
-| GITH-06 | Phase 14 | Pending |
-| GITH-07 | Phase 14 | Pending |
-| GITH-08 | Phase 14 | Pending |
-| GITH-09 | Phase 14 | Pending |
-| GITH-10 | Phase 14 | Pending |
-| GITH-11 | Phase 14 | Pending |
+| DASH-01 | Phase 16 | Pending |
+| DASH-02 | Phase 16 | Pending |
+| DASH-03 | Phase 16 | Pending |
+| DASH-04 | Phase 16 | Pending |
+| DASH-05 | Phase 16 | Pending |
+| MOB-01 | Phase 17 | Pending |
+| MOB-02 | Phase 17 | Pending |
+| MOB-03 | Phase 17 | Pending |
+| MOB-04 | Phase 17 | Pending |
+| MOB-05 | Phase 17 | Pending |
+| CONF-01 | Phase 18 | Pending |
+| CONF-02 | Phase 18 | Pending |
+| CONF-03 | Phase 18 | Pending |
+| CONF-04 | Phase 18 | Pending |
+| CONF-05 | Phase 18 | Pending |
+| CONF-06 | Phase 18 | Pending |
+| CONF-07 | Phase 18 | Pending |
+| PERF-01 | Phase 19 | Pending |
+| PERF-02 | Phase 19 | Pending |
+| PERF-03 | Phase 19 | Pending |
+| PERF-04 | Phase 19 | Pending |
+| PERF-05 | Phase 19 | Pending |
+| PERF-06 | Phase 19 | Pending |
+| PERF-07 | Phase 19 | Pending |
+| DEBT-01 | Phase 20 | Pending |
+| DEBT-02 | Phase 20 | Pending |
+| DEBT-03 | Phase 20 | Pending |
+| DEBT-04 | Phase 20 | Pending |
+| DEBT-05 | Phase 20 | Pending |
+| DEBT-06 | Phase 20 | Pending |
+| DEBT-07 | Phase 20 | Pending |
+| DEBT-08 | Phase 20 | Pending |
 
 **Coverage:**
-- v3.1 requirements: 65 total
-- Mapped to phases: 65/65 (100%)
+- v3.2 requirements: 32 total
+- Mapped to phases: 32/32 (100%)
 - Unmapped: 0
 
 ---
 
-*Requirements defined: 2026-05-02*
-*Last updated: 2026-05-01 — Traceability updated with phase mappings*
+*Requirements defined: 2026-05-03*
+*Last updated: 2026-05-03 — v3.2 requirements defined*

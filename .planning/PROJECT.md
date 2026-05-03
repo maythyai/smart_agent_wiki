@@ -114,7 +114,23 @@ Smart Agent Wiki 是一个下一代智能多代理知识平台，集百家之长
 | Cedar 策略引擎 | 实验性 cedar-python + CLI fallback | ✓ Acceptable |
 | React 19 + Zustand | 前端技术栈现代且稳定 | ✓ Good |
 
-## Current Milestone: v3.1 Third-Party Integrations — ✓ COMPLETE
+## Current Milestone: v3.2 Platform Enhancements
+
+**Goal:** 增强平台用户体验和实时能力，完善集成管理功能，清理历史技术债务
+
+**Target features:**
+- Real-time Dashboard WebSocket updates — 集成状态实时推送
+- Mobile-responsive UI improvements — 移动端适配
+- Connector settings pages — 连接器配置界面
+- Performance benchmarks — 速率限制器和同步引擎压测
+- Tech debt cleanup — Phase VERIFICATION.md、前端测试、Bundle优化
+
+**Key context:**
+- 延续 v3.1 的统一连接器架构
+- 解决 v3.1 审计报告中提出的技术债务
+- 为后续 v3.3 Tauri 桌面应用做准备
+
+## Previous Milestone: v3.1 Third-Party Integrations — ✓ COMPLETE
 
 **Shipped:** 2026-05-02
 
@@ -144,7 +160,7 @@ Smart Agent Wiki 是一个下一代智能多代理知识平台，集百家之长
 ## Current State
 
 **Shipped Version:** v3.1 (2026-05-02)
-**Current Milestone:** None — Ready for v3.2 planning
+**Current Milestone:** v3.2 Platform Enhancements (planning)
 
 **v3.1 Stats:**
 - Phases: 6 (10, 11, 12, 13, 14, 15)
@@ -152,12 +168,12 @@ Smart Agent Wiki 是一个下一代智能多代理知识平台，集百家之长
 - Tests: 546+ passing
 - Platforms: 7 (Notion, Logseq, Slack, Discord, Feishu, WeCom, GitHub)
 
-**Tech Debt:**
+**Tech Debt (addressed in v3.2):**
 1. Phase VERIFICATION.md files missing (Phase 02, 03-01, 03-02, 03-03) — non-blocking
 2. React frontend tests deferred (vitest not installed) — non-blocking
 3. Bundle size 1.36MB (Milkdown adds significant weight) — acceptable
-4. Dashboard real-time WebSocket updates — deferred to v3.2
-5. Performance benchmarks for rate limiter — outstanding
+4. Dashboard real-time WebSocket updates — deferred to v3.2 ✓
+5. Performance benchmarks for rate limiter — outstanding ✓
 
 ## Evolution
 

@@ -6,8 +6,142 @@
 - ✅ **v2.0 Extended Ingestion & Team Platform** — Phases 4-6 (shipped 2026-04-30) — [Details](milestones/v2.0-ROADMAP.md)
 - ✅ **v3.0 Ecosystem Integration** — Phases 7-9 (shipped 2026-05-01) — [Details](milestones/v3.0-MILESTONE-AUDIT.md)
 - ✅ **v3.1 Third-Party Integrations** — Phases 10-15 (shipped 2026-05-02) — [Details](milestones/v3.1-MILESTONE-AUDIT.md)
+- 🔵 **v3.2 Platform Enhancements** — Phases 16-20 (planning) — This document
 
 ## Phases
+
+### Upcoming (v3.2)
+
+- [ ] **Phase 16: Real-Time Dashboard** — WebSocket updates for connector status — Planning
+- [ ] **Phase 17: Mobile Responsive UI** — Layout adaptation for mobile devices — Planning
+- [ ] **Phase 18: Connector Settings** — Per-connector configuration pages — Planning
+- [ ] **Phase 19: Performance Benchmarks** — Rate limiter and sync engine validation — Planning
+- [ ] **Phase 20: Tech Debt Cleanup** — VERIFICATION files, frontend tests, bundle optimization — Planning
+
+### Phase Details (v3.2)
+
+### Phase 16: Real-Time Dashboard
+
+**Goal:** Users can see connector status updates in real-time without page refresh
+
+**Depends on:** v3.1 Integration Dashboard
+
+**Requirements:** DASH-01, DASH-02, DASH-03, DASH-04, DASH-05
+
+**Success Criteria** (what must be TRUE):
+1. User opens dashboard and sees connector status update automatically
+2. System pushes health changes within 1 second of detection
+3. Sync progress shows real-time item count and completion percentage
+4. WebSocket reconnects gracefully on disconnect with visual indicator
+5. User can disable WebSocket updates per connector
+
+**Plans:** 2 plans in 2 waves
+
+Plans:
+- [ ] 16-01-PLAN.md — WebSocket server and connection management (DASH-01, DASH-04)
+- [ ] 16-02-PLAN.md — Real-time status broadcasting and UI integration (DASH-02, DASH-03, DASH-05)
+
+**UI hint:** yes
+
+---
+
+### Phase 17: Mobile Responsive UI
+
+**Goal:** Dashboard renders correctly on mobile devices (320px-768px)
+
+**Depends on:** Phase 16
+
+**Requirements:** MOB-01, MOB-02, MOB-03, MOB-04, MOB-05
+
+**Success Criteria** (what must be TRUE):
+1. Dashboard renders correctly on screens as narrow as 320px
+2. Integration cards collapse to compact view on mobile
+3. Navigation menu collapses to hamburger on small screens
+4. Touch gestures (swipe, tap) work correctly
+5. Font sizes meet WCAG 2.1 mobile accessibility guidelines
+
+**Plans:** 2 plans in 2 waves
+
+Plans:
+- [ ] 17-01-PLAN.md — Responsive layout and navigation (MOB-01, MOB-03, MOB-05)
+- [ ] 17-02-PLAN.md — Touch interactions and card optimization (MOB-02, MOB-04)
+
+**UI hint:** yes
+
+---
+
+### Phase 18: Connector Settings
+
+**Goal:** Users can configure per-connector settings from dedicated settings pages
+
+**Depends on:** Phase 16
+
+**Requirements:** CONF-01, CONF-02, CONF-03, CONF-04, CONF-05, CONF-06, CONF-07
+
+**Success Criteria** (what must be TRUE):
+1. User can access settings page for each connector from dashboard
+2. User can change sync interval (5min/15min/1hr/6hr/manual)
+3. User can enable/disable sync directions per connector
+4. User can view and edit property mappings for Notion/Logseq
+5. User can re-authorize expired OAuth tokens from settings
+6. Settings persist across server restarts
+
+**Plans:** 2 plans in 2 waves
+
+Plans:
+- [ ] 18-01-PLAN.md — Settings API and persistence (CONF-02, CONF-03, CONF-05, CONF-07)
+- [ ] 18-02-PLAN.md — Settings UI and property mapping editor (CONF-01, CONF-04, CONF-06)
+
+**UI hint:** yes
+
+---
+
+### Phase 19: Performance Benchmarks
+
+**Goal:** System demonstrates rate limiter and sync engine perform correctly under load
+
+**Depends on:** v3.1 Sync Engine
+
+**Requirements:** PERF-01, PERF-02, PERF-03, PERF-04, PERF-05, PERF-06, PERF-07
+
+**Success Criteria** (what must be TRUE):
+1. Rate limiter correctly throttles at configured limits under 10x load
+2. Token bucket refill behavior matches specification
+3. Benchmark report documents latency distribution (p50, p90, p99)
+4. Sync engine handles 1000+ items without memory issues
+5. Backpressure manager throttles at queue thresholds correctly
+
+**Plans:** 2 plans in 2 waves
+
+Plans:
+- [ ] 19-01-PLAN.md — Rate limiter benchmarks (PERF-01, PERF-02, PERF-03, PERF-04)
+- [ ] 19-02-PLAN.md — Sync engine and backpressure benchmarks (PERF-05, PERF-06, PERF-07)
+
+---
+
+### Phase 20: Tech Debt Cleanup
+
+**Goal:** Resolve accumulated technical debt from v1.1-v3.1
+
+**Depends on:** v3.1 complete
+
+**Requirements:** DEBT-01, DEBT-02, DEBT-03, DEBT-04, DEBT-05, DEBT-06, DEBT-07, DEBT-08
+
+**Success Criteria** (what must be TRUE):
+1. All missing Phase VERIFICATION.md files created
+2. Vitest configured for React frontend
+3. Critical integration components have basic test coverage
+4. Bundle analysis report generated
+5. Milkdown lazy-loading implemented if needed
+
+**Plans:** 3 plans in 3 waves
+
+Plans:
+- [ ] 20-01-PLAN.md — VERIFICATION.md files for Phase 02, 03-01, 03-02, 03-03 (DEBT-01~04)
+- [ ] 20-02-PLAN.md — Vitest setup and frontend tests (DEBT-05, DEBT-06)
+- [ ] 20-03-PLAN.md — Bundle analysis and optimization (DEBT-07, DEBT-08)
+
+---
 
 ### Completed (v1.1-v3.0)
 
@@ -282,34 +416,38 @@ Plans:
 | 10. Connector Framework | v3.1 | 3/3 | Complete | 2026-05-02 |
 | 11. Sync Engine | v3.1 | 3/3 | Complete | 2026-05-02 |
 | 12. Notion Connector | v3.1 | 3/3 | Complete | 2026-05-02 |
-| 13. Logseq + IM | v3.1 | 0/4 | Planned | - |
-| 14. GitHub Connector | v3.1 | 0/3 | Not started | - |
-| 15. Dashboard + Polish | v3.1 | 0/2 | Not started | - |
+| 13. Logseq + IM | v3.1 | 4/4 | Complete | 2026-05-02 |
+| 14. GitHub Connector | v3.1 | 3/3 | Complete | 2026-05-02 |
+| 15. Dashboard + Polish | v3.1 | 2/2 | Complete | 2026-05-02 |
+| 16. Real-Time Dashboard | v3.2 | 0/2 | Planning | - |
+| 17. Mobile Responsive UI | v3.2 | 0/2 | Not started | - |
+| 18. Connector Settings | v3.2 | 0/2 | Not started | - |
+| 19. Performance Benchmarks | v3.2 | 0/2 | Not started | - |
+| 20. Tech Debt Cleanup | v3.2 | 0/3 | Not started | - |
 
 ---
 
 ## Dependency Graph
 
 ```
-v3.0 (Shipped)
+v3.1 (Shipped)
     │
-    ▼
-Phase 10 (Connector Framework)
-    │
-    ▼
-Phase 11 (Sync Engine)
-    │
-    ├──────────────┬──────────────┐
-    ▼              ▼              ▼
-Phase 12     Phase 13     Phase 14
-(Notion)     (Logseq+IM)  (GitHub)
-    │              │              │
-    └──────────────┴──────────────┘
+    ├─────────────────────────────────────┐
+    │                                     │
+    ▼                                     ▼
+Phase 16 (Real-Time Dashboard)    Phase 19 (Performance Benchmarks)
+    │                                     │
+    ├──────────────┐                      │
+    ▼              ▼                      │
+Phase 17     Phase 18                     │
+(Mobile UI)  (Connector Settings)         │
+    │              │                      │
+    └──────────────┴──────────────────────┘
                    │
                    ▼
-            Phase 15 (Dashboard)
+            Phase 20 (Tech Debt Cleanup)
 ```
 
 ---
 
-*Last updated: 2026-05-02 — Phase 13 plans created (4 plans)*
+*Last updated: 2026-05-03 — v3.2 milestone planning started*
