@@ -99,6 +99,11 @@ def create_app(
 
     app.include_router(ws_router, tags=["websocket"])
 
+    # Register integration WebSocket route (per DASH-01, DASH-02)
+    from saw.api.integrations_ws import router as integrations_ws_router
+
+    app.include_router(integrations_ws_router, prefix="/ws", tags=["websocket"])
+
     # Register REST API routes
     from saw.drivers.web.routes.graph import router as graph_router
     from saw.drivers.web.routes.pages import router as pages_router
