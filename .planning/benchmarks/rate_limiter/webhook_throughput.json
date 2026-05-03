@@ -1,0 +1,14 @@
+{
+  "benchmark": "webhook_rate_limiter",
+  "config": {
+    "platform": "slack",
+    "requests_per_minute_limit": 100
+  },
+  "results": {
+    "requests_allowed": 100,
+    "requests_denied": 50,
+    "limit_enforced": true
+  },
+  "date": "2026-05-03T10:45:44.490180+00:00",
+  "version": "1.0"
+}

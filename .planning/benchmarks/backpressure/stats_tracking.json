@@ -1,0 +1,14 @@
+{
+  "benchmark": "backpressure_stats_tracking",
+  "config": {
+    "pause_cycles_executed": 3
+  },
+  "results": {
+    "total_pause_events": 3,
+    "events_correct": true,
+    "total_pause_duration_seconds": 0.0,
+    "average_pause_duration_seconds": 0.0
+  },
+  "date": "2026-05-03T10:45:44.752154+00:00",
+  "version": "1.0"
+}

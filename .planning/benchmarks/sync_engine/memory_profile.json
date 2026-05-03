@@ -1,0 +1,20 @@
+{
+  "benchmark": "sync_engine_memory",
+  "config": {
+    "items_count": 1000,
+    "test_type": "memory_stability"
+  },
+  "results": {
+    "items_processed": 1000,
+    "baseline_memory_mb": 0.778,
+    "peak_memory_mb": 0.839,
+    "final_memory_mb": 0.076,
+    "memory_growth_mb": 0.061,
+    "memory_released_mb": 0.763,
+    "bytes_per_item": 64.2,
+    "memory_stable": true,
+    "memory_released": true
+  },
+  "date": "2026-05-03T10:45:44.508132+00:00",
+  "version": "1.0"
+}

@@ -1,0 +1,13 @@
+{
+  "benchmark": "backpressure_wait_if_paused",
+  "config": {
+    "timeout_seconds": 2.0
+  },
+  "results": {
+    "resumed_successfully": true,
+    "wait_duration_seconds": 0.201,
+    "timeout_reached": false
+  },
+  "date": "2026-05-03T10:45:44.744888+00:00",
+  "version": "1.0"
+}

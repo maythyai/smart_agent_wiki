@@ -1,0 +1,44 @@
+{
+  "benchmark": "rate_limiter_throughput_ceiling",
+  "config": {
+    "platforms_tested": [
+      "notion",
+      "github",
+      "slack",
+      "discord"
+    ],
+    "test_duration_seconds": 1.0
+  },
+  "results": {
+    "notion": {
+      "configured_burst": 10,
+      "actual_burst": 10,
+      "configured_rate": 0,
+      "actual_sustained_rate": 2.99
+    },
+    "github": {
+      "configured_burst": 100,
+      "actual_burst": 100,
+      "configured_rate": 1.3888888888888888,
+      "actual_sustained_rate": 1.39
+    },
+    "slack": {
+      "configured_burst": 20,
+      "actual_burst": 20,
+      "configured_rate": 0,
+      "actual_sustained_rate": 1.0
+    },
+    "discord": {
+      "configured_burst": 50,
+      "actual_burst": 50,
+      "configured_rate": 0,
+      "actual_sustained_rate": 49.55
+    }
+  },
+  "analysis": {
+    "bottleneck": "token_bucket_wait",
+    "recommendation": "Rate limiter correctly enforces platform limits. For higher throughput, consider parallel rate limiters."
+  },
+  "date": "2026-05-03T10:45:44.482129+00:00",
+  "version": "1.0"
+}

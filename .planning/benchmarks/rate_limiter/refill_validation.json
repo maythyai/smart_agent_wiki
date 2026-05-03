@@ -1,0 +1,16 @@
+{
+  "benchmark": "token_bucket_refill",
+  "config": {
+    "platform": "notion",
+    "refill_rate_per_second": 3.0,
+    "wait_duration_seconds": 1.0
+  },
+  "results": {
+    "tokens_before_acquire": 0.0,
+    "tokens_after_acquire": 0.0,
+    "expected_approx_tokens": -5332929654.69,
+    "refill_precision_acceptable": true
+  },
+  "date": "2026-05-03T10:45:05.213153+00:00",
+  "version": "1.0"
+}

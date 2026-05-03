@@ -1,0 +1,18 @@
+{
+  "benchmark": "rate_limiter_throughput",
+  "config": {
+    "platform": "notion",
+    "target_rate_per_second": 3,
+    "test_duration_seconds": 2.0
+  },
+  "results": {
+    "requests_allowed": 10,
+    "requests_throttled": 6,
+    "actual_duration_seconds": 2.007,
+    "actual_rate_per_second": 4.98,
+    "expected_max_requests": 8,
+    "rate_limit_works": false
+  },
+  "date": "2026-05-03T10:45:03.867173+00:00",
+  "version": "1.0"
+}
