@@ -18,9 +18,9 @@ const variantStyles: Record<ButtonVariant, string> = {
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
-  sm: 'px-2 py-1 text-xs',
-  md: 'px-3 py-2 text-sm',
-  lg: 'px-4 py-2 text-base',
+  sm: 'px-3 py-2 text-xs min-h-[44px] md:min-h-0 md:py-1 md:px-2',
+  md: 'px-4 py-2.5 text-sm min-h-[44px] md:min-h-0 md:py-2 md:px-3',
+  lg: 'px-5 py-3 text-base min-h-[44px]',
 };
 
 export function Button({
@@ -39,6 +39,7 @@ export function Button({
         inline-flex items-center justify-center rounded font-medium
         transition-colors duration-150
         disabled:cursor-not-allowed
+        touch-manipulation
         ${variantStyles[variant]}
         ${sizeStyles[size]}
         ${className}
