@@ -164,6 +164,9 @@ async def broadcast_sync_progress(
         "platform": platform,
         "data": {
             "state": status.state.value,
+            "items_synced": status.items_synced,
+            "items_total": status.items_total,
+            "completion_percent": status.completion_percent,
             "items_pending": status.items_pending,
             "last_error": status.last_error,
             "last_sync_at": status.last_sync_at.isoformat() if status.last_sync_at else None,

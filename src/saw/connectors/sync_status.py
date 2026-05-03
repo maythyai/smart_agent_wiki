@@ -46,6 +46,9 @@ class SyncStatus:
         last_success_at: Last sync that completed without errors.
         last_error: Last error message.
         items_pending: Items pending in write queue (backpressure).
+        items_synced: Items synced in current/last sync operation.
+        items_total: Total items to sync (if known).
+        completion_percent: Progress percentage (0-100).
         sync_cursor: Pagination cursor for incremental sync.
     """
 
@@ -56,6 +59,9 @@ class SyncStatus:
     last_success_at: Optional[datetime] = None
     last_error: Optional[str] = None
     items_pending: int = 0
+    items_synced: int = 0
+    items_total: int = 0
+    completion_percent: float = 0.0
     sync_cursor: Optional[str] = None
 
     def to_dict(self) -> dict:
@@ -68,6 +74,9 @@ class SyncStatus:
             "last_success_at": self.last_success_at.isoformat() if self.last_success_at else None,
             "last_error": self.last_error,
             "items_pending": self.items_pending,
+            "items_synced": self.items_synced,
+            "items_total": self.items_total,
+            "completion_percent": self.completion_percent,
             "sync_cursor": self.sync_cursor,
         }
 
