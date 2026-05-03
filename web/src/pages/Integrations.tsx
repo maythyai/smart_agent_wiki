@@ -28,11 +28,13 @@ export default function Integrations() {
 
   return (
     <div className="max-w-6xl mx-auto">
-      {/* Header with WebSocket status */}
-      <div className="mb-6 flex items-start justify-between">
+      {/* Header with WebSocket status - responsive layout */}
+      <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Integration Dashboard</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 leading-tight">
+            Integration Dashboard
+          </h1>
+          <p className="text-sm sm:text-base text-gray-600 mt-1 leading-relaxed">
             Manage platform connections and monitor sync status
           </p>
         </div>
@@ -41,16 +43,18 @@ export default function Integrations() {
 
       {/* Error banner */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6 flex items-center justify-between">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <svg className="w-5 h-5 text-red-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <span className="text-red-700">{error}</span>
+            <span className="text-sm sm:text-base text-red-700">{error}</span>
           </div>
           <button
             onClick={clearErrors}
-            className="text-red-500 hover:text-red-700"
+            className="text-red-500 hover:text-red-700 p-2 touch-manipulation"
+            style={{ minWidth: '44px', minHeight: '44px' }}
+            aria-label="Dismiss error"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -61,22 +65,23 @@ export default function Integrations() {
 
       {/* System health summary */}
       {systemHealth && (
-        <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6">
+        <div className="bg-white rounded-lg border border-gray-200 p-3 sm:p-4 mb-4 sm:mb-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-800">System Health</h2>
+            <h2 className="text-base sm:text-lg font-semibold text-gray-800">System Health</h2>
             <button
               onClick={refresh}
-              className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
+              className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1 touch-manipulation"
+              style={{ minWidth: '44px', minHeight: '44px' }}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
-              Refresh
+              <span className="hidden sm:inline">Refresh</span>
             </button>
           </div>
 
           {/* Status counts */}
-          <div className="flex items-center gap-6 mt-3">
+          <div className="flex items-center gap-4 sm:gap-6 mt-3 flex-wrap">
             {systemHealth.healthy_count > 0 && (
               <div className="flex items-center gap-2">
                 <span className="w-3 h-3 rounded-full bg-green-500" />
@@ -114,9 +119,9 @@ export default function Integrations() {
 
       {/* Loading skeleton */}
       {loading && connectors.length === 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-white rounded-lg border border-gray-200 p-4 animate-pulse">
+            <div key={i} className="bg-white rounded-lg border border-gray-200 p-3 sm:p-4 animate-pulse">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-12 h-12 bg-gray-200 rounded-lg" />
                 <div className="flex-1">

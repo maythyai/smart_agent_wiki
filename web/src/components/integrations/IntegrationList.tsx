@@ -35,9 +35,9 @@ export function IntegrationList({
 
   if (connectors.length === 0) {
     return (
-      <div className="bg-gray-50 rounded-lg p-8 text-center">
+      <div className="bg-gray-50 rounded-lg p-6 sm:p-8 text-center">
         <div className="text-gray-400 mb-3">
-          <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-10 h-10 sm:w-12 sm:h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -46,7 +46,7 @@ export function IntegrationList({
             />
           </svg>
         </div>
-        <h3 className="text-lg font-medium text-gray-600 mb-1">No Integrations</h3>
+        <h3 className="text-base sm:text-lg font-medium text-gray-600 mb-1">No Integrations</h3>
         <p className="text-sm text-gray-500">
           Connect platforms to sync your knowledge base
         </p>
@@ -55,7 +55,7 @@ export function IntegrationList({
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
       {sortedConnectors.map((connector) => (
         <IntegrationCard
           key={connector.platform}
