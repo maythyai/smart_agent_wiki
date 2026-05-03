@@ -13,7 +13,7 @@
 
 ### Upcoming (v3.3)
 
-- [ ] **Phase 21: Tauri Foundation** — Application framework and window management
+- [x] **Phase 21: Tauri Foundation** — Application framework and window management — COMPLETE (2026-05-03)
 - [ ] **Phase 22: File System Integration** — Drag-drop, file dialogs, folder watching
 - [ ] **Phase 23: System Integration** — URL protocol, file association, notifications
 - [ ] **Phase 24: Distribution** — Cross-platform builds, auto-update
@@ -36,12 +36,12 @@
 4. System tray icon allows quick access
 5. App follows system dark/light theme
 
-**Plans:** 3 plans in 3 waves
+**Plans:** 3 plans in 3 waves (COMPLETE)
 
 Plans:
-- [ ] 21-01-PLAN.md — Tauri project setup and build verification (APP-01~05)
-- [ ] 21-02-PLAN.md — Window management: menus, tray, close behavior (WIN-01~03)
-- [ ] 21-03-PLAN.md — Theme detection and keyboard shortcuts (WIN-04~05)
+- [x] 21-01-PLAN.md — Tauri project setup and build verification (APP-01~05)
+- [x] 21-02-PLAN.md — Window management: menus, tray, close behavior (WIN-01~03)
+- [x] 21-03-PLAN.md — Theme detection and keyboard shortcuts (WIN-04~05)
 
 ---
 
@@ -535,7 +535,7 @@ Plans:
 | 18. Connector Settings | v3.2 | 2/2 | Complete    | 2026-05-03 |
 | 19. Performance Benchmarks | v3.2 | 2/2 | Complete    | 2026-05-03 |
 | 20. Tech Debt Cleanup | v3.2 | 3/3 | Complete    | 2026-05-03 |
-| 21. Tauri Foundation | v3.3 | 2/2 | Planning    | - |
+| 21. Tauri Foundation | v3.3 | 3/3 | Complete | 2026-05-03 |
 | 22. File System Integration | v3.3 | 0/0 | Not started | - |
 | 23. System Integration | v3.3 | 0/0 | Not started | - |
 | 24. Distribution | v3.3 | 0/0 | Not started | - |
