@@ -251,3 +251,17 @@ temp/
 *.tar.gz
 *.rar
 *.7z
+
+# ===========================================
+# Tauri / Rust
+# ===========================================
+
+# Rust build output
+desktop/src-tauri/target/
+
+# Cargo lock files for libraries (keep for applications)
+# Cargo.lock
+
+# Package lock files (generated)
+package-lock.json
+desktop/package-lock.json
