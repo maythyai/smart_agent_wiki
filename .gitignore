@@ -265,3 +265,4 @@ desktop/src-tauri/target/
 # Package lock files (generated)
 package-lock.json
 desktop/package-lock.json
+package.json
