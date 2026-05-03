@@ -28,3 +28,34 @@ export interface PageUpdatedEvent {
 }
 
 export type ConnectionStatus = 'connecting' | 'connected' | 'disconnected';
+
+// Integration WebSocket types (matching backend integrations_ws.py)
+export type IntegrationWSMessageType = 'connector_health' | 'sync_progress' | 'connection_status' | 'ping' | 'subscribed' | 'unsubscribed';
+
+export interface IntegrationWSMessage {
+  type: IntegrationWSMessageType;
+  platform?: string;
+  data?: ConnectorHealthData | SyncProgressData | ConnectionStatusData;
+}
+
+export interface ConnectorHealthData {
+  status: 'healthy' | 'degraded' | 'unhealthy';
+  last_success_at: string | null;
+  last_failure_at: string | null;
+  consecutive_failures: number;
+  last_error: string | null;
+}
+
+export interface SyncProgressData {
+  state: 'idle' | 'syncing' | 'paused' | 'error';
+  items_synced: number;
+  items_total: number;
+  completion_percent: number;
+  last_error: string | null;
+}
+
+export interface ConnectionStatusData {
+  connected: boolean;
+  client_id?: string;
+  server_time?: string;
+}
