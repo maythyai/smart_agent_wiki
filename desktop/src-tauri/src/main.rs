@@ -4,8 +4,10 @@
 mod commands;
 mod menu;
 mod tray;
+mod theme;
 
 use tauri::Manager;
+use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut};
 use tauri_plugin_store::StoreExt;
 
 fn main() {
@@ -32,6 +34,12 @@ fn main() {
 
             // Setup system tray
             let _tray = tray::setup_tray(app)?;
+
+            // Setup theme detection
+            theme::setup_theme_listener(app.handle())?;
+
+            // Setup global keyboard shortcuts
+            setup_global_shortcuts(app)?;
 
             // Handle window close behavior based on preferences
             let window = app.get_webview_window("main")
@@ -65,7 +73,55 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             commands::get_window_preferences,
             commands::set_window_preferences,
+            theme::get_system_theme,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+/// Setup global keyboard shortcuts per D-08.
+///
+/// Registered shortcuts:
+/// - Cmd/Ctrl+N: New Wiki (emits "shortcut:new-wiki")
+/// - Cmd/Ctrl+O: Open Vault (emits "shortcut:open-vault")
+/// - Cmd/Ctrl+S: Save (emits "shortcut:save")
+/// - Cmd/Ctrl+Q: Quit (exits app directly)
+/// - Cmd/Ctrl+,: Preferences (emits "shortcut:preferences")
+fn setup_global_shortcuts(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
+    let shortcuts = app.global_shortcut();
+
+    // Cmd/Ctrl+N - New Wiki
+    shortcuts.register("CmdOrCtrl+N", |app, _shortcut| {
+        if let Some(window) = app.get_webview_window("main") {
+            let _ = window.emit("shortcut:new-wiki", ());
+        }
+    })?;
+
+    // Cmd/Ctrl+O - Open Vault
+    shortcuts.register("CmdOrCtrl+O", |app, _shortcut| {
+        if let Some(window) = app.get_webview_window("main") {
+            let _ = window.emit("shortcut:open-vault", ());
+        }
+    })?;
+
+    // Cmd/Ctrl+S - Save
+    shortcuts.register("CmdOrCtrl+S", |app, _shortcut| {
+        if let Some(window) = app.get_webview_window("main") {
+            let _ = window.emit("shortcut:save", ());
+        }
+    })?;
+
+    // Cmd/Ctrl+Q - Quit (exits app directly)
+    shortcuts.register("CmdOrCtrl+Q", |app, _shortcut| {
+        app.exit(0);
+    })?;
+
+    // Cmd/Ctrl+, - Preferences
+    shortcuts.register("CmdOrCtrl+,", |app, _shortcut| {
+        if let Some(window) = app.get_webview_window("main") {
+            let _ = window.emit("shortcut:preferences", ());
+        }
+    })?;
+
+    Ok(())
 }
