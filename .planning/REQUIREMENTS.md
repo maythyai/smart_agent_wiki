@@ -31,13 +31,13 @@
 
 **Per-Connector Configuration:**
 
-- [ ] **CONF-01**: User can access per-connector settings page from dashboard
-- [ ] **CONF-02**: User can configure sync interval per connector (5min/15min/1hr/6hr/manual)
-- [ ] **CONF-03**: User can enable/disable specific sync directions (inbound only, outbound only, bidirectional)
-- [ ] **CONF-04**: User can view and edit property mappings for Notion/Logseq connectors
-- [ ] **CONF-05**: User can configure rate limit overrides per connector (with safety bounds)
-- [ ] **CONF-06**: User can re-authorize expired OAuth tokens from settings page
-- [ ] **CONF-07**: Settings changes are persisted and survive server restart
+- [x] **CONF-01**: User can access per-connector settings page from dashboard
+- [x] **CONF-02**: User can configure sync interval per connector (5min/15min/1hr/6hr/manual)
+- [x] **CONF-03**: User can enable/disable specific sync directions (inbound only, outbound only, bidirectional)
+- [x] **CONF-04**: User can view and edit property mappings for Notion/Logseq connectors
+- [x] **CONF-05**: User can configure rate limit overrides per connector (with safety bounds)
+- [x] **CONF-06**: User can re-authorize expired OAuth tokens from settings page
+- [x] **CONF-07**: Settings changes are persisted and survive server restart
 
 ### Performance Benchmarks (PERF)
 
@@ -298,13 +298,13 @@ All v2.0 requirements have been implemented and verified.
 | MOB-03 | Phase 17 | Complete |
 | MOB-04 | Phase 17 | Complete |
 | MOB-05 | Phase 17 | Complete |
-| CONF-01 | Phase 18 | Pending |
-| CONF-02 | Phase 18 | Pending |
-| CONF-03 | Phase 18 | Pending |
-| CONF-04 | Phase 18 | Pending |
-| CONF-05 | Phase 18 | Pending |
-| CONF-06 | Phase 18 | Pending |
-| CONF-07 | Phase 18 | Pending |
+| CONF-01 | Phase 18 | Complete |
+| CONF-02 | Phase 18 | Complete |
+| CONF-03 | Phase 18 | Complete |
+| CONF-04 | Phase 18 | Complete |
+| CONF-05 | Phase 18 | Complete |
+| CONF-06 | Phase 18 | Complete |
+| CONF-07 | Phase 18 | Complete |
 | PERF-01 | Phase 19 | Pending |
 | PERF-02 | Phase 19 | Pending |
 | PERF-03 | Phase 19 | Pending |

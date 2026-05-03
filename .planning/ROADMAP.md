@@ -14,7 +14,7 @@
 
 - [x] **Phase 16: Real-Time Dashboard** — WebSocket updates for connector status — Planning (completed 2026-05-03)
 - [x] **Phase 17: Mobile Responsive UI** — Layout adaptation for mobile devices — Planning (completed 2026-05-03)
-- [ ] **Phase 18: Connector Settings** — Per-connector configuration pages — Planning
+- [x] **Phase 18: Connector Settings** — Per-connector configuration pages — Planning (completed 2026-05-03)
 - [ ] **Phase 19: Performance Benchmarks** — Rate limiter and sync engine validation — Planning
 - [ ] **Phase 20: Tech Debt Cleanup** — VERIFICATION files, frontend tests, bundle optimization — Planning
 
@@ -86,11 +86,11 @@ Plans:
 5. User can re-authorize expired OAuth tokens from settings
 6. Settings persist across server restarts
 
-**Plans:** 2 plans in 2 waves
+**Plans:** 2/2 plans complete
 
 Plans:
-- [ ] 18-01-PLAN.md — Settings API and persistence (CONF-02, CONF-03, CONF-05, CONF-07)
-- [ ] 18-02-PLAN.md — Settings UI and property mapping editor (CONF-01, CONF-04, CONF-06)
+- [x] 18-01-PLAN.md — Settings API and persistence (CONF-02, CONF-03, CONF-05, CONF-07)
+- [x] 18-02-PLAN.md — Settings UI and property mapping editor (CONF-01, CONF-04, CONF-06)
 
 **UI hint:** yes
 
@@ -421,7 +421,7 @@ Plans:
 | 15. Dashboard + Polish | v3.1 | 2/2 | Complete | 2026-05-02 |
 | 16. Real-Time Dashboard | v3.2 | 3/3 | Complete    | 2026-05-03 |
 | 17. Mobile Responsive UI | v3.2 | 2/2 | Complete    | 2026-05-03 |
-| 18. Connector Settings | v3.2 | 0/2 | Not started | - |
+| 18. Connector Settings | v3.2 | 2/2 | Complete    | 2026-05-03 |
 | 19. Performance Benchmarks | v3.2 | 0/2 | Not started | - |
 | 20. Tech Debt Cleanup | v3.2 | 0/3 | Not started | - |
 
