@@ -21,11 +21,11 @@
 
 **Layout Adaptation:**
 
-- [ ] **MOB-01**: Dashboard renders correctly on screens 320px-768px wide
-- [ ] **MOB-02**: Integration cards collapse to compact view on mobile with expand-on-tap
-- [ ] **MOB-03**: Navigation menu collapses to hamburger menu on screens <768px
-- [ ] **MOB-04**: Touch gestures work correctly (swipe to dismiss, tap to expand)
-- [ ] **MOB-05**: Font sizes and spacing follow mobile accessibility guidelines (WCAG 2.1)
+- [x] **MOB-01**: Dashboard renders correctly on screens 320px-768px wide
+- [x] **MOB-02**: Integration cards collapse to compact view on mobile with expand-on-tap
+- [x] **MOB-03**: Navigation menu collapses to hamburger menu on screens <768px
+- [x] **MOB-04**: Touch gestures work correctly (swipe to dismiss, tap to expand)
+- [x] **MOB-05**: Font sizes and spacing follow mobile accessibility guidelines (WCAG 2.1)
 
 ### Connector Settings (CONF)
 
@@ -293,11 +293,11 @@ All v2.0 requirements have been implemented and verified.
 | DASH-03 | Phase 16 | Complete |
 | DASH-04 | Phase 16 | Complete |
 | DASH-05 | Phase 16 | Complete |
-| MOB-01 | Phase 17 | Pending |
-| MOB-02 | Phase 17 | Pending |
-| MOB-03 | Phase 17 | Pending |
-| MOB-04 | Phase 17 | Pending |
-| MOB-05 | Phase 17 | Pending |
+| MOB-01 | Phase 17 | Complete |
+| MOB-02 | Phase 17 | Complete |
+| MOB-03 | Phase 17 | Complete |
+| MOB-04 | Phase 17 | Complete |
+| MOB-05 | Phase 17 | Complete |
 | CONF-01 | Phase 18 | Pending |
 | CONF-02 | Phase 18 | Pending |
 | CONF-03 | Phase 18 | Pending |

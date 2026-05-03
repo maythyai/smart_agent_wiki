@@ -13,7 +13,7 @@
 ### Upcoming (v3.2)
 
 - [x] **Phase 16: Real-Time Dashboard** — WebSocket updates for connector status — Planning (completed 2026-05-03)
-- [ ] **Phase 17: Mobile Responsive UI** — Layout adaptation for mobile devices — Planning
+- [x] **Phase 17: Mobile Responsive UI** — Layout adaptation for mobile devices — Planning (completed 2026-05-03)
 - [ ] **Phase 18: Connector Settings** — Per-connector configuration pages — Planning
 - [ ] **Phase 19: Performance Benchmarks** — Rate limiter and sync engine validation — Planning
 - [ ] **Phase 20: Tech Debt Cleanup** — VERIFICATION files, frontend tests, bundle optimization — Planning
@@ -60,11 +60,11 @@ Plans:
 4. Touch gestures (swipe, tap) work correctly
 5. Font sizes meet WCAG 2.1 mobile accessibility guidelines
 
-**Plans:** 2 plans in 2 waves
+**Plans:** 2/2 plans complete
 
 Plans:
-- [ ] 17-01-PLAN.md — Responsive layout and navigation (MOB-01, MOB-03, MOB-05)
-- [ ] 17-02-PLAN.md — Touch interactions and card optimization (MOB-02, MOB-04)
+- [x] 17-01-PLAN.md — Responsive layout and navigation (MOB-01, MOB-03, MOB-05)
+- [x] 17-02-PLAN.md — Touch interactions and card optimization (MOB-02, MOB-04)
 
 **UI hint:** yes
 
@@ -420,7 +420,7 @@ Plans:
 | 14. GitHub Connector | v3.1 | 3/3 | Complete | 2026-05-02 |
 | 15. Dashboard + Polish | v3.1 | 2/2 | Complete | 2026-05-02 |
 | 16. Real-Time Dashboard | v3.2 | 3/3 | Complete    | 2026-05-03 |
-| 17. Mobile Responsive UI | v3.2 | 0/2 | Not started | - |
+| 17. Mobile Responsive UI | v3.2 | 2/2 | Complete    | 2026-05-03 |
 | 18. Connector Settings | v3.2 | 0/2 | Not started | - |
 | 19. Performance Benchmarks | v3.2 | 0/2 | Not started | - |
 | 20. Tech Debt Cleanup | v3.2 | 0/3 | Not started | - |
