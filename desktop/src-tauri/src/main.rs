@@ -1,8 +1,12 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod commands;
 mod menu;
 mod tray;
+
+use tauri::Manager;
+use tauri_plugin_store::StoreExt;
 
 fn main() {
     tauri::Builder::default()
@@ -29,8 +33,39 @@ fn main() {
             // Setup system tray
             let _tray = tray::setup_tray(app)?;
 
+            // Handle window close behavior based on preferences
+            let window = app.get_webview_window("main")
+                .expect("Main window should exist");
+            let app_handle = app.handle().clone();
+
+            window.on_window_event(move |event| {
+                if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                    // Check preference for minimize-to-tray behavior
+                    let should_minimize = app_handle.store("preferences.json")
+                        .ok()
+                        .and_then(|store| store.get("window_preferences").cloned())
+                        .and_then(|v| serde_json::from_value::<commands::WindowPreferences>(v).ok())
+                        .map(|p| p.minimize_to_tray)
+                        .unwrap_or(true);  // Default: minimize to tray
+
+                    if should_minimize {
+                        // Prevent the default close action
+                        api.prevent_close();
+                        // Hide the window instead
+                        if let Some(win) = app_handle.get_webview_window("main") {
+                            let _ = win.hide();
+                        }
+                    }
+                    // If minimize_to_tray is false, let it close normally (app exits)
+                }
+            });
+
             Ok(())
         })
+        .invoke_handler(tauri::generate_handler![
+            commands::get_window_preferences,
+            commands::set_window_preferences,
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
