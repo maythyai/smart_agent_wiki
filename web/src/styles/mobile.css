@@ -67,3 +67,30 @@
   h2 { font-size: 1.25rem; } /* 20px */
   h3 { font-size: 1.125rem; } /* 18px */
 }
+
+/* Mobile sheet animations - Phase 17 Plan 02 */
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.2s ease-out;
+}

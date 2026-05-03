@@ -10,23 +10,23 @@ interface IntegrationCardProps {
   onReauth: (platform: string) => void;
 }
 
-// Health indicator colors with transition support
-const healthColors: Record<string, string> = {
+// Health indicator colors with transition support (exported for IntegrationCardExpanded)
+export const healthColors: Record<string, string> = {
   healthy: 'bg-green-500',
   degraded: 'bg-yellow-500',
   unhealthy: 'bg-red-500',
 };
 
-// Sync state badge colors
-const syncStateColors: Record<string, string> = {
+// Sync state badge colors (exported for IntegrationCardExpanded)
+export const syncStateColors: Record<string, string> = {
   idle: 'bg-gray-100 text-gray-600',
   syncing: 'bg-blue-100 text-blue-700 animate-pulse',
   paused: 'bg-yellow-100 text-yellow-700',
   error: 'bg-red-100 text-red-700',
 };
 
-// Format relative time
-function formatRelativeTime(isoString: string | null): string {
+// Format relative time (exported for IntegrationCardExpanded)
+export function formatRelativeTime(isoString: string | null): string {
   if (!isoString) return 'Never';
 
   const date = new Date(isoString);
@@ -43,8 +43,8 @@ function formatRelativeTime(isoString: string | null): string {
   return date.toLocaleDateString();
 }
 
-// Platform icon component
-function PlatformIcon({ platform }: { platform: string }) {
+// Platform icon component (exported for IntegrationCardExpanded)
+export function PlatformIcon({ platform }: { platform: string }) {
   const config = PLATFORM_CONFIG[platform];
   const icon = config?.icon || platform;
 
