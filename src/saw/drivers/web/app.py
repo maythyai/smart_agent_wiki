@@ -113,6 +113,11 @@ def create_app(
     app.include_router(pages_router, prefix="/api", tags=["pages"])
     app.include_router(search_router, prefix="/api", tags=["search"])
 
+    # Register connector settings routes (Phase 18)
+    from saw.api.connector_settings import router as connector_settings_router
+
+    app.include_router(connector_settings_router, tags=["connector-settings"])
+
     return app
 
 

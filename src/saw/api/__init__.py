@@ -42,6 +42,7 @@ from saw.api.sync import router as sync_router
 from saw.api.integrations import router as integrations_router
 from saw.api.websocket import ConnectionManager, manager as ws_manager
 from saw.api.integrations_ws import router as integrations_ws_router
+from saw.api.connector_settings import router as connector_settings_router
 
 __all__ = [
     # API Keys
@@ -81,4 +82,6 @@ __all__ = [
     "ConnectionManager",
     "ws_manager",
     "integrations_ws_router",
+    # Phase 18: Connector Settings
+    "connector_settings_router",
 ]
