@@ -7,6 +7,7 @@ Per IM-07: Graceful degradation when platforms unavailable.
 """
 from __future__ import annotations
 
+import asyncio
 import enum
 import logging
 from dataclasses import dataclass, field
@@ -172,13 +173,13 @@ class HealthMonitor:
         if health.status != HealthStatus.HEALTHY:
             if health.consecutive_successes >= self._thresholds.healthy_after_successes:
                 health.status = HealthStatus.HEALTHY
-                self._emit_event(HealthEvent(
+                await self._emit_event(HealthEvent(
                     connector_id=connector_id,
                     event_type="recovery",
                     old_status=old_status,
                     new_status=HealthStatus.HEALTHY,
                     details={"consecutive_successes": health.consecutive_successes},
-                ))
+                ), health)
 
         self._health_cache[connector_id] = health
         return health
@@ -220,13 +221,13 @@ class HealthMonitor:
 
         if new_status != old_status:
             health.status = new_status
-            self._emit_event(HealthEvent(
+            await self._emit_event(HealthEvent(
                 connector_id=connector_id,
                 event_type="status_change",
                 old_status=old_status,
                 new_status=new_status,
                 details={"error": error, "consecutive_failures": health.consecutive_failures},
-            ))
+            ), health)
 
             if new_status == HealthStatus.UNHEALTHY:
                 logger.error(
@@ -383,14 +384,22 @@ class HealthMonitor:
         self._health_cache[connector_id] = health
         return health
 
-    def _emit_event(self, event: HealthEvent) -> None:
+    async def _emit_event(self, event: HealthEvent, health: Optional[ConnectorHealth] = None) -> None:
         """Emit health event for external alerting.
 
         Args:
             event: Health event to emit.
+            health: Optional ConnectorHealth for WebSocket broadcast.
         """
         logger.info(
             f"health_event: {event.event_type} for {event.connector_id} - "
             f"{event.old_status.value if event.old_status else 'none'} -> {event.new_status.value}"
         )
-        # TODO: Integrate with event bus for external alerting systems
+
+        # Broadcast health change via WebSocket (per DASH-02)
+        if health is not None and event.event_type in ("status_change", "recovery"):
+            try:
+                from saw.api.integrations_ws import broadcast_health_change
+                await broadcast_health_change(health.platform, health)
+            except Exception as e:
+                logger.warning(f"Failed to broadcast health change: {e}")
