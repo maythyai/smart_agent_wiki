@@ -11,11 +11,11 @@
 
 **WebSocket Updates:**
 
-- [ ] **DASH-01**: User can see real-time connector status updates without page refresh
-- [ ] **DASH-02**: System pushes connector health changes via WebSocket within 1 second of detection
-- [ ] **DASH-03**: User can see sync progress in real-time (items synced, errors, completion percentage)
-- [ ] **DASH-04**: WebSocket connection gracefully reconnects on disconnect with visual indicator
-- [ ] **DASH-05**: User can toggle WebSocket updates on/off per connector to control bandwidth
+- [x] **DASH-01**: User can see real-time connector status updates without page refresh
+- [x] **DASH-02**: System pushes connector health changes via WebSocket within 1 second of detection
+- [x] **DASH-03**: User can see sync progress in real-time (items synced, errors, completion percentage)
+- [x] **DASH-04**: WebSocket connection gracefully reconnects on disconnect with visual indicator
+- [x] **DASH-05**: User can toggle WebSocket updates on/off per connector to control bandwidth
 
 ### Mobile Responsive (MOB)
 
@@ -288,11 +288,11 @@ All v2.0 requirements have been implemented and verified.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DASH-01 | Phase 16 | Pending |
-| DASH-02 | Phase 16 | Pending |
-| DASH-03 | Phase 16 | Pending |
-| DASH-04 | Phase 16 | Pending |
-| DASH-05 | Phase 16 | Pending |
+| DASH-01 | Phase 16 | Complete |
+| DASH-02 | Phase 16 | Complete |
+| DASH-03 | Phase 16 | Complete |
+| DASH-04 | Phase 16 | Complete |
+| DASH-05 | Phase 16 | Complete |
 | MOB-01 | Phase 17 | Pending |
 | MOB-02 | Phase 17 | Pending |
 | MOB-03 | Phase 17 | Pending |

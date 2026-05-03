@@ -12,7 +12,7 @@
 
 ### Upcoming (v3.2)
 
-- [ ] **Phase 16: Real-Time Dashboard** — WebSocket updates for connector status — Planning
+- [x] **Phase 16: Real-Time Dashboard** — WebSocket updates for connector status — Planning (completed 2026-05-03)
 - [ ] **Phase 17: Mobile Responsive UI** — Layout adaptation for mobile devices — Planning
 - [ ] **Phase 18: Connector Settings** — Per-connector configuration pages — Planning
 - [ ] **Phase 19: Performance Benchmarks** — Rate limiter and sync engine validation — Planning
@@ -35,11 +35,11 @@
 4. WebSocket reconnects gracefully on disconnect with visual indicator
 5. User can disable WebSocket updates per connector
 
-**Plans:** 2 plans in 2 waves
+**Plans:** 3/3 plans complete
 
 Plans:
-- [ ] 16-01-PLAN.md — WebSocket server and connection management (DASH-01, DASH-04)
-- [ ] 16-02-PLAN.md — Real-time status broadcasting and UI integration (DASH-02, DASH-03, DASH-05)
+- [x] 16-01-PLAN.md — WebSocket server and connection management (DASH-01, DASH-04)
+- [x] 16-02-PLAN.md — Real-time status broadcasting and UI integration (DASH-02, DASH-03, DASH-05)
 
 **UI hint:** yes
 
@@ -419,7 +419,7 @@ Plans:
 | 13. Logseq + IM | v3.1 | 4/4 | Complete | 2026-05-02 |
 | 14. GitHub Connector | v3.1 | 3/3 | Complete | 2026-05-02 |
 | 15. Dashboard + Polish | v3.1 | 2/2 | Complete | 2026-05-02 |
-| 16. Real-Time Dashboard | v3.2 | 0/2 | Planning | - |
+| 16. Real-Time Dashboard | v3.2 | 3/3 | Complete    | 2026-05-03 |
 | 17. Mobile Responsive UI | v3.2 | 0/2 | Not started | - |
 | 18. Connector Settings | v3.2 | 0/2 | Not started | - |
 | 19. Performance Benchmarks | v3.2 | 0/2 | Not started | - |
