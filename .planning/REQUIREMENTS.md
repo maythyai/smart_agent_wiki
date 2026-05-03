@@ -5,7 +5,59 @@
 
 ---
 
-## v3.2 Requirements (Platform Enhancements)
+## v3.3 Requirements (Tauri Desktop App)
+
+### APP - Application Framework
+
+- [ ] **APP-01**: 用户可以下载并安装 Smart Agent Wiki 桌面应用
+- [ ] **APP-02**: 应用启动时显示原生窗口，加载现有 React UI
+- [ ] **APP-03**: 应用使用 Tauri 框架（Rust + WebView）实现跨平台支持
+- [ ] **APP-04**: 应用打包体积小于 100MB（不含用户数据）
+- [ ] **APP-05**: 应用启动时间小于 3 秒
+
+### WIN - Window Management
+
+- [ ] **WIN-01**: 用户可以通过原生窗口菜单访问常用功能（新建、打开、保存）
+- [ ] **WIN-02**: 用户可以通过系统托盘图标快速访问应用（最小化到托盘）
+- [ ] **WIN-03**: 用户可以自定义窗口行为（关闭时最小化到托盘或退出）
+- [ ] **WIN-04**: 应用支持深色/浅色主题跟随系统设置
+- [ ] **WIN-05**: 用户可以通过键盘快捷键触发常用操作（Cmd/Ctrl+N 新建等）
+
+### FS - File System
+
+- [ ] **FS-01**: 用户可以拖拽文件到应用窗口进行摄入
+- [ ] **FS-02**: 用户可以通过文件对话框选择文件/文件夹进行摄入
+- [ ] **FS-03**: 应用可以监控指定文件夹的变更（自动摄入新文件）
+- [ ] **FS-04**: 用户可以导出 Wiki 页面为 Markdown/PDF 文件
+- [ ] **FS-05**: 应用数据存储在用户目录下的标准位置
+
+### SYS - System Integration
+
+- [ ] **SYS-01**: 用户可以通过 URL 协议（saw://）从浏览器打开应用
+- [ ] **SYS-02**: 用户可以设置应用为 .md/.pdf 文件的默认打开程序
+- [ ] **SYS-03**: 应用发送的系统通知可在通知中心显示
+- [ ] **SYS-04**: 用户可以在系统搜索中搜索 Wiki 内容
+- [ ] **SYS-05**: 应用在后台运行时继续同步（如配置了同步）
+
+### DIST - Distribution
+
+- [ ] **DIST-01**: 用户可以下载适用于其平台的安装包
+- [ ] **DIST-02**: 用户可以通过自动更新机制获取新版本
+- [ ] **DIST-03**: 用户可以查看当前版本号和更新日志
+- [ ] **DIST-04**: 用户可以选择跳过特定版本更新
+- [ ] **DIST-05**: 应用支持便携模式（无需安装，可从 U 盘运行）
+
+### BACK - Backend Integration
+
+- [ ] **BACK-01**: Python 后端作为 sidecar 进程与应用一起分发
+- [ ] **BACK-02**: 应用启动时自动启动 Python 后端
+- [ ] **BACK-03**: 应用关闭时优雅关闭 Python 后端
+- [ ] **BACK-04**: Python 后端日志可在应用中查看（开发者模式）
+- [ ] **BACK-05**: 用户可配置 Python 后端参数（端口、内存限制等）
+
+---
+
+## v3.2 Requirements (Platform Enhancements) — ✓ Shipped
 
 ### Dashboard Real-Time (DASH)
 

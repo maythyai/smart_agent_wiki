@@ -6,11 +6,117 @@
 - ✅ **v2.0 Extended Ingestion & Team Platform** — Phases 4-6 (shipped 2026-04-30) — [Details](milestones/v2.0-ROADMAP.md)
 - ✅ **v3.0 Ecosystem Integration** — Phases 7-9 (shipped 2026-05-01) — [Details](milestones/v3.0-MILESTONE-AUDIT.md)
 - ✅ **v3.1 Third-Party Integrations** — Phases 10-15 (shipped 2026-05-02) — [Details](milestones/v3.1-MILESTONE-AUDIT.md)
-- ✅ **v3.2 Platform Enhancements** — Phases 16-20 (shipped 2026-05-03) — This document
+- ✅ **v3.2 Platform Enhancements** — Phases 16-20 (shipped 2026-05-03) — [Details](milestones/v3.2-MILESTONE-AUDIT.md)
+- 🔵 **v3.3 Tauri Desktop App** — Phases 21-25 (planning) — This document
 
 ## Phases
 
-### Upcoming (v3.2)
+### Upcoming (v3.3)
+
+- [ ] **Phase 21: Tauri Foundation** — Application framework and window management
+- [ ] **Phase 22: File System Integration** — Drag-drop, file dialogs, folder watching
+- [ ] **Phase 23: System Integration** — URL protocol, file association, notifications
+- [ ] **Phase 24: Distribution** — Cross-platform builds, auto-update
+- [ ] **Phase 25: Backend Sidecar** — Python backend integration
+
+### Phase Details (v3.3)
+
+### Phase 21: Tauri Foundation
+
+**Goal:** 应用框架搭建，实现原生窗口和基础 UI 加载
+
+**Depends on:** v3.2 complete
+
+**Requirements:** APP-01, APP-02, APP-03, APP-04, APP-05, WIN-01, WIN-02, WIN-03, WIN-04, WIN-05
+
+**Success Criteria** (what must be TRUE):
+1. User can launch desktop app and see main window
+2. App loads existing React UI via WebView
+3. Native menu bar works with basic commands
+4. System tray icon allows quick access
+5. App follows system dark/light theme
+
+**Plans:** 0/0 plans
+
+---
+
+### Phase 22: File System Integration
+
+**Goal:** 实现文件系统访问功能
+
+**Depends on:** Phase 21
+
+**Requirements:** FS-01, FS-02, FS-03, FS-04, FS-05
+
+**Success Criteria** (what must be TRUE):
+1. User can drag files into app window
+2. File dialog opens for file/folder selection
+3. Folder watching detects new files
+4. Wiki pages can be exported
+5. Data stored in standard app directory
+
+**Plans:** 0/0 plans
+
+---
+
+### Phase 23: System Integration
+
+**Goal:** 实现系统集成功能
+
+**Depends on:** Phase 22
+
+**Requirements:** SYS-01, SYS-02, SYS-03, SYS-04, SYS-05
+
+**Success Criteria** (what must be TRUE):
+1. saw:// URL protocol opens app
+2. App appears in "Open With" for .md/.pdf
+3. System notifications work
+4. Spotlight/Windows Search finds wiki content
+5. Background sync continues when minimized
+
+**Plans:** 0/0 plans
+
+---
+
+### Phase 24: Distribution
+
+**Goal:** 实现跨平台分发和自动更新
+
+**Depends on:** Phase 23
+
+**Requirements:** DIST-01, DIST-02, DIST-03, DIST-04, DIST-05
+
+**Success Criteria** (what must be TRUE):
+1. Installers available for all platforms
+2. Auto-update downloads and installs new version
+3. Version info displayed in app
+4. User can skip specific versions
+5. Portable mode runs without installation
+
+**Plans:** 0/0 plans
+
+---
+
+### Phase 25: Backend Sidecar
+
+**Goal:** 集成 Python 后端作为 sidecar
+
+**Depends on:** Phase 24
+
+**Requirements:** BACK-01, BACK-02, BACK-03, BACK-04, BACK-05
+
+**Success Criteria** (what must be TRUE):
+1. Python backend bundled with app
+2. Backend starts automatically with app
+3. Backend shuts down gracefully on app close
+4. Logs viewable in developer mode
+5. Backend parameters configurable
+
+**Plans:** 0/0 plans
+
+---
+
+### Completed (v3.2)
 
 - [x] **Phase 16: Real-Time Dashboard** — WebSocket updates for connector status — Planning (completed 2026-05-03)
 - [x] **Phase 17: Mobile Responsive UI** — Layout adaptation for mobile devices — Planning (completed 2026-05-03)
@@ -424,30 +530,35 @@ Plans:
 | 18. Connector Settings | v3.2 | 2/2 | Complete    | 2026-05-03 |
 | 19. Performance Benchmarks | v3.2 | 2/2 | Complete    | 2026-05-03 |
 | 20. Tech Debt Cleanup | v3.2 | 3/3 | Complete    | 2026-05-03 |
+| 21. Tauri Foundation | v3.3 | 0/0 | Not started | - |
+| 22. File System Integration | v3.3 | 0/0 | Not started | - |
+| 23. System Integration | v3.3 | 0/0 | Not started | - |
+| 24. Distribution | v3.3 | 0/0 | Not started | - |
+| 25. Backend Sidecar | v3.3 | 0/0 | Not started | - |
 
 ---
 
 ## Dependency Graph
 
 ```
-v3.1 (Shipped)
+v3.2 (Shipped)
     │
-    ├─────────────────────────────────────┐
-    │                                     │
-    ▼                                     ▼
-Phase 16 (Real-Time Dashboard)    Phase 19 (Performance Benchmarks)
-    │                                     │
-    ├──────────────┐                      │
-    ▼              ▼                      │
-Phase 17     Phase 18                     │
-(Mobile UI)  (Connector Settings)         │
-    │              │                      │
-    └──────────────┴──────────────────────┘
-                   │
-                   ▼
-            Phase 20 (Tech Debt Cleanup)
+    ▼
+Phase 21 (Tauri Foundation)
+    │
+    ▼
+Phase 22 (File System Integration)
+    │
+    ▼
+Phase 23 (System Integration)
+    │
+    ▼
+Phase 24 (Distribution)
+    │
+    ▼
+Phase 25 (Backend Sidecar)
 ```
 
 ---
 
-*Last updated: 2026-05-03 — v3.2 milestone planning started*
+*Last updated: 2026-05-03 — v3.3 milestone planning started*
