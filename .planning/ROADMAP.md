@@ -36,7 +36,12 @@
 4. System tray icon allows quick access
 5. App follows system dark/light theme
 
-**Plans:** 0/0 plans
+**Plans:** 3 plans in 3 waves
+
+Plans:
+- [ ] 21-01-PLAN.md — Tauri project setup and build verification (APP-01~05)
+- [ ] 21-02-PLAN.md — Window management: menus, tray, close behavior (WIN-01~03)
+- [ ] 21-03-PLAN.md — Theme detection and keyboard shortcuts (WIN-04~05)
 
 ---
 
@@ -530,7 +535,7 @@ Plans:
 | 18. Connector Settings | v3.2 | 2/2 | Complete    | 2026-05-03 |
 | 19. Performance Benchmarks | v3.2 | 2/2 | Complete    | 2026-05-03 |
 | 20. Tech Debt Cleanup | v3.2 | 3/3 | Complete    | 2026-05-03 |
-| 21. Tauri Foundation | v3.3 | 0/0 | Not started | - |
+| 21. Tauri Foundation | v3.3 | 2/2 | Planning    | - |
 | 22. File System Integration | v3.3 | 0/0 | Not started | - |
 | 23. System Integration | v3.3 | 0/0 | Not started | - |
 | 24. Distribution | v3.3 | 0/0 | Not started | - |
@@ -561,4 +566,4 @@ Phase 25 (Backend Sidecar)
 
 ---
 
-*Last updated: 2026-05-03 — v3.3 milestone planning started*
+*Last updated: 2026-05-03 — Phase 21 planning complete*

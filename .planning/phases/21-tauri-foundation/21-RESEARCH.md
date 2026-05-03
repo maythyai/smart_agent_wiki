@@ -834,7 +834,7 @@ export function useTauri() {
 
 **Recommendation:** Verify menu and tray APIs via `cargo doc --open tauri` after initialization to confirm exact API signatures.
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Should the desktop app share the same port (5173) as web dev server?**
    - What we know: Tauri can point to any dev URL
