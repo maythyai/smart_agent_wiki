@@ -7,7 +7,9 @@ Per ERRO-04: All operations wrapped with error handling and logging.
 """
 from __future__ import annotations
 
+import asyncio
 import enum
+import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Optional
@@ -17,9 +19,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from saw.connectors.protocol import UnifiedConnectorInterface, ConnectorItem
 from saw.connectors.models import SyncResult, SyncDirection
 from saw.connectors.registry import ConnectorRegistry
-from saw.connectors.sync_status import SyncStatusTracker, SyncState
+from saw.connectors.sync_status import SyncStatusTracker, SyncState, SyncStatus
 from saw.connectors.sync_logger import SyncLogger
 from saw.connectors.conflict_resolver import ConflictResolver, ConflictStrategy
+
+
+logger = logging.getLogger(__name__)
 
 
 def utcnow() -> datetime:
@@ -105,6 +110,43 @@ class SyncEngine:
         self._is_paused: bool = False
         self._paused_at: Optional[datetime] = None
 
+    async def _broadcast_sync_progress(
+        self,
+        platform: str,
+        state: SyncState,
+        items_synced: int = 0,
+        items_total: int = 0,
+        last_error: Optional[str] = None,
+    ) -> None:
+        """Broadcast sync progress via WebSocket.
+
+        Per DASH-03: Real-time sync progress updates.
+
+        Args:
+            platform: Platform name.
+            state: Current sync state.
+            items_synced: Number of items synced so far.
+            items_total: Total items to sync (if known).
+            last_error: Last error message if any.
+        """
+        try:
+            from saw.api.integrations_ws import broadcast_sync_progress
+
+            status = SyncStatus(
+                connector_id=platform,
+                platform=platform,
+                state=state,
+                last_error=last_error,
+            )
+            # Add computed progress fields
+            status.items_synced = items_synced
+            status.items_total = items_total
+            status.completion_percent = (items_synced / items_total * 100) if items_total > 0 else 0.0
+
+            await broadcast_sync_progress(platform, status)
+        except Exception as e:
+            logger.warning(f"Failed to broadcast sync progress: {e}")
+
     async def sync(
         self,
         connector_id: str,
@@ -129,6 +171,12 @@ class SyncEngine:
         # Mark sync started
         await self._status_tracker.mark_sync_started(
             connector_id, connector.platform_name
+        )
+
+        # Broadcast sync started (per DASH-03)
+        await self._broadcast_sync_progress(
+            platform=connector.platform_name,
+            state=SyncState.SYNCING,
         )
 
         result = SyncResult(
@@ -180,6 +228,17 @@ class SyncEngine:
             error_message="; ".join(result.errors) if result.errors else None,
             started_at=started_at,
             completed_at=result.completed_at,
+        )
+
+        # Broadcast sync completed (per DASH-03)
+        final_state = SyncState.IDLE if result.success else SyncState.ERROR
+        total_synced = result.pulled_count + result.pushed_count
+        await self._broadcast_sync_progress(
+            platform=connector.platform_name,
+            state=final_state,
+            items_synced=total_synced,
+            items_total=total_synced,
+            last_error="; ".join(result.errors) if result.errors else None,
         )
 
         return result
