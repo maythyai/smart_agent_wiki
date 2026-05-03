@@ -6,6 +6,7 @@ import Graph from '../pages/Graph';
 import Page from '../pages/Page';
 import Dashboard from '../pages/Dashboard';
 import Integrations from '../pages/Integrations';
+import ConnectorSettings from '../pages/ConnectorSettings';
 
 export const router = createBrowserRouter([
   {
@@ -19,6 +20,7 @@ export const router = createBrowserRouter([
       { path: 'dashboard', element: <Dashboard /> },
       { path: 'integrations', element: <Integrations /> },
       { path: 'integrations/:platform', element: <Integrations /> },
+      { path: 'integrations/:platform/settings', element: <ConnectorSettings /> },
     ],
   },
 ]);

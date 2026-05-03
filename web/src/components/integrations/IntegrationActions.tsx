@@ -15,7 +15,7 @@ interface IntegrationActionsProps {
  * - Disconnect (danger, only when connected)
  * - Sync Now (primary, triggers manual sync)
  * - Re-authorize (secondary, only when OAuth expired)
- * - View Details (ghost, link to detail page)
+ * - Settings (ghost, link to settings page)
  *
  * Mobile behavior (per D-10):
  * - Buttons are full-width on mobile in expanded view
@@ -73,17 +73,16 @@ export function IntegrationActions({
         </Button>
       )}
 
-      {/* View Details link */}
+      {/* Settings link */}
       <Button
         variant="ghost"
         size="sm"
         onClick={() => {
-          // Navigate to detail page (future implementation)
-          window.location.href = `/integrations/${platform}`;
+          window.location.href = `/integrations/${platform}/settings`;
         }}
         className="w-full sm:w-auto"
       >
-        Details
+        Settings
       </Button>
     </div>
   );
