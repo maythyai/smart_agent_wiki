@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import type { ReactNode } from 'react';
 import type { DashboardConnector } from '../../types/integrations';
 import { PLATFORM_CONFIG } from '../../types/integrations';
 import { IntegrationActions } from './IntegrationActions';
+import { IntegrationCardExpanded } from './IntegrationCardExpanded';
 
 interface IntegrationCardProps {
   connector: DashboardConnector;
@@ -105,6 +107,11 @@ export function PlatformIcon({ platform }: { platform: string }) {
  * - Connection status badge
  * - Last sync time, items synced count, error count
  * - Action buttons (disconnect, sync, reauthorize)
+ *
+ * Mobile behavior (per D-03, D-07, D-08, D-09):
+ * - Compact view showing platform name, status dot, items count
+ * - Tap to expand full details in bottom sheet
+ * - Touch-friendly targets (44px minimum)
  */
 export function IntegrationCard({
   connector,
@@ -112,6 +119,8 @@ export function IntegrationCard({
   onSync,
   onReauth,
 }: IntegrationCardProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
   const config = PLATFORM_CONFIG[connector.platform] || {
     name: connector.platform,
     icon: connector.platform,
@@ -124,98 +133,153 @@ export function IntegrationCard({
   const isSyncing = connector.sync_state === 'syncing';
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow">
-      {/* Header: Platform icon + name + health dot */}
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-3">
-          <div className={`${config.color} p-2 rounded-lg`}>
-            <PlatformIcon platform={connector.platform} />
-          </div>
-          <div>
-            <h3 className="font-semibold text-gray-900">{config.name}</h3>
-            <div className="flex items-center gap-2 mt-1">
-              {/* Health indicator with transition animation */}
-              <span
-                className={`w-2 h-2 rounded-full transition-all duration-300 ${healthColors[connector.health_status]}`}
-                title={`Health: ${connector.health_status}`}
-              />
-              {/* Sync state badge */}
-              <span
-                className={`px-2 py-0.5 rounded text-xs font-medium ${syncStateColors[connector.sync_state]}`}
-              >
-                {connector.sync_state}
-              </span>
+    <>
+      {/* Mobile compact card - tap to expand */}
+      <div
+        className="md:hidden bg-white rounded-lg border border-gray-200 p-3 shadow-sm
+          active:bg-gray-50 touch-manipulation cursor-pointer"
+        onClick={() => setIsExpanded(true)}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setIsExpanded(true); }}
+        aria-label={`View ${config.name} integration details`}
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            {/* Platform icon - smaller on mobile */}
+            <div className={`${config.color} p-1.5 rounded-lg shrink-0`}>
+              <PlatformIcon platform={connector.platform} />
+            </div>
+            {/* Platform name and status */}
+            <div className="min-w-0">
+              <h3 className="font-medium text-gray-900 truncate">{config.name}</h3>
+              <div className="flex items-center gap-2 text-xs text-gray-500">
+                <span
+                  className={`w-2 h-2 rounded-full shrink-0 ${healthColors[connector.health_status]}`}
+                  title={`Health: ${connector.health_status}`}
+                />
+                <span className="truncate">{connector.items_synced.toLocaleString()} items</span>
+              </div>
             </div>
           </div>
+          {/* Chevron indicator */}
+          <svg
+            className="w-5 h-5 text-gray-400 shrink-0"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </div>
+      </div>
+
+      {/* Desktop full card */}
+      <div className="hidden md:block bg-white rounded-lg border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow">
+        {/* Header: Platform icon + name + health dot */}
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-3">
+            <div className={`${config.color} p-2 rounded-lg`}>
+              <PlatformIcon platform={connector.platform} />
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-900">{config.name}</h3>
+              <div className="flex items-center gap-2 mt-1">
+                {/* Health indicator with transition animation */}
+                <span
+                  className={`w-2 h-2 rounded-full transition-all duration-300 ${healthColors[connector.health_status]}`}
+                  title={`Health: ${connector.health_status}`}
+                />
+                {/* Sync state badge */}
+                <span
+                  className={`px-2 py-0.5 rounded text-xs font-medium ${syncStateColors[connector.sync_state]}`}
+                >
+                  {connector.sync_state}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Connection status */}
+          {connector.is_connected ? (
+            <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded">
+              Connected
+            </span>
+          ) : (
+            <span className="text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded">
+              Disconnected
+            </span>
+          )}
         </div>
 
-        {/* Connection status */}
-        {connector.is_connected ? (
-          <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded">
-            Connected
-          </span>
-        ) : (
-          <span className="text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded">
-            Disconnected
-          </span>
+        {/* Sync progress bar (only when syncing) */}
+        {isSyncing && (
+          <div className="mb-3">
+            <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
+              <span>Syncing...</span>
+              <span>{connector.items_synced.toLocaleString()} items</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+              <div
+                className="bg-blue-500 h-2 rounded-full transition-all duration-500 animate-pulse"
+                style={{ width: '60%' }}
+              />
+            </div>
+          </div>
         )}
+
+        {/* Stats row */}
+        <div className="grid grid-cols-3 gap-2 mb-4 text-center">
+          <div>
+            <p className="text-xs text-gray-500">Last Sync</p>
+            <p className="text-sm font-medium text-gray-900">
+              {formatRelativeTime(connector.last_sync_at)}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-500">Items</p>
+            <p className="text-sm font-medium text-gray-900">
+              {connector.items_synced.toLocaleString()}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-500">Errors</p>
+            <p className={`text-sm font-medium ${connector.error_count > 0 ? 'text-red-600' : 'text-gray-900'}`}>
+              {connector.error_count}
+            </p>
+          </div>
+        </div>
+
+        {/* Last error (if any) */}
+        {connector.last_error && (
+          <div className="mb-3 p-2 bg-red-50 rounded text-xs text-red-700 truncate" title={connector.last_error}>
+            {connector.last_error}
+          </div>
+        )}
+
+        {/* Actions */}
+        <IntegrationActions
+          platform={connector.platform}
+          is_connected={connector.is_connected}
+          sync_state={connector.sync_state}
+          needsReauth={needsReauth}
+          onDisconnect={onDisconnect}
+          onSync={onSync}
+          onReauth={onReauth}
+        />
       </div>
 
-      {/* Sync progress bar (only when syncing) */}
-      {isSyncing && (
-        <div className="mb-3">
-          <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
-            <span>Syncing...</span>
-            <span>{connector.items_synced.toLocaleString()} items</span>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-            <div
-              className="bg-blue-500 h-2 rounded-full transition-all duration-500 animate-pulse"
-              style={{ width: '60%' }}
-            />
-          </div>
-        </div>
+      {/* Mobile expanded view (bottom sheet) */}
+      {isExpanded && (
+        <IntegrationCardExpanded
+          connector={connector}
+          onClose={() => setIsExpanded(false)}
+          onDisconnect={onDisconnect}
+          onSync={onSync}
+          onReauth={onReauth}
+        />
       )}
-
-      {/* Stats row */}
-      <div className="grid grid-cols-3 gap-2 mb-4 text-center">
-        <div>
-          <p className="text-xs text-gray-500">Last Sync</p>
-          <p className="text-sm font-medium text-gray-900">
-            {formatRelativeTime(connector.last_sync_at)}
-          </p>
-        </div>
-        <div>
-          <p className="text-xs text-gray-500">Items</p>
-          <p className="text-sm font-medium text-gray-900">
-            {connector.items_synced.toLocaleString()}
-          </p>
-        </div>
-        <div>
-          <p className="text-xs text-gray-500">Errors</p>
-          <p className={`text-sm font-medium ${connector.error_count > 0 ? 'text-red-600' : 'text-gray-900'}`}>
-            {connector.error_count}
-          </p>
-        </div>
-      </div>
-
-      {/* Last error (if any) */}
-      {connector.last_error && (
-        <div className="mb-3 p-2 bg-red-50 rounded text-xs text-red-700 truncate" title={connector.last_error}>
-          {connector.last_error}
-        </div>
-      )}
-
-      {/* Actions */}
-      <IntegrationActions
-        platform={connector.platform}
-        is_connected={connector.is_connected}
-        sync_state={connector.sync_state}
-        needsReauth={needsReauth}
-        onDisconnect={onDisconnect}
-        onSync={onSync}
-        onReauth={onReauth}
-      />
-    </div>
+    </>
   );
 }
