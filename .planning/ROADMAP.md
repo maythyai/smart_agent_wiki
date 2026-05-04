@@ -14,7 +14,7 @@
 ### Upcoming (v3.3)
 
 - [x] **Phase 21: Tauri Foundation** — Application framework and window management — COMPLETE (2026-05-03)
-- [ ] **Phase 22: File System Integration** — Drag-drop, file dialogs, folder watching
+- [x] **Phase 22: File System Integration** — Drag-drop, file dialogs, folder watching — COMPLETE (2026-05-04)
 - [ ] **Phase 23: System Integration** — URL protocol, file association, notifications
 - [ ] **Phase 24: Distribution** — Cross-platform builds, auto-update
 - [ ] **Phase 25: Backend Sidecar** — Python backend integration
@@ -60,7 +60,11 @@ Plans:
 4. Wiki pages can be exported
 5. Data stored in standard app directory
 
-**Plans:** 0/0 plans
+**Plans:** 2 plans in 2 waves (COMPLETE)
+
+Plans:
+- [x] 22-01-PLAN.md — Drag-drop, file dialogs, app data storage (FS-01, FS-02, FS-05)
+- [x] 22-02-PLAN.md — Folder watching and wiki export (FS-03, FS-04)
 
 ---
 
