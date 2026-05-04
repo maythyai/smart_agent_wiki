@@ -8,6 +8,21 @@
     "shell:allow-open",
     "dialog:default",
     "fs:default",
+    "fs:allow-read-text-file",
+    "fs:allow-write-text-file",
+    "fs:allow-exists",
+    "fs:allow-mkdir",
+    {
+      "identifier": "fs:scope",
+      "allow": [
+        { "path": "$APPDATA/**" },
+        { "path": "$DOCUMENT/**" },
+        { "path": "$HOME/**" },
+        { "path": "$CACHE/**" },
+        { "path": "$CONFIG/**" },
+        { "path": "$LOG/**" }
+      ]
+    },
     "store:default",
     "global-shortcut:allow-register",
     "global-shortcut:allow-unregister",

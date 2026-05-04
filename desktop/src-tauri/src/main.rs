@@ -5,6 +5,7 @@ mod commands;
 mod menu;
 mod tray;
 mod theme;
+mod watcher;
 
 use tauri::Manager;
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut};
@@ -37,6 +38,12 @@ fn main() {
 
             // Setup theme detection
             theme::setup_theme_listener(app.handle())?;
+
+            // Setup file watcher state
+            watcher::setup_watcher_state(app);
+
+            // Setup app directories
+            commands::setup_app_directories(app)?;
 
             // Setup global keyboard shortcuts
             setup_global_shortcuts(app)?;
@@ -74,6 +81,11 @@ fn main() {
             commands::get_window_preferences,
             commands::set_window_preferences,
             theme::get_system_theme,
+            commands::select_files,
+            commands::select_folder,
+            commands::select_export_location,
+            commands::get_app_data_dir,
+            commands::is_portable_mode,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
