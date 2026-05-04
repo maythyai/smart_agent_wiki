@@ -57,8 +57,7 @@
   },
   "plugins": {
     "shell": {
-      "sidecar": [],
-      "scope": []
+      "open": true
     }
   }
 }

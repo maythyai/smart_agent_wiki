@@ -209,8 +209,14 @@ feedback/rejected.yaml
 # OMC state (session-specific)
 .omc/
 
-# GSD worktrees
-.claude/worktrees/
+# Claude Code session state
+.claude/
+
+# GSD planning directory (development process artifacts)
+.planning/
+
+# Planning temp files
+*.md.tmp
 
 # ===========================================
 # OS / System
@@ -259,10 +265,12 @@ temp/
 # Rust build output
 desktop/src-tauri/target/
 
+# Tauri generated schemas (auto-generated on build)
+desktop/src-tauri/gen/
+
 # Cargo lock files for libraries (keep for applications)
 # Cargo.lock
 
 # Package lock files (generated)
 package-lock.json
 desktop/package-lock.json
-package.json

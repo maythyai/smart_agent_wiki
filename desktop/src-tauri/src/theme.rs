@@ -3,7 +3,7 @@
 //! Detects system theme preference and notifies the frontend via IPC events.
 //! Per D-07: App follows system dark/light theme automatically.
 
-use tauri::{AppHandle, Manager, WebviewWindow};
+use tauri::{AppHandle, Emitter, Manager, WebviewWindow};
 
 /// Get the current system theme.
 ///

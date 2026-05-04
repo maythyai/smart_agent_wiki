@@ -52,7 +52,10 @@ pub async fn select_files(app: tauri::AppHandle) -> Result<Vec<String>, String> 
 /// Open native folder dialog for selecting a directory.
 #[tauri::command]
 pub async fn select_folder(app: tauri::AppHandle) -> Result<Option<String>, String> {
-    let path = app.dialog().directory().blocking_pick_folder();
+    let path = app
+        .dialog()
+        .file()
+        .blocking_pick_file();
 
     match path {
         Some(path) => Ok(Some(path.to_string())),
@@ -165,7 +168,7 @@ pub async fn add_watch_folder(
     path: String,
     config: WatchConfig,
 ) -> Result<Vec<String>, String> {
-    crate::watcher::start_watching(app, path, config.file_types)?;
+    crate::watcher::start_watching(app.clone(), path, config.file_types)?;
     Ok(crate::watcher::get_watched_folders(&app))
 }
 
@@ -192,7 +195,7 @@ pub async fn update_watch_config(
     // Stop existing watcher and restart with new config
     let _ = crate::watcher::stop_watching(&app, &path);
     if config.enabled {
-        crate::watcher::start_watching(app, path, config.file_types)?;
+        crate::watcher::start_watching(app.clone(), path, config.file_types)?;
     }
     Ok(crate::watcher::get_watched_folders(&app))
 }

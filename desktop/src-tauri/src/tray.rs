@@ -3,7 +3,7 @@
 //! Provides a system tray icon with quick actions for show/hide window and quit.
 
 use tauri::{
-    menu::{Menu, MenuItemBuilder},
+    menu::{Menu, MenuItemBuilder, PredefinedMenuItem},
     tray::{TrayIcon, TrayIconBuilder},
     App, Manager,
 };
@@ -20,14 +20,13 @@ pub fn setup_tray(app: &App) -> Result<TrayIcon, Box<dyn std::error::Error>> {
         .build(app)?;
     let quit_item = MenuItemBuilder::with_id("tray_quit", "Quit")
         .build(app)?;
+    let separator = PredefinedMenuItem::separator(app)?;
 
     // Build the tray menu
     let tray_menu = Menu::new(app)?;
     tray_menu.append(&show_item)?;
     tray_menu.append(&hide_item)?;
-    tray_menu.append_items(&[
-        &MenuItemBuilder::new(app).separator().build()?,
-    ])?;
+    tray_menu.append(&separator)?;
     tray_menu.append(&quit_item)?;
 
     // Create the tray icon with the app's default window icon

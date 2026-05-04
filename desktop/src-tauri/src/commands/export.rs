@@ -121,10 +121,21 @@ pub async fn export_wiki_pdf(
     // Create a temporary window for printing
     let window_label = format!("print-{}", sanitize_filename(&page_id));
 
+    // Use app data directory for temporary HTML file
+    let temp_path = app
+        .path()
+        .app_data_dir()
+        .map_err(|e| format!("Failed to get app data dir: {}", e))?
+        .join(&window_label)
+        .with_extension("html");
+
+    std::fs::write(&temp_path, &html)
+        .map_err(|e| format!("Failed to write temp HTML: {}", e))?;
+
     let window = tauri::WebviewWindowBuilder::new(
         &app,
         &window_label,
-        WebviewUrl::External(html.into_bytes().into()),
+        WebviewUrl::App(temp_path.clone().into()),
     )
     .title("Print Preview")
     .inner_size(800.0, 600.0)
@@ -140,6 +151,9 @@ pub async fn export_wiki_pdf(
     window
         .close()
         .map_err(|e| format!("Failed to close print window: {}", e))?;
+
+    // Clean up temp file
+    let _ = std::fs::remove_file(&temp_path);
 
     Ok(output_path)
 }

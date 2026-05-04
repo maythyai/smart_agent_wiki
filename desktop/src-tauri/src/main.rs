@@ -7,8 +7,8 @@ mod tray;
 mod theme;
 mod watcher;
 
-use tauri::Manager;
-use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut};
+use tauri::{Emitter, Manager};
+use tauri_plugin_global_shortcut::GlobalShortcutExt;
 use tauri_plugin_store::StoreExt;
 
 fn main() {
@@ -17,14 +17,14 @@ fn main() {
         .plugin(tauri_plugin_store::Builder::default().build())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
-        .plugin(tauri_plugin_global_shortcut::init())
+        .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_process::init())
         .setup(|app| {
             // Setup native menu bar
             let menu = menu::setup_menu(app)?;
-            app.set_menu(&menu)?;
+            app.set_menu(menu)?;
 
             // Handle menu events - emit to frontend for processing
             app.on_menu_event(|app, event| {
@@ -40,10 +40,10 @@ fn main() {
             theme::setup_theme_listener(app.handle())?;
 
             // Setup file watcher state
-            watcher::setup_watcher_state(app);
+            watcher::setup_watcher_state(app.handle());
 
             // Setup app directories
-            commands::setup_app_directories(app)?;
+            commands::setup_app_directories(app.handle())?;
 
             // Setup global keyboard shortcuts
             setup_global_shortcuts(app)?;
@@ -58,8 +58,8 @@ fn main() {
                     // Check preference for minimize-to-tray behavior
                     let should_minimize = app_handle.store("preferences.json")
                         .ok()
-                        .and_then(|store| store.get("window_preferences").cloned())
-                        .and_then(|v| serde_json::from_value::<commands::WindowPreferences>(v).ok())
+                        .and_then(|store| store.get("window_preferences"))
+                        .and_then(|v| serde_json::from_value::<commands::WindowPreferences>(v.clone()).ok())
                         .map(|p| p.minimize_to_tray)
                         .unwrap_or(true);  // Default: minimize to tray
 
@@ -107,36 +107,41 @@ fn main() {
 /// - Cmd/Ctrl+Q: Quit (exits app directly)
 /// - Cmd/Ctrl+,: Preferences (emits "shortcut:preferences")
 fn setup_global_shortcuts(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
+    use tauri_plugin_global_shortcut::{Shortcut, ShortcutEvent};
+
     let shortcuts = app.global_shortcut();
 
-    // Cmd/Ctrl+N - New Wiki
-    shortcuts.register("CmdOrCtrl+N", |app, _shortcut| {
+    // Define shortcuts with their handlers
+    let new_wiki: Shortcut = "CmdOrCtrl+N".try_into()?;
+    let open_vault: Shortcut = "CmdOrCtrl+O".try_into()?;
+    let save: Shortcut = "CmdOrCtrl+S".try_into()?;
+    let quit: Shortcut = "CmdOrCtrl+Q".try_into()?;
+    let preferences: Shortcut = "CmdOrCtrl+,".try_into()?;
+
+    // Register all shortcuts
+    shortcuts.on_shortcut(new_wiki, |app, _shortcut, _event| {
         if let Some(window) = app.get_webview_window("main") {
             let _ = window.emit("shortcut:new-wiki", ());
         }
     })?;
 
-    // Cmd/Ctrl+O - Open Vault
-    shortcuts.register("CmdOrCtrl+O", |app, _shortcut| {
+    shortcuts.on_shortcut(open_vault, |app, _shortcut, _event| {
         if let Some(window) = app.get_webview_window("main") {
             let _ = window.emit("shortcut:open-vault", ());
         }
     })?;
 
-    // Cmd/Ctrl+S - Save
-    shortcuts.register("CmdOrCtrl+S", |app, _shortcut| {
+    shortcuts.on_shortcut(save, |app, _shortcut, _event| {
         if let Some(window) = app.get_webview_window("main") {
             let _ = window.emit("shortcut:save", ());
         }
     })?;
 
-    // Cmd/Ctrl+Q - Quit (exits app directly)
-    shortcuts.register("CmdOrCtrl+Q", |app, _shortcut| {
+    shortcuts.on_shortcut(quit, |app, _shortcut, _event| {
         app.exit(0);
     })?;
 
-    // Cmd/Ctrl+, - Preferences
-    shortcuts.register("CmdOrCtrl+,", |app, _shortcut| {
+    shortcuts.on_shortcut(preferences, |app, _shortcut, _event| {
         if let Some(window) = app.get_webview_window("main") {
             let _ = window.emit("shortcut:preferences", ());
         }
