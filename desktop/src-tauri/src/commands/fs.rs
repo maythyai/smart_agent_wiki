@@ -151,3 +151,48 @@ pub fn get_data_dir(app: &tauri::AppHandle) -> Result<PathBuf, Box<dyn std::erro
     // Default: system app data directory
     Ok(app.path().app_data_dir()?)
 }
+
+// ============================================================================
+// Folder Watcher Commands
+// ============================================================================
+
+/// Add a folder to the watch list.
+///
+/// Returns the list of currently watched folders after adding.
+#[tauri::command]
+pub async fn add_watch_folder(
+    app: tauri::AppHandle,
+    path: String,
+    config: WatchConfig,
+) -> Result<Vec<String>, String> {
+    crate::watcher::start_watching(app, path, config.file_types)?;
+    Ok(crate::watcher::get_watched_folders(&app))
+}
+
+/// Remove a folder from the watch list.
+#[tauri::command]
+pub async fn remove_watch_folder(app: tauri::AppHandle, path: String) -> Result<Vec<String>, String> {
+    crate::watcher::stop_watching(&app, &path)?;
+    Ok(crate::watcher::get_watched_folders(&app))
+}
+
+/// Get list of currently watched folders.
+#[tauri::command]
+pub async fn get_watched_folders(app: tauri::AppHandle) -> Result<Vec<String>, String> {
+    Ok(crate::watcher::get_watched_folders(&app))
+}
+
+/// Update watch configuration for a folder.
+#[tauri::command]
+pub async fn update_watch_config(
+    app: tauri::AppHandle,
+    path: String,
+    config: WatchConfig,
+) -> Result<Vec<String>, String> {
+    // Stop existing watcher and restart with new config
+    let _ = crate::watcher::stop_watching(&app, &path);
+    if config.enabled {
+        crate::watcher::start_watching(app, path, config.file_types)?;
+    }
+    Ok(crate::watcher::get_watched_folders(&app))
+}

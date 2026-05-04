@@ -86,6 +86,13 @@ fn main() {
             commands::select_export_location,
             commands::get_app_data_dir,
             commands::is_portable_mode,
+            commands::add_watch_folder,
+            commands::remove_watch_folder,
+            commands::get_watched_folders,
+            commands::update_watch_config,
+            commands::get_export_default_dir,
+            commands::export_wiki_markdown,
+            commands::export_wiki_pdf,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
