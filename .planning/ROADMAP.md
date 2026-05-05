@@ -9,7 +9,7 @@
 - ✅ **v3.2 Platform Enhancements** — Phases 16-20 (shipped 2026-05-03) — [Details](milestones/v3.2-MILESTONE-AUDIT.md)
 - 🔵 **v3.3 Tauri Desktop App** — Phases 21-25 (executing) — This document
 - ⏳ **v3.4 Code Intelligence** — Phases 26-30 (complete) — [Details](milestones/v3.4-CODE-INTELLIGENCE-PLAN.md)
-- ⏳ **v3.5 Developer Experience** — Phases 31-34 (planned) — This document
+- ✅ **v3.5 Developer Experience** — Phases 31-34 (shipped 2026-05-05) — This document
 
 ## Phases
 
@@ -553,8 +553,8 @@ Plans:
 | 30. Staleness Detection | v3.4 | 1/1 | Complete | 2026-05-04 |
 | 31. Installation | v3.5 | 0/3 | Not started | - |
 | 32. Onboarding | v3.5 | 0/3 | Not started | - |
-| 33. CLI Usability | v3.5 | 0/3 | Not started | - |
-| 34. Documentation | v3.5 | 0/2 | Not started | - |
+| 33. CLI Usability | v3.5 | 3/3 | Complete | 2026-05-05 |
+| 34. Documentation | v3.5 | 2/2 | Complete | 2026-05-05 |
 
 ---
 
@@ -651,7 +651,12 @@ v3.5: Developer Experience ✓
 5. 长操作显示进度条
 6. Ctrl+C 优雅取消操作
 
-**Plans:** 0/3 plans
+**Plans:** 3/3 plans (complete)
+
+Plans:
+- [x] 33-01-PLAN.md — Short command aliases (CLI-01)
+- [x] 33-02-PLAN.md — Friendly error messages and TUI config (CLI-02~03)
+- [x] 33-03-PLAN.md — Shell completion and progress indicators (CLI-04~06)
 
 **UI hint:** yes
 
@@ -671,7 +676,11 @@ v3.5: Developer Experience ✓
 3. 版本迁移指南完整
 4. 离线文档可访问
 
-**Plans:** 0/2 plans
+**Plans:** 2/2 plans (complete)
+
+Plans:
+- [x] 34-01-PLAN.md — Command help and troubleshooting guide (DOC-01~02)
+- [x] 34-02-PLAN.md — Migration guide and offline docs (DOC-03~04)
 
 ---
 
