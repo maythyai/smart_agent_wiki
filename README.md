@@ -1,38 +1,40 @@
 # Smart Agent Wiki
 
-**下一代智能多代理知识平台** — 知识可信、可溯源、可进化
+**Next-Generation Intelligent Multi-Agent Knowledge Platform** — Knowledge that is Trustworthy, Traceable, and Evolvable
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Release](https://img.shields.io/badge/release-v3.4.0-blue.svg)](https://github.com/chensaics/smart_agent_wiki/releases/tag/v3.4.0)
 
-## 简介
+[中文文档](README_CN.md)
 
-Smart Agent Wiki 是一个本地优先的知识管理平台，将知识视为「编译」的结果而非检索的对象。它通过四层存储架构（Vault → Claims → Wiki → Index）和五大引擎（摄入、查询、治理、学习、协作），实现知识从摄入到过期修剪的全生命周期管理。
+## Introduction
 
-**核心特性：**
-- 🔍 **四层存储架构** — 每条主张可溯源到原始文档的具体位置
-- 🤖 **6 个专业化 Agent** — Librarian/Writer/Critic/Linker/Scholar/Guardian 协作编排
-- 🛡️ **治理引擎** — 4 层置信度、9 级新鲜度、矛盾检测、Ed25519 审计收据
-- 🌐 **Web UI** — React + Cytoscape.js 知识图谱可视化 + Milkdown 编辑器
-- 🔌 **MCP Server** — 24+ 工具，Claude Code/Cursor/Copilot 兼容
-- 🧠 **Code Intelligence** — 代码知识图谱分析（v3.4 新增）
+Smart Agent Wiki is a local-first knowledge management platform that treats knowledge as the result of "compilation" rather than the object of retrieval. Through a four-layer storage architecture (Vault → Claims → Wiki → Index) and five engines (Ingest, Query, Govern, Learn, Collaborate), it manages the full lifecycle of knowledge from ingestion to expiration pruning.
 
-## v3.4 新功能：Code Intelligence
+**Core Features:**
+- 🔍 **Four-Layer Storage Architecture** — Every claim can be traced back to the exact location in the original document
+- 🤖 **6 Specialized Agents** — Librarian/Writer/Critic/Linker/Scholar/Guardian collaborative orchestration
+- 🛡️ **Governance Engine** — 4-tier confidence, 9-level freshness, contradiction detection, Ed25519 audit receipts
+- 🌐 **Web UI** — React + Cytoscape.js knowledge graph visualization + Milkdown editor
+- 🔌 **MCP Server** — 24+ tools, compatible with Claude Code/Cursor/Copilot
+- 🧠 **Code Intelligence** — Code knowledge graph analysis (new in v3.4)
 
-借鉴 GitNexus（35K+ stars）的代码智能功能，Smart Agent Wiki 现具备代码知识图谱分析能力：
+## v3.4 New Feature: Code Intelligence
+
+Inspired by GitNexus (35K+ stars), Smart Agent Wiki now has code knowledge graph analysis capabilities:
 
 ### DAG Pipeline Validation
-类型安全的摄入管线架构，确保阶段依赖正确：
-- Kahn 拓扑排序算法
-- 循环检测与精确错误报告
-- 6 阶段摄入流程：Classify → Parse → Extract → Merge → Validate → Store
+Type-safe ingestion pipeline architecture ensuring correct phase dependencies:
+- Kahn's topological sort algorithm
+- Cycle detection with precise error reporting
+- 6-phase ingestion flow: Classify → Parse → Extract → Merge → Validate → Store
 
 ### Impact Analysis Engine
-代码修改影响分析，修改前了解破坏范围：
+Code modification impact analysis - understand breaking scope before changes:
 ```bash
 saw impact UserService
-# 输出：
+# Output:
 # Summary:
 #   Total affected: 5
 #   Depth 1 (will break): 2
@@ -40,16 +42,16 @@ saw impact UserService
 # ⚠ HIGH RISK: 2 direct dependents will break!
 ```
 
-风险分级：
-- **WILL_BREAK** — 直接依赖，修改必破
-- **LIKELY_AFFECTED** — 二级依赖，可能受影响
-- **MAY_NEED_TESTING** — 三级依赖，建议测试
+Risk levels:
+- **WILL_BREAK** — Direct dependency, modification will break
+- **LIKELY_AFFECTED** — Secondary dependency, possibly affected
+- **MAY_NEED_TESTING** — Tertiary dependency, testing recommended
 
 ### Process Detection
-从入口点追踪执行流程：
+Trace execution flow from entry points:
 ```bash
 saw process handleRequest
-# 输出：
+# Output:
 # Execution flow:
 #   handleRequest
 #     → validateInput
@@ -59,124 +61,124 @@ saw process handleRequest
 ```
 
 ### Staleness Detection
-知识库过期检测，判断数据可信度：
+Knowledge base staleness detection to judge data trustworthiness:
 ```bash
 saw staleness
-# 输出：
+# Output:
 # Stale nodes: 3
 # - UserService (10 days old, 12 commits behind)
 # - OldService (8 days old, 5 commits behind)
 # Recommendation: Run ingest to update 3 stale nodes
 ```
 
-## 快速开始
+## Quick Start
 
-### 1. 安装
+### 1. Installation
 
 ```bash
-# 克隆仓库
+# Clone repository
 git clone https://github.com/chensaics/smart_agent_wiki.git
 cd smart-agent-wiki
 
-# 创建虚拟环境
+# Create virtual environment
 python -m venv .venv
 source .venv/bin/activate  # Linux/macOS
 
-# 安装核心依赖
+# Install core dependencies
 pip install -e .
 
-# 安装 PDF 解析支持（可选）
+# Install PDF parsing support (optional)
 pip install -e ".[pdf]"
 
-# 安装开发依赖（可选）
+# Install development dependencies (optional)
 pip install -e ".[dev]"
 ```
 
-### 2. 初始化 Wiki
+### 2. Initialize Wiki
 
 ```bash
-# 在当前目录创建新的 Wiki
+# Create new Wiki in current directory
 saw init
 
-# 生成 Agent 配置文件
-saw init --agent claude-code  # 生成 CLAUDE.md
-saw init --agent cursor       # 生成 .cursorrules
+# Generate Agent config files
+saw init --agent claude-code  # Generate CLAUDE.md
+saw init --agent cursor       # Generate .cursorrules
 ```
 
-### 3. 摄入文档
+### 3. Ingest Documents
 
 ```bash
-# 摄入单个文件
+# Ingest single file
 saw ingest document.pdf
 saw ingest notes.md
 saw ingest https://example.com/article
 
-# 摄入整个目录
+# Ingest entire directory
 saw ingest ./documents/
 
-# 离线模式（仅提取结构）
+# Offline mode (structure extraction only)
 saw ingest document.pdf --no-llm
 ```
 
-支持的格式：
-- **Markdown** (`.md`) — LLM 提取实体、概念、主张
-- **PDF** (`.pdf`) — Docling → PyMuPDF 解析
-- **URL** — trafilatura 内容提取
-- **代码** (`.py`, `.js`, `.ts` 等) — AST 解析，零 LLM 调用
+Supported formats:
+- **Markdown** (`.md`) — LLM extracts entities, concepts, claims
+- **PDF** (`.pdf`) — Docling → PyMuPDF parsing
+- **URL** — trafilatura content extraction
+- **Code** (`.py`, `.js`, `.ts`, etc.) — AST parsing, zero LLM calls
 
-### 4. Code Intelligence 使用
+### 4. Code Intelligence Usage
 
 ```bash
-# 分析代码修改影响（上游：依赖者）
+# Analyze code modification impact (upstream: dependents)
 saw impact UserService
 
-# 分析下游依赖
+# Analyze downstream dependencies
 saw impact handleLogin --direction downstream
 
-# 深度限制
+# Depth limit
 saw impact AuthModule --max-depth 5
 
-# 置信度过滤
+# Confidence filtering
 saw impact UserService --min-confidence 0.9
 
-# JSON 输出
+# JSON output
 saw impact UserService --json
 
-# 检测执行流程
+# Detect execution flow
 saw process handleRequest --max-depth 5
 
-# 检测过期节点
+# Detect stale nodes
 saw staleness --threshold-days 7
 ```
 
-### 5. 查询知识库
+### 5. Query Knowledge Base
 
 ```bash
-# 自然语言查询
-saw query "这个项目的主要设计决策是什么？"
+# Natural language query
+saw query "What are the main design decisions of this project?"
 
-# 关键词搜索（BM25 + FTS5）
+# Keyword search (BM25 + FTS5)
 saw search "entity resolution"
 
-# 查看知识库状态
+# View knowledge base status
 saw status
 ```
 
-### 6. 启动 Web UI
+### 6. Start Web UI
 
 ```bash
 saw web
-# 访问: http://localhost:8000
-# API 文档: http://localhost:8000/docs
+# Access: http://localhost:8000
+# API Docs: http://localhost:8000/docs
 ```
 
-### 7. 启动 MCP Server
+### 7. Start MCP Server
 
 ```bash
 saw mcp
 ```
 
-在 Claude Desktop 配置：
+Configure in Claude Desktop:
 ```json
 {
   "mcpServers": {
@@ -188,67 +190,67 @@ saw mcp
 }
 ```
 
-## CLI 命令参考
+## CLI Commands Reference
 
-| 命令 | 说明 |
-|------|------|
-| `saw init` | 初始化新的 Wiki |
-| `saw status` | 显示知识库状态概览 |
-| `saw ingest <source>` | 摄入文档/URL/目录 |
-| `saw query <question>` | 自然语言查询 |
-| `saw search <keywords>` | BM25 关键词搜索 |
-| `saw impact <symbol>` | 代码修改影响分析 ⭐ |
-| `saw process <entry>` | 执行流程检测 ⭐ |
-| `saw staleness` | 知识库过期检测 ⭐ |
-| `saw lint` | 健康检查 |
-| `saw conflicts` | 列出矛盾冲突 |
-| `saw freshness` | 新鲜度报告 |
-| `saw mcp` | 启动 MCP Server |
-| `saw web` | 启动 Web UI |
+| Command | Description |
+|---------|-------------|
+| `saw init` | Initialize new Wiki |
+| `saw status` | Display knowledge base status overview |
+| `saw ingest <source>` | Ingest document/URL/directory |
+| `saw query <question>` | Natural language query |
+| `saw search <keywords>` | BM25 keyword search |
+| `saw impact <symbol>` | Code modification impact analysis ⭐ |
+| `saw process <entry>` | Execution flow detection ⭐ |
+| `saw staleness` | Knowledge base staleness detection ⭐ |
+| `saw lint` | Health check |
+| `saw conflicts` | List contradictions |
+| `saw freshness` | Freshness report |
+| `saw mcp` | Start MCP Server |
+| `saw web` | Start Web UI |
 
-⭐ v3.4 新增命令
+⭐ New in v3.4
 
-## MCP 工具列表
+## MCP Tools List
 
-**摄入工具 (2)**
-- `saw_ingest` — 摄入文档
-- `saw_reparse` — 重新解析
+**Ingestion Tools (2)**
+- `saw_ingest` — Ingest document
+- `saw_reparse` — Re-parse
 
-**查询工具 (7)**
-- `saw_query` — 自然语言查询
-- `saw_search` — BM25 搜索
-- `saw_tree_search` — 结构感知搜索
-- `saw_graph` — 知识图谱遍历
-- `saw_compare` — 页面对比
-- `saw_compile` — 上下文编译
-- `saw_coverage` — 覆盖度分析
+**Query Tools (7)**
+- `saw_query` — Natural language query
+- `saw_search` — BM25 search
+- `saw_tree_search` — Structure-aware search
+- `saw_graph` — Knowledge graph traversal
+- `saw_compare` — Page comparison
+- `saw_compile` — Context compilation
+- `saw_coverage` — Coverage analysis
 
-**治理工具 (7)**
-- `saw_lint` — 健康检查
-- `saw_conflicts` — 矛盾列表
-- `saw_verify` — 验证溯源
-- `saw_freshness` — 新鲜度报告
-- `saw_review` — 人工审核
-- `saw_audit` — 审计链验证
-- `saw_blast_radius` — 影响范围
+**Governance Tools (7)**
+- `saw_lint` — Health check
+- `saw_conflicts` — Contradiction list
+- `saw_verify` — Verify traceability
+- `saw_freshness` — Freshness report
+- `saw_review` — Manual review
+- `saw_audit` — Audit chain verification
+- `saw_blast_radius` — Impact scope
 
-**Code Intelligence 工具 (3) ⭐**
-- `saw_impact` — 代码修改影响分析
-- `saw_process` — 执行流程检测
-- `saw_staleness` — 知识库过期检测
+**Code Intelligence Tools (3) ⭐**
+- `saw_impact` — Code modification impact analysis
+- `saw_process` — Execution flow detection
+- `saw_staleness` — Knowledge base staleness detection
 
-**学习工具 (5)**
-- `saw_status` — 知识库状态
-- `saw_learn` — 触发学习周期
-- `saw_distill` — 认知蒸馏
-- `saw_suggest` — 知识缺口建议
-- `saw_wip` — 工作进度
+**Learning Tools (5)**
+- `saw_status` — Knowledge base status
+- `saw_learn` — Trigger learning cycle
+- `saw_distill` — Cognitive distillation
+- `saw_suggest` — Knowledge gap suggestions
+- `saw_wip` — Work in progress
 
-## 技术架构
+## Technical Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                        用户界面层                            │
+│                      User Interface Layer                    │
 ├─────────────────┬─────────────────┬─────────────────────────┤
 │   CLI (Typer)   │  Web UI (React) │  MCP Server (FastMCP)   │
 └────────┬────────┴────────┬────────┴────────────┬────────────┘
@@ -256,7 +258,7 @@ saw mcp
          └─────────────────┼──────────────────────┘
                            ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                       引擎层                                 │
+│                        Engine Layer                          │
 ├─────────────┬─────────────┬─────────────┬───────────────────┤
 │ IngestEngine│ QueryEngine │GovernEngine │ CollaborateEngine │
 │ (DAG v3.4)  │             │             │                   │
@@ -264,85 +266,85 @@ saw mcp
        │             │             │                │
        ▼             ▼             ▼                ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                       存储层                                 │
+│                       Storage Layer                          │
 ├─────────────┬─────────────┬─────────────┬───────────────────┤
 │    Vault    │ Claims (DB) │ Wiki Pages  │ FTS5 + Graph      │
-│  (不可变)   │  (SQLite)   │ (Markdown)  │ (索引层)          │
+│  (Immutable)│  (SQLite)   │ (Markdown)  │ (Index Layer)     │
 └─────────────┴─────────────┴─────────────┴───────────────────┘
 
 ┌─────────────────────────────────────────────────────────────┐
-│                  Code Intelligence (v3.4)                   │
+│                  Code Intelligence (v3.4)                    │
 ├─────────────┬─────────────┬─────────────┬───────────────────┤
 │ DAG Pipeline│ Impact Eng. │Process Det. │ Staleness Det.    │
 │ Validation  │ (BFS trav.) │ (DFS tree)  │ (Git compare)     │
 └─────────────┴─────────────┴─────────────┴───────────────────┘
 ```
 
-## 置信度与新鲜度
+## Confidence & Freshness
 
-### 4 层置信度体系
+### 4-Tier Confidence System
 
-| 级别 | 名称 | 说明 |
-|------|------|------|
-| 1 | Unverified | 单来源，未验证 |
-| 2 | Single Source | 单来源，已验证 |
-| 3 | Cross-Validated | 多来源交叉验证 |
-| 4 | Human Verified | 人工确认 |
+| Level | Name | Description |
+|-------|------|-------------|
+| 1 | Unverified | Single source, unverified |
+| 2 | Single Source | Single source, verified |
+| 3 | Cross-Validated | Multi-source cross-validation |
+| 4 | Human Verified | Human confirmed |
 
-### 9 级新鲜度系统
+### 9-Level Freshness System
 
-| 级别 | 颜色 | 说明 |
-|------|------|------|
-| 0-2 | 🟢 绿色 | 新鲜 |
-| 3-5 | 🟡 黄色 | 较新 |
-| 6-7 | 🟠 橙色 | 较旧 |
-| 8 | 🔴 红色 | 过期 |
+| Level | Color | Description |
+|-------|-------|-------------|
+| 0-2 | 🟢 Green | Fresh |
+| 3-5 | 🟡 Yellow | Fairly fresh |
+| 6-7 | 🟠 Orange | Somewhat stale |
+| 8 | 🔴 Red | Stale |
 
-## 项目状态
+## Project Status
 
-**当前版本：v3.4.0**
+**Current Version: v3.4.0**
 
-**已完成：**
-- ✅ 四层存储架构
-- ✅ DAG Pipeline Validation（Kahn 拓扑排序）
-- ✅ Impact Analysis Engine（BFS 风险分级）
-- ✅ Process Detection（DFS 调用树）
-- ✅ Staleness Detection（Git 提交比较）
-- ✅ MCP Server 24+ 工具
-- ✅ CLI 16 命令
-- ✅ Web UI（搜索/图谱/编辑/Dashboard）
-- ✅ 24 单元测试通过
+**Completed:**
+- ✅ Four-layer storage architecture
+- ✅ DAG Pipeline Validation (Kahn's topological sort)
+- ✅ Impact Analysis Engine (BFS risk grading)
+- ✅ Process Detection (DFS call tree)
+- ✅ Staleness Detection (Git commit comparison)
+- ✅ MCP Server 24+ tools
+- ✅ CLI 16 commands
+- ✅ Web UI (Search/Graph/Editor/Dashboard)
+- ✅ 24 unit tests passing
 
-**路线图 (v3.5)：**
-- Web UI Impact 可视化（D3.js 图）
-- Tree-sitter AST 零 LLM 解析
-- LadybugDB/KuzuDB 图数据库
-- Agent Skills Layer（Claude Code Skills）
+**Roadmap (v3.5):**
+- Web UI Impact visualization (D3.js graph)
+- Tree-sitter AST zero LLM parsing
+- LadybugDB/KuzuDB graph database
+- Agent Skills Layer (Claude Code Skills)
 
-## 开发
+## Development
 
 ```bash
-# 运行测试
+# Run tests
 pytest tests/unit/ingest/ tests/unit/analysis/ -v
 
-# 运行覆盖率测试
+# Run coverage tests
 pytest --cov=src/saw
 
-# 前端开发
+# Frontend development
 cd web && npm run dev
 ```
 
-## 许可证
+## License
 
-MIT License
+[MIT License](LICENSE)
 
-## 致谢
+## Acknowledgments
 
-本项目受到 Karpathy 的 LLM Wiki 概念启发，特别感谢：
+This project was inspired by Karpathy's LLM Wiki concept. Special thanks to:
 
-- GitNexus — DAG Pipeline、Impact Analysis 架构参考
-- Knowledge Pipeline — 编译范式、矛盾检测
-- Multi-Agent Wiki — 多代理治理
-- codesight — AST 零 LLM 提取
-- llm-wiki1 — FSRS 间隔重复
-- unified-memory-ai-agents — 三层认知、WIP 动量
+- GitNexus — DAG Pipeline, Impact Analysis architecture reference
+- Knowledge Pipeline — Compilation paradigm, contradiction detection
+- Multi-Agent Wiki — Multi-agent governance
+- codesight — AST zero LLM extraction
+- llm-wiki1 — FSRS spaced repetition
+- unified-memory-ai-agents — Three-layer cognition, WIP momentum
