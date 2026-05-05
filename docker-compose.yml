@@ -1,0 +1,72 @@
+# Smart Agent Wiki Docker Compose
+#
+# Usage:
+#   docker compose up -d
+#   docker compose logs -f saw
+#   docker compose down
+#
+# License: MIT
+
+version: "3.8"
+
+services:
+  # Main SAW service
+  saw:
+    image: chensaics/saw:latest
+    container_name: smart-agent-wiki
+    restart: unless-stopped
+    volumes:
+      - ./wiki:/wiki
+      - saw-data:/root/.local/share/saw
+    working_dir: /wiki
+    environment:
+      - SAW_LOG_LEVEL=INFO
+    ports:
+      - "8000:8000"
+    command: web --host 0.0.0.0 --port 8000
+    healthcheck:
+      test: ["CMD", "saw", "--version"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Optional: Web UI frontend (separate container)
+  web:
+    image: chensaics/saw:latest
+    container_name: saw-web
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - SAW_API_URL=http://saw:8000
+    depends_on:
+      saw:
+        condition: service_healthy
+    command: web --host 0.0.0.0 --port 3000 --frontend-only
+
+  # Optional: Scheduled sync (if using integrations)
+  sync:
+    image: chensaics/saw:latest
+    container_name: saw-sync
+    restart: unless-stopped
+    volumes:
+      - ./wiki:/wiki
+    working_dir: /wiki
+    environment:
+      - SAW_SYNC_INTERVAL=3600
+    depends_on:
+      saw:
+        condition: service_healthy
+    command: >
+      sh -c "while true; do saw sync --all; sleep 3600; done"
+
+# Named volumes for persistent data
+volumes:
+  saw-data:
+    driver: local
+
+# Network configuration
+networks:
+  default:
+    name: saw-network

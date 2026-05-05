@@ -82,6 +82,39 @@ saw staleness
 
 ### 1. Installation
 
+**Quick Install (Recommended):**
+
+```bash
+# Linux/macOS
+curl -fsSL https://get.saw.sh | bash
+
+# Windows (PowerShell)
+iwr -useb https://get.saw.sh | iex
+```
+
+**Package Managers:**
+
+```bash
+# pipx (isolated environment)
+pipx install smart-agent-wiki
+
+# Homebrew (macOS)
+brew install chensaics/tap/saw
+
+# Docker
+docker run -it chensaics/saw:latest saw init
+```
+
+**Verify Installation:**
+
+```bash
+saw --version
+# Output: saw 3.4.0
+```
+
+<details>
+<summary>Manual Installation (Development)</summary>
+
 ```bash
 # Clone repository
 git clone https://github.com/chensaics/smart_agent_wiki.git
@@ -100,6 +133,7 @@ pip install -e ".[pdf]"
 # Install development dependencies (optional)
 pip install -e ".[dev]"
 ```
+</details>
 
 ### 2. Initialize Wiki
 

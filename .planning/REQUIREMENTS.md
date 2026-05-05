@@ -5,6 +5,43 @@
 
 ---
 
+## v3.5 Requirements (Developer Experience) — Active
+
+### Installation (安装体验)
+
+- [ ] **INSTALL-01**: User can install via curl one-liner on Linux/macOS
+- [ ] **INSTALL-02**: User can install via pipx with isolated environment
+- [ ] **INSTALL-03**: User can install via Homebrew on macOS
+- [ ] **INSTALL-04**: User can run via Docker without local installation
+- [ ] **INSTALL-05**: Install script detects OS and handles dependencies automatically
+- [ ] **INSTALL-06**: User can verify installation with `saw --version`
+
+### Onboarding (入门体验)
+
+- [ ] **ONBOARD-01**: User can run `saw tutorial` for interactive guided tour
+- [ ] **ONBOARD-02**: User can find example workflows in examples/ directory
+- [ ] **ONBOARD-03**: User can read QUICKSTART.md for 5-minute setup guide
+- [ ] **ONBOARD-04**: User can try online Playground without installation
+- [ ] **ONBOARD-05**: Tutorial creates a sample wiki with demo content
+
+### CLI Usability (CLI易用性)
+
+- [ ] **CLI-01**: User can use short aliases for common commands (saw i = saw ingest)
+- [ ] **CLI-02**: User receives friendly error messages with suggested fixes
+- [ ] **CLI-03**: User can run `saw config` for interactive TUI configuration
+- [ ] **CLI-04**: User can enable shell completion for bash/zsh/fish
+- [ ] **CLI-05**: User sees progress indicators for long-running operations
+- [ ] **CLI-06**: User can cancel operations gracefully with Ctrl+C
+
+### Documentation (文档完善)
+
+- [ ] **DOC-01**: User can find comprehensive man-page style help
+- [ ] **DOC-02**: User can read troubleshooting guide for common issues
+- [ ] **DOC-03**: User can find migration guide between versions
+- [ ] **DOC-04**: User can access offline documentation via `saw help <topic>`
+
+---
+
 ## v3.3 Requirements (Tauri Desktop App)
 
 ### APP - Application Framework

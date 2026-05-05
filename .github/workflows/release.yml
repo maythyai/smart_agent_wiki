@@ -1,0 +1,114 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install build tools
+      run: |
+        pip install build twine
+
+    - name: Build package
+      run: |
+        python -m build
+        ls -la dist/
+
+    - name: Publish to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        password: ${{ secrets.PYPI_API_TOKEN }}
+
+    - name: Set up QEMU for Docker
+      uses: docker/setup-qemu-action@v3
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
+    - name: Extract version
+      id: version
+      run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        platforms: linux/amd64,linux/arm64
+        push: true
+        tags: |
+          chensaics/saw:${{ steps.version.outputs.VERSION }}
+          chensaics/saw:latest
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: dist/*
+        generate-release-notes: true
+        body: |
+          ## Installation
+
+          ### Quick Install
+          ```bash
+          # Linux/macOS
+          curl -fsSL https://get.saw.sh | bash
+
+          # Windows (PowerShell)
+          iwr -useb https://get.saw.sh | iex
+          ```
+
+          ### Package Managers
+          ```bash
+          # pipx (Recommended)
+          pipx install smart-agent-wiki
+
+          # Homebrew (macOS)
+          brew install chensaics/tap/saw
+
+          # Docker
+          docker run -it chensaics/saw:${{ steps.version.outputs.VERSION }} saw init
+          ```
+
+          ### Verify
+          ```bash
+          saw --version
+          ```
+
+          ## What's Changed
+
+          See [CHANGELOG.md](CHANGELOG.md) for details.
+
+          **Full Changelog**: https://github.com/chensaics/smart_agent_wiki/compare/v${{ steps.version.outputs.VERSION }}...HEAD
+
+  update-homebrew:
+    needs: build-and-publish
+    runs-on: ubuntu-latest
+    steps:
+    - name: Update Homebrew tap
+      run: |
+        # This would typically update the chensaics/homebrew-tap repository
+        # For now, manual update is required
+        echo "Homebrew formula update required after PyPI publication"
+        echo "Formula: https://github.com/chensaics/homebrew-tap"

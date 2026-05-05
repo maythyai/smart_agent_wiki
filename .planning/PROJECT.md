@@ -114,23 +114,39 @@ Smart Agent Wiki 是一个下一代智能多代理知识平台，集百家之长
 | Cedar 策略引擎 | 实验性 cedar-python + CLI fallback | ✓ Acceptable |
 | React 19 + Zustand | 前端技术栈现代且稳定 | ✓ Good |
 
-## Current Milestone: v3.3 Tauri Desktop App
+## Current Milestone: v3.5 Developer Experience & Usability
 
-**Goal:** 将 Smart Agent Wiki 打包为原生桌面应用，支持离线使用、系统集成和跨平台分发
+**Goal:** 降低用户首次使用门槛，5 分钟内完成安装并运行第一个命令
 
 **Target features:**
-- Tauri 应用框架集成（Rust + WebView）
-- 原生窗口管理（菜单、托盘、窗口控制）
-- 本地文件系统访问（无服务器模式）
-- 系统集成（文件关联、协议处理、通知）
-- 跨平台分发（Windows/macOS/Linux）
-- 自动更新机制
+- 多平台安装支持（curl/pipx/Homebrew/Docker）
+- 交互式入门教程 (saw tutorial)
+- 快速入门文档 + 示例目录 (examples/)
+- CLI 短参数 + 智能补全 + 友好错误提示
+- 交互式 TUI 配置界面 (saw config)
+- 在线 Playground 体验
 
 **Key context:**
-- 现有 Web UI (React + Vite) 可复用
-- Python 后端可嵌入或作为 sidecar 运行
-- 本地优先架构已支持离线操作
-- SQLite 默认存储适合桌面应用
+- v3.4 已实现核心代码智能功能
+- 不同操作系统、不同 coding 项目场景的安装适配
+- 支持独立部署使用，零本地安装
+
+## Previous Milestone: v3.4 Code Intelligence — ✓ COMPLETE
+
+**Shipped:** 2026-05-04
+
+**Delivered features:**
+- ✓ **DAG Pipeline Validation** — Kahn 拓扑排序、循环检测、精确错误报告
+- ✓ **Impact Analysis Engine** — BFS 图遍历、深度分层风险、MCP 工具 saw_impact
+- ✓ **Process Detection** — DFS 调用树构建、入口点追踪
+- ✓ **Staleness Detection** — Git commit 对比、新鲜度判断
+
+**Implementation:**
+- 24 tests passing
+- 6-phase ingestion pipeline
+- CLI commands: saw impact, saw staleness
+
+**Status:** Complete — 2026-05-04
 
 ## Previous Milestone: v3.1 Third-Party Integrations — ✓ COMPLETE
 

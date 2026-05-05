@@ -8,7 +8,8 @@
 - ✅ **v3.1 Third-Party Integrations** — Phases 10-15 (shipped 2026-05-02) — [Details](milestones/v3.1-MILESTONE-AUDIT.md)
 - ✅ **v3.2 Platform Enhancements** — Phases 16-20 (shipped 2026-05-03) — [Details](milestones/v3.2-MILESTONE-AUDIT.md)
 - 🔵 **v3.3 Tauri Desktop App** — Phases 21-25 (executing) — This document
-- ⏳ **v3.4 Code Intelligence** — Phases 26-30 (planned) — [Details](milestones/v3.4-CODE-INTELLIGENCE-PLAN.md)
+- ⏳ **v3.4 Code Intelligence** — Phases 26-30 (complete) — [Details](milestones/v3.4-CODE-INTELLIGENCE-PLAN.md)
+- ⏳ **v3.5 Developer Experience** — Phases 31-34 (planned) — This document
 
 ## Phases
 
@@ -535,79 +536,146 @@ Plans:
 | 13. Logseq + IM | v3.1 | 4/4 | Complete | 2026-05-02 |
 | 14. GitHub Connector | v3.1 | 3/3 | Complete | 2026-05-02 |
 | 15. Dashboard + Polish | v3.1 | 2/2 | Complete | 2026-05-02 |
-| 16. Real-Time Dashboard | v3.2 | 3/3 | Complete    | 2026-05-03 |
-| 17. Mobile Responsive UI | v3.2 | 2/2 | Complete    | 2026-05-03 |
-| 18. Connector Settings | v3.2 | 2/2 | Complete    | 2026-05-03 |
-| 19. Performance Benchmarks | v3.2 | 2/2 | Complete    | 2026-05-03 |
-| 20. Tech Debt Cleanup | v3.2 | 3/3 | Complete    | 2026-05-03 |
+| 16. Real-Time Dashboard | v3.2 | 3/3 | Complete | 2026-05-03 |
+| 17. Mobile Responsive UI | v3.2 | 2/2 | Complete | 2026-05-03 |
+| 18. Connector Settings | v3.2 | 2/2 | Complete | 2026-05-03 |
+| 19. Performance Benchmarks | v3.2 | 2/2 | Complete | 2026-05-03 |
+| 20. Tech Debt Cleanup | v3.2 | 3/3 | Complete | 2026-05-03 |
 | 21. Tauri Foundation | v3.3 | 3/3 | Complete | 2026-05-03 |
 | 22. File System Integration | v3.3 | 2/2 | Complete | 2026-05-04 |
 | 23. System Integration | v3.3 | 0/0 | Not started | - |
 | 24. Distribution | v3.3 | 0/0 | Not started | - |
 | 25. Backend Sidecar | v3.3 | 0/0 | Not started | - |
-| 26. DAG Pipeline Validation | v3.4 | 0/2 | Not started | - |
-| 27. Impact Analysis Engine | v3.4 | 0/3 | Not started | - |
-| 28. Process Detection | v3.4 | 0/2 | Not started | - |
-| 29. Agent Skills Layer | v3.4 | 0/2 | Not started | - |
-| 30. Staleness Detection | v3.4 | 0/1 | Not started | - |
+| 26. DAG Pipeline Validation | v3.4 | 2/2 | Complete | 2026-05-04 |
+| 27. Impact Analysis Engine | v3.4 | 3/3 | Complete | 2026-05-04 |
+| 28. Process Detection | v3.4 | 2/2 | Complete | 2026-05-04 |
+| 29. Agent Skills Layer | v3.4 | 2/2 | Complete | 2026-05-04 |
+| 30. Staleness Detection | v3.4 | 1/1 | Complete | 2026-05-04 |
+| 31. Installation | v3.5 | 0/3 | Not started | - |
+| 32. Onboarding | v3.5 | 0/3 | Not started | - |
+| 33. CLI Usability | v3.5 | 0/3 | Not started | - |
+| 34. Documentation | v3.5 | 0/2 | Not started | - |
 
 ---
 
 ## Dependency Graph
 
 ```
-v3.2 (Shipped)
+v3.4 (Complete)
     │
     ▼
-Phase 21 (Tauri Foundation) ✅
+Phase 31 (Installation)
     │
     ▼
-Phase 22 (File System Integration) ✅
+Phase 32 (Onboarding)
     │
     ▼
-Phase 23 (System Integration)
+Phase 33 (CLI Usability)
     │
     ▼
-Phase 24 (Distribution)
+Phase 34 (Documentation)
     │
     ▼
-Phase 25 (Backend Sidecar)
-    │
-    ▼
-v3.4: Code Intelligence (GitNexus Integration)
-    │
-    ├──────────────┬─────────────────┐
-    │              │                 │
-    ▼              ▼                 ▼
-Phase 26      Phase 30          Phase 28
-(DAG Pipeline) (Staleness)      (Process Detection)
-    │              │                 │
-    └──────────────┴─────────────────┘
-                   │
-                   ▼
-              Phase 27
-           (Impact Analysis)
-                   │
-                   ▼
-              Phase 29
-           (Agent Skills)
+v3.5: Developer Experience ✓
 ```
 
 ---
 
-*Last updated: 2026-05-04 — v3.4 Code Intelligence milestone added*
+*Last updated: 2026-05-05 — v3.5 Developer Experience milestone added*
 
 ---
 
-## Upcoming (v3.4: Code Intelligence)
+## Upcoming (v3.5: Developer Experience)
 
-> **Details:** [v3.4-CODE-INTELLIGENCE-PLAN.md](milestones/v3.4-CODE-INTELLIGENCE-PLAN.md)
+- [ ] **Phase 31: Installation** — curl/pipx/Homebrew/Docker 多平台安装支持
+- [ ] **Phase 32: Onboarding** — 交互式教程 + 示例目录 + 快速入门文档
+- [ ] **Phase 33: CLI Usability** — 短参数 + 友好错误提示 + TUI 配置
+- [ ] **Phase 34: Documentation** — 完整文档 + 故障排查 + 迁移指南
 
-- [ ] **Phase 26: DAG Pipeline Validation** — Type-safe pipeline phases with dependency verification
-- [ ] **Phase 27: Impact Analysis Engine** — Code modification impact analysis with risk levels
-- [ ] **Phase 28: Process Detection** — Automatic execution flow detection
-- [ ] **Phase 29: Agent Skills Layer** — Claude Code skills for effective MCP tool usage
-- [ ] **Phase 30: Staleness Detection** — Knowledge base freshness monitoring
+### Phase Details (v3.5)
+
+### Phase 31: Installation
+
+**Goal:** 多平台一键安装，自动处理依赖
+
+**Depends on:** v3.4 complete
+
+**Requirements:** INSTALL-01~06
+
+**Success Criteria** (what must be TRUE):
+1. curl 一行命令安装成功（Linux/macOS）
+2. pipx 安装创建隔离环境
+3. Homebrew 安装支持 macOS
+4. Docker 镜像零本地依赖
+5. 安装脚本自动检测 OS 和依赖
+6. `saw --version` 验证安装成功
+
+**Plans:** 0/3 plans
+
+---
+
+### Phase 32: Onboarding
+
+**Goal:** 新用户 5 分钟内完成首次体验
+
+**Depends on:** Phase 31
+
+**Requirements:** ONBOARD-01~05
+
+**Success Criteria** (what must be TRUE):
+1. `saw tutorial` 启动交互式引导
+2. examples/ 包含 5+ 常见场景示例
+3. QUICKSTART.md 可在 5 分钟内完成
+4. 在线 Playground 无需安装即可体验
+5. 教程自动创建演示 Wiki
+
+**Plans:** 0/3 plans
+
+**UI hint:** yes
+
+---
+
+### Phase 33: CLI Usability
+
+**Goal:** CLI 命令更简洁、友好、易用
+
+**Depends on:** Phase 32
+
+**Requirements:** CLI-01~06
+
+**Success Criteria** (what must be TRUE):
+1. 常用命令有短别名（saw i = saw ingest）
+2. 错误信息包含修复建议
+3. `saw config` 提供 TUI 交互配置
+4. 支持 bash/zsh/fish 补全
+5. 长操作显示进度条
+6. Ctrl+C 优雅取消操作
+
+**Plans:** 0/3 plans
+
+**UI hint:** yes
+
+---
+
+### Phase 34: Documentation
+
+**Goal:** 文档完善，覆盖全场景
+
+**Depends on:** Phase 33
+
+**Requirements:** DOC-01~04
+
+**Success Criteria** (what must be TRUE):
+1. `saw help <command>` 显示完整帮助
+2. 故障排查指南覆盖常见问题
+3. 版本迁移指南完整
+4. 离线文档可访问
+
+**Plans:** 0/2 plans
+
+---
+
+## Completed (v3.4: Code Intelligence)
 
 ### Phase Details (v3.4)
 
