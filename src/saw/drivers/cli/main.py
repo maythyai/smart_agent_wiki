@@ -30,6 +30,7 @@ from saw.drivers.cli.commands.mcp_cmd import mcp  # noqa: E402
 from saw.drivers.cli.commands.web_cmd import web  # noqa: E402
 from saw.drivers.cli.commands.ingest_media_cmd import ingest_media, preview_app  # noqa: E402
 from saw.drivers.cli.commands.feed_cmd import app as feed_app  # noqa: E402
+from saw.cli.commands.tutorial_cmd import tutorial  # noqa: E402
 
 app.command(name="init")(init)
 app.command(name="status")(status)
@@ -49,3 +50,5 @@ app.command(name="mcp")(mcp)
 app.command(name="web")(web)
 # Phase 9: RSS Feed commands
 app.add_typer(feed_app, name="feed")
+# Phase 32: Tutorial command
+app.command(name="tutorial")(tutorial)

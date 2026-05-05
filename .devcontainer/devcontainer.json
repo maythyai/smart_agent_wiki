@@ -1,0 +1,42 @@
+{
+  "name": "Smart Agent Wiki Playground",
+  "image": "mcr.microsoft.com/devcontainers/python:3.11",
+  "features": {
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "3.11"
+    }
+  },
+  "postCreateCommand": "pip install smart-agent-wiki && saw init",
+  "customizations": {
+    "codespaces": {
+      "repositories": {
+        "chensaics/smart_agent_wiki": {
+          "features": "full"
+        }
+      }
+    },
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python"
+      }
+    }
+  },
+  "forwardPorts": [8000, 3000],
+  "portsAttributes": {
+    "8000": {
+      "label": "Web UI Backend",
+      "onAutoForward": "openPreview"
+    },
+    "3000": {
+      "label": "Web UI Frontend",
+      "onAutoForward": "openBrowser"
+    }
+  },
+  "onCreateCommand": {
+    "setup": "echo '🚀 Smart Agent Wiki Playground Ready!' && echo '' && echo 'Quick commands:' && echo '  saw status      - Check wiki status' && echo '  saw query topic - Search knowledge' && echo '  saw web         - Launch web UI' && echo ''"
+  }
+}

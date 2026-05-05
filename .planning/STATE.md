@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v3.5
 milestone_name: Developer Experience & Usability
-status: planning
-last_updated: "2026-05-05T17:00:00.000Z"
-last_activity: 2026-05-05 -- v3.5 Milestone Planning Started
+status: executing
+last_updated: "2026-05-05T18:30:00.000Z"
+last_activity: 2026-05-05 -- Phase 31 COMPLETE
 progress:
-  total_phases: 0
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  total_phases: 4
+  completed_phases: 1
+  total_plans: 11
+  completed_plans: 3
+  percent: 25
 previous_milestone: v3.4
 ---
 
@@ -25,11 +25,26 @@ See: .planning/PROJECT.md (updated 2026-05-05)
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 31 (complete) → 32 (next)
 Plan: —
-Status: Defining requirements
-Last activity: 2026-05-05 — Milestone v3.5 started
+Status: Phase 31 complete, ready for Phase 32
+Last activity: 2026-05-05 — Phase 31: Installation 完成并提交
+
+## Phase 31 Summary: Installation ✅
+
+**Implemented:**
+- ✅ scripts/install.sh — Linux/macOS bash installer
+- ✅ scripts/install.ps1 — Windows PowerShell installer  
+- ✅ scripts/get-saw.sh — Domain redirect
+- ✅ homebrew/saw.rb — Homebrew formula
+- ✅ Dockerfile + docker-compose.yml — Docker support
+- ✅ .github/workflows/release.yml — Release automation
+- ✅ docs/QUICKSTART.md — 5-minute guide
+- ✅ examples/ — Basic usage examples
+- ✅ README.md — Updated installation section
+
+**Commit:** 652825e
 
 ---
 
-*Last updated: 2026-05-05 — v3.5 Milestone Planning*
+*Last updated: 2026-05-05 — Phase 31 Complete*
