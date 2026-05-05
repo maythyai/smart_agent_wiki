@@ -35,6 +35,7 @@ from saw.cli.commands.tutorial_cmd import tutorial  # noqa: E402
 # Phase 33: CLI Usability - Import new modules
 from saw.cli.config_tui import config  # noqa: E402
 from saw.cli.completion import completion  # noqa: E402
+from saw.cli.commands.docs_cmd import docs  # noqa: E402
 
 # Register main commands
 app.command(name="init")(init)
@@ -62,6 +63,9 @@ app.command(name="tutorial")(tutorial)
 # Phase 33: CLI Usability commands
 app.command(name="config")(config)
 app.command(name="completion")(completion)
+
+# Phase 34: Documentation command
+app.command(name="docs")(docs)
 
 # Phase 33: Short command aliases (CLI-01)
 app.command(name="i", help="Short alias for 'ingest'")(ingest)

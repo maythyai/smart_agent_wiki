@@ -4,14 +4,14 @@
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Release](https://img.shields.io/badge/release-v3.4.0-blue.svg)](https://github.com/chensaics/smart_agent_wiki/releases/tag/v3.4.0)
+[![Release](https://img.shields.io/badge/release-v3.5.0-blue.svg)](https://github.com/chensaics/smart_agent_wiki/releases/tag/v3.5.0)
 [![Tests](https://img.shields.io/badge/tests-24%20passing-brightgreen.svg)](tests/)
 [![MCP](https://img.shields.io/badge/MCP-24+%20tools-purple.svg)](src/saw/mcp/)
 [![Code Intelligence](https://img.shields.io/badge/code%20intelligence-v3.4-orange.svg)](src/saw/analysis/)
 [![GitHub Stars](https://img.shields.io/github/stars/chensaics/smart_agent_wiki?style=social)](https://github.com/chensaics/smart_agent_wiki)
 [![GitHub Issues](https://img.shields.io/github/issues/chensaics/smart_agent_wiki)](https://github.com/chensaics/smart_agent_wiki/issues)
 
-[中文文档](README_CN.md)
+[中文文档](README_CN.md) | [Documentation](docs/COMMANDS.md) | [Troubleshooting](docs/TROUBLESHOOTING.md) | [Migration Guide](docs/MIGRATION.md)
 
 > **Note:** `saw` is the CLI command abbreviation for **Smart Agent Wiki**. Think of it as a "saw" that cuts through knowledge chaos to build structured wisdom.
 
@@ -27,7 +27,62 @@ Smart Agent Wiki is a local-first knowledge management platform that treats know
 - 🔌 **MCP Server** — 24+ tools, compatible with Claude Code/Cursor/Copilot
 - 🧠 **Code Intelligence** — Code knowledge graph analysis (new in v3.4)
 
-## v3.4 New Feature: Code Intelligence
+## v3.5 New Feature: Developer Experience
+
+v3.5 focuses on lowering the barrier to entry with improved installation, onboarding, and CLI usability.
+
+### One-Line Installation
+```bash
+# Linux/macOS
+curl -fsSL https://get.saw.wiki | bash
+
+# Windows (PowerShell)
+iwr -useb https://get.saw.wiki | iex
+```
+
+### Interactive Tutorial
+```bash
+saw tutorial
+# 5-step guided tour with demo content
+```
+
+### Short Command Aliases
+```bash
+saw i document.pdf  # same as saw ingest
+saw q "topic"       # same as saw query
+saw s               # same as saw status
+saw w               # same as saw web
+```
+
+### Friendly Error Messages
+```bash
+# Before
+Traceback (most recent call last):
+  ...
+Error: FileNotFoundError
+
+# After
+❌ Error: File 'document.pdf' not found
+
+💡 Suggestions:
+  • Check if the file exists: ls document.pdf
+  • Use absolute path: saw ingest /path/to/document.pdf
+  • Ingest entire directory: saw ingest ./documents/
+```
+
+### Shell Completion
+```bash
+saw completion bash --install   # Bash
+saw completion zsh --install    # Zsh
+saw completion fish --install   # Fish
+```
+
+### Offline Documentation
+```bash
+saw docs --output ./docs-offline/
+```
+
+## v3.4 Feature: Code Intelligence
 
 Inspired by GitNexus (35K+ stars), Smart Agent Wiki now has code knowledge graph analysis capabilities:
 
@@ -109,7 +164,7 @@ docker run -it chensaics/saw:latest saw init
 
 ```bash
 saw --version
-# Output: saw 3.4.0
+# Output: saw 3.5.0
 ```
 
 <details>
@@ -233,23 +288,27 @@ Configure in Claude Desktop:
 
 ## CLI Commands Reference
 
-| Command | Description |
-|---------|-------------|
-| `saw init` | Initialize new Wiki |
-| `saw status` | Display knowledge base status overview |
-| `saw ingest <source>` | Ingest document/URL/directory |
-| `saw query <question>` | Natural language query |
-| `saw search <keywords>` | BM25 keyword search |
-| `saw impact <symbol>` | Code modification impact analysis ⭐ |
-| `saw process <entry>` | Execution flow detection ⭐ |
-| `saw staleness` | Knowledge base staleness detection ⭐ |
-| `saw lint` | Health check |
-| `saw conflicts` | List contradictions |
-| `saw freshness` | Freshness report |
-| `saw mcp` | Start MCP Server |
-| `saw web` | Start Web UI |
+| Command | Alias | Description |
+|---------|-------|-------------|
+| `saw init` | — | Initialize new Wiki |
+| `saw status` | `saw s` | Display knowledge base status |
+| `saw ingest <source>` | `saw i` | Ingest document/URL/directory |
+| `saw query <question>` | `saw q` | Natural language query |
+| `saw search <keywords>` | — | BM25 keyword search |
+| `saw impact <symbol>` | — | Code modification impact analysis ⭐ |
+| `saw process <entry>` | — | Execution flow detection ⭐ |
+| `saw staleness` | — | Knowledge base staleness detection ⭐ |
+| `saw lint` | `saw l` | Health check |
+| `saw conflicts` | — | List contradictions |
+| `saw freshness` | — | Freshness report |
+| `saw mcp` | — | Start MCP Server |
+| `saw web` | `saw w` | Start Web UI |
+| `saw tutorial` | — | Interactive tutorial 🆕 |
+| `saw config` | — | TUI configuration 🆕 |
+| `saw completion` | — | Shell completion 🆕 |
+| `saw docs` | — | Offline documentation 🆕 |
 
-⭐ New in v3.4
+⭐ v3.4 | 🆕 v3.5
 
 ## MCP Tools List
 
@@ -343,7 +402,7 @@ Configure in Claude Desktop:
 
 ## Project Status
 
-**Current Version: v3.4.0**
+**Current Version: v3.5.0**
 
 **Completed:**
 - ✅ Four-layer storage architecture
@@ -352,11 +411,17 @@ Configure in Claude Desktop:
 - ✅ Process Detection (DFS call tree)
 - ✅ Staleness Detection (Git commit comparison)
 - ✅ MCP Server 24+ tools
-- ✅ CLI 16 commands
+- ✅ CLI 20 commands
 - ✅ Web UI (Search/Graph/Editor/Dashboard)
 - ✅ 24 unit tests passing
+- ✅ One-line installation (curl/pipx/homebrew/docker)
+- ✅ Interactive tutorial with demo content
+- ✅ Short command aliases
+- ✅ Friendly error messages
+- ✅ Shell completion (bash/zsh/fish)
+- ✅ Offline documentation
 
-**Roadmap (v3.5):**
+**Roadmap (v3.6):**
 - Web UI Impact visualization (D3.js graph)
 - Tree-sitter AST zero LLM parsing
 - LadybugDB/KuzuDB graph database
