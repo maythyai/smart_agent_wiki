@@ -7,7 +7,8 @@
 - ✅ **v3.0 Ecosystem Integration** — Phases 7-9 (shipped 2026-05-01) — [Details](milestones/v3.0-MILESTONE-AUDIT.md)
 - ✅ **v3.1 Third-Party Integrations** — Phases 10-15 (shipped 2026-05-02) — [Details](milestones/v3.1-MILESTONE-AUDIT.md)
 - ✅ **v3.2 Platform Enhancements** — Phases 16-20 (shipped 2026-05-03) — [Details](milestones/v3.2-MILESTONE-AUDIT.md)
-- 🔵 **v3.3 Tauri Desktop App** — Phases 21-25 (planning) — This document
+- 🔵 **v3.3 Tauri Desktop App** — Phases 21-25 (executing) — This document
+- ⏳ **v3.4 Code Intelligence** — Phases 26-30 (planned) — [Details](milestones/v3.4-CODE-INTELLIGENCE-PLAN.md)
 
 ## Phases
 
@@ -540,10 +541,15 @@ Plans:
 | 19. Performance Benchmarks | v3.2 | 2/2 | Complete    | 2026-05-03 |
 | 20. Tech Debt Cleanup | v3.2 | 3/3 | Complete    | 2026-05-03 |
 | 21. Tauri Foundation | v3.3 | 3/3 | Complete | 2026-05-03 |
-| 22. File System Integration | v3.3 | 0/0 | Not started | - |
+| 22. File System Integration | v3.3 | 2/2 | Complete | 2026-05-04 |
 | 23. System Integration | v3.3 | 0/0 | Not started | - |
 | 24. Distribution | v3.3 | 0/0 | Not started | - |
 | 25. Backend Sidecar | v3.3 | 0/0 | Not started | - |
+| 26. DAG Pipeline Validation | v3.4 | 0/2 | Not started | - |
+| 27. Impact Analysis Engine | v3.4 | 0/3 | Not started | - |
+| 28. Process Detection | v3.4 | 0/2 | Not started | - |
+| 29. Agent Skills Layer | v3.4 | 0/2 | Not started | - |
+| 30. Staleness Detection | v3.4 | 0/1 | Not started | - |
 
 ---
 
@@ -553,10 +559,10 @@ Plans:
 v3.2 (Shipped)
     │
     ▼
-Phase 21 (Tauri Foundation)
+Phase 21 (Tauri Foundation) ✅
     │
     ▼
-Phase 22 (File System Integration)
+Phase 22 (File System Integration) ✅
     │
     ▼
 Phase 23 (System Integration)
@@ -566,8 +572,139 @@ Phase 24 (Distribution)
     │
     ▼
 Phase 25 (Backend Sidecar)
+    │
+    ▼
+v3.4: Code Intelligence (GitNexus Integration)
+    │
+    ├──────────────┬─────────────────┐
+    │              │                 │
+    ▼              ▼                 ▼
+Phase 26      Phase 30          Phase 28
+(DAG Pipeline) (Staleness)      (Process Detection)
+    │              │                 │
+    └──────────────┴─────────────────┘
+                   │
+                   ▼
+              Phase 27
+           (Impact Analysis)
+                   │
+                   ▼
+              Phase 29
+           (Agent Skills)
 ```
 
 ---
 
-*Last updated: 2026-05-03 — Phase 21 planning complete*
+*Last updated: 2026-05-04 — v3.4 Code Intelligence milestone added*
+
+---
+
+## Upcoming (v3.4: Code Intelligence)
+
+> **Details:** [v3.4-CODE-INTELLIGENCE-PLAN.md](milestones/v3.4-CODE-INTELLIGENCE-PLAN.md)
+
+- [ ] **Phase 26: DAG Pipeline Validation** — Type-safe pipeline phases with dependency verification
+- [ ] **Phase 27: Impact Analysis Engine** — Code modification impact analysis with risk levels
+- [ ] **Phase 28: Process Detection** — Automatic execution flow detection
+- [ ] **Phase 29: Agent Skills Layer** — Claude Code skills for effective MCP tool usage
+- [ ] **Phase 30: Staleness Detection** — Knowledge base freshness monitoring
+
+### Phase Details (v3.4)
+
+### Phase 26: DAG Pipeline Validation
+
+**Goal:** 为摄入引擎引入 DAG 架构，支持阶段依赖验证和类型安全输出
+
+**Depends on:** v3.3 complete
+
+**Requirements:** DAG-01, DAG-02, DAG-03, DAG-04, DAG-05
+
+**Success Criteria** (what must be TRUE):
+1. 每个 pipeline phase 有类型化输出定义
+2. 运行时验证阶段依赖完整性（Kahn 拓扑排序）
+3. 检测并报告循环依赖（含精确路径）
+4. 类型安全访问上游阶段输出
+5. 管线配置错误时提供清晰的错误信息
+
+**Plans:** 2/2 plans (planning complete)
+
+Plans:
+- [x] 26-01-PLAN.md — DAG types, validator, and runner
+- [x] 26-02-PLAN.md — Migrate existing 6 phases to DAG architecture
+
+---
+
+### Phase 27: Impact Analysis Engine
+
+**Goal:** 实现代码修改影响分析，支持上下游依赖追踪和风险分级
+
+**Depends on:** Phase 26
+
+**Requirements:** IMP-01~07
+
+**Success Criteria** (what must be TRUE):
+1. 用户可查询任意符号的上下游依赖
+2. 结果按深度分层（d=1 WILL BREAK, d=2 LIKELY AFFECTED, d=3 MAY NEED TESTING）
+3. 每条依赖边显示置信度分数
+4. 支持过滤关系类型（CALLS, IMPORTS, EXTENDS, IMPLEMENTS）
+5. 提供 MCP 工具 `saw_impact()`
+
+**Plans:** 0/3 plans
+
+**UI hint:** yes
+
+---
+
+### Phase 28: Process Detection
+
+**Goal:** 自动检测代码执行流程，构建端到端调用链
+
+**Depends on:** Phase 26
+
+**Requirements:** PROC-01~06
+
+**Success Criteria** (what must be TRUE):
+1. 系统自动识别入口点（API routes, CLI commands, event handlers）
+2. 沿 CALLS 边 BFS 遍历构建执行流程
+3. 流程标注类型（intra_community / cross_community）
+4. 提供 MCP 工具 `saw_processes()` 和资源
+
+**Plans:** 0/2 plans
+
+**UI hint:** yes
+
+---
+
+### Phase 29: Agent Skills Layer
+
+**Goal:** 创建 Agent Skills 层，引导用户有效使用 MCP 工具
+
+**Depends on:** Phase 27, Phase 28
+
+**Requirements:** SKILL-01~05
+
+**Success Criteria** (what must be TRUE):
+1. `.claude/skills/saw/` 目录包含 4 个核心 skill 文件
+2. 每个 skill 定义触发条件、工作流步骤、决策树
+3. Claude Code 自动检测并加载 skills
+4. 用户可通过 `/saw-exploring` 等命令触发 skill
+
+**Plans:** 0/2 plans
+
+---
+
+### Phase 30: Staleness Detection
+
+**Goal:** 实现知识库过期自动检测，与 9 级新鲜度系统联动
+
+**Depends on:** Phase 26
+
+**Requirements:** STALE-01~05
+
+**Success Criteria** (what must be TRUE):
+1. 系统比对 last_indexed_commit 与 HEAD
+2. 列出变更文件并映射到受影响的 Wiki 页面
+3. 生成更新建议
+4. 集成到现有 9 级新鲜度系统
+
+**Plans:** 0/1 plan

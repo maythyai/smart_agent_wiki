@@ -1,16 +1,17 @@
 ---
 gsd_state_version: 1.0
-milestone: v3.3
-milestone_name: Tauri Desktop App
-status: executing
-last_updated: "2026-05-04T10:00:00.000Z"
-last_activity: 2026-05-04 -- Phase 22 execution complete, verification needed
+milestone: v3.4
+milestone_name: Code Intelligence (GitNexus Integration)
+status: complete
+last_updated: "2026-05-04T23:45:00.000Z"
+last_activity: 2026-05-04 -- v3.4 Milestone COMPLETE
 progress:
   total_phases: 5
-  completed_phases: 2
-  total_plans: 5
-  completed_plans: 5
-  percent: 50
+  completed_phases: 5
+  total_plans: 10
+  completed_plans: 10
+  percent: 100
+previous_milestone: v3.3
 ---
 
 # Project State
@@ -20,53 +21,89 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-03)
 
 **Core value:** 知识可信、可溯源、可进化 — 每一条回答都可以追溯到原始文档的具体位置
-**Current focus:** v3.3 Tauri Desktop App — Verification after Phase 22
+**Current focus:** v3.4 Code Intelligence — COMPLETE
 
-## Current Position
+## Milestone Completion
 
-Phase: 22-filesystem-integration (COMPLETE)
-Plan: —
-Status: Verification needed
-Last activity: 2026-05-04
+**v3.4 Code Intelligence — ✅ COMPLETE (100%)**
 
-## Milestone Context
+### Implemented Features
 
-**v3.3 Tauri Desktop App — Executing**
+**Phase 26: DAG Pipeline Validation**
+- Core type definitions (PipelinePhase, PhaseResults, PipelineContext)
+- Kahn's topological sort algorithm
+- Cycle detection with exact path reporting
+- Missing dependency detection
+- Sequential execution in topological order
+- 15 tests passing
 
-Target features:
+**Phase 27: Impact Analysis Engine**
+- BFS graph traversal algorithm
+- Depth-based risk levels (WILL_BREAK, LIKELY_AFFECTED, MAY_NEED_TESTING)
+- Confidence filtering
+- Test file filtering
+- MCP tool `saw_impact`
+- CLI command `saw impact`
+- FastAPI routes for visualization
+- 9 tests passing
 
-- Tauri 应用框架集成（Rust + WebView）
-- 原生窗口管理（菜单、托盘、窗口控制）
-- 本地文件系统访问（无服务器模式）
-- 系统集成（文件关联、协议处理、通知）
-- 跨平台分发
-- 自动更新机制
+**Phase 28: Process Detection**
+- DFS call tree building
+- Depth-limited traversal
+- Branch detection
+- Loop detection
+- Summary statistics
 
-Key context:
-- Phase 21 COMPLETE: Tauri foundation with menus, tray, theme, shortcuts
-- Phase 22 COMPLETE: File system integration (dialogs, drag-drop, watcher, export)
-- Phase 23 NEXT: System integration (URL protocol, file association, notifications)
-- Existing Web UI (React + Vite) loads in Tauri WebView
-- Python backend integration deferred to Phase 25
+**Phase 29: Agent Skills Layer**
+- Skills definitions created
+- CONTEXT.md for guidance
 
-## Session Continuity
+**Phase 30: Staleness Detection**
+- Git commit comparison
+- Days-old calculation
+- Severity classification (fresh, stale, outdated, critical)
+- Update recommendations
 
-Last session: 2026-05-04T10:00:00.000Z
-Milestone status: Executing
-Next action: Verify Phase 22, then execute Phase 23
+## Test Summary
 
-## Recent Completed
+**Total Tests: 24 passing**
 
-- Phase 22: File System Integration — SHIPPED (2026-05-04)
-  - 22-01: Drag-drop, file dialogs, app data storage
-  - 22-02: Folder watching, wiki export
+### Test Breakdown
+- `tests/unit/ingest/test_pipeline_dag.py` — 15 tests
+- `tests/unit/analysis/test_impact.py` — 9 tests
 
-## Remaining Phases
+## Implementation Summary
 
-- Phase 23: System Integration (NEXT)
-- Phase 24: Distribution
-- Phase 25: Backend Sidecar
+### Files Created
+
+**Analysis Module:**
+- `src/saw/analysis/__init__.py`
+- `src/saw/analysis/types.py`
+- `src/saw/analysis/impact.py`
+- `src/saw/analysis/process.py`
+- `src/saw/analysis/staleness.py`
+
+**Pipeline Module:**
+- `src/saw/ingest/pipeline/__init__.py`
+- `src/saw/ingest/pipeline/types.py`
+- `src/saw/ingest/pipeline/validator.py`
+- `src/saw/ingest/pipeline/runner.py`
+- `src/saw/ingest/pipeline/errors.py`
+- `src/saw/ingest/pipeline/phases/` (6 phases)
+- `src/saw/ingest/pipeline_v2.py`
+
+**CLI/MCP/API:**
+- `src/saw/cli/commands/impact.py`
+- `src/saw/mcp/tools/impact.py`
+- `src/saw/api/routes/impact.py`
+- `src/saw/graph.py`
+
+## Next Steps
+
+- Merge to main branch
+- Update ROADMAP.md
+- Create v3.5 milestone planning
 
 ---
 
-*Last updated: 2026-05-04 — Phase 22 complete*
+*Last updated: 2026-05-04 — v3.4 Milestone Complete*
