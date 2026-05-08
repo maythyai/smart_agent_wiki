@@ -50,7 +50,7 @@ def search(
         raise typer.Exit(1)
 
     # Open Claims DB
-    db_path = wiki_path / ".saw" / "claims.db"
+    db_path = wiki_path / ".saw" / "db" / "claims.db"
     if not db_path.exists():
         console.print(f"[red]Error: Claims DB not found at {db_path}[/red]")
         raise typer.Exit(1)

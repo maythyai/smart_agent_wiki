@@ -63,7 +63,7 @@ def conflicts(
     ))
 
     # Connect to claims DB
-    db_path = config.path / ".saw" / "claims.db"
+    db_path = config.path / ".saw" / "db" / "claims.db"
     if not db_path.exists():
         console.print("[yellow]No claims database found.[/] Run 'saw ingest' first.")
         return

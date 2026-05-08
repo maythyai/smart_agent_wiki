@@ -36,7 +36,7 @@ def freshness() -> None:
         raise typer.Exit(1)
 
     # Initialize repositories
-    db_path = config.path / ".saw" / "claims.db"
+    db_path = config.path / ".saw" / "db" / "claims.db"
     conn = sqlite3.connect(str(db_path))
     claims_repo = SQLiteClaimsRepository(conn)
     wiki_repo = WikiRepository(config.path / "wiki")

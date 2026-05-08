@@ -132,13 +132,20 @@ def create_app_from_config(
     Loads configuration and creates app instance for development.
     """
     import sqlite3
+    from pathlib import Path
 
+    from saw.adapters.storage.claims_repository import SQLiteClaimsRepository
+    from saw.adapters.storage.wiki_repository import WikiRepository
+    from saw.engines.query.compare import CompareEngine
+    from saw.engines.query.compiler import ContextCompiler
+    from saw.engines.query.engine import QueryEngine
+    from saw.engines.query.graph_traverse import GraphTraverse
+    from saw.engines.query.search import FTS5Search
+    from saw.engines.query.tree_mode import TreeModeSearch
     from saw.write_queue.queue import SQLiteWriteQueue
 
     # Try to load config from .saw/config.yaml
     try:
-        from pathlib import Path
-
         import yaml
 
         config_path = Path(".saw/config.yaml")
@@ -152,7 +159,7 @@ def create_app_from_config(
         # Fallback to default path
         db_path = Path(".saw/db/claims.db")
 
-    # Create minimal write queue (engines initialized in lifespan)
+    # Create write queue
     try:
         if db_path.exists():
             conn = sqlite3.connect(str(db_path))
@@ -165,8 +172,31 @@ def create_app_from_config(
         conn = sqlite3.connect(":memory:")
         write_queue = SQLiteWriteQueue(conn)
 
+    # Initialize QueryEngine with real repositories
+    wiki_path = Path(".")
+    claims_repo = SQLiteClaimsRepository(conn)
+    wiki_repo = WikiRepository(wiki_path)
+
+    search = FTS5Search(conn)
+    compiler = ContextCompiler(claims_repo, wiki_repo, None)
+    graph = GraphTraverse(claims_repo)
+    compare_engine = CompareEngine(claims_repo, wiki_repo)
+    tree_mode = TreeModeSearch(claims_repo)
+
+    query_engine = QueryEngine(
+        search=search,
+        compiler=compiler,
+        graph=graph,
+        compare_engine=compare_engine,
+        tree_mode=tree_mode,
+        llm=None,  # Offline mode
+        claims_repo=claims_repo,
+        wiki_repo=wiki_repo,
+        conn=conn,
+    )
+
     return create_app(
-        query=None,  # Lazy initialization in lifespan
+        query=query_engine,
         collaborate=None,
         write_queue=write_queue,
         cors_origins=cors_origins,
