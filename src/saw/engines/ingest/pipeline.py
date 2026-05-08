@@ -294,15 +294,22 @@ class IngestPipeline:
 
         # Wiki operations (entity pages)
         for entity in entities:
+            # Generate content from entity description
+            entity_content = f"# {entity.name}\n\n"
+            if entity.entity_type:
+                entity_content += f"Type: {entity.entity_type}\n\n"
+            if entity.description:
+                entity_content += entity.description
             ops.append(WriteOp(
                 op_id=str(uuid.uuid4()),
                 session_id=session_id,
                 sink_name="wiki",
                 payload={
-                    "uuid": entity.uuid,
-                    "name": entity.name,
-                    "entity_type": entity.entity_type,
-                    "description": entity.description,
+                    "path": f"entities/{entity.name}.md",
+                    "title": entity.name,
+                    "content": entity_content,
+                    "tags": [entity.entity_type] if entity.entity_type else [],
+                    "page_type": "entity",
                     "source_uuid": source_uuid,
                 },
             ))

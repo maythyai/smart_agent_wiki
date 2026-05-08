@@ -92,7 +92,7 @@ def ingest(
     dispatcher.register_sink(VaultSink(vault_repo))
     dispatcher.register_sink(ClaimsSink(claims_repo))
     dispatcher.register_sink(WikiSink(wiki_repo))
-    dispatcher.register_sink(FTS5Sink(claims_repo))
+    dispatcher.register_sink(FTS5Sink(conn))
     dispatcher.register_sink(GraphSink(conn))
 
     # Initialize Ingest Pipeline
