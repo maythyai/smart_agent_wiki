@@ -26,6 +26,7 @@ Smart Agent Wiki is a local-first knowledge management platform that treats know
 - 🌐 **Web UI** — React + Cytoscape.js knowledge graph visualization + Milkdown editor
 - 🔌 **MCP Server** — 24+ tools, compatible with Claude Code/Cursor/Copilot
 - 🧠 **Code Intelligence** — Code knowledge graph analysis (new in v3.4)
+- 💰 **Token Optimizer** — Reduce LLM token consumption by 65%+ (new in v3.6)
 
 ## v3.5 New Feature: Developer Experience
 
@@ -80,6 +81,84 @@ saw completion fish --install   # Fish
 ### Offline Documentation
 ```bash
 saw docs --output ./docs-offline/
+```
+
+## v3.6 Feature: Token Optimizer
+
+Inspired by OpenWolf's token optimization techniques, Smart Agent Wiki now includes a Token Optimizer module to reduce LLM token consumption by up to 65%:
+
+### Anatomy Index (File Map)
+Project structure index with file descriptions and token estimates - know what a file contains before reading it:
+```python
+from saw.token_optimizer import AnatomyIndex
+
+index = AnatomyIndex(project_root="./my_project")
+index.scan_directory()
+
+# Get file info without reading
+entry = index.get_entry("src/main.py")
+print(f"{entry.description} (~{entry.estimated_tokens} tokens)")
+```
+
+### Cerebrum (Learning Memory)
+Cross-session learning memory that accumulates preferences and prevents repeated mistakes:
+```python
+from saw.token_optimizer import Cerebrum
+
+cerebrum = Cerebrum()
+cerebrum.add_do_not_repeat(
+    mistake="Used mutable default argument",
+    correction="Use None default and check inside function"
+)
+
+# Check before making same mistake
+if cerebrum.check_do_not_repeat("mutable default"):
+    # Apply learned correction
+```
+
+### Bug Log (Fix Memory)
+Bug fix memory that prevents re-discovery of known solutions:
+```python
+from saw.token_optimizer import BugLog
+
+buglog = BugLog()
+buglog.add_bug(
+    error_message="TypeError: 'NoneType' object is not subscriptable",
+    file="src/api.py",
+    fix="Added null check before dict access"
+)
+
+# Search for known fix
+fix = buglog.get_fix_for_error("TypeError: 'NoneType'")
+if fix:
+    print(f"Known fix: {fix.fix}")
+```
+
+### Session Tracker (Read Tracking)
+Detects repeated file reads and provides warnings:
+```python
+from saw.token_optimizer import SessionTracker
+
+tracker = SessionTracker()
+tracker.track_read("src/main.py", 150)
+
+# Second read triggers warning
+result = tracker.track_read("src/main.py", 150)
+if "warning" in result:
+    print(result["warning"])  # "File read 2 times..."
+```
+
+### Token Ledger
+Track token consumption across sessions and estimate savings:
+```python
+from saw.token_optimizer import TokenLedger
+
+ledger = TokenLedger()
+ledger.start_session()
+ledger.record_read(100, was_anatomy_hit=True)  # Saved ~800 tokens
+
+report = ledger.get_savings_report()
+print(f"Saved {report['savings_percentage']}% tokens")
 ```
 
 ## v3.4 Feature: Code Intelligence
@@ -377,6 +456,13 @@ Configure in Claude Desktop:
 ├─────────────┬─────────────┬─────────────┬───────────────────┤
 │ DAG Pipeline│ Impact Eng. │Process Det. │ Staleness Det.    │
 │ Validation  │ (BFS trav.) │ (DFS tree)  │ (Git compare)     │
+└─────────────┴─────────────┴─────────────┴───────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│                  Token Optimizer (v3.6)                      │
+├─────────────┬─────────────┬─────────────┬───────────────────┤
+│ Anatomy Index│ Cerebrum    │ Bug Log     │ Session Tracker   │
+│ (File Map)  │ (Learn Mem) │ (Fix Hist)  │ (Read Track)      │
 └─────────────┴─────────────┴─────────────┴───────────────────┘
 ```
 
