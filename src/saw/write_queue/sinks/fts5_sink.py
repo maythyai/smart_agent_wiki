@@ -26,8 +26,9 @@ class FTS5Sink:
         For updates: DELETE old + INSERT new (per Pitfall 7 recommendation 2).
         """
         payload = op.payload
-        doc_id = payload.get("doc_id", op.op_id)
-        title = payload.get("title", "")
+        # Support both doc_id and claim_uuid as identifiers
+        doc_id = payload.get("doc_id") or payload.get("claim_uuid") or op.op_id
+        title = payload.get("title") or doc_id
         content = payload.get("content", "")
         tags = payload.get("tags", "")
 
