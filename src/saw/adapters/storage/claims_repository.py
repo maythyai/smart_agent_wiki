@@ -73,14 +73,9 @@ USING fts5(
     title,
     content,
     tags,
-    content='',
     tokenize='unicode61',
     detail=column
 );
-
--- FTS5 segment merge config (per Pitfall 5 in PITFALLS.md)
-INSERT INTO fts_index(fts_index, rank) VALUES('automerge', 8);
-INSERT INTO fts_index(fts_index, rank) VALUES('crisismerge', 4);
 
 -- Partial indexes for performance
 CREATE INDEX IF NOT EXISTS idx_claim_source ON claim(source_uuid) WHERE deleted_at IS NULL;

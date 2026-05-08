@@ -267,6 +267,7 @@ class IngestPipeline:
             sink_name="vault",
             payload={
                 "source": source,
+                "source_path": source,  # Add source_path for VaultSink
                 "source_uuid": source_uuid,
                 "metadata": metadata,
                 "claims_count": len(claims),
