@@ -83,7 +83,6 @@ venv/
 ENV/
 env.bak/
 venv.bak/
-
 # Spyder / Rope
 .spyderproject
 .spyproject
@@ -114,12 +113,13 @@ node_modules/
 .next/
 out/
 .nuxt/
+web/dist/
 
 # Vite
 .vite/
 *.local
-vite.config.js
-vite.config.d.ts
+web/vite.config.js
+web/vite.config.d.ts
 
 # TypeScript
 *.tsbuildinfo

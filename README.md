@@ -4,8 +4,8 @@
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Release](https://img.shields.io/badge/release-v3.5.0-blue.svg)](https://github.com/chensaics/smart_agent_wiki/releases/tag/v3.5.0)
-[![Tests](https://img.shields.io/badge/tests-24%20passing-brightgreen.svg)](tests/)
+[![Release](https://img.shields.io/badge/release-v3.7.0-blue.svg)](https://github.com/chensaics/smart_agent_wiki/releases/tag/v3.7.0)
+[![Tests](https://img.shields.io/badge/tests-106+%20passing-brightgreen.svg)](tests/)
 [![MCP](https://img.shields.io/badge/MCP-24+%20tools-purple.svg)](src/saw/mcp/)
 [![Code Intelligence](https://img.shields.io/badge/code%20intelligence-v3.4-orange.svg)](src/saw/analysis/)
 [![GitHub Stars](https://img.shields.io/github/stars/chensaics/smart_agent_wiki?style=social)](https://github.com/chensaics/smart_agent_wiki)
@@ -27,6 +27,8 @@ Smart Agent Wiki is a local-first knowledge management platform that treats know
 - 🔌 **MCP Server** — 24+ tools, compatible with Claude Code/Cursor/Copilot
 - 🧠 **Code Intelligence** — Code knowledge graph analysis (new in v3.4)
 - 💰 **Token Optimizer** — Reduce LLM token consumption by 65%+ (new in v3.6)
+- 🔐 **Security Hardening** — JWT auth, RBAC, rate limiting, audit logs (new in v3.7)
+- 🧩 **Plugin System** — Extensible SDK with event-driven architecture (new in v3.6)
 
 ## v3.5 New Feature: Developer Experience
 
@@ -83,7 +85,47 @@ saw completion fish --install   # Fish
 saw docs --output ./docs-offline/
 ```
 
-## v3.6 Feature: Token Optimizer
+## v3.7 Feature: Security & Quality
+
+v3.7 focuses on production-readiness with comprehensive security hardening, expanded test coverage, and documentation.
+
+### Security Hardening
+- **JWT Authentication** — Access/refresh token pairs with configurable expiry
+- **RBAC Permissions** — Role-based access control (admin/editor/viewer)
+- **Rate Limiting** — Per-user, per-endpoint request throttling
+- **Input Sanitization** — SQL injection and XSS pattern detection
+- **Security Headers** — CSP, HSTS, X-Frame-Options, X-Content-Type-Options
+- **Audit Logging** — All write operations logged with timestamps and user context
+
+### Test Coverage Expansion
+- **82 new test cases** across 4 test files
+- JWT auth: 28 tests (token creation, verification, expiry, refresh flow)
+- Permissions: 24 tests (RBAC enforcement, role hierarchy, middleware)
+- Security middleware: 16 tests (rate limiting, input sanitization, headers)
+- Plugin system: 14 tests (lifecycle, events, sandbox isolation)
+
+### Documentation & Developer Experience
+- Plugin development guide (`docs/PLUGIN_DEVELOPMENT.md`)
+- Architecture documentation (`docs/ARCHITECTURE.md`)
+- Mobile-responsive Graph page with touch gestures
+
+## v3.6 Feature: Plugin System & Performance
+
+v3.6 introduces an extensible plugin system and performance optimizations.
+
+### Plugin System
+- **Plugin SDK** — `PluginBase`, `PluginContext`, event hooks
+- **CLI Management** — `saw plugin list/install/enable/disable/uninstall`
+- **Event System** — `PageCreated`, `PageUpdated`, `PageDeleted`, `ClaimCreated`, `IngestCompleted`, `QueryExecuted`
+- **Example Plugins** — markdown-formatter (admonitions, anchors), word-counter (statistics)
+- **Sandbox Isolation** — Each plugin gets isolated `data_dir`
+
+### Query Cache
+- **LRU with TTL** — 300s default, 1000 entries max
+- **Dashboard Stats API** — `/api/dashboard/stats` endpoint
+- **Real-time Metrics** — Total pages, recent edits, active agents, uptime
+
+### Token Optimizer
 
 Inspired by OpenWolf's token optimization techniques, Smart Agent Wiki now includes a Token Optimizer module to reduce LLM token consumption by up to 65%:
 
@@ -488,7 +530,7 @@ Configure in Claude Desktop:
 
 ## Project Status
 
-**Current Version: v3.5.0**
+**Current Version: v3.7.0**
 
 **Completed:**
 - ✅ Four-layer storage architecture
@@ -499,15 +541,22 @@ Configure in Claude Desktop:
 - ✅ MCP Server 24+ tools
 - ✅ CLI 20 commands
 - ✅ Web UI (Search/Graph/Editor/Dashboard)
-- ✅ 24 unit tests passing
+- ✅ 106+ unit tests passing
 - ✅ One-line installation (curl/pipx/homebrew/docker)
 - ✅ Interactive tutorial with demo content
 - ✅ Short command aliases
 - ✅ Friendly error messages
 - ✅ Shell completion (bash/zsh/fish)
 - ✅ Offline documentation
+- ✅ Plugin system with SDK and CLI management (v3.6)
+- ✅ Query cache and dashboard stats API (v3.6)
+- ✅ Token Optimizer — 65%+ token savings (v3.6)
+- ✅ Security hardening — JWT, RBAC, rate limiting, audit logs (v3.7)
+- ✅ 82 new test cases for auth/permissions/plugins (v3.7)
+- ✅ Plugin development and architecture docs (v3.7)
+- ✅ Mobile-responsive Graph page (v3.7)
 
-**Roadmap (v3.6):**
+**Roadmap (v3.8):**
 - Web UI Impact visualization (D3.js graph)
 - Tree-sitter AST zero LLM parsing
 - LadybugDB/KuzuDB graph database

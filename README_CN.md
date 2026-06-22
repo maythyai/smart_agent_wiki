@@ -4,8 +4,8 @@
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Release](https://img.shields.io/badge/release-v3.4.0-blue.svg)](https://github.com/chensaics/smart_agent_wiki/releases/tag/v3.4.0)
-[![Tests](https://img.shields.io/badge/tests-24%20passing-brightgreen.svg)](tests/)
+[![Release](https://img.shields.io/badge/release-v3.7.0-blue.svg)](https://github.com/chensaics/smart_agent_wiki/releases/tag/v3.7.0)
+[![Tests](https://img.shields.io/badge/tests-106+%20passing-brightgreen.svg)](tests/)
 [![MCP](https://img.shields.io/badge/MCP-24+%20tools-purple.svg)](src/saw/mcp/)
 [![Code Intelligence](https://img.shields.io/badge/code%20intelligence-v3.4-orange.svg)](src/saw/analysis/)
 [![GitHub Stars](https://img.shields.io/github/stars/chensaics/smart_agent_wiki?style=social)](https://github.com/chensaics/smart_agent_wiki)
@@ -26,6 +26,127 @@ Smart Agent Wiki 是一个本地优先的知识管理平台，将知识视为「
 - 🌐 **Web UI** — React + Cytoscape.js 知识图谱可视化 + Milkdown 编辑器
 - 🔌 **MCP Server** — 24+ 工具，Claude Code/Cursor/Copilot 兼容
 - 🧠 **Code Intelligence** — 代码知识图谱分析（v3.4 新增）
+- 💰 **Token Optimizer** — 减少 LLM token 消耗 65%+（v3.6 新增）
+- 🔐 **安全加固** — JWT 认证、RBAC、速率限制、审计日志（v3.7 新增）
+- 🧩 **插件系统** — 可扩展 SDK，事件驱动架构（v3.6 新增）
+
+## v3.7 新功能：安全与质量
+
+v3.7 专注于生产就绪，包含全面的安全加固、扩展的测试覆盖和文档。
+
+### 安全加固
+- **JWT 认证** — Access/refresh token 对，可配置过期时间
+- **RBAC 权限控制** — 基于角色的访问控制（admin/editor/viewer）
+- **速率限制** — 按用户、按端点的请求节流
+- **输入清洗** — SQL 注入和 XSS 模式检测
+- **安全头** — CSP、HSTS、X-Frame-Options、X-Content-Type-Options
+- **审计日志** — 所有写操作记录时间戳和用户上下文
+
+### 测试覆盖扩展
+- **82 个新测试用例**，分布在 4 个测试文件中
+- JWT 认证：28 个测试（token 创建、验证、过期、刷新流程）
+- 权限：24 个测试（RBAC 执行、角色层级、中间件）
+- 安全中间件：16 个测试（速率限制、输入清洗、安全头）
+- 插件系统：14 个测试（生命周期、事件、沙箱隔离）
+
+### 文档与开发者体验
+- 插件开发指南（`docs/PLUGIN_DEVELOPMENT.md`）
+- 架构文档（`docs/ARCHITECTURE.md`）
+- 移动端响应式 Graph 页面，支持触摸手势
+
+## v3.6 新功能：插件系统与性能
+
+v3.6 引入了可扩展的插件系统和性能优化。
+
+### 插件系统
+- **Plugin SDK** — `PluginBase`、`PluginContext`、事件钩子
+- **CLI 管理** — `saw plugin list/install/enable/disable/uninstall`
+- **事件系统** — `PageCreated`、`PageUpdated`、`PageDeleted`、`ClaimCreated`、`IngestCompleted`、`QueryExecuted`
+- **示例插件** — markdown-formatter（admonitions、anchors）、word-counter（统计）
+- **沙箱隔离** — 每个插件拥有独立的 `data_dir`
+
+### 查询缓存
+- **LRU + TTL** — 默认 300 秒，最多 1000 条目
+- **Dashboard Stats API** — `/api/dashboard/stats` 端点
+- **实时指标** — 总页面数、最近编辑、活跃 Agent、运行时间
+
+### Token Optimizer
+
+受 OpenWolf 的 token 优化技术启发，Smart Agent Wiki 现包含 Token Optimizer 模块，可减少 LLM token 消耗高达 65%：
+
+### 解剖索引（文件地图）
+项目结构索引，包含文件描述和 token 估算——在读取之前了解文件内容：
+```python
+from saw.token_optimizer import AnatomyIndex
+
+index = AnatomyIndex(project_root="./my_project")
+index.scan_directory()
+
+# 不读取文件也能获取信息
+entry = index.get_entry("src/main.py")
+print(f"{entry.description} (~{entry.estimated_tokens} tokens)")
+```
+
+### 大脑（学习记忆）
+跨会话学习记忆，积累偏好并防止重复错误：
+```python
+from saw.token_optimizer import Cerebrum
+
+cerebrum = Cerebrum()
+cerebrum.add_do_not_repeat(
+    mistake="Used mutable default argument",
+    correction="Use None default and check inside function"
+)
+
+# 在犯同样错误前检查
+if cerebrum.check_do_not_repeat("mutable default"):
+    # 应用学到的修正
+```
+
+### Bug 日志（修复记忆）
+Bug 修复记忆，防止重新发现已知解决方案：
+```python
+from saw.token_optimizer import BugLog
+
+buglog = BugLog()
+buglog.add_bug(
+    error_message="TypeError: 'NoneType' object is not subscriptable",
+    file="src/api.py",
+    fix="Added null check before dict access"
+)
+
+# 搜索已知修复
+fix = buglog.get_fix_for_error("TypeError: 'NoneType'")
+if fix:
+    print(f"Known fix: {fix.fix}")
+```
+
+### 会话追踪器（读取追踪）
+检测重复文件读取并提供警告：
+```python
+from saw.token_optimizer import SessionTracker
+
+tracker = SessionTracker()
+tracker.track_read("src/main.py", 150)
+
+# 第二次读取触发警告
+result = tracker.track_read("src/main.py", 150)
+if "warning" in result:
+    print(result["warning"])  # "File read 2 times..."
+```
+
+### Token 账本
+跨会话追踪 token 消耗并估算节省：
+```python
+from saw.token_optimizer import TokenLedger
+
+ledger = TokenLedger()
+ledger.start_session()
+ledger.record_read(100, was_anatomy_hit=True)  # 节省 ~800 tokens
+
+report = ledger.get_savings_report()
+print(f"Saved {report['savings_percentage']}% tokens")
+```
 
 ## v3.4 新功能：Code Intelligence
 
@@ -309,7 +430,7 @@ saw mcp
 
 ## 项目状态
 
-**当前版本：v3.4.0**
+**当前版本：v3.7.0**
 
 **已完成：**
 - ✅ 四层存储架构
@@ -318,11 +439,18 @@ saw mcp
 - ✅ Process Detection（DFS 调用树）
 - ✅ Staleness Detection（Git 提交比较）
 - ✅ MCP Server 24+ 工具
-- ✅ CLI 16 命令
+- ✅ CLI 20 命令
 - ✅ Web UI（搜索/图谱/编辑/Dashboard）
-- ✅ 24 单元测试通过
+- ✅ 106+ 单元测试通过
+- ✅ 插件系统，含 SDK 和 CLI 管理（v3.6）
+- ✅ 查询缓存和 Dashboard Stats API（v3.6）
+- ✅ Token Optimizer — 节省 65%+ token（v3.6）
+- ✅ 安全加固 — JWT、RBAC、速率限制、审计日志（v3.7）
+- ✅ 82 个新测试用例（auth/permissions/plugins）（v3.7）
+- ✅ 插件开发和架构文档（v3.7）
+- ✅ 移动端响应式 Graph 页面（v3.7）
 
-**路线图 (v3.5)：**
+**路线图 (v3.8)：**
 - Web UI Impact 可视化（D3.js 图）
 - Tree-sitter AST 零 LLM 解析
 - LadybugDB/KuzuDB 图数据库
