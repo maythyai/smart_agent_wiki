@@ -30,6 +30,10 @@ dependencies = [
     "apscheduler>=3.11.0",
     # Phase 12: Notion Connector
     "notion-client>=2.0.0",
+    # Phase 39: Security Hardening
+    "bcrypt>=4.0",
+    "PyJWT>=2.8",
+    "email-validator>=2.0",
 ]
 
 [project.scripts]

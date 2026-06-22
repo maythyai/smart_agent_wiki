@@ -10,6 +10,7 @@
 - 🔵 **v3.3 Tauri Desktop App** — Phases 21-25 (executing) — This document
 - ⏳ **v3.4 Code Intelligence** — Phases 26-30 (complete) — [Details](milestones/v3.4-CODE-INTELLIGENCE-PLAN.md)
 - ✅ **v3.5 Developer Experience** — Phases 31-34 (shipped 2026-05-05) — This document
+- 🔵 **v3.7 Security, Testing & Documentation** — Phases 39-42 (executing) — This document
 
 ## Phases
 
@@ -581,9 +582,94 @@ v3.5: Developer Experience ✓
 
 ---
 
-*Last updated: 2026-05-05 — v3.5 Developer Experience milestone added*
+## Upcoming (v3.7: Security, Testing & Documentation)
+
+- [ ] **Phase 39: Security Hardening** — JWT 认证、RBAC 权限、速率限制、输入验证
+- [ ] **Phase 40: Test Coverage Improvement** — 核心引擎测试、API 测试、前端测试、E2E 测试
+- [ ] **Phase 41: Documentation System** — API 文档、插件指南、架构文档、部署指南
+- [ ] **Phase 42: Mobile Responsive Optimization** — 响应式布局、触摸手势、PWA 支持
+
+### Phase Details (v3.7)
+
+### Phase 39: Security Hardening
+
+**Goal:** 实现生产级安全体系
+
+**Depends on:** v3.6 complete
+
+**Requirements:** SEC-01, SEC-02, SEC-03, SEC-04, SEC-05, SEC-06, SEC-07, SEC-08
+
+**Success Criteria** (what must be TRUE):
+1. 所有 API 端点需要认证（除 /health, /api/login）
+2. 角色权限正确隔离（viewer 只读，editor 可写，admin 可管理）
+3. 速率限制生效（防止滥用）
+4. 敏感数据在数据库中加密存储
+5. 审计日志记录所有关键操作
+
+**Plans:** 3 plans in 3 waves
 
 ---
+
+### Phase 40: Test Coverage Improvement
+
+**Goal:** 测试覆盖率从当前水平提升至 80%+
+
+**Depends on:** Phase 39
+
+**Requirements:** TEST-01, TEST-02, TEST-03, TEST-04, TEST-05, TEST-06, TEST-07
+
+**Success Criteria** (what must be TRUE):
+1. Python 测试覆盖率 ≥ 80%
+2. 前端测试覆盖率 ≥ 70%
+3. 关键路径 E2E 测试覆盖
+4. CI 管道中测试自动运行
+5. 测试报告生成（HTML + JSON）
+
+**Plans:** 4 plans in 3 waves
+
+---
+
+### Phase 41: Documentation System
+
+**Goal:** 建立完整的文档体系
+
+**Depends on:** v3.6 complete
+
+**Requirements:** DOC-01, DOC-02, DOC-03, DOC-04, DOC-05, DOC-06
+
+**Success Criteria** (what must be TRUE):
+1. API 文档自动生成并可浏览
+2. 插件开发指南包含完整示例
+3. 架构文档覆盖所有核心模块
+4. 部署指南经过验证
+5. 用户手册覆盖所有功能
+
+**Plans:** 3 plans in 2 waves
+
+---
+
+### Phase 42: Mobile Responsive Optimization
+
+**Goal:** 优化移动端体验
+
+**Depends on:** Phase 41
+
+**Requirements:** MOB-01, MOB-02, MOB-03, MOB-04, MOB-05, MOB-06
+
+**Success Criteria** (what must be TRUE):
+1. 所有页面在 320px+ 宽度正常显示
+2. 触摸操作流畅（无误触）
+3. 导航菜单在移动端可用
+4. Graph 在移动端可交互（简化版）
+5. PWA 安装后可离线使用
+
+**Plans:** 3 plans in 3 waves
+
+**UI hint:** yes
+
+---
+
+*Last updated: 2026-06-22 — v3.7 Security, Testing & Documentation milestone added*
 
 ## Upcoming (v3.5: Developer Experience)
 

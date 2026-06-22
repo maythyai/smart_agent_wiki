@@ -94,6 +94,28 @@ def create_app(
 
     register_exception_handlers(app)
 
+    # SEC-08: Security headers middleware
+    from saw.drivers.web.middleware.security import SecurityHeadersMiddleware
+
+    app.add_middleware(SecurityHeadersMiddleware)
+
+    # SEC-07: Audit logging middleware
+    from saw.drivers.web.middleware.security import AuditLogMiddleware
+
+    app.add_middleware(AuditLogMiddleware)
+
+    # SEC-04: Input sanitization middleware
+    from saw.drivers.web.middleware.security import InputSanitizerMiddleware
+
+    app.add_middleware(InputSanitizerMiddleware)
+
+    # SEC-03: Rate limiting middleware
+    from saw.api.rate_limit import RateLimitMiddleware, RateLimitConfig
+
+    rate_config = RateLimitConfig.from_env()
+    if rate_config.enabled:
+        app.add_middleware(RateLimitMiddleware, config=rate_config)
+
     # Register WebSocket route (per D-04)
     from saw.drivers.web.routes.websocket import router as ws_router
 
@@ -122,6 +144,11 @@ def create_app(
     from saw.api.dashboard_stats import router as dashboard_stats_router
 
     app.include_router(dashboard_stats_router, tags=["dashboard"])
+
+    # SEC-01: Authentication routes (Phase 39)
+    from saw.drivers.web.routes.auth import router as auth_router
+
+    app.include_router(auth_router)
 
     return app
 
