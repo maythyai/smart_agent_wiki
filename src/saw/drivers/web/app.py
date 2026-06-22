@@ -118,6 +118,11 @@ def create_app(
 
     app.include_router(connector_settings_router, tags=["connector-settings"])
 
+    # Register dashboard statistics routes (Phase 36)
+    from saw.api.dashboard_stats import router as dashboard_stats_router
+
+    app.include_router(dashboard_stats_router, tags=["dashboard"])
+
     return app
 
 
