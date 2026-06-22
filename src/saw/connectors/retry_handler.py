@@ -13,11 +13,8 @@ from datetime import datetime, timezone
 from typing import Any, Awaitable, Callable, Generic, Optional, TypeVar
 
 T = TypeVar("T")
-
-
-def utcnow() -> datetime:
-    """Get current UTC datetime."""
-    return datetime.now(timezone.utc)
+import saw.domain.exceptions as saw_domain
+from saw.domain.utils import utcnow  # noqa: F401
 
 
 class RetryConfig:
@@ -69,7 +66,7 @@ class RetryResult(Generic[T]):
     permanent_error_count: int = 0
 
 
-class TransientError(Exception):
+class TransientError(saw_domain.TransientError):
     """Error that should be retried (rate limits, timeouts, 5xx)."""
 
     def __init__(self, message: str, retry_after: Optional[float] = None) -> None:
@@ -77,7 +74,7 @@ class TransientError(Exception):
         self.retry_after = retry_after  # Seconds to wait from Retry-After header
 
 
-class PermanentError(Exception):
+class PermanentError(saw_domain.PermanentError):
     """Error that should not be retried (auth failures, 4xx)."""
     pass
 

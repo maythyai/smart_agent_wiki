@@ -10,7 +10,36 @@ from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 
-from saw.domain.exceptions import SAWError
+from saw.domain.exceptions import (
+    SAWError,
+    StorageError,
+    VaultError,
+    ClaimsDBError,
+    FTS5Error,
+    WriteQueueError,
+    ConfigError,
+    ConnectorError,
+    AuthenticationError,
+    RateLimitError,
+    PipelineError,
+    LLMError,
+)
+
+# Map exception types to HTTP status codes.
+# More specific exceptions are checked first via MRO in the handler.
+_ERROR_STATUS_MAP: dict[type[SAWError], int] = {
+    AuthenticationError: 401,
+    RateLimitError: 429,
+    PipelineError: 422,
+    StorageError: 503,
+    VaultError: 503,
+    ClaimsDBError: 503,
+    FTS5Error: 503,
+    WriteQueueError: 503,
+    LLMError: 503,
+    ConnectorError: 502,
+    ConfigError: 500,
+}
 
 
 def register_exception_handlers(app: FastAPI) -> None:
@@ -33,12 +62,19 @@ def register_exception_handlers(app: FastAPI) -> None:
         Returns:
             RFC 7807 formatted error response.
         """
+        # Walk the MRO to find the most specific mapped exception type.
+        http_status = 400
+        for cls in type(exc).__mro__:
+            if cls in _ERROR_STATUS_MAP:
+                http_status = _ERROR_STATUS_MAP[cls]
+                break
+
         return JSONResponse(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=http_status,
             content={
                 "type": "https://smart-agent.wiki/errors/business",
                 "title": exc.__class__.__name__,
-                "status": 400,
+                "status": http_status,
                 "detail": str(exc),
             },
         )

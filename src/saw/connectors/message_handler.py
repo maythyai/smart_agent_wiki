@@ -11,11 +11,7 @@ from datetime import datetime, timezone
 from typing import Any, Optional
 
 from saw.connectors.protocol import ConnectorItem
-
-
-def utcnow() -> datetime:
-    """Get current UTC datetime."""
-    return datetime.now(timezone.utc)
+from saw.domain.utils import utcnow  # noqa: F401
 
 
 @dataclass

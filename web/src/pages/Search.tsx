@@ -17,7 +17,7 @@ export default function Search() {
 
   const [, setInputQuery] = useState(query);
 
-  const { data, isLoading, isError } = useSearch({
+  const { data, isLoading, isError, error, refetch } = useSearch({
     query,
     page,
     per_page: 10,
@@ -103,13 +103,60 @@ export default function Search() {
 
           {/* Results */}
           <main className="flex-1">
-            <SearchResults
-              data={data}
-              isLoading={isLoading}
-              isError={isError}
-              page={page}
-              onPageChange={handlePageChange}
-            />
+            {isLoading && (
+              <div className="flex items-center justify-center py-16">
+                <div className="flex flex-col items-center gap-3">
+                  <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Searching...</p>
+                </div>
+              </div>
+            )}
+
+            {isError && !isLoading && (
+              <div className="text-center py-16">
+                <div className="text-red-500 mb-3">
+                  <svg className="w-10 h-10 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-1">Search failed</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                  {error instanceof Error ? error.message : 'Something went wrong. Please try again.'}
+                </p>
+                <button
+                  onClick={() => refetch()}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                >
+                  Retry
+                </button>
+              </div>
+            )}
+
+            {!isLoading && !isError && data && data.results.length === 0 && (
+              <div className="text-center py-16">
+                <div className="text-gray-400 dark:text-gray-500 mb-3">
+                  <svg className="w-10 h-10 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-1">No results found</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  No results found for &ldquo;{query}&rdquo;. Try different keywords or filters.
+                </p>
+              </div>
+            )}
+
+            {!isLoading && !isError && data && data.results.length > 0 && (
+              <SearchResults
+                data={data}
+                isLoading={isLoading}
+                isError={isError}
+                page={page}
+                onPageChange={handlePageChange}
+              />
+            )}
           </main>
         </div>
       )}

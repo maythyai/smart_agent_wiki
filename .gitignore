@@ -121,6 +121,8 @@ out/
 # Vite
 .vite/
 *.local
+vite.config.js
+vite.config.d.ts
 
 # TypeScript
 *.tsbuildinfo

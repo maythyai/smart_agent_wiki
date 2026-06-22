@@ -12,11 +12,7 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 # Use the same Base as other models
 from saw.db.models import Base
-
-
-def utcnow() -> datetime:
-    """Get current UTC datetime."""
-    return datetime.now(timezone.utc)
+from saw.domain.utils import utcnow  # noqa: F401
 
 
 class LogseqFileHashModel(Base):

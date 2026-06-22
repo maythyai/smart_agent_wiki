@@ -1,5 +1,6 @@
 import { Outlet, NavLink } from 'react-router';
 import { MobileNav } from './components/layout/MobileNav';
+import { useStore } from './stores';
 
 /**
  * Main App layout with responsive navigation.
@@ -7,8 +8,10 @@ import { MobileNav } from './components/layout/MobileNav';
  * Per D-04: Hamburger menu visible on mobile, horizontal nav on desktop.
  */
 export default function App() {
+  const theme = useStore((s) => s.theme);
+
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className={`min-h-screen flex flex-col ${theme === 'dark' ? 'dark' : ''}`}>
       {/* Skip to main content link for accessibility */}
       <a
         href="#main-content"
@@ -19,10 +22,10 @@ export default function App() {
       </a>
 
       {/* Fixed height header per D-06 */}
-      <header className="bg-white border-b h-14 fixed top-0 left-0 right-0 z-30">
+      <header className="bg-white dark:bg-gray-800 border-b dark:border-gray-700 h-14 fixed top-0 left-0 right-0 z-30">
         <div className="flex items-center justify-between h-full px-4 max-w-7xl mx-auto">
           {/* Logo */}
-          <h1 className="text-lg md:text-xl font-bold text-gray-900">
+          <h1 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white">
             Smart Agent Wiki
           </h1>
 
@@ -31,7 +34,9 @@ export default function App() {
             <NavLink
               to="/search"
               className={({ isActive }) =>
-                isActive ? 'text-blue-600 font-medium' : 'text-gray-600 hover:text-blue-600'
+                isActive
+                  ? 'text-blue-600 font-medium'
+                  : 'text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400'
               }
             >
               Search
@@ -39,7 +44,9 @@ export default function App() {
             <NavLink
               to="/graph"
               className={({ isActive }) =>
-                isActive ? 'text-blue-600 font-medium' : 'text-gray-600 hover:text-blue-600'
+                isActive
+                  ? 'text-blue-600 font-medium'
+                  : 'text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400'
               }
             >
               Graph
@@ -47,7 +54,9 @@ export default function App() {
             <NavLink
               to="/dashboard"
               className={({ isActive }) =>
-                isActive ? 'text-blue-600 font-medium' : 'text-gray-600 hover:text-blue-600'
+                isActive
+                  ? 'text-blue-600 font-medium'
+                  : 'text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400'
               }
             >
               Dashboard
@@ -60,7 +69,7 @@ export default function App() {
       </header>
 
       {/* Main content with top padding for fixed header */}
-      <main id="main-content" className="flex-1 pt-14 px-4 md:px-6">
+      <main id="main-content" className="flex-1 pt-14 px-4 md:px-6 dark:bg-gray-900 dark:text-white">
         <Outlet />
       </main>
     </div>

@@ -16,11 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from saw.connectors.protocol import ConnectorItem
 from saw.db.sync_models import ConflictRecordModel
-
-
-def utcnow() -> datetime:
-    """Get current UTC datetime."""
-    return datetime.now(timezone.utc)
+from saw.domain.utils import utcnow  # noqa: F401
 
 
 class ConflictStrategy(enum.Enum):

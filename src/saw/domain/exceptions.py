@@ -28,3 +28,40 @@ class FTS5Error(StorageError):
 
 class ConfigError(SAWError):
     """Configuration error."""
+
+
+class LLMError(SAWError):
+    """LLM call or response parsing failed."""
+
+
+class ConnectorError(SAWError):
+    """Base for all connector errors."""
+
+
+class AuthenticationError(ConnectorError):
+    """OAuth/auth failures."""
+
+
+class SyncError(ConnectorError):
+    """Sync operation failures."""
+
+
+class TransientError(ConnectorError):
+    """Temporary/retryable errors."""
+
+
+class PermanentError(ConnectorError):
+    """Permanent/non-retryable errors."""
+
+
+class TokenRefreshError(ConnectorError):
+    """Token refresh failures."""
+
+
+class PipelineError(SAWError):
+    """Ingest pipeline errors."""
+
+
+class RateLimitError(SAWError):
+    """Rate limiting errors."""
+

@@ -4,7 +4,7 @@ export type WSMessageType = 'agent_status' | 'workflow_progress' | 'page_updated
 
 export interface WSMessage {
   type: WSMessageType;
-  data: Record<string, unknown>;
+  payload: Record<string, unknown>;
   timestamp: string;
 }
 

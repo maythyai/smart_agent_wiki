@@ -13,11 +13,7 @@ from sqlalchemy import String, Boolean, Integer, Text, DateTime, ForeignKey, Ind
 from sqlalchemy.orm import Mapped, mapped_column
 
 from saw.db.models import Base, generate_uuid
-
-
-def utcnow() -> datetime:
-    """Get current UTC datetime."""
-    return datetime.now(timezone.utc)
+from saw.domain.utils import utcnow  # noqa: F401
 
 
 class SyncStateModel(Base):

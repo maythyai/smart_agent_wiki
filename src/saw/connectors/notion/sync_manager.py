@@ -22,11 +22,7 @@ from saw.connectors.notion.connector import NotionConnector
 
 
 logger = logging.getLogger(__name__)
-
-
-def utcnow() -> datetime:
-    """Get current UTC datetime."""
-    return datetime.now(timezone.utc)
+from saw.domain.utils import utcnow  # noqa: F401
 
 
 @dataclass

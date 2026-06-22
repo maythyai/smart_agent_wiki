@@ -11,6 +11,7 @@ from datetime import datetime, timezone, timedelta
 from typing import Optional
 
 from saw.connectors.token_encryption import TokenEncryption
+from saw.domain.exceptions import TokenRefreshError
 
 
 @dataclass
@@ -181,9 +182,10 @@ class TokenRefreshManager:
                     headers={"Accept": "application/json"},
                 )
                 token = response.json()
-        except Exception:
-            # Fallback for testing
-            token = {"access_token": "refreshed_token", "expires_in": 3600}
+        except Exception as e:
+            raise TokenRefreshError(
+                f"Token refresh failed: {e}"
+            ) from e
 
         expires_at = None
         if token.get("expires_in"):
@@ -194,8 +196,3 @@ class TokenRefreshManager:
             "refresh_token": token.get("refresh_token"),
             "expires_at": expires_at,
         }
-
-
-class TokenRefreshError(Exception):
-    """Token refresh error."""
-    pass

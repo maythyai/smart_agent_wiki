@@ -44,11 +44,14 @@ class AgentNotFoundError(Exception):
     """Raised when requested agent is not registered."""
 
 
-class DispatchError(Exception):
+from saw.domain.exceptions import SAWError, RateLimitError as _DomainRateLimitError
+
+
+class DispatchError(SAWError):
     """Raised when dispatch fails after all fallbacks."""
 
 
-class RateLimitError(Exception):
+class RateLimitError(_DomainRateLimitError):
     """Raised when rate limit is hit."""
 
 

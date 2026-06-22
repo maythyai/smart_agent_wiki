@@ -71,6 +71,7 @@ class WriteOpStatus(IntEnum):
     PROCESSING = 2
     DONE = 3
     FAILED = 4
+    DEAD_LETTER = 5
 
 
 @dataclass(frozen=True)

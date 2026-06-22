@@ -25,6 +25,7 @@ from saw.connectors.protocol import (
 )
 from saw.connectors.models import ConnectorConfig
 from saw.connectors.rate_limiter import RateLimitManager
+from saw.domain.exceptions import ConnectorError
 from saw.connectors.github.models import (
     GitHubUser,
     GitHubIssue,
@@ -43,11 +44,7 @@ from saw.db.github_models import (
 )
 
 logger = logging.getLogger(__name__)
-
-
-def utcnow() -> datetime:
-    """Get current UTC datetime."""
-    return datetime.now(timezone.utc)
+from saw.domain.utils import utcnow  # noqa: F401
 
 
 class GitHubConnector(UnifiedConnectorInterface):
@@ -355,9 +352,10 @@ class GitHubConnector(UnifiedConnectorInterface):
             await self._update_sync_cursor(repository_id, "issues", len(items))
 
         except Exception as e:
-            logger.error(f"Error fetching issues from {repository_id}: {e}")
-
-        return items
+            logger.error("Error fetching issues from %s: %s", repository_id, e)
+            raise ConnectorError(
+                f"Failed to fetch issues from {repository_id}: {e}"
+            ) from e
 
     async def _fetch_discussions(
         self,
@@ -626,7 +624,10 @@ class GitHubConnector(UnifiedConnectorInterface):
                 ))
 
         except Exception as e:
-            logger.error(f"Error listing repositories: {e}")
+            logger.error("Error listing repositories: %s", e)
+            raise ConnectorError(
+                f"Failed to list GitHub repositories: {e}"
+            ) from e
 
         return repositories
 
@@ -652,14 +653,10 @@ class GitHubConnector(UnifiedConnectorInterface):
                 used=rate_limit.core.limit - rate_limit.core.remaining,
             )
         except Exception as e:
-            logger.error(f"Error checking rate limit: {e}")
-            # Return default
-            return GitHubRateLimit(
-                limit=5000,
-                remaining=5000,
-                reset=utcnow(),
-                used=0,
-            )
+            logger.error("Error checking rate limit: %s", e)
+            raise ConnectorError(
+                f"Failed to check GitHub rate limit: {e}"
+            ) from e
 
 
 class MockGithub:

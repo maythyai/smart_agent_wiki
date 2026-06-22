@@ -63,12 +63,14 @@ services:
     image: postgres:16-alpine
     environment:
       POSTGRES_USER: saw
-      POSTGRES_PASSWORD: saw
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
       POSTGRES_HOST: db
       POSTGRES_DB: saw
       BACKUP_SCHEDULE: "0 2 * * *"
     volumes:
       - ../data/backups:/backups
+    secrets:
+      - db_password
     entrypoint: |
       sh -c 'while true; do
         sleep 86400

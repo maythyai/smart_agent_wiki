@@ -22,6 +22,7 @@ from saw.connectors.protocol import (
     AuthenticationError,
     SyncError,
 )
+from saw.domain.exceptions import ConnectorError
 from saw.connectors.models import ConnectorConfig
 from saw.connectors.rate_limiter import RateLimitManager
 from saw.connectors.notion.models import NotionPage, NotionDatabase, NotionRichText
@@ -29,11 +30,7 @@ from saw.connectors.notion.oauth import NotionOAuthHandler
 from saw.db.notion_models import NotionSyncCursorModel, NotionDatabaseConfigModel
 
 logger = logging.getLogger(__name__)
-
-
-def utcnow() -> datetime:
-    """Get current UTC datetime."""
-    return datetime.now(timezone.utc)
+from saw.domain.utils import utcnow  # noqa: F401
 
 
 class NotionConnector(UnifiedConnectorInterface):
@@ -93,8 +90,14 @@ class NotionConnector(UnifiedConnectorInterface):
 
                 self._client = AsyncClient(auth=access_token)
             except ImportError:
-                logger.warning("notion-client not installed, using mock")
-                self._client = AsyncMock()
+                logger.error(
+                    "notion-client package is not installed. "
+                    "Run: pip install notion-client"
+                )
+                raise ConnectorError(
+                    "notion-client package is not installed. "
+                    "Run: pip install notion-client"
+                )
 
         return self._client
 

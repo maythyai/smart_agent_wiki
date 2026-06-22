@@ -2,17 +2,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useStore } from '../stores';
 import type { AgentStatus, WorkflowProgress } from '../types/api';
+import type { ConnectionStatus, WSMessage } from '../types/websocket';
 
-type ConnectionStatus = 'connecting' | 'connected' | 'disconnected';
-
-// Extended message type including 'pong' response
-type WSMessageType = 'agent_status' | 'workflow_progress' | 'page_updated' | 'pong';
-
-interface WSMessage {
-  type: WSMessageType;
-  payload: Record<string, unknown>;
-  timestamp: string;
-}
+// Extended message type including 'pong' response is already in types/websocket.ts
 
 interface UseWebSocketOptions {
   sessionId?: string;

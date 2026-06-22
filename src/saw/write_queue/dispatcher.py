@@ -17,6 +17,9 @@ class Dispatcher:
     """Parallel sink dispatcher with retry and dead letter handling.
 
     Coordinates dispatching WriteOps to the appropriate Sink implementations.
+    Supports exponential backoff via ``next_retry_at`` on each WriteOp and
+    promotes exhausted ops to the dead-letter queue automatically (handled
+    inside ``SQLiteWriteQueue.mark_failed``).
     """
 
     def __init__(self, queue: SQLiteWriteQueue, sinks: list | None = None) -> None:
@@ -33,13 +36,29 @@ class Dispatcher:
     def dispatch_pending(self) -> int:
         """Dispatch all pending operations to their matching sinks.
 
+        Ops whose ``next_retry_at`` is still in the future are skipped
+        (exponential backoff).  Ops that exhaust their retries are
+        automatically moved to the dead-letter queue by
+        ``SQLiteWriteQueue.mark_failed``.
+
         Returns:
-            Number of operations processed.
+            Number of operations successfully processed.
         """
         pending = self._queue.get_pending()
         processed = 0
+        now = datetime.now(timezone.utc)
 
         for op in pending:
+            # Belt-and-suspenders: skip ops whose backoff hasn't elapsed yet.
+            # The SQL query in get_pending() already filters these, but an
+            # explicit check guards against clock skew or stale caches.
+            if op.next_retry_at is not None and op.next_retry_at > now:
+                logger.debug(
+                    "Skipping op %s — next_retry_at %s is in the future",
+                    op.op_id, op.next_retry_at.isoformat(),
+                )
+                continue
+
             sink = self._sinks.get(op.sink_name)
             if sink is None:
                 logger.warning("No sink registered for: %s", op.sink_name)
@@ -60,9 +79,15 @@ class Dispatcher:
                 self._queue.track_sink(
                     op.op_id, op.sink_name, "failed", error_msg
                 )
+                # mark_failed handles exponential backoff scheduling and
+                # promotes the op to 'dead_letter' when retries are exhausted.
                 self._queue.mark_failed(op.op_id, error_msg)
-                # If retry_count < max_retries, status is 'failed' and will be
-                # picked up again by get_pending() on next dispatch cycle
+
+                if op.retry_count + 1 >= op.max_retries:
+                    logger.warning(
+                        "Op %s exhausted retries (%d/%d) — moved to dead_letter queue",
+                        op.op_id, op.retry_count + 1, op.max_retries,
+                    )
 
         return processed
 

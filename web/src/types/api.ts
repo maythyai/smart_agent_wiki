@@ -93,14 +93,8 @@ export interface PageListResponse {
   total: number;
 }
 
-// WebSocket types (matching backend websocket.py)
-export type WSMessageType = 'agent_status' | 'workflow_progress' | 'page_updated';
-
-export interface WSMessage {
-  type: WSMessageType;
-  payload: Record<string, unknown>;
-  timestamp: string;
-}
+// WebSocket types - re-exported from shared websocket types
+export type { WSMessageType, WSMessage } from './websocket';
 
 // Agent status types
 export interface AgentStatus {

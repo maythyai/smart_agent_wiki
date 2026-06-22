@@ -22,14 +22,10 @@ from saw.connectors.registry import ConnectorRegistry
 from saw.connectors.sync_status import SyncStatusTracker, SyncState, SyncStatus
 from saw.connectors.sync_logger import SyncLogger
 from saw.connectors.conflict_resolver import ConflictResolver, ConflictStrategy
+from saw.domain.utils import utcnow  # noqa: F401
 
 
 logger = logging.getLogger(__name__)
-
-
-def utcnow() -> datetime:
-    """Get current UTC datetime."""
-    return datetime.now(timezone.utc)
 
 
 class SyncMode(enum.Enum):

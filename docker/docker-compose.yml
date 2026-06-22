@@ -17,7 +17,7 @@ services:
     environment:
       - DATABASE_URL=postgresql://saw:saw@db:5432/saw
       - REDIS_URL=redis://redis:6379/0
-      - AUTH_SECRET_KEY=${AUTH_SECRET_KEY:-change-me-in-production}
+      - AUTH_SECRET_KEY=${AUTH_SECRET_KEY:?AUTH_SECRET_KEY must be set}
       - ACCESS_TOKEN_EXPIRE_MINUTES=30
       - REFRESH_TOKEN_EXPIRE_DAYS=7
       - LOG_LEVEL=INFO

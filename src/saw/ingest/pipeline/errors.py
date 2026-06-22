@@ -3,12 +3,14 @@
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from saw.domain.exceptions import PipelineError as _DomainPipelineError
+
 if TYPE_CHECKING:
     from .types import PhaseResults
     from .validator import ValidationResult
 
 
-class PipelineError(Exception):
+class PipelineError(_DomainPipelineError):
     """Base exception for pipeline errors."""
 
     pass

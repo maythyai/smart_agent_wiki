@@ -34,41 +34,47 @@ export function useFileWatcher(): UseFileWatcherReturn {
 
   // Subscribe to file system events
   useEffect(() => {
+    let cancelled = false;
     const unlisteners: UnlistenFn[] = [];
 
-    // Listen for file creation events
-    listen<string>('fs:file-created', (event) => {
-      console.log('File created:', event.payload);
-      // Emit custom event for app to handle
-      window.dispatchEvent(new CustomEvent('saw:file-created', {
-        detail: { path: event.payload }
-      }));
-    }).then((unlisten) => {
-      unlisteners.push(unlisten);
-    });
+    const subscribe = async () => {
+      // Listen for file creation events
+      const unlistenCreated = await listen<string>('fs:file-created', (event) => {
+        console.log('File created:', event.payload);
+        // Emit custom event for app to handle
+        window.dispatchEvent(new CustomEvent('saw:file-created', {
+          detail: { path: event.payload }
+        }));
+      });
+      if (cancelled) { unlistenCreated(); return; }
+      unlisteners.push(unlistenCreated);
 
-    // Listen for file modification events
-    listen<string>('fs:file-modified', (event) => {
-      console.log('File modified:', event.payload);
-      window.dispatchEvent(new CustomEvent('saw:file-modified', {
-        detail: { path: event.payload }
-      }));
-    }).then((unlisten) => {
-      unlisteners.push(unlisten);
-    });
+      // Listen for file modification events
+      const unlistenModified = await listen<string>('fs:file-modified', (event) => {
+        console.log('File modified:', event.payload);
+        window.dispatchEvent(new CustomEvent('saw:file-modified', {
+          detail: { path: event.payload }
+        }));
+      });
+      if (cancelled) { unlistenModified(); return; }
+      unlisteners.push(unlistenModified);
 
-    // Listen for file deletion events
-    listen<string>('fs:file-deleted', (event) => {
-      console.log('File deleted:', event.payload);
-      window.dispatchEvent(new CustomEvent('saw:file-deleted', {
-        detail: { path: event.payload }
-      }));
-    }).then((unlisten) => {
-      unlisteners.push(unlisten);
-    });
+      // Listen for file deletion events
+      const unlistenDeleted = await listen<string>('fs:file-deleted', (event) => {
+        console.log('File deleted:', event.payload);
+        window.dispatchEvent(new CustomEvent('saw:file-deleted', {
+          detail: { path: event.payload }
+        }));
+      });
+      if (cancelled) { unlistenDeleted(); return; }
+      unlisteners.push(unlistenDeleted);
+    };
+
+    subscribe();
 
     // Cleanup listeners on unmount
     return () => {
+      cancelled = true;
       unlisteners.forEach((unlisten) => unlisten());
     };
   }, []);

@@ -6,6 +6,20 @@ interface RequestOptions {
   params?: Record<string, string | number | undefined>;
 }
 
+export class ApiError extends Error {
+  status: number;
+  statusText: string;
+  body: unknown;
+
+  constructor(status: number, statusText: string, body: unknown) {
+    super(`API Error: ${status} ${statusText}`);
+    this.name = 'ApiError';
+    this.status = status;
+    this.statusText = statusText;
+    this.body = body;
+  }
+}
+
 function buildUrl(path: string, params?: Record<string, string | number | undefined>): string {
   const url = new URL(`${API_BASE}${path}`, window.location.origin);
   if (params) {
@@ -33,7 +47,17 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   });
 
   if (!response.ok) {
-    throw new Error(`API Error: ${response.status} ${response.statusText}`);
+    let errorBody: unknown;
+    try {
+      errorBody = await response.json();
+    } catch {
+      try {
+        errorBody = await response.text();
+      } catch {
+        errorBody = null;
+      }
+    }
+    throw new ApiError(response.status, response.statusText, errorBody);
   }
 
   return response.json();

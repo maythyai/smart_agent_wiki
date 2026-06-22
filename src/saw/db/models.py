@@ -23,6 +23,8 @@ from sqlalchemy import (
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
+from saw.domain.utils import utcnow  # noqa: F401
+
 
 class Base(DeclarativeBase):
     """Base class for all models."""
@@ -32,11 +34,6 @@ class Base(DeclarativeBase):
 def generate_uuid() -> str:
     """Generate a UUID string."""
     return str(uuid.uuid4())
-
-
-def utcnow() -> datetime:
-    """Get current UTC datetime."""
-    return datetime.now(timezone.utc)
 
 
 class User(Base):

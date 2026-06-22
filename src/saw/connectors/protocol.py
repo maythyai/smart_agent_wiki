@@ -162,11 +162,17 @@ class UnifiedConnectorInterface(Protocol):
         ...
 
 
-class AuthenticationError(Exception):
+from saw.domain.exceptions import (
+    AuthenticationError as _DomainAuthenticationError,
+    SyncError as _DomainSyncError,
+)
+
+
+class AuthenticationError(_DomainAuthenticationError):
     """Raised when platform authentication fails."""
     pass
 
 
-class SyncError(Exception):
+class SyncError(_DomainSyncError):
     """Raised when synchronization operation fails."""
     pass

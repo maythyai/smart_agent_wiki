@@ -16,11 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from saw.db.sync_models import SyncStateModel
 from saw.connectors.models import SyncResult
-
-
-def utcnow() -> datetime:
-    """Get current UTC datetime."""
-    return datetime.now(timezone.utc)
+from saw.domain.utils import utcnow  # noqa: F401
 
 
 class SyncState(enum.Enum):

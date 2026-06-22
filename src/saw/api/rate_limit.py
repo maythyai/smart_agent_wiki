@@ -7,6 +7,7 @@ Uses Redis sliding window algorithm.
 """
 from __future__ import annotations
 
+import logging
 import os
 import time
 from dataclasses import dataclass
@@ -15,6 +16,8 @@ from typing import Callable, Optional
 from fastapi import Request, Response, HTTPException
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -101,16 +104,19 @@ class RedisRateLimiter:
         redis_client = self._get_redis()
 
         if redis_client is None:
-            # Redis not available - return unlimited
+            # Redis not available — fail-close: deny requests to prevent abuse
+            logger.warning(
+                "Redis unavailable for rate-limit key %s; failing closed", key_id
+            )
             now = int(time.time())
             return RateLimitStatus(
-                hour_count=0,
+                hour_count=hour_limit + 1,
                 hour_limit=hour_limit,
-                hour_remaining=hour_limit,
+                hour_remaining=0,
                 hour_reset=now + 3600,
-                day_count=0,
+                day_count=day_limit + 1,
                 day_limit=day_limit,
-                day_remaining=day_limit,
+                day_remaining=0,
                 day_reset=now + 86400,
             )
 
@@ -201,7 +207,15 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
         # Use IP-based rate limiting if no API key
         if not api_key_id:
-            api_key_id = f"ip:{request.client.host if request.client else 'unknown'}"
+            forwarded_for = request.headers.get("X-Forwarded-For")
+            if forwarded_for:
+                client_ip = forwarded_for.split(",")[0].strip()
+            else:
+                client_ip = request.headers.get(
+                    "X-Real-IP",
+                    request.client.host if request.client else "unknown",
+                )
+            api_key_id = f"ip:{client_ip}"
 
         # Check rate limit
         status = self.limiter.check_rate_limit(

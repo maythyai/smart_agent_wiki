@@ -20,11 +20,7 @@ from saw.connectors.github.models import (
 )
 
 logger = logging.getLogger(__name__)
-
-
-def utcnow() -> datetime:
-    """Get current UTC datetime."""
-    return datetime.now(timezone.utc)
+from saw.domain.utils import utcnow  # noqa: F401
 
 
 # GraphQL queries
