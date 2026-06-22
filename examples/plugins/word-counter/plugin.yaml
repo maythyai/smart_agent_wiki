@@ -1,0 +1,8 @@
+name: word-counter
+version: 0.1.0
+description: Word count and reading time analysis for wiki pages
+author: SAW Team
+hooks:
+  - page_created
+  - page_updated
+dependencies: []

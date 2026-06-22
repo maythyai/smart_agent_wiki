@@ -1,0 +1,8 @@
+name: markdown-formatter
+version: 0.1.0
+description: Custom Markdown rendering rules for SAW wiki pages
+author: SAW Team
+hooks:
+  - page_created
+  - page_updated
+dependencies: []
