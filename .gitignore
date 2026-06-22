@@ -206,6 +206,10 @@ feedback/rejected.yaml
 *.pem
 *.key
 
+# Runtime data directories (user-generated at runtime)
+/vault/
+/wiki/
+
 # SQLite databases (runtime-generated)
 *.db
 *.sqlite3
