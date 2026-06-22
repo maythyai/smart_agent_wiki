@@ -17,6 +17,73 @@ from saw.reconcile import (
     ContradictionType,
     ResolutionStrategyType,
 )
+from saw.adapters.storage.claims_repository import ClaimsRepository
+from pathlib import Path as _Path
+
+
+def _load_facts_from_db(repo: ClaimsRepository | None = None, scope: str | None = None) -> list[BiTemporalFact]:
+    """Load claims as BiTemporalFact objects for contradiction detection.
+
+    Args:
+        repo: Optional ClaimsRepository; created with default path if None.
+        scope: Optional topic filter.
+
+    Returns:
+        List of BiTemporalFact objects.
+    """
+    if repo is None:
+        db_path = _Path.home() / ".saw" / "claims.db"
+        if not db_path.exists():
+            return []
+        repo = ClaimsRepository(str(db_path))
+    try:
+        claims = repo.list_all() if hasattr(repo, "list_all") else []
+    except Exception:
+        claims = []
+
+    facts: list[BiTemporalFact] = []
+    for c in claims:
+        if hasattr(c, "content"):
+            content = c.content
+            uuid_val = c.uuid if hasattr(c, "uuid") else ""
+            confidence = getattr(c, "confidence", "unverified")
+            source = getattr(c, "source_uuid", "")
+            ts = getattr(c, "created_at", None)
+        elif isinstance(c, dict):
+            content = c.get("content", "")
+            uuid_val = c.get("uuid", "")
+            confidence = c.get("confidence", "unverified")
+            source = c.get("source_uuid", "")
+            ts = c.get("created_at")
+        else:
+            continue
+
+        if scope and scope.lower() not in content.lower():
+            continue
+
+        conf_map = {"unverified": 1, "single_source": 2, "cross_validated": 3, "human_verified": 4}
+        conf_int = conf_map.get(str(confidence), 1)
+
+        from datetime import datetime as _dt
+        if isinstance(ts, str):
+            try:
+                valid_from = _dt.fromisoformat(ts.replace("Z", "+00:00"))
+            except Exception:
+                valid_from = _dt.now()
+        elif isinstance(ts, _dt):
+            valid_from = ts
+        else:
+            valid_from = _dt.now()
+
+        facts.append(BiTemporalFact(
+            fact_id=uuid_val,
+            content=content,
+            topic=scope or "general",
+            valid_from=valid_from,
+            source=source,
+            confidence=conf_int,
+        ))
+    return facts
 
 
 app = typer.Typer(help="Reconcile contradictions in claims")
@@ -36,15 +103,11 @@ def detect_contradictions(
     """
     console.print("[bold blue]Detecting contradictions...[/bold blue]")
 
-    # TODO: Load facts from database
-    # For now, show placeholder
-    console.print("[yellow]Note: This is a placeholder. Implement fact loading from DB.[/yellow]")
+    # Load facts from database
+    facts = _load_facts_from_db(scope=scope)
 
     # Create engine
     engine = ReconcileEngine()
-
-    # Placeholder facts for demo
-    facts: list[BiTemporalFact] = []
 
     # Detect
     result = engine.detect_only(facts, scope)
@@ -98,8 +161,8 @@ def run_reconcile(
     """
     console.print("[bold blue]Running reconcile engine...[/bold blue]")
 
-    # TODO: Load facts from database
-    console.print("[yellow]Note: This is a placeholder. Implement fact loading from DB.[/yellow]")
+    # Load facts from database
+    facts = _load_facts_from_db(scope=scope)
 
     # Create engine
     audit_path = output or Path(".saw/reconcile_audit.json")

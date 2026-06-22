@@ -275,6 +275,44 @@ class PatternAggregator:
         Returns:
             聚合后的模式列表
         """
-        # TODO: 实现更复杂的聚合算法
-        # 当前简单实��：合并相同关键词
-        return patterns
+        # Aggregate similar patterns using keyword overlap (Jaccard similarity)
+        if not patterns:
+            return patterns
+
+        merged: list[Pattern] = []
+        used: set[int] = set()
+
+        for i, p in enumerate(patterns):
+            if i in used:
+                continue
+            current = p
+            for j in range(i + 1, len(patterns)):
+                if j in used:
+                    continue
+                other = patterns[j]
+                kw_a = set(current.keywords)
+                kw_b = set(other.keywords)
+                if not kw_a or not kw_b:
+                    continue
+                intersection = kw_a & kw_b
+                union = kw_a | kw_b
+                jaccard = len(intersection) / len(union) if union else 0.0
+                if jaccard >= similarity_threshold:
+                    merged_keywords = sorted(kw_a | kw_b)
+                    merged_occurrences = current.occurrences + other.occurrences
+                    merged_confidence = (current.confidence + other.confidence) / 2
+                    merged_sources = sorted(set(current.sources + other.sources))
+                    current = Pattern(
+                        pattern_id=current.pattern_id,
+                        name=current.name if current.occurrences >= other.occurrences else other.name,
+                        keywords=merged_keywords,
+                        occurrences=merged_occurrences,
+                        sources=merged_sources,
+                        first_seen=min(current.first_seen, other.first_seen),
+                        last_seen=max(current.last_seen, other.last_seen),
+                        confidence=merged_confidence,
+                        description=current.description,
+                    )
+                    used.add(j)
+            merged.append(current)
+        return merged

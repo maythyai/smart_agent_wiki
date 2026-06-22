@@ -161,5 +161,40 @@ class ClusterBuilder:
         Returns:
             合并后的簇列表
         """
-        # TODO: 实现更复杂的合并逻辑
-        return clusters
+        # Merge clusters with overlapping claims (Jaccard similarity on claim content)
+        if not clusters or len(clusters) < 2:
+            return clusters
+
+        merged: list[Cluster] = []
+        used: set[int] = set()
+
+        for i, c in enumerate(clusters):
+            if i in used:
+                continue
+            current = c
+            for j in range(i + 1, len(clusters)):
+                if j in used:
+                    continue
+                other = clusters[j]
+                # Compare by topic similarity and claim overlap
+                claims_a = set(cl.get("content", "")[:100] if isinstance(cl, dict) else getattr(cl, "content", "")[:100] for cl in current.claims)
+                claims_b = set(cl.get("content", "")[:100] if isinstance(cl, dict) else getattr(cl, "content", "")[:100] for cl in other.claims)
+                if not claims_a or not claims_b:
+                    continue
+                intersection = claims_a & claims_b
+                union = claims_a | claims_b
+                overlap = len(intersection) / len(union) if union else 0.0
+                topic_similar = current.topic.lower() == other.topic.lower()
+                if overlap > 0.3 or topic_similar:
+                    # Merge: combine claims, average confidence
+                    all_claims = list(current.claims) + [cl for cl in other.claims if cl not in current.claims]
+                    avg_conf = (current.confidence + other.confidence) / 2
+                    current = Cluster(
+                        cluster_id=current.cluster_id,
+                        topic=current.topic,
+                        claims=all_claims,
+                        confidence=avg_conf,
+                    )
+                    used.add(j)
+            merged.append(current)
+        return merged

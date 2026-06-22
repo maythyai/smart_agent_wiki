@@ -165,14 +165,38 @@ def _process_single(
                 console.print(panel)
 
             else:
-                # Direct ingest (TODO: integrate with Write Queue)
+                # Direct ingest via Write Queue
                 progress.update(task, description="Transcription complete!")
+
+                from saw.write_queue.queue import WriteQueue, WriteOp
+                from saw.domain.value_objects import WriteOpStatus
+                import uuid as _uuid
+
+                ops = []
+                for claim in result.claims:
+                    op = WriteOp(
+                        op_id=f"media-{_uuid.uuid4().hex[:8]}",
+                        session_id=f"media-ingest-{file_path.stem}",
+                        sink_name="claims",
+                        payload={
+                            "content": claim.content if hasattr(claim, "content") else str(claim),
+                            "source_platform": "media",
+                            "source_id": str(file_path),
+                        },
+                        status=WriteOpStatus.PENDING,
+                    )
+                    ops.append(op)
+
+                if ops:
+                    write_queue = WriteQueue()
+                    write_queue.enqueue(ops)
 
                 panel = Panel(
                     f"File: {file_path.name}\n"
                     f"Duration: {result.metadata.get('media_info', {}).get('duration_seconds', 0):.1f}s\n"
                     f"Claims: {len(result.claims)}\n"
-                    f"Parser: whisper",
+                    f"Parser: whisper\n"
+                    f"Queued: {len(ops)} write ops",
                     title="[green]Ingestion Complete[/green]",
                     border_style="green",
                 )

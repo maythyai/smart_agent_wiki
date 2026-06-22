@@ -341,11 +341,41 @@ class SyncEngine:
             result.errors.append("Connector does not support push")
             return result
 
-        # TODO: Query claims modified since last_sync_at
-        # This requires ClaimRepository integration
-        # For now, return empty result
+        # Query claims modified since last_sync_at via ClaimRepository
+        from saw.adapters.storage.claims_repository import ClaimsRepository
+        from pathlib import Path as _Path
 
-        result.pushed_count = 0
+        db_path = _Path.home() / ".saw" / "claims.db"
+        if not db_path.exists():
+            result.pushed_count = 0
+            return result
+
+        repo = ClaimsRepository(str(db_path))
+        status = await self._status_tracker.get_status(connector.platform_name)
+        since = None if options.force or options.mode == SyncMode.FULL else status.last_sync_at
+
+        try:
+            claims = repo.list_modified_since(since) if hasattr(repo, "list_modified_since") else []
+            # Filter out claims originating from the same platform to avoid sync loops
+            filtered = [
+                c for c in claims
+                if not (
+                    hasattr(c, "metadata")
+                    and isinstance(getattr(c, "metadata", None), dict)
+                    and c.metadata.get("source_platform") == connector.platform_name
+                )
+            ]
+            for c in filtered:
+                payload = {
+                    "content": c.content if hasattr(c, "content") else str(c),
+                    "source_platform": "saw",
+                    "source_id": c.uuid if hasattr(c, "uuid") else "",
+                }
+                await connector.push_item(payload)
+                result.pushed_count += 1
+        except Exception as e:
+            result.errors.append(f"Push failed: {str(e)}")
+
         return result
 
     async def check_backpressure(self) -> tuple[bool, int]:

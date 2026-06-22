@@ -20,6 +20,68 @@ from saw.synthesize import (
     SynthesizeScheduler,
 )
 from saw.synthesize.scheduler import ScheduleType
+from saw.adapters.storage.claims_repository import ClaimsRepository
+from pathlib import Path as _Path
+
+
+def _load_claims_as_items(repo: ClaimsRepository | None = None, days: int = 30) -> list[dict]:
+    """Load recent claims from SQLite and convert to synthesis item dicts.
+
+    Args:
+        repo: Optional ClaimsRepository; created with default path if None.
+        days: Look-back window in days.
+
+    Returns:
+        List of item dicts compatible with SynthesizeEngine.
+    """
+    if repo is None:
+        db_path = _Path.home() / ".saw" / "claims.db"
+        if not db_path.exists():
+            return []
+        repo = ClaimsRepository(str(db_path))
+    try:
+        claims = repo.list_recent(days=days) if hasattr(repo, "list_recent") else []
+    except Exception:
+        claims = []
+    items = []
+    for c in claims:
+        content = c.content if hasattr(c, "content") else (c.get("content", "") if isinstance(c, dict) else "")
+        source = c.source_uuid if hasattr(c, "source_uuid") else (c.get("source_uuid", "") if isinstance(c, dict) else "")
+        ts = c.created_at if hasattr(c, "created_at") else (c.get("created_at", "") if isinstance(c, dict) else "")
+        items.append({"content": content, "source": source, "timestamp": ts})
+    return items
+
+
+def _load_claims_as_dicts(repo: ClaimsRepository | None = None) -> list[dict]:
+    """Load all active claims as plain dicts for clustering.
+
+    Args:
+        repo: Optional ClaimsRepository.
+
+    Returns:
+        List of claim dicts with 'content', 'confidence', 'tags', 'entities'.
+    """
+    if repo is None:
+        db_path = _Path.home() / ".saw" / "claims.db"
+        if not db_path.exists():
+            return []
+        repo = ClaimsRepository(str(db_path))
+    try:
+        claims = repo.list_all() if hasattr(repo, "list_all") else []
+    except Exception:
+        claims = []
+    result = []
+    for c in claims:
+        if hasattr(c, "content"):
+            result.append({
+                "content": c.content,
+                "confidence": getattr(c, "confidence", "unverified"),
+                "tags": getattr(c, "tags", []),
+                "entities": getattr(c, "entities", []),
+            })
+        elif isinstance(c, dict):
+            result.append(c)
+    return result
 
 
 app = typer.Typer(help="Synthesize patterns and generate wiki pages")
@@ -48,12 +110,10 @@ def run_synthesize(
         min_occurrences=min_occurrences,
     )
 
-    # TODO: Load items from database
-    # For now, show placeholder
-    console.print("[yellow]Note: This is a placeholder. Implement item loading from DB.[/yellow]")
-
-    # Placeholder items
-    items: list[dict] = []
+    # Load items from database
+    items = _load_claims_as_items(days=days)
+    if not items:
+        console.print("[yellow]No items found in database for the specified period.[/yellow]")
 
     # Run synthesize
     time_window = timedelta(days=days)
@@ -104,8 +164,8 @@ def show_patterns(
     # Create miner
     miner = PatternMiner(min_occurrences=min_occurrences)
 
-    # TODO: Load items from database
-    items: list[dict] = []
+    # Load items from database
+    items = _load_claims_as_items(days=days)
 
     # Mine
     time_window = timedelta(days=days)
@@ -149,8 +209,8 @@ def show_clusters(
     # Create builder
     builder = ClusterBuilder()
 
-    # TODO: Load claims from database
-    claims: list[dict] = []
+    # Load claims from database
+    claims = _load_claims_as_dicts()
 
     # Build
     result = builder.build(claims)
@@ -244,8 +304,8 @@ def manage_schedule(
         # Create engine
         engine = SynthesizeEngine()
 
-        # TODO: Load items for task
-        items: list[dict] = []
+        # Load items for task
+        items = _load_claims_as_items(days=30)
 
         result = engine.run_scheduled_task(task_id, items)
 

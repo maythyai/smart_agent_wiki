@@ -154,12 +154,10 @@ class AgentDispatcher:
         last_error: Exception | None = None
         for fallback_tier in fallback_chain:
             try:
-                # TODO(WR-01): The fallback_tier is currently not used to switch models.
-                # Agent's model_tier is fixed at construction time. The metadata below
-                # records the intended tier but actual LLM calls use the original model.
-                # Future: Either pass model dynamically to agent.execute() or have
-                # LLMRouter.completion() support fallback model selection.
-                result = await agent.execute(task, context, tools or [])
+                # Use fallback_tier to dynamically switch models via LLMRouter.
+                # The agent's original model_tier is the primary; on rate-limit we
+                # escalate to the next tier in FALLBACK_ORDER.
+                result = await agent.execute(task, context, tools or [], model_tier_override=fallback_tier)
                 result.metadata["model_tier_used"] = fallback_tier.value
                 return result
             except RateLimitError as e:

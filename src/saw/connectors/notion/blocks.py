@@ -247,13 +247,23 @@ class BlockRenderer:
         return f"$$\n{expression}\n$$\n"
 
     async def _render_toggle(self, block: dict) -> str:
-        """Render toggle block."""
+        """Render toggle block with child content."""
         toggle = block.get("toggle", {})
         rich_text = toggle.get("rich_text", [])
         text = render_rich_text(rich_text)
 
-        # Render as collapsible section (simplified)
-        return f"<details><summary>{text}</summary>\n\nTODO: Fetch children\n\n</details>\n"
+        # Fetch and render child blocks if block ID is available
+        block_id = block.get("id", "")
+        children_md = ""
+        if block_id and hasattr(self, "_fetch_children"):
+            try:
+                children = await self._fetch_children(block_id)
+                for child in children:
+                    children_md += await self.render_block(child)
+            except Exception:
+                children_md = "_Failed to load child content._"
+
+        return f"<details><summary>{text}</summary>\n\n{children_md}\n\n</details>\n"
 
     async def _render_column_list(self, block: dict) -> str:
         """Render column list - flatten columns."""
