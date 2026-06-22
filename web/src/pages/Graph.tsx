@@ -15,6 +15,7 @@ export default function Graph() {
   const entity = searchParams.get('entity') ?? undefined;
   const containerRef = useRef<HTMLDivElement>(null);
   const [layout, setLayout] = useState<LayoutType>('fcose');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const selectedNode = useStore((s) => s.selectedNode);
   const selectNode = useStore((s) => s.selectNode);
@@ -51,10 +52,22 @@ export default function Graph() {
 
   return (
     <div className="h-screen flex flex-col">
-      <header className="bg-white dark:bg-gray-800 border-b dark:border-gray-700 px-6 py-4">
+      <header className="bg-white dark:bg-gray-800 border-b dark:border-gray-700 px-4 md:px-6 py-3 md:py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Knowledge Graph</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+          <div className="flex items-center gap-3">
+            {/* Mobile sidebar toggle */}
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              aria-label="Toggle filters"
+            >
+              <svg className="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+            <h1 className="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">Knowledge Graph</h1>
+          </div>
+          <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400">
             {isLoading
               ? 'Loading...'
               : isError
@@ -68,7 +81,19 @@ export default function Graph() {
 
       <div className="flex-1 flex">
         {/* Left sidebar: Filters and Controls */}
-        <aside className="w-64 border-r dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-4 space-y-4 overflow-y-auto">
+        {/* Mobile: overlay drawer, Desktop: fixed sidebar */}
+        {sidebarOpen && (
+          <div
+            className="md:hidden fixed inset-0 bg-black/50 z-20"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+        <aside className={`
+          fixed md:relative z-30 h-full md:h-auto
+          w-64 border-r dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-4 space-y-4 overflow-y-auto
+          transition-transform duration-200 ease-in-out
+          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+        `}>
           <GraphFilters onRefresh={handleRefresh} />
           <GraphControls
             onZoomIn={() => {/* Handled by Cytoscape internally */}}
