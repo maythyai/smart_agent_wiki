@@ -8,10 +8,13 @@ import { useStore } from '../stores';
 import { useGraph } from '../hooks/useGraph';
 import type { GraphNode } from '../types/api';
 
+type LayoutType = 'fcose' | 'breadthfirst' | 'circle' | 'grid';
+
 export default function Graph() {
   const [searchParams, setSearchParams] = useSearchParams();
   const entity = searchParams.get('entity') ?? undefined;
   const containerRef = useRef<HTMLDivElement>(null);
+  const [layout, setLayout] = useState<LayoutType>('fcose');
 
   const selectedNode = useStore((s) => s.selectedNode);
   const selectNode = useStore((s) => s.selectNode);
@@ -72,6 +75,22 @@ export default function Graph() {
             onZoomOut={() => {/* Handled by Cytoscape internally */}}
             onFit={() => {/* Handled by Cytoscape internally */}}
           />
+          {/* Layout selector */}
+          <div className="pt-4 border-t dark:border-gray-700">
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">
+              Layout
+            </label>
+            <select
+              value={layout}
+              onChange={(e) => setLayout(e.target.value as LayoutType)}
+              className="w-full px-2 py-1.5 text-sm border dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="fcose">Force-directed (fCoSE)</option>
+              <option value="breadthfirst">Hierarchical</option>
+              <option value="circle">Circle</option>
+              <option value="grid">Grid</option>
+            </select>
+          </div>
         </aside>
 
         {/* Main graph area */}
@@ -129,6 +148,7 @@ export default function Graph() {
             entity={entity}
             depth={2}
             maxNodes={100}
+            layout={layout}
             onNodeSelect={handleNodeSelect}
           />
 

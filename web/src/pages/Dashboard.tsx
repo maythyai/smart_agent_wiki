@@ -2,11 +2,20 @@ import { useWebSocket } from '../hooks/useWebSocket';
 import { AgentList } from '../components/dashboard/AgentList';
 import { ConnectionStatus } from '../components/dashboard/ConnectionStatus';
 import { useStore } from '../stores';
+import { useState, useEffect } from 'react';
+
+interface StatsData {
+  total_pages: number;
+  recent_edits: number;
+  active_agents: number;
+  uptime_hours: number;
+}
 
 /**
  * Dashboard page displays agent status and WebSocket connection.
  * Per D-17: Real-time agent status via WebSocket.
  * Per D-18~19: Agent list with name, status, task, progress.
+ * v3.6 Enhancement: Statistics cards and quick actions.
  */
 export default function Dashboard() {
   // Initialize WebSocket connection (auto-connects on mount)
@@ -16,6 +25,33 @@ export default function Dashboard() {
   const agents = useStore((s) => s.agents);
   const activeWorkflow = useStore((s) => s.activeWorkflow);
   const lastUpdate = useStore((s) => s.lastUpdate);
+
+  // Statistics state
+  const [stats, setStats] = useState<StatsData>({
+    total_pages: 0,
+    recent_edits: 0,
+    active_agents: 0,
+    uptime_hours: 0,
+  });
+
+  // Fetch statistics periodically
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await fetch('/api/dashboard/stats');
+        if (response.ok) {
+          const data = await response.json();
+          setStats(data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch stats:', err);
+      }
+    };
+
+    fetchStats();
+    const interval = setInterval(fetchStats, 30000); // Refresh every 30s
+    return () => clearInterval(interval);
+  }, []);
 
   // Count agents by status
   const agentCounts = Object.values(agents).reduce(
@@ -107,6 +143,90 @@ export default function Dashboard() {
             Last update: {new Date(lastUpdate).toLocaleTimeString()}
           </span>
         )}
+      </div>
+
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 border border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Total Pages</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{stats.total_pages}</p>
+            </div>
+            <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+              <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 border border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Recent Edits (24h)</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{stats.recent_edits}</p>
+            </div>
+            <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+              <svg className="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 border border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Active Agents</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{stats.active_agents}</p>
+            </div>
+            <div className="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+              <svg className="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 border border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Uptime</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{stats.uptime_hours}h</p>
+            </div>
+            <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
+              <svg className="w-5 h-5 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-6 border border-gray-200 dark:border-gray-700">
+        <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Quick Actions</h3>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => window.location.href = '/graph'}
+            className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            View Graph
+          </button>
+          <button
+            onClick={() => window.location.href = '/search'}
+            className="px-3 py-1.5 text-sm bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+          >
+            Search Pages
+          </button>
+          <button
+            onClick={() => window.location.href = '/integrations'}
+            className="px-3 py-1.5 text-sm bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+          >
+            Manage Integrations
+          </button>
+        </div>
       </div>
 
       {/* Active workflow banner */}
