@@ -7,7 +7,6 @@
 [![Release](https://img.shields.io/badge/release-v3.7.0-blue.svg)](https://github.com/chensaics/smart_agent_wiki/releases/tag/v3.7.0)
 [![Tests](https://img.shields.io/badge/tests-106+%20passing-brightgreen.svg)](tests/)
 [![MCP](https://img.shields.io/badge/MCP-24+%20tools-purple.svg)](src/saw/mcp/)
-[![Code Intelligence](https://img.shields.io/badge/code%20intelligence-v3.4-orange.svg)](src/saw/analysis/)
 [![GitHub Stars](https://img.shields.io/github/stars/chensaics/smart_agent_wiki?style=social)](https://github.com/chensaics/smart_agent_wiki)
 [![GitHub Issues](https://img.shields.io/github/issues/chensaics/smart_agent_wiki)](https://github.com/chensaics/smart_agent_wiki/issues)
 
@@ -19,360 +18,197 @@
 
 Smart Agent Wiki 是一个本地优先的知识管理平台，将知识视为「编译」的结果而非检索的对象。它通过四层存储架构（Vault → Claims → Wiki → Index）和五大引擎（摄入、查询、治理、学习、协作），实现知识从摄入到过期修剪的全生命周期管理。
 
-**核心特性：**
+**亮点：**
+
 - 🔍 **四层存储架构** — 每条主张可溯源到原始文档的具体位置
-- 🤖 **6 个专业化 Agent** — Librarian/Writer/Critic/Linker/Scholar/Guardian 协作编排
+- 🤖 **6 个专业化 Agent** — Librarian / Writer / Critic / Linker / Scholar / Guardian
 - 🛡️ **治理引擎** — 4 层置信度、9 级新鲜度、矛盾检测、Ed25519 审计收据
-- 🌐 **Web UI** — React + Cytoscape.js 知识图谱可视化 + Milkdown 编辑器
-- 🔌 **MCP Server** — 24+ 工具，Claude Code/Cursor/Copilot 兼容
-- 🧠 **Code Intelligence** — 代码知识图谱分析（v3.4 新增）
-- 💰 **Token Optimizer** — 减少 LLM token 消耗 65%+（v3.6 新增）
-- 🔐 **安全加固** — JWT 认证、RBAC、速率限制、审计日志（v3.7 新增）
-- 🧩 **插件系统** — 可扩展 SDK，事件驱动架构（v3.6 新增）
-
-## v3.7 新功能：安全与质量
-
-v3.7 专注于生产就绪，包含全面的安全加固、扩展的测试覆盖和文档。
-
-### 安全加固
-- **JWT 认证** — Access/refresh token 对，可配置过期时间
-- **RBAC 权限控制** — 基于角色的访问控制（admin/editor/viewer）
-- **速率限制** — 按用户、按端点的请求节流
-- **输入清洗** — SQL 注入和 XSS 模式检测
-- **安全头** — CSP、HSTS、X-Frame-Options、X-Content-Type-Options
-- **审计日志** — 所有写操作记录时间戳和用户上下文
-
-### 测试覆盖扩展
-- **82 个新测试用例**，分布在 4 个测试文件中
-- JWT 认证：28 个测试（token 创建、验证、过期、刷新流程）
-- 权限：24 个测试（RBAC 执行、角色层级、中间件）
-- 安全中间件：16 个测试（速率限制、输入清洗、安全头）
-- 插件系统：14 个测试（生命周期、事件、沙箱隔离）
-
-### 文档与开发者体验
-- 插件开发指南（`docs/PLUGIN_DEVELOPMENT.md`）
-- 架构文档（`docs/ARCHITECTURE.md`）
-- 移动端响应式 Graph 页面，支持触摸手势
-
-## v3.6 新功能：插件系统与性能
-
-v3.6 引入了可扩展的插件系统和性能优化。
-
-### 插件系统
-- **Plugin SDK** — `PluginBase`、`PluginContext`、事件钩子
-- **CLI 管理** — `saw plugin list/install/enable/disable/uninstall`
-- **事件系统** — `PageCreated`、`PageUpdated`、`PageDeleted`、`ClaimCreated`、`IngestCompleted`、`QueryExecuted`
-- **示例插件** — markdown-formatter（admonitions、anchors）、word-counter（统计）
-- **沙箱隔离** — 每个插件拥有独立的 `data_dir`
-
-### 查询缓存
-- **LRU + TTL** — 默认 300 秒，最多 1000 条目
-- **Dashboard Stats API** — `/api/dashboard/stats` 端点
-- **实时指标** — 总页面数、最近编辑、活跃 Agent、运行时间
-
-### Token Optimizer
-
-受 OpenWolf 的 token 优化技术启发，Smart Agent Wiki 现包含 Token Optimizer 模块，可减少 LLM token 消耗高达 65%：
-
-### 解剖索引（文件地图）
-项目结构索引，包含文件描述和 token 估算——在读取之前了解文件内容：
-```python
-from saw.token_optimizer import AnatomyIndex
-
-index = AnatomyIndex(project_root="./my_project")
-index.scan_directory()
-
-# 不读取文件也能获取信息
-entry = index.get_entry("src/main.py")
-print(f"{entry.description} (~{entry.estimated_tokens} tokens)")
-```
-
-### 大脑（学习记忆）
-跨会话学习记忆，积累偏好并防止重复错误：
-```python
-from saw.token_optimizer import Cerebrum
-
-cerebrum = Cerebrum()
-cerebrum.add_do_not_repeat(
-    mistake="Used mutable default argument",
-    correction="Use None default and check inside function"
-)
-
-# 在犯同样错误前检查
-if cerebrum.check_do_not_repeat("mutable default"):
-    # 应用学到的修正
-```
-
-### Bug 日志（修复记忆）
-Bug 修复记忆，防止重新发现已知解决方案：
-```python
-from saw.token_optimizer import BugLog
-
-buglog = BugLog()
-buglog.add_bug(
-    error_message="TypeError: 'NoneType' object is not subscriptable",
-    file="src/api.py",
-    fix="Added null check before dict access"
-)
-
-# 搜索已知修复
-fix = buglog.get_fix_for_error("TypeError: 'NoneType'")
-if fix:
-    print(f"Known fix: {fix.fix}")
-```
-
-### 会话追踪器（读取追踪）
-检测重复文件读取并提供警告：
-```python
-from saw.token_optimizer import SessionTracker
-
-tracker = SessionTracker()
-tracker.track_read("src/main.py", 150)
-
-# 第二次读取触发警告
-result = tracker.track_read("src/main.py", 150)
-if "warning" in result:
-    print(result["warning"])  # "File read 2 times..."
-```
-
-### Token 账本
-跨会话追踪 token 消耗并估算节省：
-```python
-from saw.token_optimizer import TokenLedger
-
-ledger = TokenLedger()
-ledger.start_session()
-ledger.record_read(100, was_anatomy_hit=True)  # 节省 ~800 tokens
-
-report = ledger.get_savings_report()
-print(f"Saved {report['savings_percentage']}% tokens")
-```
-
-## v3.4 新功能：Code Intelligence
-
-借鉴 GitNexus（35K+ stars）的代码智能功能，Smart Agent Wiki 现具备代码知识图谱分析能力：
-
-### DAG Pipeline Validation
-类型安全的摄入管线架构，确保阶段依赖正确：
-- Kahn 拓扑排序算法
-- 循环检测与精确错误报告
-- 6 阶段摄入流程：Classify → Parse → Extract → Merge → Validate → Store
-
-### Impact Analysis Engine
-代码修改影响分析，修改前了解破坏范围：
-```bash
-saw impact UserService
-# 输出：
-# Summary:
-#   Total affected: 5
-#   Depth 1 (will break): 2
-#   Depth 2 (likely affected): 3
-# ⚠ HIGH RISK: 2 direct dependents will break!
-```
-
-风险分级：
-- **WILL_BREAK** — 直接依赖，修改必破
-- **LIKELY_AFFECTED** — 二级依赖，可能受影响
-- **MAY_NEED_TESTING** — 三级依赖，建议测试
-
-### Process Detection
-从入口点追踪执行流程：
-```bash
-saw process handleRequest
-# 输出：
-# Execution flow:
-#   handleRequest
-#     → validateInput
-#       → parseJSON
-#     → processData
-#       → saveToDatabase
-```
-
-### Staleness Detection
-知识库过期检测，判断数据可信度：
-```bash
-saw staleness
-# 输出：
-# Stale nodes: 3
-# - UserService (10 days old, 12 commits behind)
-# - OldService (8 days old, 5 commits behind)
-# Recommendation: Run ingest to update 3 stale nodes
-```
+- 🧠 **代码智能** — 影响分析、执行流检测、过期检测，基于知识图谱
+- 🔐 **安全体系** — JWT 认证、RBAC、速率限制、输入清洗、审计日志
+- 🧩 **插件系统** — 可扩展 SDK，事件驱动钩子，沙箱隔离
+- 💰 **Token 优化** — 减少 LLM token 消耗 65%+
+- 🌐 **Web UI** — React + Cytoscape.js 知识图谱 + Milkdown 编辑器
+- 🔌 **MCP Server** — 24+ 工具，兼容 Claude Code / Cursor / Copilot
 
 ## 快速开始
 
 ### 1. 安装
 
 ```bash
-# 克隆仓库
+# Linux/macOS
+curl -fsSL https://get.saw.sh | bash
+
+# Windows (PowerShell)
+iwr -useb https://get.saw.sh | iex
+```
+
+其他方式：`pipx install smart-agent-wiki`、`brew install chensaics/tap/saw`、或 Docker。
+
+<details>
+<summary>手动安装（开发环境）</summary>
+
+```bash
 git clone https://github.com/chensaics/smart_agent_wiki.git
-cd smart-agent-wiki
-
-# 创建虚拟环境
-python -m venv .venv
-source .venv/bin/activate  # Linux/macOS
-
-# 安装核心依赖
-pip install -e .
-
-# 安装 PDF 解析支持（可选）
-pip install -e ".[pdf]"
-
-# 安装开发依赖（可选）
-pip install -e ".[dev]"
+cd smart_agent_wiki
+python -m venv .venv && source .venv/bin/activate
+pip install -e .            # 核心
+pip install -e ".[pdf]"     # + PDF 解析
+pip install -e ".[dev]"     # + 开发工具
 ```
+</details>
 
-### 2. 初始化 Wiki
+### 2. 初始化与摄入
 
 ```bash
-# 在当前目录创建新的 Wiki
-saw init
+saw init                          # 在当前目录创建 Wiki
+saw init --agent claude-code      # 同时生成 CLAUDE.md
 
-# 生成 Agent 配置文件
-saw init --agent claude-code  # 生成 CLAUDE.md
-saw init --agent cursor       # 生成 .cursorrules
+saw ingest document.pdf           # 单个文件
+saw ingest ./documents/           # 整个目录
+saw ingest https://example.com    # URL
+saw ingest doc.pdf --no-llm       # 离线模式（仅提取结构）
 ```
 
-### 3. 摄入文档
+支持格式：**Markdown**、**PDF**（Docling/PyMuPDF）、**URL**（trafilatura）、**代码**（AST 解析，零 LLM 调用）。
+
+### 3. 查询与搜索
 
 ```bash
-# 摄入单个文件
-saw ingest document.pdf
-saw ingest notes.md
-saw ingest https://example.com/article
-
-# 摄入整个目录
-saw ingest ./documents/
-
-# 离线模式（仅提取结构）
-saw ingest document.pdf --no-llm
+saw query "这个项目的主要设计决策是什么？"   # 自然语言查询
+saw search "entity resolution"               # BM25 关键词搜索
+saw status                                   # 知识库概览
 ```
 
-支持的格式：
-- **Markdown** (`.md`) — LLM 提取实体、概念、主张
-- **PDF** (`.pdf`) — Docling → PyMuPDF 解析
-- **URL** — trafilatura 内容提取
-- **代码** (`.py`, `.js`, `.ts` 等) — AST 解析，零 LLM 调用
-
-### 4. Code Intelligence 使用
+### 4. Web UI 与 MCP
 
 ```bash
-# 分析代码修改影响（上游：依赖者）
-saw impact UserService
-
-# 分析下游依赖
-saw impact handleLogin --direction downstream
-
-# 深度限制
-saw impact AuthModule --max-depth 5
-
-# 置信度过滤
-saw impact UserService --min-confidence 0.9
-
-# JSON 输出
-saw impact UserService --json
-
-# 检测执行流程
-saw process handleRequest --max-depth 5
-
-# 检测过期节点
-saw staleness --threshold-days 7
+saw web    # → http://localhost:8000  (API 文档: /docs)
+saw mcp    # 启动 MCP Server
 ```
 
-### 5. 查询知识库
-
-```bash
-# 自然语言查询
-saw query "这个项目的主要设计决策是什么？"
-
-# 关键词搜索（BM25 + FTS5）
-saw search "entity resolution"
-
-# 查看知识库状态
-saw status
-```
-
-### 6. 启动 Web UI
-
-```bash
-saw web
-# 访问: http://localhost:8000
-# API 文档: http://localhost:8000/docs
-```
-
-### 7. 启动 MCP Server
-
-```bash
-saw mcp
-```
-
-在 Claude Desktop 配置：
+Claude Desktop MCP 配置：
 ```json
-{
-  "mcpServers": {
-    "smart-agent-wiki": {
-      "command": "saw",
-      "args": ["mcp"]
-    }
-  }
-}
+{ "mcpServers": { "smart-agent-wiki": { "command": "saw", "args": ["mcp"] } } }
 ```
+
+## 功能详解
+
+### 知识治理
+
+- **4 层置信度** — 未验证 → 单来源 → 交叉验证 → 人工确认
+- **9 级新鲜度** — 🟢 新鲜 → 🟡 较新 → 🟠 较旧 → 🔴 过期
+- **矛盾检测** — 自动发现跨来源的冲突主张
+- **Ed25519 审计收据** — 数据溯源的密码学证明
+- **Write Queue** — SQLite outbox 模式，单一变更网关
+
+### 代码智能
+
+通过知识图谱分析代码库：
+
+```bash
+saw impact UserService                  # 修改影响分析（BFS 风险分级）
+saw impact handleLogin --direction downstream
+saw process handleRequest               # 执行流检测（DFS 调用树）
+saw staleness --threshold-days 7        # 知识库新鲜度检查
+```
+
+风险分级：**WILL_BREAK**（直接依赖）→ **LIKELY_AFFECTED**（二级）→ **MAY_NEED_TESTING**（三级）。
+
+摄入管线使用 Kahn 拓扑排序进行 DAG 验证，含循环检测，跨 6 个阶段：Classify → Parse → Extract → Merge → Validate → Store。
+
+### 安全
+
+内置生产级安全能力：
+
+- **JWT 认证** — Access/refresh token 对，可配置过期时间
+- **RBAC** — 基于角色的访问控制（admin / editor / viewer）
+- **速率限制** — 按用户、按端点的请求节流
+- **输入清洗** — SQL 注入和 XSS 模式检测
+- **安全头** — CSP、HSTS、X-Frame-Options、X-Content-Type-Options
+- **审计日志** — 所有写操作记录时间戳和用户上下文
+
+### 插件系统
+
+通过自定义插件扩展 SAW：
+
+```bash
+saw plugin list                  # 列出已安装插件
+saw plugin install my-plugin     # 从仓库安装
+saw plugin enable my-plugin      # 启用/禁用
+```
+
+- **Plugin SDK** — `PluginBase`、`PluginContext`、事件钩子
+- **事件系统** — `PageCreated`、`PageUpdated`、`PageDeleted`、`ClaimCreated`、`IngestCompleted`、`QueryExecuted`
+- **沙箱隔离** — 每个插件拥有独立的 `data_dir`
+
+详见[插件开发指南](docs/PLUGIN_DEVELOPMENT.md)。
+
+### Token 优化
+
+减少 LLM token 消耗高达 65%：
+
+| 模块 | 用途 |
+|------|------|
+| **Anatomy Index** | 项目结构索引，含文件描述和 token 估算 |
+| **Cerebrum** | 跨会话学习记忆 — 积累偏好，防止重复错误 |
+| **Bug Log** | 修复记忆 — 防止重新发现已知解决方案 |
+| **Session Tracker** | 检测重复文件读取并提供警告 |
+| **Token Ledger** | 跨会话追踪 token 消耗并估算节省 |
+
+```python
+from saw.token_optimizer import AnatomyIndex, TokenLedger
+
+index = AnatomyIndex(project_root="./my_project")
+index.scan_directory()
+entry = index.get_entry("src/main.py")
+print(f"{entry.description} (~{entry.estimated_tokens} tokens)")
+```
+
+### 开发者体验
+
+- **一行安装** — `curl -fsSL https://get.saw.sh | bash`
+- **交互式教程** — `saw tutorial`（5 步引导，含演示内容）
+- **简短别名** — `saw i`（ingest）、`saw q`（query）、`saw s`（status）、`saw w`（web）
+- **友好错误** — 可操作的建议，而非原始 traceback
+- **Shell 补全** — `saw completion bash|zsh|fish --install`
+- **离线文档** — `saw docs --output ./docs-offline/`
+- **查询缓存** — LRU + TTL（默认 300 秒，最多 1000 条目）
+- **Dashboard 统计** — 实时指标：总页面数、最近编辑、活跃 Agent、运行时间
 
 ## CLI 命令参考
 
-| 命令 | 说明 |
-|------|------|
-| `saw init` | 初始化新的 Wiki |
-| `saw status` | 显示知识库状态概览 |
-| `saw ingest <source>` | 摄入文档/URL/目录 |
-| `saw query <question>` | 自然语言查询 |
-| `saw search <keywords>` | BM25 关键词搜索 |
-| `saw impact <symbol>` | 代码修改影响分析 ⭐ |
-| `saw process <entry>` | 执行流程检测 ⭐ |
-| `saw staleness` | 知识库过期检测 ⭐ |
-| `saw lint` | 健康检查 |
-| `saw conflicts` | 列出矛盾冲突 |
-| `saw freshness` | 新鲜度报告 |
-| `saw mcp` | 启动 MCP Server |
-| `saw web` | 启动 Web UI |
+| 命令 | 别名 | 说明 |
+|------|------|------|
+| `saw init` | — | 初始化新的 Wiki |
+| `saw status` | `saw s` | 显示知识库状态 |
+| `saw ingest <source>` | `saw i` | 摄入文档/URL/目录 |
+| `saw query <question>` | `saw q` | 自然语言查询 |
+| `saw search <keywords>` | — | BM25 关键词搜索 |
+| `saw impact <symbol>` | — | 代码修改影响分析 |
+| `saw process <entry>` | — | 执行流检测 |
+| `saw staleness` | — | 知识库过期检测 |
+| `saw lint` | `saw l` | 健康检查 |
+| `saw conflicts` | — | 列出矛盾冲突 |
+| `saw freshness` | — | 新鲜度报告 |
+| `saw plugin <action>` | — | 插件管理（list/install/enable/disable） |
+| `saw mcp` | — | 启动 MCP Server |
+| `saw web` | `saw w` | 启动 Web UI |
+| `saw tutorial` | — | 交互式教程 |
+| `saw config` | — | TUI 配置界面 |
+| `saw completion` | — | Shell 补全 |
+| `saw docs` | — | 离线文档 |
 
-⭐ v3.4 新增命令
+## MCP 工具（24+）
 
-## MCP 工具列表
+**摄入（2）：** `saw_ingest`、`saw_reparse`
 
-**摄入工具 (2)**
-- `saw_ingest` — 摄入文档
-- `saw_reparse` — 重新解析
+**查询（7）：** `saw_query`、`saw_search`、`saw_tree_search`、`saw_graph`、`saw_compare`、`saw_compile`、`saw_coverage`
 
-**查询工具 (7)**
-- `saw_query` — 自然语言查询
-- `saw_search` — BM25 搜索
-- `saw_tree_search` — 结构感知搜索
-- `saw_graph` — 知识图谱遍历
-- `saw_compare` — 页面对比
-- `saw_compile` — 上下文编译
-- `saw_coverage` — 覆盖度分析
+**治理（7）：** `saw_lint`、`saw_conflicts`、`saw_verify`、`saw_freshness`、`saw_review`、`saw_audit`、`saw_blast_radius`
 
-**治理工具 (7)**
-- `saw_lint` — 健康检查
-- `saw_conflicts` — 矛盾列表
-- `saw_verify` — 验证溯源
-- `saw_freshness` — 新鲜度报告
-- `saw_review` — 人工审核
-- `saw_audit` — 审计链验证
-- `saw_blast_radius` — 影响范围
+**代码智能（3）：** `saw_impact`、`saw_process`、`saw_staleness`
 
-**Code Intelligence 工具 (3) ⭐**
-- `saw_impact` — 代码修改影响分析
-- `saw_process` — 执行流程检测
-- `saw_staleness` — 知识库过期检测
-
-**学习工具 (5)**
-- `saw_status` — 知识库状态
-- `saw_learn` — 触发学习周期
-- `saw_distill` — 认知蒸馏
-- `saw_suggest` — 知识缺口建议
-- `saw_wip` — 工作进度
+**学习（5）：** `saw_status`、`saw_learn`、`saw_distill`、`saw_suggest`、`saw_wip`
 
 ## 技术架构
 
@@ -389,7 +225,7 @@ saw mcp
 │                       引擎层                                 │
 ├─────────────┬─────────────┬─────────────┬───────────────────┤
 │ IngestEngine│ QueryEngine │GovernEngine │ CollaborateEngine │
-│ (DAG v3.4)  │             │             │                   │
+│ (DAG pipe)  │ (+ Cache)   │ (+ RBAC)    │                   │
 └──────┬──────┴──────┬──────┴──────┬──────┴─────────┬─────────┘
        │             │             │                │
        ▼             ▼             ▼                ▼
@@ -400,73 +236,29 @@ saw mcp
 │  (不可变)   │  (SQLite)   │ (Markdown)  │ (索引层)          │
 └─────────────┴─────────────┴─────────────┴───────────────────┘
 
-┌─────────────────────────────────────────────────────────────┐
-│                  Code Intelligence (v3.4)                   │
-├─────────────┬─────────────┬─────────────┬───────────────────┤
-│ DAG Pipeline│ Impact Eng. │Process Det. │ Staleness Det.    │
-│ Validation  │ (BFS trav.) │ (DFS tree)  │ (Git compare)     │
-└─────────────┴─────────────┴─────────────┴───────────────────┘
+┌──────────────────────┐  ┌──────────────────────┐
+│      代码智能         │  │     Token 优化        │
+├──────────────────────┤  ├──────────────────────┤
+│ Impact · Process     │  │ Anatomy · Cerebrum   │
+│ Staleness · DAG      │  │ BugLog · Tracker     │
+└──────────────────────┘  └──────────────────────┘
 ```
 
-## 置信度与新鲜度
+六边形架构：`domain/`（纯 Python）→ `engines/`（业务逻辑）→ `adapters/`（基础设施）→ `drivers/`（CLI/Web/MCP）。六个专业化 Agent — Librarian、Writer、Critic、Linker、Scholar、Guardian — 协作处理知识。
 
-### 4 层置信度体系
+## 路线图
 
-| 级别 | 名称 | 说明 |
-|------|------|------|
-| 1 | Unverified | 单来源，未验证 |
-| 2 | Single Source | 单来源，已验证 |
-| 3 | Cross-Validated | 多来源交叉验证 |
-| 4 | Human Verified | 人工确认 |
-
-### 9 级新鲜度系统
-
-| 级别 | 颜色 | 说明 |
-|------|------|------|
-| 0-2 | 🟢 绿色 | 新鲜 |
-| 3-5 | 🟡 黄色 | 较新 |
-| 6-7 | 🟠 橙色 | 较旧 |
-| 8 | 🔴 红色 | 过期 |
-
-## 项目状态
-
-**当前版本：v3.7.0**
-
-**已完成：**
-- ✅ 四层存储架构
-- ✅ DAG Pipeline Validation（Kahn 拓扑排序）
-- ✅ Impact Analysis Engine（BFS 风险分级）
-- ✅ Process Detection（DFS 调用树）
-- ✅ Staleness Detection（Git 提交比较）
-- ✅ MCP Server 24+ 工具
-- ✅ CLI 20 命令
-- ✅ Web UI（搜索/图谱/编辑/Dashboard）
-- ✅ 106+ 单元测试通过
-- ✅ 插件系统，含 SDK 和 CLI 管理（v3.6）
-- ✅ 查询缓存和 Dashboard Stats API（v3.6）
-- ✅ Token Optimizer — 节省 65%+ token（v3.6）
-- ✅ 安全加固 — JWT、RBAC、速率限制、审计日志（v3.7）
-- ✅ 82 个新测试用例（auth/permissions/plugins）（v3.7）
-- ✅ 插件开发和架构文档（v3.7）
-- ✅ 移动端响应式 Graph 页面（v3.7）
-
-**路线图 (v3.8)：**
 - Web UI Impact 可视化（D3.js 图）
 - Tree-sitter AST 零 LLM 解析
-- LadybugDB/KuzuDB 图数据库
+- LadybugDB / KuzuDB 图数据库
 - Agent Skills Layer（Claude Code Skills）
 
 ## 开发
 
 ```bash
-# 运行测试
-pytest tests/unit/ingest/ tests/unit/analysis/ -v
-
-# 运行覆盖率测试
-pytest --cov=src/saw
-
-# 前端开发
-cd web && npm run dev
+pytest tests/ -v              # 运行所有测试
+pytest --cov=src/saw          # 含覆盖率
+cd web && npm run dev         # 前端开发服务器
 ```
 
 ## 许可证
