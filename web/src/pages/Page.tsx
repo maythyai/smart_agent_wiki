@@ -4,6 +4,7 @@ import { WikiEditorWrapper } from '../components/editor/WikiEditor';
 import { useStore } from '../stores';
 import { ConfidenceBadge } from '../components/common/ConfidenceBadge';
 import { FreshnessBadge } from '../components/common/FreshnessBadge';
+import { BacklinksPanel } from '../components/links/BacklinksPanel';
 import { useState } from 'react';
 
 /**
@@ -188,6 +189,9 @@ export default function Page() {
           readOnly={mode === 'view'}
         />
       </div>
+
+      {/* Backlinks Panel */}
+      {slug && <BacklinksPanel slug={slug} />}
     </div>
   );
 }

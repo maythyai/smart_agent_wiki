@@ -8,6 +8,7 @@ import Pages from '../pages/Pages';
 import Dashboard from '../pages/Dashboard';
 import Integrations from '../pages/Integrations';
 import ConnectorSettings from '../pages/ConnectorSettings';
+import Import from '../pages/Import';
 import Login from '../pages/Login';
 import NotFound from '../pages/NotFound';
 
@@ -29,6 +30,7 @@ export const router = createBrowserRouter([
       { path: 'integrations', element: <Integrations /> },
       { path: 'integrations/:platform', element: <Integrations /> },
       { path: 'integrations/:platform/settings', element: <ConnectorSettings /> },
+      { path: 'import', element: <Import /> },
     ],
   },
   {

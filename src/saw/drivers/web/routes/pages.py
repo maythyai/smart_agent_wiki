@@ -5,6 +5,10 @@ Per D-14: GET /api/pages/{slug} - get page content.
 Per D-15: PUT /api/pages/{slug} - update page via Write Queue.
 Per D-16: DELETE /api/pages/{slug} - delete page via Write Queue.
 
+Bidirectional linking:
+- GET /api/pages/{slug}/backlinks - pages linking TO this page
+- GET /api/pages/{slug}/outlinks - pages this page links TO
+
 All mutations flow through Write Queue for durability (per ARCHITECTURE.md).
 """
 from __future__ import annotations
@@ -21,6 +25,7 @@ from saw.drivers.web.schemas.pages import (
     PageStatus,
     PageUpdate,
 )
+from saw.engines.query.wiki_links import extract_unique_targets, parse_wiki_links
 
 router = APIRouter()
 
@@ -227,6 +232,110 @@ async def delete_page(
         slug=slug,
         op_id=op_id,
     )
+
+
+@router.get("/pages/{slug}/backlinks")
+async def get_backlinks(
+    slug: str = Path(..., description="Page slug"),
+    engine=Depends(get_query_engine),
+) -> list[dict]:
+    """Get pages that link TO this page (backlinks).
+
+    Scans all wiki pages to find which ones contain [[slug]] links.
+    Returns list of {slug, title, context_snippet}.
+    """
+    wiki = getattr(engine, "_wiki_repo", None) or getattr(engine, "wiki", None)
+    if wiki is None:
+        return []
+
+    backlinks: list[dict] = []
+    target_slug = slug.strip("/")  # Normalize
+
+    for page_slug in wiki.list_pages():
+        if page_slug == slug:
+            continue  # Skip self
+
+        page = wiki.read(page_slug)
+        if page is None:
+            continue
+
+        # Check if this page links to target
+        links = parse_wiki_links(page.content)
+        matching_links = [l for l in links if l.target == target_slug]
+
+        if matching_links:
+            # Extract context snippet around the link
+            context = _extract_context(page.content, target_slug)
+            backlinks.append({
+                "slug": page_slug,
+                "title": page.title,
+                "context": context,
+                "link_count": len(matching_links),
+            })
+
+    return backlinks
+
+
+@router.get("/pages/{slug}/outlinks")
+async def get_outlinks(
+    slug: str = Path(..., description="Page slug"),
+    engine=Depends(get_query_engine),
+) -> list[dict]:
+    """Get pages this page links TO (outlinks).
+
+    Parses [[wiki-links]] from page content.
+    Returns list of {target, alias, exists}.
+    """
+    wiki = getattr(engine, "_wiki_repo", None) or getattr(engine, "wiki", None)
+    if wiki is None:
+        return []
+
+    page = wiki.read(slug)
+    if page is None:
+        raise HTTPException(status_code=404, detail=f"Page '{slug}' not found")
+
+    links = parse_wiki_links(page.content)
+    outlinks: list[dict] = []
+
+    for link in links:
+        # Check if target page exists
+        target_page = wiki.read(link.target)
+        outlinks.append({
+            "target": link.target,
+            "alias": link.alias,
+            "section": link.section,
+            "exists": target_page is not None,
+        })
+
+    return outlinks
+
+
+def _extract_context(content: str, target_slug: str, context_chars: int = 80) -> str:
+    """Extract text snippet around a [[wiki-link]] reference.
+
+    Args:
+        content: Page content.
+        target_slug: The slug being linked to.
+        context_chars: Characters of context on each side.
+
+    Returns:
+        Snippet with ... ellipsis for truncated text.
+    """
+    import re
+    # Find [[target]] or [[target|alias]] in content
+    pattern = rf'\[\[{re.escape(target_slug)}[^]]*\]\]'
+    match = re.search(pattern, content, re.IGNORECASE)
+    if not match:
+        return ""
+
+    start = max(0, match.start() - context_chars)
+    end = min(len(content), match.end() + context_chars)
+
+    snippet = content[start:end].replace("\n", " ")
+    prefix = "..." if start > 0 else ""
+    suffix = "..." if end < len(content) else ""
+
+    return f"{prefix}{snippet}{suffix}"
 
 
 @router.post("/pages", response_model=PageStatus)

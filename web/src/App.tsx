@@ -1,5 +1,6 @@
 import { Outlet, NavLink, useNavigate } from 'react-router';
 import { MobileNav } from './components/layout/MobileNav';
+import { CommandPalette } from './components/search/CommandPalette';
 import { useStore } from './stores';
 import { useAuthStore } from './stores/authStore';
 
@@ -30,6 +31,9 @@ export default function App() {
         Skip to main content
       </a>
 
+      {/* Command Palette (Cmd+K) */}
+      <CommandPalette />
+
       {/* Fixed height header per D-06 */}
       <header className="bg-white dark:bg-gray-800 border-b dark:border-gray-700 h-14 fixed top-0 left-0 right-0 z-30">
         <div className="flex items-center justify-between h-full px-4 max-w-7xl mx-auto">
@@ -39,7 +43,7 @@ export default function App() {
           </h1>
 
           {/* Desktop navigation - hidden on mobile */}
-          <nav className="hidden md:flex gap-4">
+          <nav className="hidden md:flex gap-4 items-center">
             <NavLink
               to="/pages"
               className={({ isActive }) =>
@@ -80,6 +84,32 @@ export default function App() {
             >
               Dashboard
             </NavLink>
+            <NavLink
+              to="/import"
+              className={({ isActive }) =>
+                isActive
+                  ? 'text-blue-600 font-medium'
+                  : 'text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400'
+              }
+            >
+              Import
+            </NavLink>
+
+            {/* Cmd+K search button */}
+            <button
+              onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }))}
+              className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-500 dark:text-gray-400
+                bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg
+                transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <span className="hidden lg:inline">Search</span>
+              <kbd className="hidden lg:inline-block px-1.5 py-0.5 text-xs font-mono
+                bg-white dark:bg-gray-800 rounded">⌘K</kbd>
+            </button>
           </nav>
 
           {/* Logout button */}

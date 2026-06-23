@@ -130,10 +130,12 @@ def create_app(
     from saw.drivers.web.routes.graph import router as graph_router
     from saw.drivers.web.routes.pages import router as pages_router
     from saw.drivers.web.routes.search import router as search_router
+    from saw.drivers.web.routes.import_md import router as import_router
 
     app.include_router(graph_router, prefix="/api", tags=["graph"])
     app.include_router(pages_router, prefix="/api", tags=["pages"])
     app.include_router(search_router, prefix="/api", tags=["search"])
+    app.include_router(import_router, prefix="/api", tags=["import"])
 
     # Register connector settings routes (Phase 18)
     from saw.api.connector_settings import router as connector_settings_router
@@ -226,6 +228,20 @@ def create_app_from_config(
         wiki_repo=wiki_repo,
         conn=conn,
     )
+
+    # Startup: index wiki pages into FTS5 for search
+    from saw.engines.query.wiki_indexer import WikiIndexer
+
+    wiki_indexer = WikiIndexer(conn, wiki_repo)
+    try:
+        indexed = wiki_indexer.index_all()
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"Indexed {indexed} wiki pages into FTS5")
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning(f"Wiki indexing failed: {e}")
 
     return create_app(
         query=query_engine,

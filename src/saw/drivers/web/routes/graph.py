@@ -38,7 +38,8 @@ async def get_graph(
 ) -> GraphResponse:
     """Get knowledge graph nodes and edges (per D-10).
 
-    Per D-12: Support BFS/DFS traversal parameters.
+    Builds graph from wiki pages and [[wiki-links]] for real connections.
+    Falls back to entity graph if wiki is empty.
 
     Args:
         depth: Traversal depth (default 2, max 5).
@@ -50,6 +51,50 @@ async def get_graph(
     Returns:
         GraphResponse with nodes and edges for Cytoscape.js.
     """
+    # Try wiki graph first (real [[wiki-links]])
+    wiki = getattr(engine, "_wiki_repo", None) or getattr(engine, "wiki", None)
+    if wiki is not None:
+        from saw.engines.query.wiki_graph import WikiGraphBuilder
+
+        builder = WikiGraphBuilder(wiki)
+        wiki_nodes, wiki_edges = builder.build(max_nodes=max_nodes)
+
+        # Apply type filter if specified
+        if type is not None:
+            wiki_nodes = [n for n in wiki_nodes if n.type == type]
+            wiki_node_ids = {n.id for n in wiki_nodes}
+            wiki_edges = [e for e in wiki_edges if e.source in wiki_node_ids and e.target in wiki_node_ids]
+
+        if wiki_nodes:
+            # Convert to GraphNode/GraphEdge
+            nodes = [
+                GraphNode(
+                    id=n.id,
+                    label=n.label,
+                    type=n.type,
+                    confidence=n.confidence,
+                    description=n.description,
+                )
+                for n in wiki_nodes
+            ]
+            edges = [
+                GraphEdge(
+                    id=e.id,
+                    source=e.source,
+                    target=e.target,
+                    type=e.type,
+                    weight=e.weight,
+                )
+                for e in wiki_edges
+            ]
+            return GraphResponse(
+                nodes=nodes,
+                edges=edges,
+                total_nodes=len(nodes),
+                total_edges=len(edges),
+            )
+
+    # Fallback to entity graph if wiki is empty
     graph = engine._graph
 
     # Get all entities from cache
