@@ -89,6 +89,7 @@ export interface PageStatus {
 }
 
 export interface PageListResponse {
+  pages: PageResponse[];
   slugs: string[];
   total: number;
 }

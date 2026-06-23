@@ -11,6 +11,7 @@
 - ⏳ **v3.4 Code Intelligence** — Phases 26-30 (complete) — [Details](milestones/v3.4-CODE-INTELLIGENCE-PLAN.md)
 - ✅ **v3.5 Developer Experience** — Phases 31-34 (shipped 2026-05-05) — This document
 - 🔵 **v3.7 Security, Testing & Documentation** — Phases 39-42 (executing) — This document
+- 🔴 **v3.8 Implementation Reality Check** — Phases 43-45 (new) — Based on competitive analysis断裂点
 
 ## Phases
 
@@ -669,7 +670,76 @@ v3.5: Developer Experience ✓
 
 ---
 
-*Last updated: 2026-06-22 — v3.7 Security, Testing & Documentation milestone added*
+*Last updated: 2026-06-23 — v3.8 Implementation Reality Check milestone added*
+
+## Upcoming (v3.8: Implementation Reality Check)
+
+> Based on competitive analysis: "架构 80 分、实现 30 分" — make existing features actually work.
+
+- [x] **Phase 43: Frontend Core User Flow** — 登录页、页面列表、新建入口、编辑器保存、404 页面
+- [x] **Phase 44: Backend Engine Implementation** — Agent execute() 真实逻辑、矛盾检测、去重、治理统计
+- [x] **Phase 45: Connector & MCP Integration** — MCP Server 工具注册、Notion 修复、同步流程集成冲突检测
+
+### Phase Details (v3.8)
+
+### Phase 43: Frontend Core User Flow
+
+**Goal:** 用户打开 Web UI 后 2 分钟内能完成核心操作（登录 → 浏览 → 创建 → 编辑 → 保存）
+
+**Depends on:** v3.7 complete
+
+**Requirements:** UI-01, UI-02, UI-03, UI-04, UI-05
+
+**Success Criteria** (what must be TRUE):
+1. 用户访问 /login 能登录并跳转到 /dashboard
+2. 用户访问 /pages 能看到所有 Wiki 页面列表
+3. 用户点击"新建页面"能创建新页面并进入编辑
+4. 编辑器保存按钮能成功保存内容并显示反馈
+5. 访问不存在的路由显示友好的 404 页面
+
+**Plans:** 0/3 plans
+
+**UI hint:** yes
+
+---
+
+### Phase 44: Backend Engine Implementation
+
+**Goal:** 6 个 Agent 的 execute() 返回真实结果，矛盾检测和治理统计正常工作
+
+**Depends on:** v3.7 complete
+
+**Requirements:** BE-01, BE-02, BE-03, BE-04, BE-05
+
+**Success Criteria** (what must be TRUE):
+1. 每个 Agent execute() 调用 LLM 并返回结构化结果（非空 payload）
+2. ContradictionDetector.detect_candidates() 从 Claims DB 查询并返回候选矛盾对
+3. IngestPipeline deduplicate 阶段返回真实去重结果
+4. Governor.freshness_report() 返回实际新鲜度分布数据
+5. `saw conflicts` CLI 命令返回真实检测结果
+
+**Plans:** 0/3 plans
+
+---
+
+### Phase 45: Connector & MCP Integration
+
+**Goal:** MCP Server 启动后工具可调用，Notion 连接器能拉取内容，冲突检测集成到同步流程
+
+**Depends on:** Phase 44
+
+**Requirements:** INT-01, INT-02, INT-03, INT-04, INT-05
+
+**Success Criteria** (what must be TRUE):
+1. `saw mcp` 启动后 MCP 工具列表包含所有注册工具
+2. Notion 连接器 fetch_items() 返回非空内容列表
+3. SyncEngine.sync() 在入库前调用矛盾检测
+4. 所有 5 个 MCP 工具文件（collaborate, govern, ingest, learn, query）正确注册
+5. MCP 工具调用返回真实引擎数据（非空结果）
+
+**Plans:** 0/3 plans
+
+---
 
 ## Upcoming (v3.5: Developer Experience)
 

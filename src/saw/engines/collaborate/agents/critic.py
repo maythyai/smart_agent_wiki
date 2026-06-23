@@ -60,13 +60,14 @@ class CriticAgent(BaseAgent):
         Returns:
             AgentResult with review findings.
         """
-        # If no LLM router, return mock success for testing
+        # If no LLM router, use heuristic-based quality checks
         if self._llm is None:
+            review = self._review_fallback(task)
             return AgentResult(
                 success=True,
-                payload={"message": "Critic task processed"},
+                payload=review,
                 confidence=1,
-                metadata={"agent": self.name, "model_tier": self.model_tier},
+                metadata={"agent": self.name, "model_tier": self.model_tier, "fallback": True},
             )
 
         messages = self._build_messages(task, context)
@@ -93,3 +94,36 @@ class CriticAgent(BaseAgent):
                 confidence=1,
                 metadata={"model": "sonnet"},
             )
+
+    def _review_fallback(self, task: AgentTask) -> dict:
+        """Heuristic-based quality review when LLM is unavailable."""
+        payload = task.payload or {}
+        content = payload.get("content", "")
+        findings = []
+
+        # Check content length
+        if len(content) < 50:
+            findings.append({"severity": "warning", "issue": "Content too short", "suggestion": "Expand content"})
+
+        # Check for structure
+        if not content.startswith("#"):
+            findings.append({"severity": "info", "issue": "Missing title heading", "suggestion": "Add H1 heading"})
+
+        # Check for citations
+        if "[" not in content or "]" not in content:
+            findings.append({"severity": "warning", "issue": "No citations found", "suggestion": "Add source references"})
+
+        # Check for TODOs
+        if "TODO" in content.upper() or "FIXME" in content.upper():
+            findings.append({"severity": "error", "issue": "Contains TODO/FIXME", "suggestion": "Resolve incomplete items"})
+
+        # Calculate quality score (1-4)
+        score = 4 - len([f for f in findings if f["severity"] in ("error", "warning")])
+        score = max(1, min(4, score))
+
+        return {
+            "findings": findings,
+            "score": score,
+            "passed": score >= 2,
+            "mode": "heuristic",
+        }

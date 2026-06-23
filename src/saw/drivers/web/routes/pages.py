@@ -37,20 +37,57 @@ def get_write_queue(request: Request):
 
 @router.get("/pages", response_model=PageListResponse)
 async def list_pages(
+    q: str | None = None,
     engine=Depends(get_query_engine),
 ) -> PageListResponse:
-    """List all wiki page slugs (per D-13).
+    """List all wiki pages with optional search (per D-13).
 
-    Returns a list of all available wiki page slugs.
+    Returns full page objects for listing and search results.
     """
-    pages: list[str] = []
+    slug_list: list[str] = []
     if hasattr(engine, "_wiki_repo") and engine._wiki_repo is not None:
-        pages = engine._wiki_repo.list_pages()
+        slug_list = engine._wiki_repo.list_pages()
     elif hasattr(engine, "wiki") and engine.wiki is not None:
-        pages = engine.wiki.list_pages()
+        slug_list = engine.wiki.list_pages()
+
+    # Build full page responses with search filtering
+    pages: list[PageResponse] = []
+    for slug in slug_list:
+        page = None
+        if hasattr(engine, "_wiki_repo") and engine._wiki_repo is not None:
+            page = engine._wiki_repo.read(slug)
+        elif hasattr(engine, "wiki") and engine.wiki is not None:
+            page = engine.wiki.read(slug)
+
+        if page is None:
+            continue
+
+        # Apply search filter
+        if q:
+            query_lower = q.lower()
+            if (
+                query_lower not in page.title.lower()
+                and query_lower not in page.content.lower()
+            ):
+                continue
+
+        confidence_value = page.confidence.value if hasattr(page.confidence, "value") else 1
+        freshness_value = page.freshness.value if hasattr(page.freshness, "value") else 0
+
+        pages.append(
+            PageResponse(
+                slug=slug,
+                title=page.title,
+                content=page.content,
+                frontmatter=page.frontmatter,
+                confidence=confidence_value,
+                freshness=freshness_value,
+            )
+        )
 
     return PageListResponse(
-        slugs=pages,
+        pages=pages,
+        slugs=slug_list,
         total=len(pages),
     )
 

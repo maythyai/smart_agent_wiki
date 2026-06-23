@@ -1,6 +1,7 @@
-import { Outlet, NavLink } from 'react-router';
+import { Outlet, NavLink, useNavigate } from 'react-router';
 import { MobileNav } from './components/layout/MobileNav';
 import { useStore } from './stores';
+import { useAuthStore } from './stores/authStore';
 
 /**
  * Main App layout with responsive navigation.
@@ -9,6 +10,14 @@ import { useStore } from './stores';
  */
 export default function App() {
   const theme = useStore((s) => s.theme);
+  const navigate = useNavigate();
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const logout = useAuthStore((s) => s.logout);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   return (
     <div className={`min-h-screen flex flex-col ${theme === 'dark' ? 'dark' : ''}`}>
@@ -31,6 +40,16 @@ export default function App() {
 
           {/* Desktop navigation - hidden on mobile */}
           <nav className="hidden md:flex gap-4">
+            <NavLink
+              to="/pages"
+              className={({ isActive }) =>
+                isActive
+                  ? 'text-blue-600 font-medium'
+                  : 'text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400'
+              }
+            >
+              Pages
+            </NavLink>
             <NavLink
               to="/search"
               className={({ isActive }) =>
@@ -62,6 +81,16 @@ export default function App() {
               Dashboard
             </NavLink>
           </nav>
+
+          {/* Logout button */}
+          {isAuthenticated && (
+            <button
+              onClick={handleLogout}
+              className="hidden md:block text-sm text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400"
+            >
+              Logout
+            </button>
+          )}
 
           {/* Mobile hamburger menu */}
           <MobileNav />

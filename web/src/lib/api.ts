@@ -4,6 +4,7 @@ interface RequestOptions {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
   body?: unknown;
   params?: Record<string, string | number | undefined>;
+  skipAuth?: boolean;
 }
 
 export class ApiError extends Error {
@@ -32,19 +33,46 @@ function buildUrl(path: string, params?: Record<string, string | number | undefi
   return url.toString();
 }
 
+function getAccessToken(): string | null {
+  try {
+    const stored = localStorage.getItem('saw-auth');
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      return parsed.state?.accessToken ?? null;
+    }
+  } catch {
+    // ignore
+  }
+  return null;
+}
+
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const { method = 'GET', body, params } = options;
+  const { method = 'GET', body, params, skipAuth = false } = options;
   const url = buildUrl(path, params);
 
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
   };
 
+  // Attach JWT token if available
+  if (!skipAuth) {
+    const token = getAccessToken();
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+  }
+
   const response = await fetch(url, {
     method,
     headers,
     body: body ? JSON.stringify(body) : undefined,
   });
+
+  // Handle 401 by redirecting to login
+  if (response.status === 401 && !skipAuth && !path.includes('/auth/')) {
+    window.location.href = '/login';
+    throw new ApiError(401, 'Unauthorized', { message: 'Session expired' });
+  }
 
   if (!response.ok) {
     let errorBody: unknown;

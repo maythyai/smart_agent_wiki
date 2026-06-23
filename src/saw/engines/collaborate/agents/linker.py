@@ -58,13 +58,14 @@ class LinkerAgent(BaseAgent):
         Returns:
             AgentResult with discovered links.
         """
-        # If no LLM router, return mock success for testing
+        # If no LLM router, use keyword-based link detection
         if self._llm is None:
+            links = self._find_links_fallback(task)
             return AgentResult(
                 success=True,
-                payload={"message": "Linker task processed"},
+                payload=links,
                 confidence=1,
-                metadata={"agent": self.name, "model_tier": self.model_tier},
+                metadata={"agent": self.name, "model_tier": self.model_tier, "fallback": True},
             )
 
         messages = self._build_messages(task, context)
@@ -90,3 +91,44 @@ class LinkerAgent(BaseAgent):
                 confidence=1,
                 metadata={"model": "haiku"},
             )
+
+    def _find_links_fallback(self, task: AgentTask) -> dict:
+        """Keyword-based link detection when LLM is unavailable."""
+        payload = task.payload or {}
+        content = payload.get("content", "")
+        source_slug = payload.get("source_slug", "")
+        other_pages = payload.get("other_pages", [])
+
+        links = []
+
+        # Find explicit wiki links [[slug]]
+        import re
+        explicit = re.findall(r"\[\[([^\]]+)\]\]", content)
+        for link_target in explicit:
+            if link_target != source_slug:
+                links.append({
+                    "source": source_slug,
+                    "target": link_target,
+                    "type": "explicit",
+                    "confidence": 4,
+                })
+
+        # Find keyword matches in other pages
+        content_lower = content.lower()
+        for page in other_pages:
+            page_slug = page.get("slug", "")
+            page_title = page.get("title", "").lower()
+            if page_slug and page_slug != source_slug and page_title:
+                if page_title in content_lower:
+                    links.append({
+                        "source": source_slug,
+                        "target": page_slug,
+                        "type": "keyword",
+                        "confidence": 2,
+                    })
+
+        return {
+            "links": links,
+            "count": len(links),
+            "mode": "keyword-based",
+        }

@@ -58,13 +58,14 @@ class ScholarAgent(BaseAgent):
         Returns:
             AgentResult with reasoning output.
         """
-        # If no LLM router, return mock success for testing
+        # If no LLM router, use aggregation-based research
         if self._llm is None:
+            research = self._research_fallback(task)
             return AgentResult(
                 success=True,
-                payload={"message": "Scholar task processed"},
-                confidence=1,
-                metadata={"agent": self.name, "model_tier": self.model_tier},
+                payload=research,
+                confidence=2,
+                metadata={"agent": self.name, "model_tier": self.model_tier, "fallback": True},
             )
 
         messages = self._build_messages(task, context)
@@ -90,3 +91,33 @@ class ScholarAgent(BaseAgent):
                 confidence=2,
                 metadata={"model": "opus"},
             )
+
+    def _research_fallback(self, task: AgentTask) -> dict:
+        """Aggregation-based research when LLM is unavailable."""
+        payload = task.payload or {}
+        topic = payload.get("topic", "Unknown")
+        sources = payload.get("sources", [])
+
+        # Aggregate statistics from sources
+        source_count = len(sources)
+        total_claims = sum(s.get("claims_count", 0) for s in sources if isinstance(s, dict))
+
+        # Extract common themes (simple word frequency)
+        all_content = " ".join(s.get("content", "") for s in sources if isinstance(s, dict))
+        words = all_content.lower().split()
+        stop_words = {"the", "is", "are", "was", "were", "and", "or", "a", "an", "in", "on", "to", "for"}
+        word_freq = {}
+        for w in words:
+            w = w.strip(".,;:!?")
+            if len(w) >= 5 and w not in stop_words:
+                word_freq[w] = word_freq.get(w, 0) + 1
+        themes = sorted(word_freq.items(), key=lambda x: -x[1])[:10]
+
+        return {
+            "topic": topic,
+            "source_count": source_count,
+            "total_claims": total_claims,
+            "themes": [w for w, _ in themes],
+            "summary": f"Found {source_count} sources with {total_claims} claims on '{topic}'",
+            "mode": "aggregation",
+        }

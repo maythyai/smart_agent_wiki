@@ -39,7 +39,8 @@ class PageDelete(BaseModel):
 class PageListResponse(BaseModel):
     """List of wiki pages."""
 
-    slugs: list[str]
+    pages: list[PageResponse] = []
+    slugs: list[str] = []
     total: int
 
 
