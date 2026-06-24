@@ -173,7 +173,6 @@ export default function Graph() {
             entity={entity}
             depth={2}
             maxNodes={100}
-            layout={layout}
             onNodeSelect={handleNodeSelect}
           />
 

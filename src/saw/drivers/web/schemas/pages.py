@@ -21,6 +21,8 @@ class PageResponse(BaseModel):
     frontmatter: dict[str, Any]
     confidence: int = Field(..., ge=1, le=4)
     freshness: int = Field(..., ge=0, le=8)
+    entity_type: str = "note"
+    properties: dict[str, Any] = {}
 
 
 class PageUpdate(BaseModel):
@@ -28,6 +30,8 @@ class PageUpdate(BaseModel):
 
     content: str
     message: str | None = None  # Commit message
+    entity_type: str | None = None
+    properties: dict[str, Any] | None = None
 
 
 class PageDelete(BaseModel):
@@ -52,6 +56,8 @@ class PageCreate(BaseModel):
     content: str
     tags: list[str] = []
     type: str = "summary"
+    entity_type: str = "note"
+    properties: dict[str, Any] = {}
 
 
 class PageStatus(BaseModel):
@@ -60,3 +66,19 @@ class PageStatus(BaseModel):
     status: str
     slug: str
     op_id: str | None = None
+
+
+class QuickCaptureRequest(BaseModel):
+    """Minimal page creation — title only, slug auto-generated."""
+
+    title: str = Field(..., min_length=1, max_length=200)
+    content: str = ""
+    tags: list[str] = []
+
+
+class QuickCaptureResponse(BaseModel):
+    """Response after quick capture."""
+
+    slug: str
+    title: str
+    status: str  # "queued"

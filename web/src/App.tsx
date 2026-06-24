@@ -1,6 +1,7 @@
 import { Outlet, NavLink, useNavigate } from 'react-router';
 import { MobileNav } from './components/layout/MobileNav';
 import { CommandPalette } from './components/search/CommandPalette';
+import { QuickCapture } from './components/capture/QuickCapture';
 import { useStore } from './stores';
 import { useAuthStore } from './stores/authStore';
 
@@ -33,6 +34,9 @@ export default function App() {
 
       {/* Command Palette (Cmd+K) */}
       <CommandPalette />
+
+      {/* Quick Capture (Cmd+Shift+N) */}
+      <QuickCapture />
 
       {/* Fixed height header per D-06 */}
       <header className="bg-white dark:bg-gray-800 border-b dark:border-gray-700 h-14 fixed top-0 left-0 right-0 z-30">
@@ -93,6 +97,26 @@ export default function App() {
               }
             >
               Import
+            </NavLink>
+            <NavLink
+              to="/templates"
+              className={({ isActive }) =>
+                isActive
+                  ? 'text-blue-600 font-medium'
+                  : 'text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400'
+              }
+            >
+              Templates
+            </NavLink>
+            <NavLink
+              to="/timeline"
+              className={({ isActive }) =>
+                isActive
+                  ? 'text-blue-600 font-medium'
+                  : 'text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400'
+              }
+            >
+              Timeline
             </NavLink>
 
             {/* Cmd+K search button */}

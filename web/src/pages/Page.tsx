@@ -5,6 +5,9 @@ import { useStore } from '../stores';
 import { ConfidenceBadge } from '../components/common/ConfidenceBadge';
 import { FreshnessBadge } from '../components/common/FreshnessBadge';
 import { BacklinksPanel } from '../components/links/BacklinksPanel';
+import { RelatedPagesPanel } from '../components/related/RelatedPagesPanel';
+import EntityTypeBadge from '../components/entity/EntityTypeBadge';
+import PropertiesEditor from '../components/entity/PropertiesEditor';
 import { useState } from 'react';
 
 /**
@@ -133,6 +136,7 @@ export default function Page() {
 
         {/* Badges row */}
         <div className="flex items-center gap-3 mb-3">
+          <EntityTypeBadge typeId={page.entity_type} size="md" />
           <ConfidenceBadge value={page.confidence} />
           <FreshnessBadge value={page.freshness} />
           {isDirty && (
@@ -190,8 +194,23 @@ export default function Page() {
         />
       </div>
 
+      {/* Properties Editor */}
+      {page.entity_type && page.entity_type !== 'note' && (
+        <div className="mt-4 bg-white rounded-lg border shadow-sm p-4">
+          <PropertiesEditor
+            typeId={page.entity_type}
+            properties={page.properties ?? {}}
+            onChange={() => {}} // read-only in view mode for now
+            readOnly={mode === 'view'}
+          />
+        </div>
+      )}
+
       {/* Backlinks Panel */}
       {slug && <BacklinksPanel slug={slug} />}
+
+      {/* Related Pages Panel */}
+      {slug && <RelatedPagesPanel slug={slug} />}
     </div>
   );
 }

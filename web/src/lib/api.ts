@@ -91,12 +91,44 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   return response.json();
 }
 
+async function requestForm<T>(path: string, formData: FormData): Promise<T> {
+  const url = buildUrl(path);
+  const headers: HeadersInit = {};
+
+  const token = getAccessToken();
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers,
+    body: formData,
+  });
+
+  if (response.status === 401 && !path.includes('/auth/')) {
+    window.location.href = '/login';
+    throw new ApiError(401, 'Unauthorized', { message: 'Session expired' });
+  }
+
+  if (!response.ok) {
+    let errorBody: unknown;
+    try { errorBody = await response.json(); } catch { errorBody = null; }
+    throw new ApiError(response.status, response.statusText, errorBody);
+  }
+
+  return response.json();
+}
+
 export const api = {
   get: <T>(path: string, params?: Record<string, string | number | undefined>) =>
     request<T>(path, { method: 'GET', params }),
 
   post: <T>(path: string, body: unknown) =>
     request<T>(path, { method: 'POST', body }),
+
+  postForm: <T>(path: string, formData: FormData) =>
+    requestForm<T>(path, formData),
 
   put: <T>(path: string, body: unknown) =>
     request<T>(path, { method: 'PUT', body }),

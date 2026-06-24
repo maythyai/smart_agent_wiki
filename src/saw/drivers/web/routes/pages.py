@@ -43,6 +43,7 @@ def get_write_queue(request: Request):
 @router.get("/pages", response_model=PageListResponse)
 async def list_pages(
     q: str | None = None,
+    entity_type: str | None = None,
     engine=Depends(get_query_engine),
 ) -> PageListResponse:
     """List all wiki pages with optional search (per D-13).
@@ -76,6 +77,10 @@ async def list_pages(
             ):
                 continue
 
+        # Apply entity_type filter
+        if entity_type and page.entity_type != entity_type:
+            continue
+
         confidence_value = page.confidence.value if hasattr(page.confidence, "value") else 1
         freshness_value = page.freshness.value if hasattr(page.freshness, "value") else 0
 
@@ -87,6 +92,8 @@ async def list_pages(
                 frontmatter=page.frontmatter,
                 confidence=confidence_value,
                 freshness=freshness_value,
+                entity_type=page.entity_type,
+                properties=page.properties,
             )
         )
 
@@ -127,6 +134,8 @@ async def get_page(
         frontmatter=page.frontmatter,
         confidence=confidence_value,
         freshness=freshness_value,
+        entity_type=page.entity_type,
+        properties=page.properties,
     )
 
 
@@ -310,6 +319,26 @@ async def get_outlinks(
     return outlinks
 
 
+@router.get("/pages/{slug}/related")
+async def get_related_pages(
+    slug: str = Path(..., description="Page slug"),
+    top_k: int = 8,
+    engine=Depends(get_query_engine),
+) -> list[dict]:
+    """Get pages related to this page.
+
+    Uses 3-signal scoring: shared tags, shared links, type affinity.
+    Returns list of {slug, title, score, reasons}.
+    """
+    from saw.engines.query.related_pages import compute_related_pages
+
+    wiki = getattr(engine, "_wiki_repo", None) or getattr(engine, "wiki", None)
+    if wiki is None:
+        return []
+
+    return compute_related_pages(slug, wiki, top_k=top_k)
+
+
 def _extract_context(content: str, target_slug: str, context_chars: int = 80) -> str:
     """Extract text snippet around a [[wiki-link]] reference.
 
@@ -364,6 +393,8 @@ async def create_page(
                 "content": create.content,
                 "tags": create.tags,
                 "type": create.type,
+                "entity_type": create.entity_type,
+                "properties": create.properties,
             },
             status=WriteOpStatus.PENDING,
         ),

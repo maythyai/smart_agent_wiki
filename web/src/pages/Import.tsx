@@ -33,9 +33,7 @@ export default function Import() {
     mutationFn: async (files: File[]) => {
       const formData = new FormData();
       files.forEach((file) => formData.append('files', file));
-      return api.post<ImportResponse>('/api/import/markdown', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      return api.postForm<ImportResponse>('/api/import/markdown', formData);
     },
     onSuccess: (data) => {
       setResult(data);
@@ -48,9 +46,7 @@ export default function Import() {
     mutationFn: async (file: File) => {
       const formData = new FormData();
       formData.append('file', file);
-      return api.post<ImportResponse>('/api/import/zip', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      return api.postForm<ImportResponse>('/api/import/zip', formData);
     },
     onSuccess: (data) => {
       setResult(data);

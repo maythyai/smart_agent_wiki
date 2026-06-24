@@ -34,6 +34,8 @@ _governor = None
 _detector = None
 _pipeline = None
 _learn_engine = None
+_wiki_repo = None
+_write_queue = None
 
 
 def create_server(wiki_path: Path, db_path: Path | None = None) -> FastMCP:
@@ -48,7 +50,7 @@ def create_server(wiki_path: Path, db_path: Path | None = None) -> FastMCP:
     Returns:
         Configured FastMCP instance with all tools registered.
     """
-    global _query_engine, _governor, _detector, _pipeline, _learn_engine
+    global _query_engine, _governor, _detector, _pipeline, _learn_engine, _wiki_repo, _write_queue
 
     # Resolve DB path
     if db_path is None:
@@ -58,6 +60,7 @@ def create_server(wiki_path: Path, db_path: Path | None = None) -> FastMCP:
     try:
         from saw.adapters.storage.claims_repository import SQLiteClaimsRepository
         from saw.adapters.storage.wiki_repository import WikiRepository
+        from saw.write_queue.queue import SQLiteWriteQueue
         from saw.engines.query.engine import QueryEngine
         from saw.engines.query.search import FTS5Search
         from saw.engines.query.compiler import ContextCompiler
@@ -95,6 +98,10 @@ def create_server(wiki_path: Path, db_path: Path | None = None) -> FastMCP:
             _governor = Governor(claims_repo, wiki_repo)
             _detector = ContradictionDetector(claims_repo, None)
             _pipeline = IngestPipeline(claims_repo, wiki_repo)
+            _wiki_repo = wiki_repo
+
+            # Initialize write queue for MCP page mutations
+            _write_queue = SQLiteWriteQueue(conn)
         else:
             logger.warning("Database not found at %s — tools will return empty results", db_path)
     except Exception as e:
@@ -116,7 +123,16 @@ def create_server(wiki_path: Path, db_path: Path | None = None) -> FastMCP:
         blast_radius=None,
         audit=None,
         learn_engine=_learn_engine,
+        wiki_repo=_wiki_repo,
+        write_queue=_write_queue,
     )
+
+    # Register resources and prompts
+    from saw.drivers.mcp.resources import init_resources
+    from saw.drivers.mcp.prompts import init_prompts
+
+    init_resources(_wiki_repo, _query_engine)
+    init_prompts(_wiki_repo)
 
     logger.info("MCP server initialized with %d tools", len(_list_registered_tools()))
     return mcp

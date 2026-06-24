@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../lib/api';
 import type { PageResponse, PageStatus } from '../types/api';
+import EntityTypeBadge from '../components/entity/EntityTypeBadge';
+import { useEntityTypes } from '../hooks/useEntityTypes';
 
 interface PagesListResponse {
   pages: PageResponse[];
@@ -17,16 +19,20 @@ export default function Pages() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
+  const [entityTypeFilter, setEntityTypeFilter] = useState<string>('');
   const [showNewForm, setShowNewForm] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newContent, setNewContent] = useState('');
 
+  const { data: entityTypes } = useEntityTypes();
+
   // Fetch pages list
   const { data, isLoading, error } = useQuery<PagesListResponse>({
-    queryKey: ['pages', search],
+    queryKey: ['pages', search, entityTypeFilter],
     queryFn: () =>
       api.get<PagesListResponse>('/api/pages', {
         q: search || undefined,
+        entity_type: entityTypeFilter || undefined,
       }),
     staleTime: 30_000,
   });
@@ -132,8 +138,8 @@ export default function Pages() {
         </div>
       )}
 
-      {/* Search */}
-      <div className="mb-4">
+      {/* Search + Entity Type Filter */}
+      <div className="mb-4 space-y-2">
         <input
           type="text"
           value={search}
@@ -142,6 +148,38 @@ export default function Pages() {
           className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500
             dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:placeholder-gray-400"
         />
+        {entityTypes && entityTypes.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            <button
+              onClick={() => setEntityTypeFilter('')}
+              className={`px-2.5 py-1 text-xs rounded-full transition-colors ${
+                !entityTypeFilter
+                  ? 'bg-indigo-600 text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300'
+              }`}
+            >
+              全部
+            </button>
+            {entityTypes.map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setEntityTypeFilter(entityTypeFilter === t.id ? '' : t.id)}
+                className={`px-2.5 py-1 text-xs rounded-full transition-colors ${
+                  entityTypeFilter === t.id
+                    ? 'text-white'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300'
+                }`}
+                style={
+                  entityTypeFilter === t.id
+                    ? { backgroundColor: t.color }
+                    : undefined
+                }
+              >
+                {t.icon} {t.name}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Loading */}
@@ -182,10 +220,13 @@ export default function Pages() {
                   hover:shadow-sm transition-all"
               >
                 <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-semibold text-gray-900 dark:text-white">
-                      {page.title}
-                    </h3>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <EntityTypeBadge typeId={page.entity_type} />
+                      <h3 className="font-semibold text-gray-900 dark:text-white truncate">
+                        {page.title}
+                      </h3>
+                    </div>
                     <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-1">
                       {page.content?.slice(0, 100) || '无内容'}
                     </p>

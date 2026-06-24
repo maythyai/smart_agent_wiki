@@ -131,11 +131,25 @@ def create_app(
     from saw.drivers.web.routes.pages import router as pages_router
     from saw.drivers.web.routes.search import router as search_router
     from saw.drivers.web.routes.import_md import router as import_router
+    from saw.drivers.web.routes.capture import router as capture_router
+    from saw.drivers.web.routes.templates import router as templates_router
+    from saw.drivers.web.routes.entity_types import router as entity_types_router
 
     app.include_router(graph_router, prefix="/api", tags=["graph"])
     app.include_router(pages_router, prefix="/api", tags=["pages"])
     app.include_router(search_router, prefix="/api", tags=["search"])
     app.include_router(import_router, prefix="/api", tags=["import"])
+    app.include_router(capture_router, prefix="/api", tags=["capture"])
+    app.include_router(templates_router, prefix="/api", tags=["templates"])
+    app.include_router(entity_types_router, prefix="/api", tags=["entity-types"])
+
+    # Register onboarding routes (Phase 55)
+    from saw.drivers.web.routes.onboarding import router as onboarding_router
+    app.include_router(onboarding_router)
+
+    # Register timeline routes (Phase 56)
+    from saw.drivers.web.routes.timeline import router as timeline_router
+    app.include_router(timeline_router)
 
     # Register connector settings routes (Phase 18)
     from saw.api.connector_settings import router as connector_settings_router
