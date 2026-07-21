@@ -7,7 +7,7 @@ Per 02-03 Task 2: 23 tools covering all operations.
 
 # Import all tool modules to register tools with FastMCP
 # Tools are registered via @mcp.tool decorators in each module
-from saw.drivers.mcp.tools import ingest, query, govern, learn, collaborate, pages, links
+from saw.drivers.mcp.tools import ingest, query, govern, learn, collaborate, pages, links, code_graph
 
 __all__ = [
     "register_all_tools",
@@ -19,6 +19,7 @@ __all__ = [
     "collaborate",
     "pages",
     "links",
+    "code_graph",
 ]
 
 
@@ -45,6 +46,7 @@ def init_all_tools(
     learn_engine=None,
     wiki_repo=None,
     write_queue=None,
+    code_graph_engine=None,
 ) -> None:
     """Initialize all tool modules with their engine references.
 
@@ -62,6 +64,7 @@ def init_all_tools(
         learn_engine: LearnEngine for learn/collaborate tools.
         wiki_repo: WikiRepository for pages/links tools.
         write_queue: SQLiteWriteQueue for pages/links tools.
+        code_graph_engine: CodeGraphEngine for code graph tools.
     """
     from saw.drivers.mcp.tools.ingest import init_ingest_tools
     from saw.drivers.mcp.tools.query import init_query_tools
@@ -70,6 +73,7 @@ def init_all_tools(
     from saw.drivers.mcp.tools.collaborate import init_collaborate_tools
     from saw.drivers.mcp.tools.pages import init_pages_tools
     from saw.drivers.mcp.tools.links import init_links_tools
+    from saw.drivers.mcp.tools.code_graph import init_code_graph_tools
 
     init_ingest_tools(pipeline)
     init_query_tools(query_engine, search, compiler, graph, tree_mode)
@@ -78,3 +82,4 @@ def init_all_tools(
     init_collaborate_tools(learn_engine)
     init_pages_tools(wiki_repo, write_queue)
     init_links_tools(wiki_repo, write_queue)
+    init_code_graph_tools(code_graph_engine)
