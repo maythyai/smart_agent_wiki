@@ -143,11 +143,16 @@ class PostProcessor:
         return [{"source": r[0], "target": r[1], "edge_type": r[2]} for r in rows]
 
     def _build_name_index(self) -> dict[str, list[str]]:
-        """构建 name → [uid] 索引"""
+        """构建 name → [uid] 索引 (轻量级 SQL，避免全量反序列化)"""
+        conn = self.store._conn
+        if conn is None:
+            return {}
+        rows = conn.execute(
+            "SELECT name, uid FROM code_nodes WHERE kind != 'file'"
+        ).fetchall()
         index: dict[str, list[str]] = defaultdict(list)
-        for node in self.store.get_all_nodes():
-            if node.kind != NodeKind.FILE:
-                index[node.name].append(node.uid)
+        for name, uid in rows:
+            index[name].append(uid)
         return dict(index)
 
     def _build_import_graph(self) -> dict[str, set[str]]:

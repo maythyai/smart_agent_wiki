@@ -104,6 +104,7 @@ END;
 -- 索引
 CREATE INDEX IF NOT EXISTS idx_edges_source ON code_edges(source, edge_type);
 CREATE INDEX IF NOT EXISTS idx_edges_target ON code_edges(target, edge_type);
+CREATE INDEX IF NOT EXISTS idx_edges_type ON code_edges(edge_type);
 CREATE INDEX IF NOT EXISTS idx_nodes_file ON code_nodes(file_path);
 CREATE INDEX IF NOT EXISTS idx_nodes_kind ON code_nodes(kind);
 CREATE INDEX IF NOT EXISTS idx_nodes_name ON code_nodes(name);
@@ -231,6 +232,44 @@ class CodeGraphStore:
             "SELECT * FROM code_nodes WHERE name = ?", (name,)
         ).fetchall()
         return [self._row_to_node(r) for r in rows]
+
+    def get_nodes_by_uids(self, uids: list[str]) -> dict[str, "CodeNode"]:
+        """批量按 UID 获取节点 (消除 N+1 查询)"""
+        assert self._conn is not None
+        if not uids:
+            return {}
+        placeholders = ",".join("?" * len(uids))
+        rows = self._conn.execute(
+            f"SELECT * FROM code_nodes WHERE uid IN ({placeholders})", uids
+        ).fetchall()
+        return {r["uid"]: self._row_to_node(r) for r in rows}
+
+    def get_all_edges_lite(self, edge_types: Optional[list[str]] = None) -> list[tuple]:
+        """轻量级全边扫描: 返回 (source, target, edge_type, confidence) 元组
+
+        避免为每条边反序列化完整 CodeEdge + json.loads(metadata)。
+        用于社区检测、流追踪等需要全图边信息的场景。
+        """
+        assert self._conn is not None
+        if edge_types:
+            ph = ",".join("?" * len(edge_types))
+            rows = self._conn.execute(
+                f"SELECT source, target, edge_type, confidence FROM code_edges WHERE edge_type IN ({ph})",
+                edge_types,
+            ).fetchall()
+        else:
+            rows = self._conn.execute(
+                "SELECT source, target, edge_type, confidence FROM code_edges"
+            ).fetchall()
+        return [(r[0], r[1], r[2], r[3]) for r in rows]
+
+    def get_called_targets(self, edge_type: str = "CALLS") -> set[str]:
+        """获取所有被指定类型边指向的 target UID 集合 (单次查询)"""
+        assert self._conn is not None
+        rows = self._conn.execute(
+            "SELECT DISTINCT target FROM code_edges WHERE edge_type = ?", (edge_type,)
+        ).fetchall()
+        return {r[0] for r in rows}
 
     def get_nodes_by_file(self, file_path: str) -> list[CodeNode]:
         """获取文件的所有节点"""

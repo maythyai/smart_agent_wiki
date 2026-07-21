@@ -181,7 +181,7 @@ class IncrementalBuilder:
         return self._detect_via_hash()
 
     def _detect_via_git(self) -> Optional[tuple[list[str], list[str]]]:
-        """通过 git diff 检测变更"""
+        """通过 git diff 检测变更 (加固: 禁用 fsmonitor/hooks 防止恶意仓库执行代码)"""
         git_dir = self.root_path / ".git"
         if not git_dir.exists():
             # 可能是 worktree
@@ -189,14 +189,27 @@ class IncrementalBuilder:
             if not git_file.is_file():
                 return None
 
+        # 安全加固: 禁止 git 执行外部命令 (fsmonitor/hooks/pager)
+        import os
+        safe_env = {
+            **os.environ,
+            "GIT_CONFIG_NOSYSTEM": "1",
+            "GIT_OPTIONAL_LOCKS": "0",
+        }
+        safe_git = [
+            "git", "-c", "core.fsmonitor=", "-c", "core.hooksPath=",
+            "-c", "core.pager=cat", "-c", "core.editor=true",
+        ]
+
         try:
             # 获取相对于 HEAD 的变更
             proc = subprocess.run(
-                ["git", "diff", "--name-status", "HEAD"],
+                safe_git + ["diff", "--name-status", "HEAD"],
                 cwd=str(self.root_path),
                 capture_output=True,
                 text=True,
                 timeout=10,
+                env=safe_env,
             )
             if proc.returncode != 0:
                 return None
@@ -237,11 +250,12 @@ class IncrementalBuilder:
 
             # 也检查未追踪的新文件
             proc2 = subprocess.run(
-                ["git", "ls-files", "--others", "--exclude-standard"],
+                safe_git + ["ls-files", "--others", "--exclude-standard"],
                 cwd=str(self.root_path),
                 capture_output=True,
                 text=True,
                 timeout=10,
+                env=safe_env,
             )
             if proc2.returncode == 0:
                 from saw.code_graph.parser import detect_language, should_skip

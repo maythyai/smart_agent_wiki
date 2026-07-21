@@ -213,13 +213,18 @@ def _format_impacts(impacts) -> str:
 
 
 def _get_source_snippet(node: CodeNode, engine) -> str:
-    """获取源码片段 (verbose 模式)"""
+    """获取源码片段 (verbose 模式, 含路径遍历防护)"""
     try:
         from pathlib import Path
-        file_path = Path(engine.root_path) / node.file_path
-        if not file_path.exists():
+        root = Path(engine.root_path).resolve()
+        file_path = (root / node.file_path).resolve()
+        # 路径遍历防护: 确保解析后的路径仍在项目根目录内
+        if not file_path.is_relative_to(root) or not file_path.is_file():
             return ""
-        lines = file_path.read_text(encoding="utf-8").split("\n")
+        # 文件大小保护
+        if file_path.stat().st_size > 2 * 1024 * 1024:
+            return ""
+        lines = file_path.read_text(encoding="utf-8", errors="replace").split("\n")
         start = max(0, node.start_line - 1)
         end = min(len(lines), node.end_line)
         # 限制 50 行
