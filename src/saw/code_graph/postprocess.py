@@ -197,16 +197,19 @@ class PostProcessor:
         self, source: str, old_target: str, new_target: str, edge_type: str
     ) -> None:
         """更新边的 target 为解析后的完整 UID (处理 UNIQUE 冲突)"""
+        import json as _json
+
         conn = self.store._conn
         if conn is None:
             return
+        metadata_json = _json.dumps({"resolved_from": old_target})
         try:
             conn.execute(
                 """UPDATE code_edges
                    SET target = ?, confidence = 0.9, confidence_tier = 'RESOLVED',
-                       metadata = '{"resolved_from": "' || ? || '"}'
+                       metadata = ?
                    WHERE source = ? AND target = ? AND edge_type = ?""",
-                (new_target, old_target, source, old_target, edge_type),
+                (new_target, metadata_json, source, old_target, edge_type),
             )
         except Exception:
             # UNIQUE 冲突: 已存在解析后的边，删除旧的裸名边

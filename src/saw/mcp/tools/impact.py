@@ -55,7 +55,7 @@ High-risk modifications trigger warnings.""",
                     "type": "array",
                     "items": {
                         "type": "string",
-                        "enum": ["CALLS", "IMPORTS", "EXTENDS", "IMPLEMENTS"]
+                        "enum": ["CALLS", "IMPORTS", "INHERITS", "IMPLEMENTS"]
                     },
                     "description": "Filter by relation types (default: all)"
                 },

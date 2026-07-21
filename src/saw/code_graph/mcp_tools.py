@@ -163,6 +163,12 @@ async def handle_code_query(
     if engine is None:
         return {"error": "engine_not_available", "message": "Code graph engine not initialized"}
 
+    # 输入验证
+    if not target or not target.strip():
+        return {"error": "invalid_input", "message": "target must not be empty"}
+    target = target.strip()[:512]
+    limit = max(1, min(int(limit), 200))
+
     try:
         # Resolve target
         node = engine._resolve_target(target)
@@ -229,6 +235,12 @@ async def handle_code_search(
     """Handle saw_code_search tool call."""
     if engine is None:
         return {"error": "engine_not_available", "message": "Code graph engine not initialized"}
+
+    # 输入验证
+    if not query or not query.strip():
+        return {"error": "invalid_input", "message": "query must not be empty"}
+    query = query.strip()[:512]
+    limit = max(1, min(int(limit), 100))
 
     try:
         results = engine.search(query, limit=limit * 2)  # over-fetch for filtering
@@ -308,6 +320,10 @@ async def handle_flows(
     """Handle saw_flows tool call."""
     if engine is None:
         return {"error": "engine_not_available", "message": "Code graph engine not initialized"}
+
+    # 输入验证: 防止 max_depth 过大导致 CPU/内存 DoS
+    max_depth = max(1, min(int(max_depth), 32))
+    min_criticality = max(0.0, min(float(min_criticality), 1.0))
 
     try:
         if affected_by:
