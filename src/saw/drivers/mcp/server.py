@@ -107,6 +107,17 @@ def create_server(wiki_path: Path, db_path: Path | None = None) -> FastMCP:
     except Exception as e:
         logger.warning("Failed to initialize engines: %s — tools will return empty results", e)
 
+    # Initialize code graph engine (optional — only if DB exists)
+    _code_graph_engine = None
+    try:
+        code_graph_db = wiki_path / ".saw" / "code_graph.db"
+        if code_graph_db.exists():
+            from saw.code_graph.engine import CodeGraphEngine
+            _code_graph_engine = CodeGraphEngine(wiki_path, db_path=code_graph_db)
+            logger.info("Code graph engine initialized from %s", code_graph_db)
+    except Exception as e:
+        logger.warning("Failed to initialize code graph engine: %s", e)
+
     # Register all tools via @mcp.tool decorators (import triggers registration)
     from saw.drivers.mcp.tools import register_all_tools, init_all_tools
 
@@ -125,6 +136,7 @@ def create_server(wiki_path: Path, db_path: Path | None = None) -> FastMCP:
         learn_engine=_learn_engine,
         wiki_repo=_wiki_repo,
         write_queue=_write_queue,
+        code_graph_engine=_code_graph_engine,
     )
 
     # Register resources and prompts
