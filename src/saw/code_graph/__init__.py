@@ -14,6 +14,9 @@ from saw.code_graph.models import (
 )
 from saw.code_graph.store import CodeGraphStore
 from saw.code_graph.engine import CodeGraphEngine
+from saw.code_graph.postprocess import PostProcessor
+from saw.code_graph.flows import FlowTracer, ExecutionFlow
+from saw.code_graph.communities import CommunityDetector, Community, ArchitectureOverview
 
 __all__ = [
     "CodeNode",
@@ -23,4 +26,10 @@ __all__ = [
     "ConfidenceTier",
     "CodeGraphStore",
     "CodeGraphEngine",
+    "PostProcessor",
+    "FlowTracer",
+    "ExecutionFlow",
+    "CommunityDetector",
+    "Community",
+    "ArchitectureOverview",
 ]
