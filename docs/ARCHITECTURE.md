@@ -161,6 +161,49 @@ Query → FTS5 Search → Graph Traverse → Context Compile → LLM Enhance →
 | **Scholar** | 研究学者 | 深度分析、文献综述 |
 | **Guardian** | 守护代理 | 安全审查、隐私保护 |
 
+### Code Graph Engine
+
+代码结构图生命周期管理，采用 **六阶段生命周期** 架构：
+
+```
+Parse → Build → PostProcess → Query → Review → Update
+  ↑                                              │
+  └──────────────── 增量反馈环路 ─────────────────┘
+```
+
+| 阶段 | 职责 | 关键能力 |
+|------|------|----------|
+| **Parse** | AST 解析源码 | Python ast + TS 启发式，零 LLM 依赖，2MB 文件保护 |
+| **Build** | 持久化到 SQLite | WAL 模式，原子文件替换，确定性 UID |
+| **PostProcess** | 派生结构计算 | 证据门控裸名解析，签名生成，FTS5 索引 |
+| **Query** | 影响分析/搜索 | 加权 BFS (单跳衰减)，FTS5 + LIKE 降级 |
+| **Review** | 变更风险评估 | 跨图影响传播，文档过期检测 |
+| **Update** | 增量同步 | git-diff + content-hash 双模式，< 2s |
+
+模块结构：
+
+```
+src/saw/code_graph/
+├── models.py          # CodeNode/CodeEdge 数据模型
+├── store.py           # SQLite WAL 存储 + FTS5 + 批量查询
+├── parser.py          # 多语言解析器 (Python AST + TS 启发式)
+├── incremental.py     # 增量构建编排 (git-diff + hash)
+├── engine.py          # 六阶段生命周期编排
+├── postprocess.py     # 裸名解析 + 签名 + FTS
+├── flows.py           # 执行流追踪 + 关键度评分
+├── communities.py     # Leiden/Louvain 社区检测
+├── bridge.py          # doc↔code 双向锚定
+├── snapshot.py        # 图快照与完整性自检
+├── context_tool.py    # token 预算感知上下文组装
+├── govern.py          # 代码变更→文档过期治理
+├── health.py          # 可观测性 (指标/告警/健康报告)
+├── cli.py             # saw code-graph 子命令
+├── mcp_tools.py       # MCP 工具定义
+└── resolvers/         # 语言特化解析器 (FastAPI/Flask)
+```
+
+双图融合设计：Code Graph (代码结构) 与 Wiki Knowledge Graph (知识文档) 通过 Bridge Layer 松耦合连接，支持跨图影响传播和统一社区视图。
+
 ---
 
 ## 数据模型

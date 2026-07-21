@@ -411,6 +411,107 @@ saw feed sync
 
 ---
 
+### code-graph
+
+Code graph lifecycle management — build, query, and maintain the code structure graph.
+
+```bash
+saw code-graph [SUBCOMMAND] [OPTIONS]
+```
+
+**Subcommands:**
+
+#### build
+
+Build the code graph from source files.
+
+```bash
+saw code-graph build [OPTIONS]
+```
+
+**Options:**
+- `--full, -f` — Full rebuild (ignore cache)
+- `--lang, -l TEXT` — Comma-separated languages (e.g., "python,typescript")
+- `--no-postprocess` — Skip postprocess pipeline
+- `--root, -r PATH` — Project root path (default: ".")
+
+**Examples:**
+```bash
+saw code-graph build
+saw code-graph build --full --lang python
+saw code-graph build -r /path/to/project
+```
+
+#### update
+
+Incremental update — only re-parse changed files (< 2s typical).
+
+```bash
+saw code-graph update [--root PATH]
+```
+
+#### health
+
+Check code graph health (5 checks: empty graph, orphan edges, staleness, error rate, FTS).
+
+```bash
+saw code-graph health [--json] [--root PATH]
+```
+
+#### verify
+
+Verify graph integrity (orphan edges, FTS consistency, file tracking).
+
+```bash
+saw code-graph verify [--root PATH]
+```
+
+#### stats
+
+Show code graph statistics (nodes, edges, files, DB path).
+
+```bash
+saw code-graph stats [--root PATH]
+```
+
+#### search
+
+Search code symbols by name or signature.
+
+```bash
+saw code-graph search QUERY [--kind TEXT] [--limit N] [--root PATH]
+```
+
+**Options:**
+- `--kind, -k TEXT` — Filter by kind (function, class, method, type, test, endpoint)
+- `--limit, -n N` — Max results (default: 10)
+
+**Examples:**
+```bash
+saw code-graph search "authenticate"
+saw code-graph search "User" --kind class
+```
+
+#### impact
+
+Analyze impact of modifying a symbol (blast radius).
+
+```bash
+saw code-graph impact TARGET [--direction TEXT] [--depth N] [--root PATH]
+```
+
+**Options:**
+- `--direction, -d TEXT` — "upstream" (dependents) or "downstream" (dependencies)
+- `--depth N` — Max traversal depth (default: 3, max: 5)
+
+**Examples:**
+```bash
+saw code-graph impact "AuthService"
+saw code-graph impact "handleLogin" --direction downstream --depth 2
+```
+
+---
+
 ## Global Options
 
 These options apply to all commands:

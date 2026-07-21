@@ -23,12 +23,12 @@ Smart Agent Wiki is a local-first knowledge management platform that treats know
 - 🔍 **Four-Layer Storage** — Every claim traces back to the exact location in the original document
 - 🤖 **6 Specialized Agents** — Librarian / Writer / Critic / Linker / Scholar / Guardian
 - 🛡️ **Governance Engine** — 4-tier confidence, 9-level freshness, contradiction detection, Ed25519 audit receipts
-- 🧠 **Code Intelligence** — Impact analysis, process detection, staleness detection via knowledge graph
+- 🧠 **Code Intelligence** — Full code graph lifecycle: AST parsing, impact analysis, execution flow tracing, community detection, doc↔code anchoring
 - 🔐 **Security** — JWT auth, RBAC, rate limiting, input sanitization, audit logging
 - 🧩 **Plugin System** — Extensible SDK with event-driven hooks and sandbox isolation
 - 💰 **Token Optimizer** — Reduce LLM token consumption by 65%+
 - 🌐 **Web UI** — React + Cytoscape.js knowledge graph + Milkdown editor
-- 🔌 **MCP Server** — 24+ tools, compatible with Claude Code / Cursor / Copilot
+- 🔌 **MCP Server** — 30+ tools, compatible with Claude Code / Cursor / Copilot
 
 ## Quick Start
 
@@ -53,6 +53,7 @@ cd smart_agent_wiki
 python -m venv .venv && source .venv/bin/activate
 pip install -e .            # core
 pip install -e ".[pdf]"     # + PDF parsing
+pip install -e ".[graph]"   # + Leiden community detection (igraph)
 pip install -e ".[dev]"     # + dev tools
 ```
 </details>
