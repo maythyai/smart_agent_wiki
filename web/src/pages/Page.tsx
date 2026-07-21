@@ -4,6 +4,11 @@ import { WikiEditorWrapper } from '../components/editor/WikiEditor';
 import { useStore } from '../stores';
 import { ConfidenceBadge } from '../components/common/ConfidenceBadge';
 import { FreshnessBadge } from '../components/common/FreshnessBadge';
+import { BacklinksPanel } from '../components/links/BacklinksPanel';
+import { RelatedPagesPanel } from '../components/related/RelatedPagesPanel';
+import EntityTypeBadge from '../components/entity/EntityTypeBadge';
+import PropertiesEditor from '../components/entity/PropertiesEditor';
+import { useState } from 'react';
 
 /**
  * Page component displays a Wiki page with view/edit modes.
@@ -13,6 +18,9 @@ import { FreshnessBadge } from '../components/common/FreshnessBadge';
 export default function Page() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
+
+  // Local state for editor content (断裂点 #4 fix: track content for save)
+  const [editorContent, setEditorContent] = useState<string | null>(null);
 
   // Store state for editor mode
   const mode = useStore((s) => s.mode);
@@ -25,9 +33,24 @@ export default function Page() {
   const { data: page, isLoading, error } = usePage(slug || '');
   const { mutate: updatePage, isPending: isSaving } = useUpdatePage(slug || '');
 
-  // Handle save action
+  // Handle save action — 断裂点 #4 fix: actually call updatePage
   const handleSave = (content: string) => {
     updatePage({ content });
+  };
+
+  // Track editor content changes for save button
+  const handleContentChange = (content: string) => {
+    setEditorContent(content);
+    setDirty(content !== page?.content);
+  };
+
+  // Handle explicit save button click
+  const handleSaveClick = () => {
+    const content = editorContent ?? page?.content ?? '';
+    if (content) {
+      handleSave(content);
+    }
+    setMode('view');
   };
 
   // Handle edit mode toggle
@@ -113,6 +136,7 @@ export default function Page() {
 
         {/* Badges row */}
         <div className="flex items-center gap-3 mb-3">
+          <EntityTypeBadge typeId={page.entity_type} size="md" />
           <ConfidenceBadge value={page.confidence} />
           <FreshnessBadge value={page.freshness} />
           {isDirty && (
@@ -140,10 +164,7 @@ export default function Page() {
                   Cancel
                 </button>
                 <button
-                  onClick={() => {
-                    // The save will be triggered by WikiEditor's internal state
-                    setMode('view');
-                  }}
+                  onClick={handleSaveClick}
                   className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded font-medium disabled:opacity-50"
                   disabled={isSaving || !isDirty}
                 >
@@ -168,9 +189,28 @@ export default function Page() {
           slug={slug || ''}
           initialContent={page.content}
           onSave={handleSave}
+          onContentChange={handleContentChange}
           readOnly={mode === 'view'}
         />
       </div>
+
+      {/* Properties Editor */}
+      {page.entity_type && page.entity_type !== 'note' && (
+        <div className="mt-4 bg-white rounded-lg border shadow-sm p-4">
+          <PropertiesEditor
+            typeId={page.entity_type}
+            properties={page.properties ?? {}}
+            onChange={() => {}} // read-only in view mode for now
+            readOnly={mode === 'view'}
+          />
+        </div>
+      )}
+
+      {/* Backlinks Panel */}
+      {slug && <BacklinksPanel slug={slug} />}
+
+      {/* Related Pages Panel */}
+      {slug && <RelatedPagesPanel slug={slug} />}
     </div>
   );
 }

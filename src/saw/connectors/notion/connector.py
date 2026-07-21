@@ -145,6 +145,48 @@ class NotionConnector(UnifiedConnectorInterface):
         }
         return self._sync_cursors
 
+    async def _auto_discover_databases(self) -> list[dict]:
+        """Auto-discover Notion databases accessible to the connector.
+
+        Queries the Notion API for all databases the integration has access to.
+        Populates _selected_databases with discovered databases.
+
+        Returns:
+            List of discovered database configs.
+        """
+        if self._client is None:
+            return []
+
+        try:
+            await self._rate_limiter.acquire()
+            response = await self._client.search(
+                filter={"property": "object", "value": "database"},
+                page_size=10,
+            )
+            databases = response.get("results", [])
+
+            self._selected_databases = []
+            for db in databases:
+                db_id = db.get("id", "")
+                title_parts = db.get("title", [])
+                db_name = (
+                    title_parts[0].get("plain_text", db_id)
+                    if title_parts
+                    else db_id
+                )
+                self._selected_databases.append({
+                    "database_id": db_id,
+                    "database_name": db_name,
+                    "sync_direction": "pull",
+                    "property_mapping": {},
+                })
+
+            logger.info("Auto-discovered %d Notion databases", len(self._selected_databases))
+            return self._selected_databases
+        except Exception as e:
+            logger.error("Failed to auto-discover Notion databases: %s", e)
+            return []
+
     async def authenticate(self, credentials: dict) -> AuthResult:
         """Complete OAuth authentication flow.
 
@@ -198,7 +240,16 @@ class NotionConnector(UnifiedConnectorInterface):
         await self._load_selected_databases()
         await self._load_sync_cursors()
 
+        # Auto-discover databases if none are configured
+        if not self._selected_databases:
+            logger.info("No databases configured — auto-discovering Notion databases")
+            await self._auto_discover_databases()
+
         items: list[ConnectorItem] = []
+
+        if not self._selected_databases:
+            logger.warning("No Notion databases selected or discoverable — returning empty results")
+            return items
 
         for db_config in self._selected_databases:
             database_id = db_config["database_id"]

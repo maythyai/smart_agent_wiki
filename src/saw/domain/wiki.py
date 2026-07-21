@@ -15,19 +15,23 @@ class WikiPage:
     path: str
     title: str
     page_type: PageType = PageType.SUMMARY
+    entity_type: str = "note"
     tags: list[str] = field(default_factory=list)
     related: list[str] = field(default_factory=list)
     confidence: ConfidenceLevel = ConfidenceLevel.UNVERIFIED
     freshness: FreshnessLevel = FreshnessLevel.LEVEL_0  # Freshest by default
     content: str = ""
+    properties: dict[str, Any] = field(default_factory=dict)
     frontmatter: dict[str, Any] = field(default_factory=dict)
 
 
 class WikiFrontmatter(BaseModel):
     """Pydantic model for wiki page YAML frontmatter validation."""
     type: str = "summary"
+    entity_type: str = "note"
     tags: list[str] = []
     related: list[str] = []
     confidence: str = "unverified"
     freshness: int = 3
     record_type: str = "SUMMARY"
+    properties: dict[str, Any] = {}

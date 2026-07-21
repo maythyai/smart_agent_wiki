@@ -42,11 +42,13 @@ class WikiRepository:
         # Build frontmatter dict
         fm = {
             "type": page.page_type.name.lower(),
+            "entity_type": page.entity_type,
             "tags": page.tags,
             "related": page.related,
             "confidence": page.confidence.name.lower(),
             "freshness": page.freshness.value,
             "record_type": page.page_type.name,
+            "properties": page.properties,
         }
         # Merge any extra frontmatter from the page
         fm.update(page.frontmatter)
@@ -92,11 +94,13 @@ class WikiRepository:
                 path=path,
                 title=page_path.stem,
                 page_type=page_type,
+                entity_type=fm.get("entity_type", "note"),
                 tags=fm.get("tags", []),
                 related=fm.get("related", []),
                 confidence=confidence,
                 freshness=freshness,
                 content=post.content,
+                properties=fm.get("properties", {}),
                 frontmatter=dict(fm),
             )
         except Exception as e:

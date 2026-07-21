@@ -4,11 +4,26 @@ import Home from '../pages/Home';
 import Search from '../pages/Search';
 import Graph from '../pages/Graph';
 import Page from '../pages/Page';
+import Pages from '../pages/Pages';
 import Dashboard from '../pages/Dashboard';
 import Integrations from '../pages/Integrations';
 import ConnectorSettings from '../pages/ConnectorSettings';
+import Import from '../pages/Import';
+import Templates from '../pages/Templates';
+import Timeline from '../pages/Timeline';
+import Onboarding from '../pages/Onboarding';
+import Login from '../pages/Login';
+import NotFound from '../pages/NotFound';
 
 export const router = createBrowserRouter([
+  {
+    path: '/login',
+    element: <Login />,
+  },
+  {
+    path: '/onboarding',
+    element: <Onboarding />,
+  },
   {
     path: '/',
     element: <App />,
@@ -16,11 +31,19 @@ export const router = createBrowserRouter([
       { index: true, element: <Home /> },
       { path: 'search', element: <Search /> },
       { path: 'graph', element: <Graph /> },
+      { path: 'pages', element: <Pages /> },
       { path: 'page/:slug', element: <Page /> },
       { path: 'dashboard', element: <Dashboard /> },
       { path: 'integrations', element: <Integrations /> },
       { path: 'integrations/:platform', element: <Integrations /> },
       { path: 'integrations/:platform/settings', element: <ConnectorSettings /> },
+      { path: 'import', element: <Import /> },
+      { path: 'templates', element: <Templates /> },
+      { path: 'timeline', element: <Timeline /> },
     ],
+  },
+  {
+    path: '*',
+    element: <NotFound />,
   },
 ]);

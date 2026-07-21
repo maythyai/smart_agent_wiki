@@ -14,6 +14,8 @@ interface WikiEditorProps {
   initialContent: string;
   /** Callback when content is saved (Ctrl+S or toolbar save) */
   onSave?: (content: string) => void;
+  /** Callback when content changes (for dirty tracking) */
+  onContentChange?: (content: string) => void;
   /** Whether editor is in read-only mode */
   readOnly?: boolean;
 }
@@ -27,6 +29,7 @@ export function WikiEditor({
   slug: _slug,
   initialContent,
   onSave,
+  onContentChange,
   readOnly = false,
 }: WikiEditorProps) {
   const contentRef = useRef(initialContent);
@@ -73,6 +76,7 @@ export function WikiEditor({
           if (markdown !== prevMarkdown && isInitializedRef.current) {
             setDirty(true);
             contentRef.current = markdown;
+            onContentChange?.(markdown);
           }
         });
       })

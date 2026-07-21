@@ -7,7 +7,7 @@ Per 02-03 Task 2: 23 tools covering all operations.
 
 # Import all tool modules to register tools with FastMCP
 # Tools are registered via @mcp.tool decorators in each module
-from saw.drivers.mcp.tools import ingest, query, govern, learn, collaborate
+from saw.drivers.mcp.tools import ingest, query, govern, learn, collaborate, pages, links
 
 __all__ = [
     "register_all_tools",
@@ -17,6 +17,8 @@ __all__ = [
     "govern",
     "learn",
     "collaborate",
+    "pages",
+    "links",
 ]
 
 
@@ -41,6 +43,8 @@ def init_all_tools(
     blast_radius=None,
     audit=None,
     learn_engine=None,
+    wiki_repo=None,
+    write_queue=None,
 ) -> None:
     """Initialize all tool modules with their engine references.
 
@@ -56,15 +60,21 @@ def init_all_tools(
         blast_radius: BlastRadiusAnalyzer for blast radius tools.
         audit: AuditTrail for audit tools.
         learn_engine: LearnEngine for learn/collaborate tools.
+        wiki_repo: WikiRepository for pages/links tools.
+        write_queue: SQLiteWriteQueue for pages/links tools.
     """
     from saw.drivers.mcp.tools.ingest import init_ingest_tools
     from saw.drivers.mcp.tools.query import init_query_tools
     from saw.drivers.mcp.tools.govern import init_govern_tools
     from saw.drivers.mcp.tools.learn import init_learn_tools
     from saw.drivers.mcp.tools.collaborate import init_collaborate_tools
+    from saw.drivers.mcp.tools.pages import init_pages_tools
+    from saw.drivers.mcp.tools.links import init_links_tools
 
     init_ingest_tools(pipeline)
     init_query_tools(query_engine, search, compiler, graph, tree_mode)
     init_govern_tools(governor, detector, blast_radius, audit)
     init_learn_tools(learn_engine)
     init_collaborate_tools(learn_engine)
+    init_pages_tools(wiki_repo, write_queue)
+    init_links_tools(wiki_repo, write_queue)

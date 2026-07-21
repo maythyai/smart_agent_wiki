@@ -67,11 +67,15 @@ export interface PageResponse {
   frontmatter: Record<string, unknown>;
   confidence: number;
   freshness: number;
+  entity_type: string;
+  properties: Record<string, unknown>;
 }
 
 export interface PageUpdate {
   content: string;
   message?: string;
+  entity_type?: string;
+  properties?: Record<string, unknown>;
 }
 
 export interface PageCreate {
@@ -80,6 +84,8 @@ export interface PageCreate {
   content: string;
   tags?: string[];
   type?: string;
+  entity_type?: string;
+  properties?: Record<string, unknown>;
 }
 
 export interface PageStatus {
@@ -89,8 +95,48 @@ export interface PageStatus {
 }
 
 export interface PageListResponse {
+  pages: PageResponse[];
   slugs: string[];
   total: number;
+}
+
+// Quick Capture types
+export interface QuickCaptureRequest {
+  title: string;
+  content?: string;
+  tags?: string[];
+}
+
+export interface QuickCaptureResponse {
+  slug: string;
+  title: string;
+  status: string;
+}
+
+// Entity Type types
+export interface EntityField {
+  name: string;
+  field_type: string;
+  required: boolean;
+  description: string;
+  options: string[];
+}
+
+export interface EntityType {
+  id: string;
+  name: string;
+  icon: string;
+  description: string;
+  fields: EntityField[];
+  color: string;
+}
+
+// Related Pages types
+export interface RelatedPage {
+  slug: string;
+  title: string;
+  score: number;
+  reasons: string[];
 }
 
 // WebSocket types - re-exported from shared websocket types
