@@ -41,6 +41,7 @@ saw = "saw.drivers.cli.main:app"
 
 [project.optional-dependencies]
 pdf = ["docling>=2.0", "PyMuPDF>=1.24"]
+graph = ["igraph>=0.11"]
 dev = ["pytest>=8.0", "pytest-asyncio>=1.0", "pytest-benchmark>=4.0", "ruff>=0.4"]
 
 [tool.hatch.build.targets.wheel]
