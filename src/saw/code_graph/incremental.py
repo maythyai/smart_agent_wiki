@@ -172,10 +172,22 @@ class IncrementalBuilder:
             for line in proc.stdout.strip().split("\n"):
                 if not line:
                     continue
-                parts = line.split("\t", 1)
+                parts = line.split("\t")
                 if len(parts) < 2:
                     continue
-                status, file_path = parts[0], parts[1]
+                status = parts[0]
+
+                # 处理 rename/copy: R100\told.py\tnew.py
+                if status.startswith(("R", "C")) and len(parts) >= 3:
+                    old_path, new_path = parts[1], parts[2]
+                    from saw.code_graph.parser import detect_language, should_skip
+                    if detect_language(old_path) and not should_skip(Path(old_path)):
+                        removed.append(old_path)
+                    if detect_language(new_path) and not should_skip(Path(new_path)):
+                        changed.append(new_path)
+                    continue
+
+                file_path = parts[1]
 
                 # 只处理源码文件
                 from saw.code_graph.parser import detect_language, should_skip

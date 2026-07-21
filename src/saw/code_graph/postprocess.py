@@ -196,17 +196,24 @@ class PostProcessor:
     def _update_edge_target(
         self, source: str, old_target: str, new_target: str, edge_type: str
     ) -> None:
-        """更新边的 target 为解析后的完整 UID"""
+        """更新边的 target 为解析后的完整 UID (处理 UNIQUE 冲突)"""
         conn = self.store._conn
         if conn is None:
             return
-        conn.execute(
-            """UPDATE code_edges
-               SET target = ?, confidence = 0.9, confidence_tier = 'RESOLVED',
-                   metadata = '{}'
-               WHERE source = ? AND target = ? AND edge_type = ?""",
-            (new_target, source, old_target, edge_type),
-        )
+        try:
+            conn.execute(
+                """UPDATE code_edges
+                   SET target = ?, confidence = 0.9, confidence_tier = 'RESOLVED',
+                       metadata = '{"resolved_from": "' || ? || '"}'
+                   WHERE source = ? AND target = ? AND edge_type = ?""",
+                (new_target, old_target, source, old_target, edge_type),
+            )
+        except Exception:
+            # UNIQUE 冲突: 已存在解析后的边，删除旧的裸名边
+            conn.execute(
+                "DELETE FROM code_edges WHERE source = ? AND target = ? AND edge_type = ?",
+                (source, old_target, edge_type),
+            )
         conn.commit()
 
     # ─── Step 2: 签名计算 ─────────────────────────────────────────

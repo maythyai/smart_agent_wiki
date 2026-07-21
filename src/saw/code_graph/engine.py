@@ -200,13 +200,10 @@ class CodeGraphEngine:
                 neighbor_uid = edge.source if direction == "upstream" else edge.target
 
                 if neighbor_uid in visited:
-                    # 最佳分数松弛: 如果新路径分数更高则更新
-                    new_score = parent_score * edge.weight * (DEPTH_DECAY ** (depth + 1))
-                    if neighbor_uid in scores and new_score > scores[neighbor_uid].score:
-                        scores[neighbor_uid].score = new_score
                     continue
 
-                new_score = parent_score * edge.weight * (DEPTH_DECAY ** (depth + 1))
+                # 单跳衰减: parent_score 已包含前序累积衰减，此处仅乘一次
+                new_score = parent_score * edge.weight * DEPTH_DECAY
                 if new_score < min_score:
                     continue
 

@@ -109,7 +109,7 @@ class CodeGovernIntegration:
             })
             if doc.severity == "critical":
                 report.critical_count += 1
-            else:
+            elif doc.severity == "warning":
                 report.warning_count += 1
 
         # 图健康检查
