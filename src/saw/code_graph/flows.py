@@ -134,9 +134,10 @@ class FlowTracer:
                 continue
 
             if node.kind in (NodeKind.FUNCTION, NodeKind.METHOD):
-                # 命名约定
+                # 命名约定 (全词匹配，避免 "prune" 匹配 "run" 等误判)
                 name_lower = node.name.lower()
-                if any(p in name_lower for p in ENTRY_POINT_PATTERNS):
+                name_tokens = set(name_lower.replace("-", "_").split("_"))
+                if name_lower in ENTRY_POINT_PATTERNS or name_tokens & ENTRY_POINT_PATTERNS:
                     entries.append(node.uid)
                     continue
 

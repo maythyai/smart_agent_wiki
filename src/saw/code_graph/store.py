@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import logging
 import sqlite3
+import threading
 import uuid
 from contextlib import contextmanager
 from datetime import datetime, timezone
@@ -124,6 +125,7 @@ class CodeGraphStore:
         self.db_path = Path(db_path)
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self._conn: Optional[sqlite3.Connection] = None
+        self._lock = threading.Lock()
         self._initialize()
 
     def _initialize(self) -> None:
@@ -144,41 +146,44 @@ class CodeGraphStore:
 
     @contextmanager
     def _transaction(self):
-        """事务上下文管理器"""
+        """事务上下文管理器 (线程安全)"""
         assert self._conn is not None
-        try:
-            yield self._conn
-            self._conn.commit()
-        except Exception:
-            self._conn.rollback()
-            raise
+        with self._lock:
+            try:
+                yield self._conn
+                self._conn.commit()
+            except Exception:
+                self._conn.rollback()
+                raise
 
     # ─── Node CRUD ───────────────────────────────────────────────
 
     def upsert_node(self, node: CodeNode) -> None:
         """插入或更新单个节点"""
         assert self._conn is not None
-        self._conn.execute(
-            """INSERT INTO code_nodes
-               (uid, name, kind, file_path, language, start_line, end_line,
-                signature, parameters, docstring, content_hash, metadata,
-                created_at, updated_at)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-               ON CONFLICT(uid) DO UPDATE SET
-                 name=excluded.name, kind=excluded.kind,
-                 start_line=excluded.start_line, end_line=excluded.end_line,
-                 signature=excluded.signature, parameters=excluded.parameters,
-                 docstring=excluded.docstring, content_hash=excluded.content_hash,
-                 metadata=excluded.metadata, updated_at=excluded.updated_at
-            """,
-            (
-                node.uid, node.name, node.kind.value, node.file_path,
-                node.language, node.start_line, node.end_line,
-                node.signature, json.dumps(node.parameters),
-                node.docstring, node.content_hash, json.dumps(node.metadata),
-                node.created_at, node.updated_at,
-            ),
-        )
+        with self._lock:
+            self._conn.execute(
+                """INSERT INTO code_nodes
+                   (uid, name, kind, file_path, language, start_line, end_line,
+                    signature, parameters, docstring, content_hash, metadata,
+                    created_at, updated_at)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                   ON CONFLICT(uid) DO UPDATE SET
+                     name=excluded.name, kind=excluded.kind,
+                     start_line=excluded.start_line, end_line=excluded.end_line,
+                     signature=excluded.signature, parameters=excluded.parameters,
+                     docstring=excluded.docstring, content_hash=excluded.content_hash,
+                     metadata=excluded.metadata, updated_at=excluded.updated_at
+                """,
+                (
+                    node.uid, node.name, node.kind.value, node.file_path,
+                    node.language, node.start_line, node.end_line,
+                    node.signature, json.dumps(node.parameters),
+                    node.docstring, node.content_hash, json.dumps(node.metadata),
+                    node.created_at, node.updated_at,
+                ),
+            )
+            self._conn.commit()
 
     def get_node(self, uid: str) -> Optional[CodeNode]:
         """按 UID 获取节点"""
@@ -211,16 +216,26 @@ class CodeGraphStore:
         return [self._row_to_node(r) for r in rows]
 
     def search_nodes_fts(self, query: str, limit: int = 20) -> list[CodeNode]:
-        """FTS5 全文搜索"""
+        """FTS5 全文搜索 (安全处理特殊字符)"""
         assert self._conn is not None
-        rows = self._conn.execute(
-            """SELECT cn.* FROM code_nodes cn
-               JOIN code_nodes_fts fts ON cn.rowid = fts.rowid
-               WHERE code_nodes_fts MATCH ?
-               ORDER BY rank
-               LIMIT ?""",
-            (query, limit),
-        ).fetchall()
+        limit = max(1, min(limit, 1000))
+        # 转义 FTS5 语法字符，防止 OperationalError
+        safe_query = '"' + query.replace('"', '""') + '"'
+        try:
+            rows = self._conn.execute(
+                """SELECT cn.* FROM code_nodes cn
+                   JOIN code_nodes_fts fts ON cn.rowid = fts.rowid
+                   WHERE code_nodes_fts MATCH ?
+                   ORDER BY rank
+                   LIMIT ?""",
+                (safe_query, limit),
+            ).fetchall()
+        except sqlite3.OperationalError:
+            # FTS 语法错误降级为 LIKE 查询
+            rows = self._conn.execute(
+                "SELECT * FROM code_nodes WHERE name LIKE ? OR signature LIKE ? LIMIT ?",
+                (f"%{query}%", f"%{query}%", limit),
+            ).fetchall()
         return [self._row_to_node(r) for r in rows]
 
     # ─── Edge CRUD ───────────────────────────────────────────────
@@ -228,21 +243,23 @@ class CodeGraphStore:
     def upsert_edge(self, edge: CodeEdge) -> None:
         """插入或更新单条边"""
         assert self._conn is not None
-        self._conn.execute(
-            """INSERT INTO code_edges
-               (source, target, edge_type, confidence, confidence_tier, metadata)
-               VALUES (?, ?, ?, ?, ?, ?)
-               ON CONFLICT(source, target, edge_type) DO UPDATE SET
-                 confidence=excluded.confidence,
-                 confidence_tier=excluded.confidence_tier,
-                 metadata=excluded.metadata
-            """,
-            (
-                edge.source, edge.target, edge.edge_type.value,
-                edge.confidence, edge.confidence_tier.value,
-                json.dumps(edge.metadata),
-            ),
-        )
+        with self._lock:
+            self._conn.execute(
+                """INSERT INTO code_edges
+                   (source, target, edge_type, confidence, confidence_tier, metadata)
+                   VALUES (?, ?, ?, ?, ?, ?)
+                   ON CONFLICT(source, target, edge_type) DO UPDATE SET
+                     confidence=excluded.confidence,
+                     confidence_tier=excluded.confidence_tier,
+                     metadata=excluded.metadata
+                """,
+                (
+                    edge.source, edge.target, edge.edge_type.value,
+                    edge.confidence, edge.confidence_tier.value,
+                    json.dumps(edge.metadata),
+                ),
+            )
+            self._conn.commit()
 
     def get_outgoing_edges(
         self, uid: str, edge_types: Optional[list[str]] = None
@@ -296,9 +313,11 @@ class CodeGraphStore:
             ]
             if old_uids:
                 placeholders = ",".join("?" * len(old_uids))
+                # 仅删除本文件拥有的边 (source 属于本文件)
+                # 不删除其他文件指向本文件的入边，避免跨文件边丢失
                 conn.execute(
-                    f"DELETE FROM code_edges WHERE source IN ({placeholders}) OR target IN ({placeholders})",
-                    old_uids + old_uids,
+                    f"DELETE FROM code_edges WHERE source IN ({placeholders})",
+                    old_uids,
                 )
                 conn.execute(
                     f"DELETE FROM code_nodes WHERE uid IN ({placeholders})",

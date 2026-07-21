@@ -172,17 +172,20 @@ class CommunityDetector:
 
     def _louvain_fallback(self) -> list[Community]:
         """简化 Louvain: 基于连通分量的聚类"""
+        from collections import deque
+
         nodes = self.store.get_all_nodes()
         non_file_nodes = [n for n in nodes if n.kind != NodeKind.FILE]
         if not non_file_nodes:
             return []
 
-        # 构建邻接表
+        # 构建邻接表 (仅包含非 FILE 节点)
+        non_file_uids = {n.uid for n in non_file_nodes}
         adjacency: dict[str, set[str]] = defaultdict(set)
         for node in non_file_nodes:
             outgoing = self.store.get_outgoing_edges(node.uid)
             for edge in outgoing:
-                if "::" in edge.target:  # 只处理已解析的边
+                if edge.target in non_file_uids:
                     adjacency[node.uid].add(edge.target)
                     adjacency[edge.target].add(node.uid)
 
@@ -194,11 +197,11 @@ class CommunityDetector:
         for node in non_file_nodes:
             if node.uid in visited:
                 continue
-            # BFS
+            # BFS (deque 避免 O(n²))
             component = []
-            queue = [node.uid]
+            queue = deque([node.uid])
             while queue:
-                uid = queue.pop(0)
+                uid = queue.popleft()
                 if uid in visited:
                     continue
                 visited.add(uid)

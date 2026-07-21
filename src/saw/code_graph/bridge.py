@@ -87,6 +87,17 @@ class BridgeLayer:
             page_title: 页面标题
             code_uids: 关联的代码符号 UID 列表
         """
+        # 清除旧锚定的反向索引条目 (防止 re-anchor 时残留)
+        old = self._anchors.get(page_id)
+        if old:
+            for uid in old.code_uids:
+                if uid in self._reverse_index:
+                    self._reverse_index[uid] = [
+                        p for p in self._reverse_index[uid] if p != page_id
+                    ]
+                    if not self._reverse_index[uid]:
+                        del self._reverse_index[uid]
+
         anchor = DocAnchor(
             page_id=page_id,
             page_title=page_title,

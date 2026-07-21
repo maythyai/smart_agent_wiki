@@ -64,6 +64,22 @@ def should_skip(path: Path) -> bool:
     return False
 
 
+def _is_test_path(rel_path: str) -> bool:
+    """路径段感知的测试文件检测 (避免 'latest.py'/'contest.ts' 误判)"""
+    lower = rel_path.lower()
+    parts = lower.replace("\\", "/").split("/")
+    filename = parts[-1] if parts else lower
+    # 目录段: tests/, test/, __tests__/
+    if any(seg in ("tests", "test", "__tests__") for seg in parts[:-1]):
+        return True
+    # 文件名: test_*.py, *_test.py, *.test.ts, *.spec.ts
+    if filename.startswith("test_") or filename.startswith("test-"):
+        return True
+    if "_test." in filename or ".test." in filename or ".spec." in filename:
+        return True
+    return False
+
+
 def discover_files(root: str | Path, languages: Optional[list[str]] = None) -> list[Path]:
     """发现根目录下所有可解析的源码文件"""
     root = Path(root)
@@ -216,8 +232,8 @@ class CodeParser:
                 qualified = f"{parent_qualifier}{node.name}" if not parent_qualifier else f"{parent_qualifier}.{node.name}"
                 uid = make_uid(rel_path, qualified)
 
-                # 检测是否为测试类
-                is_test = node.name.startswith("Test") or "test" in rel_path.lower()
+                # 检测是否为测试类 (路径段匹配，避免 "latest.py" 等误判)
+                is_test = node.name.startswith("Test") or _is_test_path(rel_path)
                 kind = NodeKind.TEST if is_test else NodeKind.CLASS
 
                 # 提取 docstring
@@ -272,7 +288,7 @@ class CodeParser:
                 qualified = f"{parent_qualifier}{node.name}" if not parent_qualifier else f"{parent_qualifier}.{node.name}"
                 uid = make_uid(rel_path, qualified)
 
-                is_test = node.name.startswith("test_") or "test" in rel_path.lower()
+                is_test = node.name.startswith("test_") or _is_test_path(rel_path)
                 is_endpoint = self._has_decorator(node, ("route", "get", "post", "put", "delete", "patch", "api_view"))
 
                 if is_test:
@@ -405,13 +421,16 @@ class CodeParser:
         return params
 
     def _has_decorator(self, node, names: tuple[str, ...]) -> bool:
-        """检查函数是否有指定装饰器"""
+        """检查函数是否有指定装饰器 (精确匹配末尾组件)"""
         import ast
 
         for dec in node.decorator_list:
             dec_name = self._get_name_from_node(dec)
-            if dec_name and any(n in dec_name for n in names):
-                return True
+            if dec_name:
+                # 取最后一个点分组件做精确匹配，避免子串误匹配
+                tail = dec_name.split(".")[-1]
+                if tail in names:
+                    return True
         return False
 
     # ─── TypeScript/JavaScript 解析 ───────────────────────────────
@@ -470,7 +489,7 @@ class CodeParser:
             line_no = source[: match.start()].count("\n") + 1
             uid = make_uid(rel_path, class_name)
 
-            is_test = "test" in rel_path.lower() or "spec" in rel_path.lower()
+            is_test = _is_test_path(rel_path)
             kind = NodeKind.TEST if is_test else NodeKind.CLASS
 
             class_node = CodeNode(
@@ -512,7 +531,7 @@ class CodeParser:
                 line_no = source[: match.start()].count("\n") + 1
                 uid = make_uid(rel_path, func_name)
 
-                is_test = func_name.startswith("test") or "test" in rel_path.lower()
+                is_test = func_name.startswith("test") or _is_test_path(rel_path)
                 kind = NodeKind.TEST if is_test else NodeKind.FUNCTION
 
                 params = [p.strip().split(":")[0].strip() for p in params_str.split(",") if p.strip()]
@@ -621,16 +640,24 @@ class CodeParser:
         return None
 
     def _resolve_relative_import(self, current_file: str, module: str) -> Optional[str]:
-        """解析相对导入路径"""
+        """解析相对导入路径 (正确处理 ../ 父目录导入)"""
         current_dir = Path(current_file).parent
-        # 去掉 ./ 或 ../ 前缀
-        clean = module.lstrip("./")
+        # 计算前导点数量确定向上层级: "./" → 0, "../" → 1, "../../" → 2
+        dots = len(module) - len(module.lstrip("."))
+        base = current_dir
+        for _ in range(max(0, dots - 1)):
+            base = base.parent
+        # 去掉前导点和斜杠得到模块路径
+        clean = module.lstrip(".").lstrip("/")
+        if not clean:
+            return None
         candidates = [
-            current_dir / f"{clean}.ts",
-            current_dir / f"{clean}.tsx",
-            current_dir / f"{clean}.js",
-            current_dir / f"{clean}/index.ts",
-            current_dir / f"{clean}/index.js",
+            base / f"{clean}.ts",
+            base / f"{clean}.tsx",
+            base / f"{clean}.js",
+            base / f"{clean}.jsx",
+            base / f"{clean}/index.ts",
+            base / f"{clean}/index.js",
         ]
         for c in candidates:
             full = self.root_path / c
