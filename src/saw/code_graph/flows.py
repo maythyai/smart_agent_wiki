@@ -124,9 +124,14 @@ class FlowTracer:
         1. ENDPOINT 类型节点 (框架路由装饰器)
         2. 命名约定匹配 (main, app, run, ...)
         3. 无入边 CALLS 的 FUNCTION/METHOD 节点
+
+        性能: 使用单次 SQL 查询预计算被调用集合，避免 N+1 查询。
         """
         entries = []
         all_nodes = self.store.get_all_nodes()
+
+        # 单次查询: 所有被 CALLS 边指向的 target UID 集合
+        called_targets = self.store.get_called_targets(EdgeType.CALLS.value)
 
         for node in all_nodes:
             if node.kind == NodeKind.ENDPOINT:
@@ -141,11 +146,8 @@ class FlowTracer:
                     entries.append(node.uid)
                     continue
 
-                # 无入边 CALLS (没有被其他函数调用)
-                incoming = self.store.get_incoming_edges(
-                    node.uid, [EdgeType.CALLS.value]
-                )
-                if not incoming and node.kind == NodeKind.FUNCTION:
+                # 无入边 CALLS (O(1) 集合查找代替 SQL 查询)
+                if node.uid not in called_targets and node.kind == NodeKind.FUNCTION:
                     # 排除私有函数和测试
                     if not node.name.startswith("_") and node.kind != NodeKind.TEST:
                         entries.append(node.uid)

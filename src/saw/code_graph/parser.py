@@ -652,7 +652,7 @@ class CodeParser:
         return None
 
     def _resolve_relative_import(self, current_file: str, module: str) -> Optional[str]:
-        """解析相对导入路径 (正确处理 ../ 父目录导入)"""
+        """解析相对导入路径 (正确处理 ../ 父目录导入, 含路径遍历防护)"""
         current_dir = Path(current_file).parent
         # 计算前导点数量确定向上层级: "./" → 0, "../" → 1, "../../" → 2
         dots = len(module) - len(module.lstrip("."))
@@ -661,7 +661,7 @@ class CodeParser:
             base = base.parent
         # 去掉前导点和斜杠得到模块路径
         clean = module.lstrip(".").lstrip("/")
-        if not clean:
+        if not clean or ".." in clean:
             return None
         candidates = [
             base / f"{clean}.ts",
@@ -671,8 +671,10 @@ class CodeParser:
             base / f"{clean}/index.ts",
             base / f"{clean}/index.js",
         ]
+        root_resolved = self.root_path.resolve()
         for c in candidates:
-            full = self.root_path / c
-            if full.exists():
+            full = (self.root_path / c).resolve()
+            # 路径遍历防护: 确保解析后的路径仍在项目根目录内
+            if full.is_relative_to(root_resolved) and full.exists():
                 return str(c)
         return None
