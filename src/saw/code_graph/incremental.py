@@ -58,6 +58,8 @@ class IncrementalBuilder:
                     result.files_failed += 1
                     result.errors.extend(parse_result.errors)
                 else:
+                    # 应用语言特化 Resolver (框架语义增强)
+                    parse_result = self._apply_resolvers(parse_result)
                     self.store.store_file_batch(parse_result)
                     result.files_parsed += 1
                     result.total_nodes += len(parse_result.nodes)
@@ -106,6 +108,7 @@ class IncrementalBuilder:
                     result.files_failed += 1
                     result.errors.extend(parse_result.errors)
                 else:
+                    parse_result = self._apply_resolvers(parse_result)
                     self.store.store_file_batch(parse_result)
                     result.files_parsed += 1
                     result.total_nodes += len(parse_result.nodes)
@@ -130,6 +133,23 @@ class IncrementalBuilder:
             f"{len(removed)} removed, {result.files_skipped} skipped, "
             f"{result.build_time_ms:.0f}ms"
         )
+        return result
+
+    def _apply_resolvers(self, result) -> "ParseResult":
+        """应用语言特化 Resolver 增强 ParseResult
+
+        Resolver 在通用 AST 解析之后运行，负责:
+        - 框架装饰器语义 (FastAPI route → ENDPOINT)
+        - Depends() → DEPENDS_ON 边
+        - 其他语言/框架特化逻辑
+        """
+        try:
+            from saw.code_graph.resolvers.registry import get_resolver
+            resolvers = get_resolver(result.language)
+            for resolver in resolvers:
+                result = resolver.resolve(result, {})
+        except (ImportError, Exception) as e:
+            logger.debug(f"Resolver skipped for {result.file_path}: {e}")
         return result
 
     def _detect_changes(self) -> tuple[list[str], list[str]]:

@@ -81,21 +81,25 @@ def _is_test_path(rel_path: str) -> bool:
 
 
 def discover_files(root: str | Path, languages: Optional[list[str]] = None) -> list[Path]:
-    """发现根目录下所有可解析的源码文件"""
+    """发现根目录下所有可解析的源码文件 (不跟随符号链接，防止循环)"""
+    import os
+
     root = Path(root)
     files = []
-    for path in sorted(root.rglob("*")):
-        if not path.is_file():
-            continue
-        if should_skip(path):
-            continue
-        lang = detect_language(path)
-        if lang is None:
-            continue
-        if languages and lang not in languages:
-            continue
-        files.append(path)
-    return files
+    for dirpath, dirnames, filenames in os.walk(root, followlinks=False):
+        # 跳过排除目录 (就地修改 dirnames 阻止递归)
+        dirnames[:] = [d for d in dirnames if d not in SKIP_DIRS]
+        for fname in sorted(filenames):
+            path = Path(dirpath) / fname
+            if should_skip(path):
+                continue
+            lang = detect_language(path)
+            if lang is None:
+                continue
+            if languages and lang not in languages:
+                continue
+            files.append(path)
+    return sorted(files)
 
 
 class CodeParser:
@@ -126,6 +130,14 @@ class CodeParser:
 
         start = time.time()
         try:
+            # 文件大小保护: 跳过超大文件 (防止生成的代码导致 OOM)
+            file_size = file_path.stat().st_size
+            if file_size > 2 * 1024 * 1024:  # 2MB
+                return ParseResult(
+                    file_path=str(file_path),
+                    language=language,
+                    errors=[f"File too large: {file_size} bytes (limit: 2MB)"],
+                )
             source = file_path.read_text(encoding="utf-8", errors="replace")
         except (OSError, UnicodeDecodeError) as e:
             return ParseResult(

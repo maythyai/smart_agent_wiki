@@ -47,7 +47,7 @@ def analyze_impact(
     Returns:
         ImpactResult with affected nodes grouped by depth and risk level
     """
-    relation_types = relation_types or ['CALLS', 'IMPORTS', 'EXTENDS', 'IMPLEMENTS']
+    relation_types = relation_types or ['CALLS', 'IMPORTS', 'INHERITS', 'IMPLEMENTS']
 
     start = time.time()
 
