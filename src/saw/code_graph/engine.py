@@ -25,6 +25,9 @@ from saw.code_graph.models import (
 from saw.code_graph.parser import CodeParser
 from saw.code_graph.store import CodeGraphStore
 from saw.code_graph.incremental import IncrementalBuilder
+from saw.code_graph.postprocess import PostProcessor
+from saw.code_graph.flows import FlowTracer, ExecutionFlow
+from saw.code_graph.communities import CommunityDetector, Community, ArchitectureOverview
 
 logger = logging.getLogger(__name__)
 
@@ -56,28 +59,64 @@ class CodeGraphEngine:
         self.store = CodeGraphStore(self.db_path)
         self.parser = CodeParser(self.root_path)
         self.builder = IncrementalBuilder(self.root_path, self.store, self.parser)
+        self.postprocessor = PostProcessor(self.store)
+        self.flow_tracer = FlowTracer(self.store)
+        self.community_detector = CommunityDetector(self.store)
 
     # ─── Phase 1+2: Parse & Build ────────────────────────────────
 
-    def build(self, full: bool = False, languages: Optional[list[str]] = None) -> BuildResult:
+    def build(self, full: bool = False, languages: Optional[list[str]] = None, postprocess: bool = True) -> BuildResult:
         """构建代码图
 
         Args:
             full: True = 全量重建, False = 增量更新
             languages: 限定语言 (e.g., ["python", "typescript"])
+            postprocess: 构建后是否自动执行 PostProcess 管线
         """
         if full:
-            return self.builder.full_build(languages)
+            result = self.builder.full_build(languages)
         else:
             # 首次构建时自动全量
             if self.store.node_count() == 0:
                 logger.info("Empty graph detected, running full build")
-                return self.builder.full_build(languages)
-            return self.builder.incremental_update(languages)
+                result = self.builder.full_build(languages)
+            else:
+                result = self.builder.incremental_update(languages)
+
+        # Phase 3: PostProcess
+        if postprocess and result.files_parsed > 0:
+            self.postprocess()
+
+        return result
 
     def update(self, languages: Optional[list[str]] = None) -> BuildResult:
         """增量更新（Phase 6 快捷入口）"""
-        return self.builder.incremental_update(languages)
+        result = self.builder.incremental_update(languages)
+        if result.files_parsed > 0:
+            self.postprocess()
+        return result
+
+    # ─── Phase 3: PostProcess ────────────────────────────────────
+
+    def postprocess(self) -> dict:
+        """执行后处理管线: 裸名解析 → 签名 → FTS 校验"""
+        return self.postprocessor.run()
+
+    def trace_flows(self, max_depth: int = 10) -> list[ExecutionFlow]:
+        """追踪执行流"""
+        return self.flow_tracer.trace_flows(max_depth=max_depth)
+
+    def get_affected_flows(self, changed_uids: list[str]) -> list[ExecutionFlow]:
+        """获取受变更影响的执行流"""
+        return self.flow_tracer.get_affected_flows(changed_uids)
+
+    def detect_communities(self) -> list[Community]:
+        """社区检测"""
+        return self.community_detector.detect()
+
+    def architecture_overview(self) -> ArchitectureOverview:
+        """架构概览: 社区 + hub + bridge"""
+        return self.community_detector.architecture_overview()
 
     # ─── Phase 4: Query ──────────────────────────────────────────
 
