@@ -44,16 +44,21 @@ class IncrementalBuilder:
         self.parser = parser or CodeParser(self.root_path)
 
     def full_build(self, languages: Optional[list[str]] = None) -> BuildResult:
-        """全量构建 — 解析所有源码文件"""
+        """全量构建 — 解析所有源码文件 + 剪枝已删除文件"""
         start = time.time()
         result = BuildResult()
 
         files = discover_files(self.root_path, languages)
         result.total_files = len(files)
 
+        # 记录本次发现的文件集 (用于剪枝)
+        discovered_paths = set()
+
         for fp in files:
             try:
                 parse_result = self.parser.parse_file(fp)
+                rel_path = parse_result.file_path
+                discovered_paths.add(rel_path)
                 if parse_result.errors:
                     result.files_failed += 1
                     result.errors.extend(parse_result.errors)
@@ -68,6 +73,15 @@ class IncrementalBuilder:
                 result.files_failed += 1
                 result.errors.append(f"{fp}: {e}")
                 logger.warning(f"Failed to parse {fp}: {e}")
+
+        # 剪枝: 删除 file_tracking 中存在但本次未发现的文件 (已被删除)
+        pruned = 0
+        for tracked in self.store.get_tracked_files():
+            if tracked.file_path not in discovered_paths:
+                self.store.remove_file(tracked.file_path)
+                pruned += 1
+        if pruned:
+            logger.info(f"Pruned {pruned} deleted files from graph")
 
         # 创建快照
         snapshot = self.store.create_snapshot("full_build", files_changed=result.files_parsed)

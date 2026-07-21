@@ -44,8 +44,14 @@ class KnowledgeGraph:
             try:
                 from saw.code_graph.store import CodeGraphStore
                 self._store = CodeGraphStore(db_path)
-            except (ImportError, Exception):
-                pass  # 降级到内存模式
+            except ImportError:
+                pass  # code_graph 未安装，降级到内存模式
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).warning(
+                    f"Failed to open code graph store at {db_path}: {e}. "
+                    f"Falling back to empty in-memory graph."
+                )
 
     @property
     def nodes(self) -> dict[str, dict]:
@@ -117,10 +123,16 @@ def get_graph(db_path: Optional[str | Path] = None) -> KnowledgeGraph:
 
     Args:
         db_path: 可选的 SQLite 路径。首次调用时传入可初始化持久化后端。
+                 未传入时自动发现 CWD 下的 .saw/code_graph.db。
     """
     global _graph
     with _lock:
         if _graph is None:
+            # 自动发现: 优先使用传入路径，否则查找 CWD/.saw/code_graph.db
+            if db_path is None:
+                candidate = Path(".saw/code_graph.db")
+                if candidate.exists():
+                    db_path = candidate
             _graph = KnowledgeGraph(db_path=db_path)
         return _graph
 

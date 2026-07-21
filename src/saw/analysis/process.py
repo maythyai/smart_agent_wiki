@@ -65,6 +65,7 @@ def detect_process(
         ProcessResult with call tree and summary
     """
     relation_types = relation_types or ['CALLS']
+    max_depth = max(1, min(max_depth, 10))  # 防止 RecursionError
 
     start = time.time()
 

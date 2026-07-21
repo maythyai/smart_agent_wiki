@@ -122,27 +122,58 @@ class CodeGraphStore:
     """
 
     def __init__(self, db_path: str | Path):
-        self.db_path = Path(db_path)
-        self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self._conn: Optional[sqlite3.Connection] = None
         self._lock = threading.Lock()
+        self.db_path = Path(db_path)
+        self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self._initialize()
 
     def _initialize(self) -> None:
-        """初始化数据库连接和 schema"""
-        self._conn = sqlite3.connect(
-            str(self.db_path),
-            check_same_thread=False,
-            timeout=30.0,
-        )
-        self._conn.row_factory = sqlite3.Row
-        # WAL 模式: 读写并发
-        self._conn.execute("PRAGMA journal_mode=WAL")
-        self._conn.execute("PRAGMA synchronous=NORMAL")
-        self._conn.execute("PRAGMA foreign_keys=ON")
-        self._conn.execute("PRAGMA busy_timeout=5000")
-        self._conn.executescript(_SCHEMA_SQL)
-        self._conn.commit()
+        """初始化数据库连接和 schema (损坏时自动重建)"""
+        try:
+            self._conn = sqlite3.connect(
+                str(self.db_path),
+                check_same_thread=False,
+                timeout=30.0,
+            )
+            self._conn.row_factory = sqlite3.Row
+            # WAL 模式: 读写并发
+            self._conn.execute("PRAGMA journal_mode=WAL")
+            self._conn.execute("PRAGMA synchronous=NORMAL")
+            self._conn.execute("PRAGMA foreign_keys=ON")
+            self._conn.execute("PRAGMA busy_timeout=5000")
+            self._conn.executescript(_SCHEMA_SQL)
+            self._conn.commit()
+        except sqlite3.DatabaseError as e:
+            # 数据库损坏: 重命名旧文件并重建 (图是派生缓存，可安全重建)
+            logger.warning(f"Database corrupted ({e}), rebuilding: {self.db_path}")
+            if self._conn:
+                try:
+                    self._conn.close()
+                except Exception:
+                    pass
+                self._conn = None
+            import datetime
+            corrupt_name = self.db_path.with_suffix(
+                f".corrupt-{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}"
+            )
+            try:
+                self.db_path.rename(corrupt_name)
+            except OSError:
+                pass  # 无法重命名则覆盖
+            # 重建
+            self._conn = sqlite3.connect(
+                str(self.db_path),
+                check_same_thread=False,
+                timeout=30.0,
+            )
+            self._conn.row_factory = sqlite3.Row
+            self._conn.execute("PRAGMA journal_mode=WAL")
+            self._conn.execute("PRAGMA synchronous=NORMAL")
+            self._conn.execute("PRAGMA foreign_keys=ON")
+            self._conn.execute("PRAGMA busy_timeout=5000")
+            self._conn.executescript(_SCHEMA_SQL)
+            self._conn.commit()
 
     @contextmanager
     def _transaction(self):
@@ -489,9 +520,15 @@ class CodeGraphStore:
 
     # ─── 兼容接口（供现有 analysis 模块使用）─────────────────────────
 
-    def as_knowledge_graph(self) -> "CodeGraphStore":
-        """返回自身（已实现 KnowledgeGraph 接口）"""
-        return self
+    def as_knowledge_graph(self):
+        """返回 KnowledgeGraph 兼容层 (dict 接口，供 analysis 模块使用)
+
+        注意: CodeGraphStore 返回 CodeNode/CodeEdge dataclass，
+        而 analysis 模块期望 dict (.get() 访问)。
+        必须通过 KnowledgeGraph 兼容层转换。
+        """
+        from saw.graph import KnowledgeGraph
+        return KnowledgeGraph(db_path=self.db_path)
 
     # ─── 内部工具 ─────────────────────────────────────────────────
 
