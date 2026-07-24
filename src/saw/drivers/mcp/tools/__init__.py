@@ -3,11 +3,12 @@
 Provides tool registration for MCP server.
 
 Per 02-03 Task 2: 23 tools covering all operations.
+Extended with compile layer, concept graph, feedback, and code wiki tools.
 """
 
 # Import all tool modules to register tools with FastMCP
 # Tools are registered via @mcp.tool decorators in each module
-from saw.drivers.mcp.tools import ingest, query, govern, learn, collaborate, pages, links, code_graph
+from saw.drivers.mcp.tools import ingest, query, govern, learn, collaborate, pages, links, code_graph, compile
 
 __all__ = [
     "register_all_tools",
@@ -20,6 +21,7 @@ __all__ = [
     "pages",
     "links",
     "code_graph",
+    "compile",
 ]
 
 
@@ -47,6 +49,12 @@ def init_all_tools(
     wiki_repo=None,
     write_queue=None,
     code_graph_engine=None,
+    compile_engine=None,
+    archiver=None,
+    wiki_linter=None,
+    concept_graph=None,
+    feedback_engine=None,
+    code_wiki_engine=None,
 ) -> None:
     """Initialize all tool modules with their engine references.
 
@@ -65,6 +73,12 @@ def init_all_tools(
         wiki_repo: WikiRepository for pages/links tools.
         write_queue: SQLiteWriteQueue for pages/links tools.
         code_graph_engine: CodeGraphEngine for code graph tools.
+        compile_engine: WikiCompileEngine for wiki compile tools.
+        archiver: QueryArchiver for archive tools.
+        wiki_linter: WikiLinter for wiki lint tools.
+        concept_graph: ConceptGraphEngine for concept tools.
+        feedback_engine: FeedbackEngine for issue/CR tools.
+        code_wiki_engine: CodeWikiEngine for code wiki tools.
     """
     from saw.drivers.mcp.tools.ingest import init_ingest_tools
     from saw.drivers.mcp.tools.query import init_query_tools
@@ -74,6 +88,7 @@ def init_all_tools(
     from saw.drivers.mcp.tools.pages import init_pages_tools
     from saw.drivers.mcp.tools.links import init_links_tools
     from saw.drivers.mcp.tools.code_graph import init_code_graph_tools
+    from saw.drivers.mcp.tools.compile import init_compile_tools
 
     init_ingest_tools(pipeline)
     init_query_tools(query_engine, search, compiler, graph, tree_mode)
@@ -83,3 +98,7 @@ def init_all_tools(
     init_pages_tools(wiki_repo, write_queue)
     init_links_tools(wiki_repo, write_queue)
     init_code_graph_tools(code_graph_engine)
+    init_compile_tools(
+        compile_engine, archiver, wiki_linter,
+        concept_graph, feedback_engine, code_wiki_engine,
+    )
