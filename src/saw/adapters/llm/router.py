@@ -172,3 +172,87 @@ class LLMRouter:
                 )
                 return False
         return True
+
+    # ─── Generic completion API (used by collaborate agents & compile engine) ──
+
+    def complete(
+        self,
+        model: str | None = None,
+        messages: list[dict[str, str]] | None = None,
+        prompt: str | None = None,
+        system: str | None = None,
+        temperature: float = 0.7,
+        response_format: dict[str, str] | None = None,
+        timeout: int = _DEFAULT_TIMEOUT,
+        **kwargs: Any,
+    ) -> Any:
+        """Generic synchronous completion call.
+
+        Accepts either ``messages`` (chat format) or ``prompt`` (single user
+        message). Returns the raw litellm response object so callers can access
+        ``.choices[0].message.content``.
+
+        Args:
+            model: Model name. Defaults to query_model.
+            messages: Chat-format messages list.
+            prompt: Single user prompt (alternative to messages).
+            system: Optional system prompt (used with prompt arg).
+            temperature: Sampling temperature.
+            response_format: Optional format spec (e.g. {"type": "json_object"}).
+            timeout: Per-call timeout in seconds.
+
+        Raises:
+            LLMError: When all retries are exhausted.
+        """
+        if messages is None:
+            if prompt is None:
+                raise LLMError("complete() requires either messages or prompt")
+            messages = []
+            if system:
+                messages.append({"role": "system", "content": system})
+            messages.append({"role": "user", "content": prompt})
+
+        call_kwargs: dict[str, Any] = {
+            "model": model or self._query_model,
+            "messages": messages,
+            "temperature": temperature,
+            "timeout": timeout,
+            **kwargs,
+        }
+        if response_format is not None:
+            call_kwargs["response_format"] = response_format
+
+        return _completion_with_retry(**call_kwargs)
+
+    async def completion(
+        self,
+        model: str | None = None,
+        messages: list[dict[str, str]] | None = None,
+        prompt: str | None = None,
+        system: str | None = None,
+        temperature: float = 0.7,
+        response_format: dict[str, str] | None = None,
+        timeout: int = _DEFAULT_TIMEOUT,
+        **kwargs: Any,
+    ) -> Any:
+        """Async completion call used by collaborate agents.
+
+        Wraps the synchronous retry logic in a thread executor so it can be
+        awaited from async agent code without blocking the event loop.
+
+        Returns:
+            Raw litellm response object with ``.choices[0].message.content``.
+        """
+        import asyncio
+
+        return await asyncio.to_thread(
+            self.complete,
+            model=model,
+            messages=messages,
+            prompt=prompt,
+            system=system,
+            temperature=temperature,
+            response_format=response_format,
+            timeout=timeout,
+            **kwargs,
+        )

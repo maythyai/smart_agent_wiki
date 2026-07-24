@@ -28,11 +28,13 @@ class ScholarAgent(BaseAgent):
     Uses Opus model for complex multi-step reasoning.
     """
 
-    def __init__(self, llm_router: LLMRouter | None) -> None:
+    def __init__(self, llm_router: LLMRouter | None, feedback_engine=None) -> None:
         """Initialize the Scholar agent.
 
         Args:
             llm_router: LLM router for model access (can be None for testing).
+            feedback_engine: Optional FeedbackEngine for submitting change
+                requests when research proposes updates to existing pages.
         """
         super().__init__(
             name="Scholar",
@@ -41,6 +43,7 @@ class ScholarAgent(BaseAgent):
             tools_allowed=["saw_query", "saw_search", "saw_compile", "saw_verify"],
         )
         self._llm = llm_router
+        self._feedback = feedback_engine
 
     async def execute(
         self,
@@ -61,6 +64,7 @@ class ScholarAgent(BaseAgent):
         # If no LLM router, use aggregation-based research
         if self._llm is None:
             research = self._research_fallback(task)
+            self._submit_cr_if_needed(research, task)
             return AgentResult(
                 success=True,
                 payload=research,
@@ -71,7 +75,39 @@ class ScholarAgent(BaseAgent):
         messages = self._build_messages(task, context)
         model = "claude-opus-4-20250514"
         response = await self._llm.completion(model=model, messages=messages)
-        return self._parse_response(response)
+        result = self._parse_response(response)
+        self._submit_cr_if_needed(result.payload if isinstance(result.payload, dict) else {}, task)
+        return result
+
+    def _submit_cr_if_needed(self, research: dict, task: AgentTask) -> None:
+        """Submit a ChangeRequest when research targets an existing page.
+
+        Scholar proposes changes via CR (requiring approval) rather than
+        directly modifying stable knowledge. Best-effort.
+        """
+        if self._feedback is None or not isinstance(research, dict):
+            return
+        try:
+            payload = task.payload or {}
+            target_page = payload.get("target_page") or payload.get("page")
+            # Only open CR when there's an explicit target page to update
+            if not target_page:
+                return
+
+            proposed = research.get("summary") or research.get("content") or ""
+            if not proposed:
+                return
+
+            topic = research.get("topic", target_page)
+            self._feedback.create_cr(
+                title=f"Scholar research update: {topic}",
+                target_page=target_page,
+                proposed_content=str(proposed),
+                creator="agent:Scholar",
+                description=f"Research synthesis from {research.get('source_count', 0)} sources",
+            )
+        except Exception:  # noqa: BLE001 — feedback is best-effort
+            pass
 
     def _parse_response(self, response) -> AgentResult:
         """Parse LLM response into AgentResult."""

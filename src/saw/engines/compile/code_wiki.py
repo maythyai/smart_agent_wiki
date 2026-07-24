@@ -170,7 +170,11 @@ class CodeWikiEngine:
     def _generate_overview(
         self, config: CodeWikiConfig, modules: dict[str, list[Path]]
     ) -> CodeWikiPage:
-        """Generate repository overview page."""
+        """Generate repository overview page.
+
+        When a CodeGraphEngine is attached, enriches the overview with
+        architecture and community-detection intelligence.
+        """
         repo_name = config.repo_path.name
         module_list = "\n".join(
             f"- **{name}**: {len(files)} files" for name, files in sorted(modules.items())
@@ -191,6 +195,11 @@ class CodeWikiEngine:
 - Module count: {len(modules)}
 - Branch: {config.branch}
 """
+        # Enrich with code graph intelligence (best-effort)
+        graph_section = self._code_graph_overview_section()
+        if graph_section:
+            content += "\n" + graph_section
+
         return CodeWikiPage(
             filename="code/README.md",
             title=f"{repo_name} — Code Overview",
@@ -198,6 +207,45 @@ class CodeWikiEngine:
             source_files=[],
             commit_hash=config.commit_hash,
         )
+
+    def _code_graph_overview_section(self) -> str:
+        """Build architecture/communities sections from the code graph.
+
+        Returns an empty string when no code graph is attached or any error
+        occurs (code wiki generation must never fail because of graph issues).
+        """
+        if self._code_graph is None:
+            return ""
+        sections: list[str] = []
+        try:
+            stats = self._code_graph.stats()
+            if stats:
+                sections.append("## Code Graph")
+                sections.append("")
+                sections.append(f"- Nodes: {stats.get('nodes', 0)}")
+                sections.append(f"- Edges: {stats.get('edges', 0)}")
+                sections.append(f"- Files: {stats.get('files', 0)}")
+                sections.append("")
+        except Exception:  # noqa: BLE001
+            pass
+
+        try:
+            communities = self._code_graph.detect_communities()
+            if communities:
+                sections.append("## Detected Communities")
+                sections.append("")
+                for i, comm in enumerate(communities[:10], 1):
+                    label = getattr(comm, "label", None) or getattr(comm, "name", f"Cluster {i}")
+                    size = getattr(comm, "size", None)
+                    if size is None:
+                        members = getattr(comm, "members", None)
+                        size = len(members) if members else "?"
+                    sections.append(f"- **{label}** ({size} symbols)")
+                sections.append("")
+        except Exception:  # noqa: BLE001
+            pass
+
+        return "\n".join(sections)
 
     def _generate_module_page(
         self, module_name: str, files: list[Path], config: CodeWikiConfig
