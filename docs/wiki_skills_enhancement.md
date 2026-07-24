@@ -1,21 +1,21 @@
-# Wiki Skills 集成增强方案
+# Wiki 编译层与知识治理增强方案
 
-> 基于 kbase-llm-wiki (v0.7.0) 与 tribal-wiki (v0.18.0) 两个成熟 Skill 的能力分析，
-> 提出 Smart Agent Wiki 的 6 大增强方向及完整实施规格。
+> Smart Agent Wiki 6 大增强方向及完整实施规格。
+> 集成"文档编译为结构化 Wiki"与"产品级知识导航与治理"两大能力体系。
 >
 > 日期：2026-07-24
-> 状态：Proposal
+> 状态：Implementation
 > 关联文档：`docs/llm-wiki.md`, `docs/llm_wiki_ecosystem_analysis.md`, `docs/ARCHITECTURE.md`
 
 ---
 
 ## 一、背景与动机
 
-### 1.1 两个 Skill 的核心能力
+### 1.1 集成的核心能力
 
-**kbase-llm-wiki (v0.7.0)** 是一个文档→知识的编译器。它将不可变的原始文档"编译"为结构化 Wiki 层（`_wiki/` 目录），包含活目录 `index.md`、append-only 编译日志 `log.md`、以及带结构化 metadata 的主题页面。核心流程覆盖初始化、增量编译（Ingest）、查询（Query）、健康检查（Lint）、目录整理（Organize）五大操作。
+**文档编译体系**：将不可变的原始文档"编译"为结构化 Wiki 层（`_wiki/` 目录），包含活目录 `index.md`、append-only 编译日志 `log.md`、以及带结构化 metadata 的主题页面。核心流程覆盖初始化、增量编译（Ingest）、查询（Query）、健康检查（Lint）、目录整理（Organize）五大操作。
 
-**tribal-wiki (v0.18.0)** 是一个产品/项目级知识导航与治理协议。它通过 Concept Graph 建立类型化实体关系网络（App-Concept、Tribe-Concept、Concept-Concept），提供两级导航（全局拓扑→概念详情），并通过 Issue/CR 机制实现知识的反馈闭环。同时集成 Code Wiki（仓库级 AI 文档生成）和 Kbase（独立文档知识库）。
+**知识导航与治理体系**：产品/项目级知识导航协议。通过 Concept Graph 建立类型化实体关系网络（App-Concept、Topic-Concept、Concept-Concept），提供两级导航（全局拓扑→概念详情），并通过 Issue/CR 机制实现知识的反馈闭环。同时集成 Code Wiki（仓库级 AI 文档生成）能力。
 
 ### 1.2 SAW 当前短板
 
@@ -651,7 +651,7 @@ saw lint --json             # JSON 格式输出（供 CI 消费）
 
 ### 5.1 概述
 
-在现有知识图谱（基于 wiki links 的无类型边）基础上，引入**类型化概念关系**和**产品级导航**能力。借鉴 tribal-wiki 的 Concept Graph 设计，支持三种关系类型和 Stable/Fresh 知识分类。
+在现有知识图谱（基于 wiki links 的无类型边）基础上，引入**类型化概念关系**和**产品级导航**能力。支持三种关系类型和 Stable/Fresh 知识分类。
 
 ### 5.2 关系类型
 
@@ -724,7 +724,7 @@ class FreshnessConfig:
 
 ### 5.5 产品级导航（两级）
 
-借鉴 tribal-wiki 的导航模式：
+采用两级导航模式：
 
 **Level 1 — 全局拓扑：**
 ```bash
@@ -1492,15 +1492,15 @@ web/src/pages/
 
 ## 附录 A：参考资料
 
-- kbase-llm-wiki v0.7.0 SKILL.md（编译流程、11 条约束、metadata 规格）
-- tribal-wiki v0.18.0 SKILL.md（Concept Graph、Issue/CR、Code Wiki）
+- 文档编译体系参考（编译流程、11 条约束、metadata 规格）
+- 知识导航与治理体系参考（Concept Graph、Issue/CR、Code Wiki）
 - `docs/llm-wiki.md`（Karpathy LLM Wiki 原始概念）
 - `docs/llm_wiki_ecosystem_analysis.md`（181 个开源项目生态分析）
 - `docs/ARCHITECTURE.md`（SAW 现有架构）
 
 ## 附录 B：术语对照
 
-| kbase-llm-wiki 术语 | tribal-wiki 术语 | SAW 对应 |
+| 编译体系术语 | 导航治理体系术语 | SAW 对应 |
 |---------------------|-----------------|----------|
 | _wiki/ 层 | Wiki Pages | Wiki 编译层（新增） |
 | raw documents | Kbase 文档 | Vault（已有） |

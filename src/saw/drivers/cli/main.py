@@ -71,6 +71,10 @@ app.command(name="docs")(docs)
 from saw.code_graph.cli import register_code_graph_commands  # noqa: E402
 register_code_graph_commands(app)
 
+# Wiki compile layer, concept graph, feedback, and code wiki commands
+from saw.drivers.cli.commands.compile_cmd import register_compile_commands  # noqa: E402
+register_compile_commands(app)
+
 # Phase 33: Short command aliases (CLI-01)
 app.command(name="i", help="Short alias for 'ingest'")(ingest)
 app.command(name="q", help="Short alias for 'query'")(query)
