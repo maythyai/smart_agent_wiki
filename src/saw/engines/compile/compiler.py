@@ -76,6 +76,32 @@ class WikiCompileEngine:
         self._claims_repo = claims_repo
         self._wiki_repo = wiki_repo
         self._llm = llm_router
+        self._concept_graph = None  # Optional: set via attach_concept_graph()
+
+    def attach_concept_graph(self, concept_graph) -> None:
+        """Attach a ConceptGraphEngine for auto-rebuild after compilation.
+
+        When attached, every successful compile triggers concept relation
+        inference from the newly written wiki pages.
+        """
+        self._concept_graph = concept_graph
+
+    def _rebuild_concept_graph(self) -> int:
+        """Rebuild concept graph relations from current wiki pages.
+
+        Returns the number of new relations inferred. No-op when no concept
+        graph is attached.
+        """
+        if self._concept_graph is None:
+            return 0
+        try:
+            return self._concept_graph.rebuild_from_wiki()
+        except Exception as exc:  # noqa: BLE001 — graph rebuild is best-effort
+            import logging
+            logging.getLogger(__name__).warning(
+                "Concept graph rebuild failed: %s", exc
+            )
+            return 0
 
     @property
     def wiki_root(self) -> Path:
@@ -152,6 +178,9 @@ class WikiCompileEngine:
         self._append_log(result.log_entry)
         self._update_index_header(result)
 
+        # Auto-infer concept relations from compiled pages (best-effort)
+        self._rebuild_concept_graph()
+
         return result
 
     async def compile_incremental(self, changed_sources: list[str]) -> CompileResult:
@@ -199,6 +228,9 @@ class WikiCompileEngine:
             duration_seconds=duration,
         )
         self._append_log(result.log_entry)
+
+        # Auto-infer concept relations from compiled pages (best-effort)
+        self._rebuild_concept_graph()
 
         return result
 
@@ -354,15 +386,64 @@ class WikiCompileEngine:
         return WikiConfidence.LOW
 
     def _compile_content(self, raw: str, title: str) -> str:
-        """Compile raw content into structured wiki page format."""
-        lines = raw.strip().split("\n")
+        """Compile raw content into structured wiki page format.
 
-        # Ensure title header
+        When an LLM router is configured, uses it to produce a structured
+        synthesis (overview + key points + cross-references). Falls back to
+        the rule-based version on any error or when LLM is unavailable.
+        """
+        if self._llm is not None:
+            try:
+                llm_output = self._llm_synthesize(raw, title)
+                if llm_output and len(llm_output.strip()) > 100:
+                    return llm_output
+            except Exception as exc:  # noqa: BLE001 — fall back to rules
+                import logging
+                logging.getLogger(__name__).warning(
+                    "LLM synthesis failed, falling back to rule-based compile: %s", exc
+                )
+
+        # Rule-based fallback
+        lines = raw.strip().split("\n")
         if not lines[0].startswith("# "):
             lines.insert(0, f"# {title}\n")
-
-        # Add metadata comment block at end
         return "\n".join(lines)
+
+    def _llm_synthesize(self, raw: str, title: str) -> str:
+        """Use LLM to synthesize raw content into a structured wiki page.
+
+        Produces a page with: title, overview paragraph, body sections,
+        and inline [[wiki-link]] suggestions for cross-referencing.
+        """
+        system_prompt = (
+            "You are a knowledge compiler for a personal wiki. "
+            "Transform the source document into a well-structured wiki page in Markdown.\n\n"
+            "Requirements:\n"
+            f"1. Start with a single '# {title}' heading.\n"
+            "2. Write a 2-3 sentence overview paragraph immediately after the heading.\n"
+            "3. Organize the body into logical ## sections (e.g. Key Concepts, Details, Examples).\n"
+            "4. Preserve factual content faithfully — do NOT invent facts.\n"
+            "5. When you mention a concept that could be its own wiki page, wrap it as [[concept-name]] "
+            "(lowercase, hyphenated). Use sparingly (3-8 links max).\n"
+            "6. If the source contains contradictions or uncertain claims, annotate them with "
+            "'> [!contradiction]' or '> [!uncertain]' blockquotes — do NOT resolve them.\n"
+            "7. Output ONLY the Markdown page content. No preamble, no commentary.\n"
+        )
+        # Truncate very large sources to fit context window
+        max_chars = 12000
+        source_text = raw[:max_chars]
+        if len(raw) > max_chars:
+            source_text += "\n\n[... source truncated ...]"
+
+        response = self._llm.complete(
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": source_text},
+            ],
+            temperature=0.3,
+            timeout=60,
+        )
+        return response.choices[0].message.content or ""
 
     def _extract_title(self, content: str, fallback: str) -> str:
         """Extract title from content (first H1) or use fallback."""

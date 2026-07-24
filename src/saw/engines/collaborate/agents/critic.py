@@ -30,11 +30,13 @@ class CriticAgent(BaseAgent):
     Uses Sonnet model for balanced quality analysis.
     """
 
-    def __init__(self, llm_router: LLMRouter | None) -> None:
+    def __init__(self, llm_router: LLMRouter | None, feedback_engine=None) -> None:
         """Initialize the Critic agent.
 
         Args:
             llm_router: LLM router for model access (can be None for testing).
+            feedback_engine: Optional FeedbackEngine for opening knowledge issues
+                when contradictions or quality problems are detected.
         """
         super().__init__(
             name="Critic",
@@ -43,6 +45,7 @@ class CriticAgent(BaseAgent):
             tools_allowed=["saw_query", "saw_verify", "saw_lint"],
         )
         self._llm = llm_router
+        self._feedback = feedback_engine
 
     async def execute(
         self,
@@ -63,6 +66,7 @@ class CriticAgent(BaseAgent):
         # If no LLM router, use heuristic-based quality checks
         if self._llm is None:
             review = self._review_fallback(task)
+            self._open_issues_if_needed(review, task)
             return AgentResult(
                 success=True,
                 payload=review,
@@ -73,7 +77,54 @@ class CriticAgent(BaseAgent):
         messages = self._build_messages(task, context)
         model = "claude-sonnet-4-20250514"
         response = await self._llm.completion(model=model, messages=messages)
-        return self._parse_response(response)
+        result = self._parse_response(response)
+        self._open_issues_if_needed(result.payload if isinstance(result.payload, dict) else {}, task)
+        return result
+
+    def _open_issues_if_needed(self, review: dict, task: AgentTask) -> None:
+        """Open KnowledgeIssues for contradictions/errors found during review.
+
+        Best-effort: failures here never break the review flow.
+        """
+        if self._feedback is None or not isinstance(review, dict):
+            return
+        try:
+            from saw.domain.feedback import IssueType
+
+            findings = review.get("findings", [])
+            issues = review.get("issues", [])
+            problems = findings + (issues if isinstance(issues, list) else [])
+
+            # Only open issues for error/contradiction severity
+            serious = [
+                p for p in problems
+                if isinstance(p, dict)
+                and (
+                    p.get("severity") == "error"
+                    or "contradict" in str(p.get("issue", "")).lower()
+                )
+            ]
+            if not serious:
+                return
+
+            payload = task.payload or {}
+            affected = payload.get("affected_pages", [])
+            if not affected and payload.get("page"):
+                affected = [payload["page"]]
+
+            title = f"Critic detected {len(serious)} issue(s)"
+            desc = "; ".join(
+                str(p.get("issue") or p.get("description") or p) for p in serious[:5]
+            )
+            self._feedback.create_issue(
+                issue_type=IssueType.CHALLENGE,
+                title=title,
+                description=desc,
+                affected_pages=affected,
+                reporter="agent:Critic",
+            )
+        except Exception:  # noqa: BLE001 — feedback is best-effort
+            pass
 
     def _parse_response(self, response) -> AgentResult:
         """Parse LLM response into AgentResult."""
