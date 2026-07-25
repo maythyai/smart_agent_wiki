@@ -127,9 +127,9 @@ def create_server(wiki_path: Path, db_path: Path | None = None) -> FastMCP:
             search = FTS5Search(conn)
             # FIX: ContextCompiler requires (claims_repo, wiki_repo, search, conn)
             compiler = ContextCompiler(claims_repo, wiki_repo, search, conn)
-            graph = GraphTraverse(claims_repo)
+            graph = GraphTraverse(conn)
             compare_engine = CompareEngine(claims_repo, wiki_repo)
-            tree_mode = TreeModeSearch(claims_repo)
+            tree_mode = TreeModeSearch(wiki_repo, claims_repo, conn)
 
             _query_engine = QueryEngine(
                 search=search,
@@ -186,7 +186,7 @@ def create_server(wiki_path: Path, db_path: Path | None = None) -> FastMCP:
         )
 
         _compile_engine = WikiCompileEngine(
-            vault_root=wiki_path,
+            vault_root=wiki_path / "vault",
             claims_repo=None,
             wiki_repo=_wiki_repo,
             llm_router=_llm_router,

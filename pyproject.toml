@@ -25,6 +25,10 @@ dependencies = [
     "httpx>=0.25",
     "fastapi>=0.100",
     "pynacl>=1.5",
+    # MCP server (imported by CLI at startup)
+    "fastmcp>=2.0",
+    # Web dashboard system stats
+    "psutil>=5.9",
     # Phase 9: RSS Subscription
     "fastfeedparser>=0.6.0",
     "apscheduler>=3.11.0",

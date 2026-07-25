@@ -68,6 +68,9 @@ class RedisRateLimiter:
     def __init__(self, config: RateLimitConfig | None = None):
         self.config = config or RateLimitConfig.from_env()
         self._redis = None
+        # In-memory fallback counters for when Redis is unavailable
+        # (local/single-node deployments). Keyed by key_id.
+        self._memory_counters: dict[str, dict] = {}
 
     def _get_redis(self):
         if self._redis is None:
@@ -88,6 +91,45 @@ class RedisRateLimiter:
         now = time.time()
         return int(now // 86400) * 86400
 
+    def _check_rate_limit_memory(
+        self, key_id: str, hour_limit: int, day_limit: int
+    ) -> RateLimitStatus:
+        """In-memory fixed-window rate limiting (Redis fallback).
+
+        Suitable for local/single-node deployments where Redis is unavailable.
+        Counters reset when the hour/day window rolls over.
+        """
+        now = int(time.time())
+        hour_ts = self._get_hour_timestamp()
+        day_ts = self._get_day_timestamp()
+
+        entry = self._memory_counters.get(key_id)
+        if entry is None:
+            entry = {"hour_ts": hour_ts, "day_ts": day_ts, "hour": 0, "day": 0}
+            self._memory_counters[key_id] = entry
+
+        # Reset counters when the window rolls over
+        if entry["hour_ts"] != hour_ts:
+            entry["hour_ts"] = hour_ts
+            entry["hour"] = 0
+        if entry["day_ts"] != day_ts:
+            entry["day_ts"] = day_ts
+            entry["day"] = 0
+
+        entry["hour"] += 1
+        entry["day"] += 1
+
+        return RateLimitStatus(
+            hour_count=entry["hour"],
+            hour_limit=hour_limit,
+            hour_remaining=max(0, hour_limit - entry["hour"]),
+            hour_reset=hour_ts + 3600,
+            day_count=entry["day"],
+            day_limit=day_limit,
+            day_remaining=max(0, day_limit - entry["day"]),
+            day_reset=day_ts + 86400,
+        )
+
     def check_rate_limit(
         self,
         key_id: str,
@@ -104,21 +146,9 @@ class RedisRateLimiter:
         redis_client = self._get_redis()
 
         if redis_client is None:
-            # Redis not available — fail-close: deny requests to prevent abuse
-            logger.warning(
-                "Redis unavailable for rate-limit key %s; failing closed", key_id
-            )
-            now = int(time.time())
-            return RateLimitStatus(
-                hour_count=hour_limit + 1,
-                hour_limit=hour_limit,
-                hour_remaining=0,
-                hour_reset=now + 3600,
-                day_count=day_limit + 1,
-                day_limit=day_limit,
-                day_remaining=0,
-                day_reset=now + 86400,
-            )
+            # Redis not available — fall back to in-memory counters so
+            # local/single-node deployments work without a Redis server.
+            return self._check_rate_limit_memory(key_id, hour_limit, day_limit)
 
         # Get timestamps
         hour_ts = self._get_hour_timestamp()

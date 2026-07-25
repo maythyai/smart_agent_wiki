@@ -290,7 +290,9 @@ class WikiLinter:
     def _check_stale_content(self, pages: list[str]) -> list[LintFinding]:
         """Check for stale content based on metadata dates."""
         findings = []
-        now = utcnow()
+        from datetime import datetime, timezone
+        # Normalize "now" to naive UTC for safe comparison with parsed dates
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
 
         for page in pages:
             content = self._read_page(page)
@@ -301,8 +303,9 @@ class WikiLinter:
             updated_match = re.search(r"updated:\s*(\d{4}-\d{2}-\d{2})", content)
             if updated_match:
                 try:
-                    from datetime import datetime
                     updated = datetime.fromisoformat(updated_match.group(1))
+                    # Strip any tz info to keep the subtraction naive-vs-naive
+                    updated = updated.replace(tzinfo=None)
                     days_old = (now - updated).days
                     if days_old > 30:
                         findings.append(LintFinding(

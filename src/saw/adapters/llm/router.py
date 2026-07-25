@@ -93,6 +93,30 @@ class LLMRouter:
         # Default to gpt-4o-mini if extraction_model not configured
         self._extraction_model = settings.extraction_model or "gpt-4o-mini"
         self._query_model = settings.query_model or "gpt-4o-mini"
+        self._api_base = getattr(settings, "api_base", "") or ""
+        self._api_key = getattr(settings, "api_key", "") or ""
+        self._timeout = getattr(settings, "timeout", 0) or _DEFAULT_TIMEOUT
+        self._enable_thinking = getattr(settings, "enable_thinking", True)
+
+    def _endpoint_kwargs(self) -> dict[str, Any]:
+        """Return litellm kwargs for routing to a custom endpoint.
+
+        When api_base is configured (e.g. Ollama at http://localhost:11434/v1),
+        litellm needs both api_base and an api_key (Ollama ignores the key but
+        litellm requires a non-empty value). Returns empty dict for cloud
+        providers that rely on environment variables.
+
+        Also disables reasoning ("thinking") for models that support it when
+        enable_thinking is False — this dramatically speeds up extraction and
+        classification tasks on reasoning models like qwen3.5.
+        """
+        kwargs: dict[str, Any] = {}
+        if self._api_base:
+            kwargs["api_base"] = self._api_base
+            kwargs["api_key"] = self._api_key or "ollama"
+        if not self._enable_thinking:
+            kwargs["extra_body"] = {"enable_thinking": False}
+        return kwargs
 
     def extract_claims(self, text: str, system_prompt: str) -> dict[str, Any]:
         """Extract claims from text using LLM.
@@ -115,7 +139,8 @@ class LLMRouter:
             ],
             temperature=0.1,  # Low temperature for stable extraction (per RESEARCH.md)
             response_format={"type": "json_object"},
-            timeout=_DEFAULT_TIMEOUT,
+            timeout=self._timeout,
+            **self._endpoint_kwargs(),
         )
         content = response.choices[0].message.content or ""
         try:
@@ -150,7 +175,8 @@ class LLMRouter:
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": f"Context:\n{context}\n\nQuestion: {question}"},
             ],
-            timeout=_DEFAULT_TIMEOUT,
+            timeout=self._timeout,
+            **self._endpoint_kwargs(),
         )
         return response.choices[0].message.content or ""
 
@@ -161,7 +187,12 @@ class LLMRouter:
         validates that the expected API-key environment variable is set for the
         configured model.  Returns True when no known provider prefix is matched
         (optimistic fallback for custom / local models).
+
+        When a custom api_base is configured (Ollama/vLLM/etc.), the endpoint is
+        assumed reachable and env-var checks are skipped.
         """
+        if self._api_base:
+            return True
         for model in (self._extraction_model, self._query_model):
             env_var = _required_env_var(model)
             if env_var and not os.environ.get(env_var):
@@ -183,7 +214,7 @@ class LLMRouter:
         system: str | None = None,
         temperature: float = 0.7,
         response_format: dict[str, str] | None = None,
-        timeout: int = _DEFAULT_TIMEOUT,
+        timeout: int | None = None,
         **kwargs: Any,
     ) -> Any:
         """Generic synchronous completion call.
@@ -216,7 +247,8 @@ class LLMRouter:
             "model": model or self._query_model,
             "messages": messages,
             "temperature": temperature,
-            "timeout": timeout,
+            "timeout": timeout or self._timeout,
+            **self._endpoint_kwargs(),
             **kwargs,
         }
         if response_format is not None:
@@ -232,7 +264,7 @@ class LLMRouter:
         system: str | None = None,
         temperature: float = 0.7,
         response_format: dict[str, str] | None = None,
-        timeout: int = _DEFAULT_TIMEOUT,
+        timeout: int | None = None,
         **kwargs: Any,
     ) -> Any:
         """Async completion call used by collaborate agents.

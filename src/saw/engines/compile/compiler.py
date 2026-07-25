@@ -149,8 +149,17 @@ class WikiCompileEngine:
 
         # Phase B: Content compilation
         result = CompileResult()
+        seen_hashes: set[str] = set()  # Dedupe identical content (e.g. loose + vault copies)
         for topic, source_list in topics.items():
             for source_path in source_list:
+                # Skip documents whose content was already compiled
+                content_hash = self._content_hash(source_path)
+                if content_hash and content_hash in seen_hashes:
+                    result.pages_unchanged.append(str(source_path))
+                    continue
+                if content_hash:
+                    seen_hashes.add(content_hash)
+
                 page = await self._compile_source(source_path, topic)
                 if page is None:
                     continue
@@ -270,14 +279,36 @@ class WikiCompileEngine:
 
     # ─── Private helpers ───────────────────────────────────────────────
 
+    def _content_hash(self, source_path: Path) -> Optional[str]:
+        """Return a SHA-256 hash of normalized file content for dedup.
+
+        Returns None when the file cannot be read (so it is never deduped).
+        """
+        import hashlib
+        try:
+            raw = source_path.read_text(encoding="utf-8", errors="ignore")
+        except OSError:
+            return None
+        normalized = " ".join(raw.split())
+        if not normalized:
+            return None
+        return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
+
     def _scan_vault_sources(self) -> list[Path]:
         """Scan Vault for raw source documents."""
         sources = []
+        # Directories that must never be treated as compilation sources
+        excluded = ("_wiki", ".saw", ".git", "wiki", "node_modules", "__pycache__")
+        # SAW vault-internal storage files (per-document UUID dir copies)
+        internal_files = ("original.md", "transcript.md", "meta.yaml")
         for pattern in ("**/*.md", "**/*.pdf", "**/*.html", "**/*.txt"):
             for p in self._vault_root.glob(pattern):
-                # Skip _wiki/ and .saw/ directories
                 rel = p.relative_to(self._vault_root)
-                if rel.parts[0] in ("_wiki", ".saw", ".git"):
+                # Skip system/output directories and any hidden directory
+                if rel.parts[0] in excluded or any(part.startswith(".") for part in rel.parts):
+                    continue
+                # Skip vault-internal storage copies
+                if p.name in internal_files:
                     continue
                 sources.append(p)
         return sorted(sources)
@@ -543,7 +574,8 @@ class WikiCompileEngine:
         current_topic = ""
         for line in content.split("\n"):
             if line.startswith("## "):
-                current_topic = line[3:].strip()
+                # Normalize heading back to lowercase key (render title-cases it)
+                current_topic = line[3:].strip().lower()
                 index.topics.setdefault(current_topic, [])
             elif line.startswith("| [["):
                 entry = self._parse_index_row(line)

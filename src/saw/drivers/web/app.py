@@ -226,10 +226,10 @@ def create_app_from_config(
     wiki_repo = WikiRepository(wiki_path)
 
     search = FTS5Search(conn)
-    compiler = ContextCompiler(claims_repo, wiki_repo, None)
-    graph = GraphTraverse(claims_repo)
+    compiler = ContextCompiler(claims_repo, wiki_repo, search, conn)
+    graph = GraphTraverse(conn)
     compare_engine = CompareEngine(claims_repo, wiki_repo)
-    tree_mode = TreeModeSearch(claims_repo)
+    tree_mode = TreeModeSearch(wiki_repo, claims_repo, conn)
 
     query_engine = QueryEngine(
         search=search,

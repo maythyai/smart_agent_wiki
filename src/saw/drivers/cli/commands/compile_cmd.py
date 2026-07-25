@@ -12,6 +12,19 @@ from rich.panel import Panel
 
 console = Console()
 
+
+def _resolve_vault_root() -> Path:
+    """Resolve the compilation source root.
+
+    SAW stores immutable source documents under ``vault/``. When that
+    subdirectory exists in the current working directory, use it as the
+    compile source root; otherwise fall back to the current directory.
+    """
+    cwd = Path(".")
+    vault = cwd / "vault"
+    return vault if vault.is_dir() else cwd
+
+
 # ─── Compile commands ──────────────────────────────────────────────────
 
 
@@ -21,10 +34,11 @@ def compile_cmd(
 ) -> None:
     """Compile raw documents into structured Wiki layer."""
     import asyncio
-    from saw.engines.compile import WikiCompileEngine
+    from saw.engines.compile import WikiCompileEngine, ConceptGraphEngine
 
-    vault_root = Path(".")
-    engine = WikiCompileEngine(vault_root)
+    engine = WikiCompileEngine(_resolve_vault_root())
+    # Attach concept graph so compilation auto-infers typed relations
+    engine.attach_concept_graph(ConceptGraphEngine(wiki_root=engine.wiki_root))
 
     async def _run():
         if full:
@@ -58,7 +72,7 @@ def wiki_index_cmd() -> None:
     import asyncio
     from saw.engines.compile import WikiCompileEngine
 
-    engine = WikiCompileEngine(Path("."))
+    engine = WikiCompileEngine(_resolve_vault_root())
 
     async def _run():
         return await engine.get_index()
@@ -89,7 +103,7 @@ def wiki_log_cmd(
     """Display Wiki compile log."""
     from saw.engines.compile import WikiCompileEngine
 
-    engine = WikiCompileEngine(Path("."))
+    engine = WikiCompileEngine(_resolve_vault_root())
     entries = engine.get_log(limit)
 
     if not entries:
@@ -110,7 +124,7 @@ def wiki_page_cmd(
     """Read a Wiki compile layer page."""
     from saw.engines.compile import WikiCompileEngine
 
-    engine = WikiCompileEngine(Path("."))
+    engine = WikiCompileEngine(_resolve_vault_root())
     page = engine.read_page(name)
 
     if not page:
@@ -137,7 +151,7 @@ def archive_cmd(
     import asyncio
     from saw.engines.compile import WikiCompileEngine, QueryArchiver
 
-    engine = WikiCompileEngine(Path("."))
+    engine = WikiCompileEngine(_resolve_vault_root())
     archiver = QueryArchiver(engine.wiki_root)
 
     referenced = [p.strip() for p in pages.split(",")] if pages else []
@@ -153,7 +167,7 @@ def archive_list_cmd() -> None:
     """List all archived pages."""
     from saw.engines.compile import WikiCompileEngine, QueryArchiver
 
-    engine = WikiCompileEngine(Path("."))
+    engine = WikiCompileEngine(_resolve_vault_root())
     archiver = QueryArchiver(engine.wiki_root)
     archives = archiver.list_archives()
 
@@ -176,7 +190,7 @@ def wiki_lint_cmd(
     import asyncio
     from saw.engines.compile import WikiCompileEngine, WikiLinter
 
-    engine = WikiCompileEngine(Path("."))
+    engine = WikiCompileEngine(_resolve_vault_root())
     linter = WikiLinter(engine.wiki_root)
 
     async def _run():
@@ -224,7 +238,7 @@ def concept_list_cmd() -> None:
     """List all concepts in the knowledge graph."""
     from saw.engines.compile import WikiCompileEngine, ConceptGraphEngine
 
-    engine = WikiCompileEngine(Path("."))
+    engine = WikiCompileEngine(_resolve_vault_root())
     graph = ConceptGraphEngine(engine.wiki_root)
     concepts = graph.list_concepts()
 
@@ -258,7 +272,7 @@ def concept_view_cmd(
     """View concept details with relations."""
     from saw.engines.compile import WikiCompileEngine, ConceptGraphEngine
 
-    engine = WikiCompileEngine(Path("."))
+    engine = WikiCompileEngine(_resolve_vault_root())
     graph = ConceptGraphEngine(engine.wiki_root)
     node = graph.get_concept(name)
 
@@ -295,7 +309,7 @@ def concept_relate_cmd(
     from saw.engines.compile import WikiCompileEngine, ConceptGraphEngine
     from saw.domain.concept import ConceptRelation, ConceptRelationType
 
-    engine = WikiCompileEngine(Path("."))
+    engine = WikiCompileEngine(_resolve_vault_root())
     graph = ConceptGraphEngine(engine.wiki_root)
 
     try:
@@ -324,7 +338,7 @@ def graph_overview_cmd() -> None:
     """Display knowledge graph global topology."""
     from saw.engines.compile import WikiCompileEngine, ConceptGraphEngine
 
-    engine = WikiCompileEngine(Path("."))
+    engine = WikiCompileEngine(_resolve_vault_root())
     graph = ConceptGraphEngine(engine.wiki_root)
     overview = graph.get_overview()
 
@@ -351,7 +365,7 @@ def issue_list_cmd(
     from saw.engines.compile import WikiCompileEngine, FeedbackEngine
     from saw.domain.feedback import IssueStatus
 
-    engine = WikiCompileEngine(Path("."))
+    engine = WikiCompileEngine(_resolve_vault_root())
     storage = engine.wiki_root.parent / ".saw" / "feedback.json"
     fb = FeedbackEngine(storage)
 
@@ -384,7 +398,7 @@ def issue_create_cmd(
     from saw.engines.compile import WikiCompileEngine, FeedbackEngine
     from saw.domain.feedback import IssueType
 
-    engine = WikiCompileEngine(Path("."))
+    engine = WikiCompileEngine(_resolve_vault_root())
     storage = engine.wiki_root.parent / ".saw" / "feedback.json"
     fb = FeedbackEngine(storage)
 
@@ -406,7 +420,7 @@ def cr_list_cmd(
     from saw.engines.compile import WikiCompileEngine, FeedbackEngine
     from saw.domain.feedback import CRStatus
 
-    engine = WikiCompileEngine(Path("."))
+    engine = WikiCompileEngine(_resolve_vault_root())
     storage = engine.wiki_root.parent / ".saw" / "feedback.json"
     fb = FeedbackEngine(storage)
 
@@ -438,7 +452,7 @@ def cr_create_cmd(
     """Create a change request."""
     from saw.engines.compile import WikiCompileEngine, FeedbackEngine
 
-    engine = WikiCompileEngine(Path("."))
+    engine = WikiCompileEngine(_resolve_vault_root())
     storage = engine.wiki_root.parent / ".saw" / "feedback.json"
     fb = FeedbackEngine(storage)
 
@@ -459,7 +473,7 @@ def cr_review_cmd(
     """Review a change request."""
     from saw.engines.compile import WikiCompileEngine, FeedbackEngine
 
-    engine = WikiCompileEngine(Path("."))
+    engine = WikiCompileEngine(_resolve_vault_root())
     storage = engine.wiki_root.parent / ".saw" / "feedback.json"
     fb = FeedbackEngine(storage)
 
@@ -489,7 +503,7 @@ def code_wiki_generate_cmd(
     from saw.engines.compile import WikiCompileEngine, CodeWikiEngine
     from saw.domain.code_wiki import CodeWikiConfig
 
-    engine = WikiCompileEngine(Path("."))
+    engine = WikiCompileEngine(_resolve_vault_root())
     code_wiki = CodeWikiEngine(engine.wiki_root)
 
     config = CodeWikiConfig(
@@ -520,7 +534,7 @@ def code_wiki_status_cmd(
     from saw.engines.compile import WikiCompileEngine, CodeWikiEngine
     from saw.domain.code_wiki import CodeWikiConfig
 
-    engine = WikiCompileEngine(Path("."))
+    engine = WikiCompileEngine(_resolve_vault_root())
     code_wiki = CodeWikiEngine(engine.wiki_root)
     config = CodeWikiConfig(repo_path=Path(repo_path))
 

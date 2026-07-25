@@ -17,10 +17,21 @@ from saw.domain.value_objects import CapabilityTier
 
 
 class LLMSettings(BaseModel):
-    """LLM configuration."""
+    """LLM configuration.
+
+    Supports cloud providers (via api_key + model name) and local
+    OpenAI-compatible endpoints (e.g. Ollama) via api_base. For Ollama:
+        extraction_model: "openai/qwen3.5:4b"
+        query_model: "openai/qwen3.5:4b"
+        api_base: "http://localhost:11434/v1"
+        api_key: "ollama"  # placeholder, Ollama ignores it
+    """
     extraction_model: str = ""
     query_model: str = ""
     api_key: str = ""
+    api_base: str = ""  # Custom endpoint (e.g. Ollama, vLLM, LM Studio)
+    timeout: int = 120  # Per-call timeout in seconds (local models can be slow)
+    enable_thinking: bool = False  # Reasoning models: disable for fast extraction
 
 
 class WikiSettings(BaseModel):
@@ -50,20 +61,25 @@ SUPPORTED_EXTENSIONS: dict[str, str] = {
 }
 
 
-def detect_tier() -> CapabilityTier:
+def detect_tier(llm: "LLMSettings | None" = None) -> CapabilityTier:
     """Detect system capability tier on startup (per D-22).
 
     - OFFLINE: BM25+TF-IDF, zero LLM
     - LIGHTWEIGHT: LLM + BM25 only
     - FULL: LLM + embeddings + vector
 
+    Args:
+        llm: Optional LLMSettings. When provided, a configured local endpoint
+            (api_base) or model/api_key counts as LLM-available even if no
+            cloud environment variable is set (e.g. Ollama).
+
     Returns:
         CapabilityTier enum value.
     """
     tier = CapabilityTier.OFFLINE
 
-    # Check if any LLM API key is configured
-    if _llm_available():
+    # Check if any LLM is configured (env var OR explicit settings)
+    if _llm_available(llm):
         tier = CapabilityTier.LIGHTWEIGHT
 
     # Check if embeddings are available
@@ -73,9 +89,13 @@ def detect_tier() -> CapabilityTier:
     return tier
 
 
-def _llm_available() -> bool:
-    """Check if any LLM API key is configured."""
+def _llm_available(llm: "LLMSettings | None" = None) -> bool:
+    """Check if any LLM is configured (env vars or explicit settings)."""
     import os
+    # Explicit settings: a local endpoint or model means LLM is available
+    if llm is not None:
+        if getattr(llm, "api_base", "") or llm.api_key or llm.extraction_model or llm.query_model:
+            return True
     # Check common LLM API key environment variables
     llm_keys = [
         "OPENAI_API_KEY",
