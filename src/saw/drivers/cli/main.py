@@ -30,12 +30,12 @@ from saw.drivers.cli.commands.mcp_cmd import mcp  # noqa: E402
 from saw.drivers.cli.commands.web_cmd import web  # noqa: E402
 from saw.drivers.cli.commands.ingest_media_cmd import ingest_media, preview_app  # noqa: E402
 from saw.drivers.cli.commands.feed_cmd import app as feed_app  # noqa: E402
-from saw.cli.commands.tutorial_cmd import tutorial  # noqa: E402
+from saw.drivers.cli.commands.tutorial_cmd import tutorial  # noqa: E402
 
 # Phase 33: CLI Usability - Import new modules
-from saw.cli.config_tui import config  # noqa: E402
-from saw.cli.completion import completion  # noqa: E402
-from saw.cli.commands.docs_cmd import docs  # noqa: E402
+from saw.drivers.cli.config_tui import config  # noqa: E402
+from saw.drivers.cli.completion import completion  # noqa: E402
+from saw.drivers.cli.commands.docs_cmd import docs  # noqa: E402
 
 # Register main commands
 app.command(name="init")(init)
@@ -87,7 +87,7 @@ app.command(name="l", help="Short alias for 'lint'")(lint)
 def main() -> None:
     """Main entry point."""
     # Setup friendly error handler
-    from saw.cli.error_handler import setup_error_handler
+    from saw.drivers.cli.error_handler import setup_error_handler
     setup_error_handler()
 
     app()

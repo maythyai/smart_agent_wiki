@@ -9,11 +9,11 @@ from datetime import datetime, timedelta
 from pathlib import Path
 import tempfile
 
-from saw.mcp.tools.challenge import challenge_tool, ChallengeResult
-from saw.mcp.tools.emerge import emerge_tool, EmergeResult
-from saw.mcp.tools.connect import connect_tool, ConnectResult
-from saw.mcp.tools.graduate import graduate_tool, GraduateResult
-from saw.mcp.tools.context import context_tool
+from saw.drivers.mcp.tools.challenge import challenge_tool, ChallengeResult
+from saw.drivers.mcp.tools.emerge import emerge_tool, EmergeResult
+from saw.drivers.mcp.tools.connect import connect_tool, ConnectResult
+from saw.drivers.mcp.tools.graduate import graduate_tool, GraduateResult
+from saw.drivers.mcp.tools.context import context_tool
 from saw.context.loader import ContextLoader, ContextLevel
 
 

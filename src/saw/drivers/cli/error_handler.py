@@ -4,7 +4,7 @@ This module provides user-friendly error messages with suggestions
 instead of raw stack traces.
 
 Usage:
-    from saw.cli.error_handler import handle_error
+    from saw.drivers.cli.error_handler import handle_error
 
     try:
         risky_operation()
