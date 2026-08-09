@@ -2,11 +2,16 @@
 
 Per Pitfall 7: DELETE old + INSERT new pattern for updates.
 Per Pitfall 1: verify row count consistency after insert.
+
+The indexed ``content``/``tags`` columns hold CJK-tokenized text (see
+saw.adapters.storage.fts_tokenize); the verbatim text is kept in the
+UNINDEXED ``original`` column for display.
 """
 from __future__ import annotations
 
 import sqlite3
 
+from saw.adapters.storage.fts_tokenize import tokenize_for_fts
 from saw.domain.exceptions import FTS5Error
 
 
@@ -38,10 +43,11 @@ class FTS5Sink:
                 "DELETE FROM fts_index WHERE title = ?",
                 (doc_id,),
             )
-            # Insert new entry
+            # Insert new entry (tokenized for CJK-aware matching)
             self._conn.execute(
-                "INSERT INTO fts_index (title, content, tags) VALUES (?, ?, ?)",
-                (doc_id, content, tags),
+                "INSERT INTO fts_index (title, content, tags, original) "
+                "VALUES (?, ?, ?, ?)",
+                (doc_id, tokenize_for_fts(content), tokenize_for_fts(tags), content),
             )
             self._conn.commit()
         except sqlite3.Error as e:

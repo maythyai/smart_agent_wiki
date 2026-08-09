@@ -43,6 +43,7 @@ def in_memory_db() -> sqlite3.Connection:
             title,
             content,
             tags,
+            original UNINDEXED,
             tokenize='unicode61',
             detail=column
         )
@@ -74,9 +75,9 @@ def populated_db(in_memory_db: sqlite3.Connection) -> sqlite3.Connection:
         )
         # Insert into FTS5 index
         conn.execute(
-            """INSERT INTO fts_index (title, content, tags)
-               VALUES (?, ?, '')""",
-            (uuid, content),
+            """INSERT INTO fts_index (title, content, tags, original)
+               VALUES (?, ?, '', ?)""",
+            (uuid, content, content),
         )
 
     conn.commit()
@@ -173,3 +174,70 @@ class TestFTS5Search:
 
         # uuid-1 should not appear in results
         assert "uuid-1" not in result.claim_uuids
+
+
+class TestChineseSearch:
+    """Tests for CJK-aware full-text search (jieba / bigram fallback)."""
+
+    @pytest.fixture
+    def chinese_db(self, in_memory_db: sqlite3.Connection) -> sqlite3.Connection:
+        """Populate DB with Chinese claims via the production write path."""
+        from saw.adapters.storage.fts_tokenize import tokenize_for_fts
+
+        conn = in_memory_db
+        test_claims = [
+            ("cn-1", "Smart Agent Wiki 是一个本地优先的知识管理平台。"),
+            ("cn-2", "核心概念是知识编译而非检索，知识需要经过治理与验证。"),
+            ("cn-3", "四层存储架构：Vault、Claims、Wiki、Index。"),
+        ]
+        for uuid, content in test_claims:
+            conn.execute(
+                """INSERT INTO claim (uuid, content, source_uuid, content_hash)
+                   VALUES (?, ?, 'src', ?)""",
+                (uuid, content, f"hash-{uuid}"),
+            )
+            conn.execute(
+                """INSERT INTO fts_index (title, content, tags, original)
+                   VALUES (?, ?, '', ?)""",
+                (uuid, tokenize_for_fts(content), content),
+            )
+        conn.commit()
+        return conn
+
+    def test_chinese_word_search(self, chinese_db: sqlite3.Connection) -> None:
+        """Chinese word queries must match claims containing the word."""
+        search = FTS5Search(chinese_db)
+        result = search.search("知识管理")
+
+        assert result.total >= 1
+        assert "cn-1" in result.claim_uuids
+
+    def test_chinese_search_compilation(self, chinese_db: sqlite3.Connection) -> None:
+        """A term from the second claim is found despite no spaces in text."""
+        search = FTS5Search(chinese_db)
+        result = search.search("知识编译")
+
+        assert "cn-2" in result.claim_uuids
+
+    def test_chinese_display_is_verbatim(self, chinese_db: sqlite3.Connection) -> None:
+        """Returned content must be the original text, not tokenized text."""
+        search = FTS5Search(chinese_db)
+        result = search.search("知识管理")
+
+        idx = result.claim_uuids.index("cn-1")
+        assert result.contents[idx] == "Smart Agent Wiki 是一个本地优先的知识管理平台。"
+        assert " 知 " not in result.contents[idx]  # no tokenization artifacts
+
+    def test_mixed_chinese_english_query(self, chinese_db: sqlite3.Connection) -> None:
+        """Mixed queries match on both the Latin and CJK parts."""
+        search = FTS5Search(chinese_db)
+        result = search.search("Vault 存储")
+
+        assert "cn-3" in result.claim_uuids
+
+    def test_chinese_no_match(self, chinese_db: sqlite3.Connection) -> None:
+        """Unrelated Chinese queries return nothing."""
+        search = FTS5Search(chinese_db)
+        result = search.search("量子纠缠")
+
+        assert result.total == 0

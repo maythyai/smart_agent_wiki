@@ -58,8 +58,8 @@ def query(
         console.print(f"[red]Error loading config: {e}[/red]")
         raise typer.Exit(1)
 
-    # Detect capability tier
-    tier = detect_tier()
+    # Detect capability tier (pass settings so local endpoints like Ollama count)
+    tier = detect_tier(settings.llm)
 
     # Open Claims DB
     db_path = wiki_path / ".saw" / "db" / "claims.db"

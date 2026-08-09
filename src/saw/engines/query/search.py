@@ -8,6 +8,8 @@ from __future__ import annotations
 import sqlite3
 from dataclasses import dataclass, field
 
+from saw.adapters.storage.fts_tokenize import build_match_query
+
 
 @dataclass
 class SearchResult:
@@ -50,15 +52,21 @@ class FTS5Search:
             return SearchResult()
 
         try:
-            # Escape query for FTS5 MATCH
+            # Escape query for FTS5 MATCH (CJK-aware tokenization)
             escaped_query = self._escape_query(query)
+            if not escaped_query:
+                return SearchResult()
 
             # Execute FTS5 search with bm25 ranking
             # The title column in fts_index stores the claim UUID
             # We use rowid mapping: fts_index.rowid maps to claim.uuid
             # For simplicity, we store UUID in title column and query directly
+            # Display text comes from the UNINDEXED original column
+            # (pre-tokenization); fall back to indexed content for rows
+            # written before the CJK migration.
             rows = self._conn.execute(
-                """SELECT title, content, bm25(fts_index) as rank
+                """SELECT title, COALESCE(original, content) AS body,
+                          bm25(fts_index) as rank
                    FROM fts_index
                    WHERE fts_index MATCH ?
                    ORDER BY rank
@@ -124,12 +132,13 @@ class FTS5Search:
 
         try:
             escaped_query = self._escape_query(query)
+            if not escaped_query:
+                return SearchResult()
 
-            # Use FTS5 snippet() and highlight() functions
+            # snippet()/highlight() would render CJK-tokenized text with
+            # inserted spaces, so display the verbatim original column.
             rows = self._conn.execute(
-                """SELECT title, content,
-                          snippet(fts_index, 1, '>>>', '<<<', '...', 32) as snippet,
-                          highlight(fts_index, 1, '**', '**') as highlighted,
+                """SELECT title, COALESCE(original, content) AS body,
                           bm25(fts_index) as rank
                    FROM fts_index
                    WHERE fts_index MATCH ?
@@ -144,9 +153,8 @@ class FTS5Search:
 
             for row in rows:
                 uuid = row[0]
-                # Use snippet if available, else use full content
-                content = row[2] or row[1] or ""
-                score = -row[4] if row[4] else 0.0
+                content = row[1] or ""
+                score = -row[2] if row[2] else 0.0
                 # Check if claim is deleted
                 deleted_row = self._conn.execute(
                     "SELECT 1 FROM claim WHERE uuid = ? AND deleted_at IS NULL",
@@ -181,6 +189,8 @@ class FTS5Search:
 
         try:
             escaped_query = self._escape_query(query)
+            if not escaped_query:
+                return 0
             row = self._conn.execute(
                 """SELECT COUNT(*)
                    FROM fts_index f
@@ -194,26 +204,17 @@ class FTS5Search:
             return 0
 
     def _escape_query(self, query: str) -> str:
-        """Escape query for FTS5 MATCH syntax.
+        """Escape query for FTS5 MATCH syntax (CJK-aware).
 
-        FTS5 requires special handling for certain characters.
-        For multi-word queries, we use implicit AND by joining with spaces.
-        Each word is matched against all columns.
+        Latin words are AND-joined; CJK runs are segmented (jieba when
+        available, else unigram+bigram fallback) and OR-joined so Chinese
+        queries match regardless of exact word boundaries. See
+        saw.adapters.storage.fts_tokenize for details.
 
         Args:
             query: Raw query string.
 
         Returns:
-            FTS5-safe query string.
+            FTS5-safe MATCH expression (may be empty).
         """
-        # Remove any FTS5 special characters that could break the query
-        import re
-        # Replace special FTS5 characters with spaces
-        cleaned = re.sub(r'[*:"()^]', ' ', query.strip())
-        # Split into words and join for implicit AND search
-        words = [w for w in cleaned.split() if w]
-        if not words:
-            return ""
-        # FTS5: join words with space for implicit AND
-        # No column prefix means search across all columns
-        return " ".join(words)
+        return build_match_query(query)

@@ -35,6 +35,7 @@ def in_memory_db() -> sqlite3.Connection:
             title,
             content,
             tags,
+            original UNINDEXED,
             tokenize='unicode61',
             detail=column
         )
@@ -64,9 +65,9 @@ def in_memory_db() -> sqlite3.Connection:
             (uuid, content, source, f"hash-{uuid}", confidence),
         )
         conn.execute(
-            """INSERT INTO fts_index (title, content, tags)
-               VALUES (?, ?, '')""",
-            (uuid, content),
+            """INSERT INTO fts_index (title, content, tags, original)
+               VALUES (?, ?, '', ?)""",
+            (uuid, content, content),
         )
 
     # Insert test wiki pages

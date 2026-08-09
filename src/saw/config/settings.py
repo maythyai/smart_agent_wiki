@@ -19,10 +19,18 @@ from saw.domain.value_objects import CapabilityTier
 class LLMSettings(BaseModel):
     """LLM configuration.
 
-    Supports cloud providers (via api_key + model name) and local
-    OpenAI-compatible endpoints (e.g. Ollama) via api_base. For Ollama:
+    Supports cloud providers (via api_key + model name) and local endpoints.
+    For Ollama prefer the native ``ollama/`` provider (talks to /api/chat);
+    the model name is the bare Ollama model tag and no api_key is needed:
+        extraction_model: "ollama/qwen3.5:4b"
+        query_model: "ollama/qwen3.5:4b"
+        api_base: "http://localhost:11434"   # optional, this is the default
+        enable_thinking: false               # reasoning models default to
+                                             # thinking ON via Ollama, which is
+                                             # slow and can return empty JSON
+    Alternatively the OpenAI-compatible endpoint works with the ``openai/``
+    prefix and a ``/v1`` base:
         extraction_model: "openai/qwen3.5:4b"
-        query_model: "openai/qwen3.5:4b"
         api_base: "http://localhost:11434/v1"
         api_key: "ollama"  # placeholder, Ollama ignores it
     """

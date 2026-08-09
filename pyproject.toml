@@ -20,6 +20,8 @@ dependencies = [
     "trafilatura>=1.6",
     "beautifulsoup4>=4.12",
     "rank-bm25>=0.2",
+    # CJK segmentation for FTS5 full-text search
+    "jieba>=0.42",
     "PyYAML>=6.0",
     "platformdirs>=3.0",
     "httpx>=0.25",

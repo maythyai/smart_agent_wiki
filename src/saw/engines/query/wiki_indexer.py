@@ -8,6 +8,7 @@ import sqlite3
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from saw.adapters.storage.fts_tokenize import tokenize_for_fts
 from saw.engines.query.wiki_links import extract_unique_targets
 
 if TYPE_CHECKING:
@@ -82,10 +83,17 @@ class WikiIndexer:
             tags_str = " ".join(tags) if tags else ""
             searchable = f"{title} {content} {tags_str}"
 
-            # Insert new entry
+            # Insert new entry (tokenized for CJK-aware matching; the
+            # verbatim text goes into the UNINDEXED original column)
             self._conn.execute(
-                "INSERT INTO fts_index (title, content, tags) VALUES (?, ?, ?)",
-                (slug, searchable, tags_str),
+                "INSERT INTO fts_index (title, content, tags, original) "
+                "VALUES (?, ?, ?, ?)",
+                (
+                    slug,
+                    tokenize_for_fts(searchable),
+                    tokenize_for_fts(tags_str),
+                    searchable,
+                ),
             )
             self._conn.commit()
         except sqlite3.Error as e:

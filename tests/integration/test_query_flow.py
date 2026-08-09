@@ -16,7 +16,10 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from saw.adapters.storage.claims_repository import SQLiteClaimsRepository
+from saw.adapters.storage.claims_repository import (
+    CLAIMS_DB_SCHEMA,
+    SQLiteClaimsRepository,
+)
 from saw.adapters.storage.wiki_repository import WikiRepository
 from saw.domain.claims import Claim
 from saw.domain.entities import Entity, EntityRelation
@@ -67,53 +70,8 @@ def populated_db(temp_wiki: Path) -> sqlite3.Connection:
     db_path = temp_wiki / ".saw" / "claims.db"
     conn = sqlite3.connect(str(db_path))
 
-    # Create schema - must match ClaimsRepository.CLAIMS_DB_SCHEMA exactly
-    conn.executescript("""
-        CREATE TABLE IF NOT EXISTS claim (
-            uuid TEXT PRIMARY KEY,
-            content TEXT NOT NULL,
-            source_uuid TEXT NOT NULL,
-            page_number INTEGER,
-            line_number INTEGER,
-            timestamp TEXT,
-            confidence TEXT NOT NULL DEFAULT 'unverified',
-            source_mark TEXT NOT NULL DEFAULT 'extracted',
-            tags TEXT NOT NULL DEFAULT '[]',
-            entities TEXT NOT NULL DEFAULT '[]',
-            content_hash TEXT NOT NULL,
-            session_id TEXT,
-            created_at TEXT NOT NULL DEFAULT (datetime('now')),
-            updated_at TEXT,
-            deleted_at TEXT
-        );
-
-        CREATE TABLE IF NOT EXISTS entity (
-            uuid TEXT PRIMARY KEY,
-            name TEXT NOT NULL,
-            aliases TEXT NOT NULL DEFAULT '[]',
-            entity_type TEXT NOT NULL,
-            description TEXT,
-            created_at TEXT NOT NULL DEFAULT (datetime('now'))
-        );
-
-        CREATE TABLE IF NOT EXISTS entity_relation (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            source_uuid TEXT NOT NULL,
-            target_uuid TEXT NOT NULL,
-            relation_type TEXT NOT NULL,
-            weight REAL NOT NULL DEFAULT 1.0,
-            created_at TEXT NOT NULL DEFAULT (datetime('now'))
-        );
-
-        CREATE VIRTUAL TABLE IF NOT EXISTS fts_index
-        USING fts5(
-            title,
-            content,
-            tags,
-            tokenize='unicode61',
-            detail=column
-        );
-    """)
+    # Create schema - use the authoritative production schema directly
+    conn.executescript(CLAIMS_DB_SCHEMA)
 
     # Insert test claims - order must match schema columns
     claims = [
@@ -133,9 +91,9 @@ def populated_db(temp_wiki: Path) -> sqlite3.Connection:
              json.dumps(tags), json.dumps(entities), content_hash),
         )
         conn.execute(
-            """INSERT INTO fts_index (title, content, tags)
-               VALUES (?, ?, '')""",
-            (uuid, content),
+            """INSERT INTO fts_index (title, content, tags, original)
+               VALUES (?, ?, '', ?)""",
+            (uuid, content, content),
         )
 
     # Insert test entities

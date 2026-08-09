@@ -98,24 +98,38 @@ class LLMRouter:
         self._timeout = getattr(settings, "timeout", 0) or _DEFAULT_TIMEOUT
         self._enable_thinking = getattr(settings, "enable_thinking", True)
 
-    def _endpoint_kwargs(self) -> dict[str, Any]:
+    @staticmethod
+    def _is_ollama_model(model: str) -> bool:
+        """True when *model* routes through litellm's native Ollama provider."""
+        return model.lower().startswith("ollama/")
+
+    def _endpoint_kwargs(self, model: str) -> dict[str, Any]:
         """Return litellm kwargs for routing to a custom endpoint.
 
-        When api_base is configured (e.g. Ollama at http://localhost:11434/v1),
-        litellm needs both api_base and an api_key (Ollama ignores the key but
-        litellm requires a non-empty value). Returns empty dict for cloud
-        providers that rely on environment variables.
+        When api_base is configured (e.g. Ollama at http://localhost:11434),
+        litellm receives api_base; an api_key is only injected when required
+        (OpenAI-compatible endpoints demand a non-empty key, native Ollama
+        ignores it).
 
-        Also disables reasoning ("thinking") for models that support it when
-        enable_thinking is False — this dramatically speeds up extraction and
-        classification tasks on reasoning models like qwen3.5.
+        Reasoning control depends on the provider:
+        - ``ollama/`` models talk to /api/chat, where qwen3-style reasoning
+          models default to thinking ON (slow, and combined with json format
+          it can yield empty content). Disable it with the native ``think``
+          parameter.
+        - OpenAI-compatible endpoints use ``enable_thinking`` in extra_body.
         """
         kwargs: dict[str, Any] = {}
         if self._api_base:
             kwargs["api_base"] = self._api_base
-            kwargs["api_key"] = self._api_key or "ollama"
+            if self._api_key:
+                kwargs["api_key"] = self._api_key
+            elif not self._is_ollama_model(model):
+                kwargs["api_key"] = "ollama"  # placeholder, ignored server-side
         if not self._enable_thinking:
-            kwargs["extra_body"] = {"enable_thinking": False}
+            if self._is_ollama_model(model):
+                kwargs["think"] = False
+            else:
+                kwargs["extra_body"] = {"enable_thinking": False}
         return kwargs
 
     def extract_claims(self, text: str, system_prompt: str) -> dict[str, Any]:
@@ -140,7 +154,7 @@ class LLMRouter:
             temperature=0.1,  # Low temperature for stable extraction (per RESEARCH.md)
             response_format={"type": "json_object"},
             timeout=self._timeout,
-            **self._endpoint_kwargs(),
+            **self._endpoint_kwargs(self._extraction_model),
         )
         content = response.choices[0].message.content or ""
         try:
@@ -176,7 +190,7 @@ class LLMRouter:
                 {"role": "user", "content": f"Context:\n{context}\n\nQuestion: {question}"},
             ],
             timeout=self._timeout,
-            **self._endpoint_kwargs(),
+            **self._endpoint_kwargs(self._query_model),
         )
         return response.choices[0].message.content or ""
 
@@ -243,12 +257,13 @@ class LLMRouter:
                 messages.append({"role": "system", "content": system})
             messages.append({"role": "user", "content": prompt})
 
+        resolved_model = model or self._query_model
         call_kwargs: dict[str, Any] = {
-            "model": model or self._query_model,
+            "model": resolved_model,
             "messages": messages,
             "temperature": temperature,
             "timeout": timeout or self._timeout,
-            **self._endpoint_kwargs(),
+            **self._endpoint_kwargs(resolved_model),
             **kwargs,
         }
         if response_format is not None:

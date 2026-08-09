@@ -21,10 +21,14 @@ class LLMExtractor:
 
     def __init__(self, router: LLMRouter, prompts_dir: Path | None = None) -> None:
         self._router = router
-        # Default prompts directory relative to this file
+        # Default prompts directory: resolve to the saw package root (4 levels
+        # up from saw/engines/ingest/extractors/) then into adapters/llm/prompts.
+        # This works for both the src/ layout and installed site-packages.
         if prompts_dir is None:
-            prompts_dir = Path(__file__).parent.parent.parent.parent.parent / \
-                "src/saw/adapters/llm/prompts"
+            prompts_dir = (
+                Path(__file__).resolve().parent.parent.parent.parent
+                / "adapters" / "llm" / "prompts"
+            )
         self._prompts_dir = prompts_dir
 
     def extract_claims(self, text: str, source_uuid: str) -> list[Claim]:
@@ -46,11 +50,17 @@ class LLMExtractor:
         # Parse JSON response into Claim objects
         claims: list[Claim] = []
         for claim_data in result.get("claims", []):
+            if not isinstance(claim_data, dict):
+                continue
+            content = claim_data.get("content", "")
+            # Skip claims without usable content
+            if not isinstance(content, str) or not content.strip():
+                continue
             claim = Claim(
                 uuid=str(uuid.uuid4()),
-                content=claim_data.get("content", ""),
+                content=content,
                 source_uuid=source_uuid,
-                content_hash=Claim.compute_hash(claim_data.get("content", "")),
+                content_hash=Claim.compute_hash(content),
                 source_mark=self._parse_source_mark(claim_data.get("source_mark", "extracted")),
                 tags=claim_data.get("tags", []),
                 entities=claim_data.get("entities", []),
@@ -76,7 +86,12 @@ class LLMExtractor:
 
         # Collect entities from all claims
         for claim_data in result.get("claims", []):
+            if not isinstance(claim_data, dict):
+                continue
             for entity_name in claim_data.get("entities", []):
+                # Skip non-string / empty names (LLM output is not schema-guaranteed)
+                if not isinstance(entity_name, str) or not entity_name.strip():
+                    continue
                 if entity_name not in entity_names:
                     entity_names.add(entity_name)
                     entity = Entity(
@@ -108,8 +123,17 @@ class LLMExtractor:
         relations: list[EntityRelation] = []
         for claim_data in result.get("claims", []):
             for rel_data in claim_data.get("relations", []):
+                if not isinstance(rel_data, dict):
+                    continue
                 source_name = rel_data.get("source", "")
                 target_name = rel_data.get("target", "")
+
+                # LLM output is not schema-guaranteed: skip relations whose
+                # endpoints are not plain non-empty strings (e.g. lists).
+                if not isinstance(source_name, str) or not isinstance(target_name, str):
+                    continue
+                if not source_name or not target_name:
+                    continue
 
                 # Only create relation if both entities exist
                 source_uuid = entity_map.get(source_name)

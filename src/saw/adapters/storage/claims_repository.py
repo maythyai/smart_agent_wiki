@@ -2,19 +2,42 @@
 
 Per D-03: FTS5 with unicode61 tokenizer, detail=column, automerge=8.
 Per Pitfall 7: INSERT OR IGNORE for idempotent writes.
+
+CJK support: fts_index.content/tags store *tokenized* text (see
+saw.adapters.storage.fts_tokenize) so Chinese content is searchable;
+the pre-tokenization text is kept in the UNINDEXED ``original`` column
+for display purposes.
 """
 from __future__ import annotations
 
 import json
+import logging
 import sqlite3
 from pathlib import Path
 
+from saw.adapters.storage.fts_tokenize import build_match_query, tokenize_for_fts
 from saw.domain.claims import Claim
 from saw.domain.exceptions import ClaimsDBError
 from saw.domain.value_objects import ConfidenceLevel, SourceMark
 
+logger = logging.getLogger(__name__)
+
+# FTS5 virtual table (per D-03). ``original`` is UNINDEXED: it stores the
+# pre-tokenization text so search results can display verbatim content.
+FTS_INDEX_DDL = """
+CREATE VIRTUAL TABLE IF NOT EXISTS fts_index
+USING fts5(
+    title,
+    content,
+    tags,
+    original UNINDEXED,
+    tokenize='unicode61',
+    detail=column
+);
+"""
+
 # Claims DB schema initialization SQL
-CLAIMS_DB_SCHEMA = """
+_CLAIMS_CORE_SCHEMA = """
 -- Core claims table
 CREATE TABLE IF NOT EXISTS claim (
     uuid TEXT PRIMARY KEY,
@@ -66,23 +89,30 @@ CREATE TABLE IF NOT EXISTS entity_relation (
     FOREIGN KEY (source_uuid) REFERENCES entity(uuid),
     FOREIGN KEY (target_uuid) REFERENCES entity(uuid)
 );
+"""
 
--- FTS5 virtual table (per D-03)
-CREATE VIRTUAL TABLE IF NOT EXISTS fts_index
-USING fts5(
-    title,
-    content,
-    tags,
-    tokenize='unicode61',
-    detail=column
-);
-
+_CLAIMS_INDEX_SCHEMA = """
 -- Partial indexes for performance
 CREATE INDEX IF NOT EXISTS idx_claim_source ON claim(source_uuid) WHERE deleted_at IS NULL;
 CREATE INDEX IF NOT EXISTS idx_claim_confidence ON claim(confidence) WHERE deleted_at IS NULL;
 CREATE INDEX IF NOT EXISTS idx_claim_hash ON claim(content_hash) WHERE deleted_at IS NULL;
 CREATE INDEX IF NOT EXISTS idx_entity_name ON entity(name);
 """
+
+CLAIMS_DB_SCHEMA = _CLAIMS_CORE_SCHEMA + FTS_INDEX_DDL + _CLAIMS_INDEX_SCHEMA
+
+
+def _tags_to_text(tags_json: str | None) -> str:
+    """Convert a claim's tags JSON column into searchable plain text."""
+    if not tags_json:
+        return ""
+    try:
+        parsed = json.loads(tags_json)
+    except (json.JSONDecodeError, TypeError):
+        return str(tags_json)
+    if isinstance(parsed, list):
+        return " ".join(str(t) for t in parsed)
+    return str(parsed)
 
 
 class SQLiteClaimsRepository:
@@ -100,8 +130,45 @@ class SQLiteClaimsRepository:
         try:
             self._conn.executescript(CLAIMS_DB_SCHEMA)
             self._conn.commit()
+            self._migrate_fts_schema()
         except sqlite3.Error as e:
             raise ClaimsDBError(f"Failed to initialize Claims DB schema: {e}") from e
+
+    def _migrate_fts_schema(self) -> None:
+        """Upgrade pre-CJK-fix fts_index tables.
+
+        Older wikis have an fts_index without the UNINDEXED ``original``
+        column and with untokenized (unsearchable) CJK content. Detect via
+        the missing column, drop + recreate the table, and rebuild the index
+        from the claim table using CJK-aware tokenization. Wiki page entries
+        are re-added by WikiIndexer on the next compile/index run.
+        """
+        cols = {
+            row[1]
+            for row in self._conn.execute("PRAGMA table_info(fts_index)")
+        }
+        if "original" in cols:
+            return
+
+        logger.info("Migrating fts_index to CJK-aware schema (rebuilding index)")
+        self._conn.execute("DROP TABLE IF EXISTS fts_index")
+        self._conn.executescript(FTS_INDEX_DDL)
+        self._rebuild_fts_index()
+        self._conn.commit()
+
+    def _rebuild_fts_index(self) -> None:
+        """Repopulate fts_index from all non-deleted claims."""
+        self._conn.execute("DELETE FROM fts_index")
+        rows = self._conn.execute(
+            "SELECT uuid, content, tags FROM claim WHERE deleted_at IS NULL"
+        ).fetchall()
+        for uuid, content, tags_json in rows:
+            tags = _tags_to_text(tags_json)
+            self._conn.execute(
+                "INSERT INTO fts_index (title, content, tags, original) "
+                "VALUES (?, ?, ?, ?)",
+                (uuid, tokenize_for_fts(content), tokenize_for_fts(tags), content),
+            )
 
     def get_by_id(self, uuid: str) -> Claim | None:
         """Retrieve a claim by its UUID."""
@@ -145,6 +212,9 @@ class SQLiteClaimsRepository:
     def search(self, query: str, limit: int = 10) -> list[Claim]:
         """Full-text search via FTS5 MATCH with bm25 ranking."""
         try:
+            match_expr = build_match_query(query)
+            if not match_expr:
+                return []
             rows = self._conn.execute(
                 """SELECT c.*
                    FROM claim c
@@ -153,7 +223,7 @@ class SQLiteClaimsRepository:
                      AND c.deleted_at IS NULL
                    ORDER BY bm25(fts_index)
                    LIMIT ?""",
-                (query, limit),
+                (match_expr, limit),
             ).fetchall()
             return [self._row_to_claim(row) for row in rows]
         except sqlite3.Error as e:
