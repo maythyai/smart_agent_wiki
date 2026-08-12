@@ -279,24 +279,21 @@ class CommunityDetector:
         return sorted(files)
 
     def _find_hubs(self, community: Community, top_n: int = 3) -> list[str]:
-        """找到社区内的高连接度节点"""
+        """找到社区内的高连接度节点 (M4: 批量加载消除 N+1)"""
         member_set = set(community.members)
-        degrees: list[tuple[str, int]] = []
+        if not member_set:
+            return []
 
-        for uid in community.members:
-            out_degree = len(self.store.get_outgoing_edges(uid))
-            in_degree = len(self.store.get_incoming_edges(uid))
-            # 只计算社区内部的连接
-            internal_out = sum(
-                1 for e in self.store.get_outgoing_edges(uid)
-                if e.target in member_set
-            )
-            internal_in = sum(
-                1 for e in self.store.get_incoming_edges(uid)
-                if e.source in member_set
-            )
-            degrees.append((uid, internal_out + internal_in))
+        # 单次查询获取所有边，内存中聚合计数
+        all_edges = self.store.get_all_edges_lite()
+        out_degree: dict[str, int] = defaultdict(int)
+        in_degree: dict[str, int] = defaultdict(int)
+        for src, tgt, _etype, _conf in all_edges:
+            if src in member_set and tgt in member_set:
+                out_degree[src] += 1
+                in_degree[tgt] += 1
 
+        degrees = [(uid, out_degree.get(uid, 0) + in_degree.get(uid, 0)) for uid in member_set]
         degrees.sort(key=lambda x: -x[1])
         return [uid for uid, _ in degrees[:top_n]]
 
@@ -322,32 +319,31 @@ class CommunityDetector:
         return hub_scores[:top_n]
 
     def _find_bridges(self, communities: list[Community]) -> list[dict]:
-        """找到跨社区桥接节点"""
-        # 建立 uid → community_id 映射
+        """找到跨社区桥接节点 (M4: 批量加载消除 N+1)"""
         uid_to_comm: dict[str, int] = {}
         for comm in communities:
             for uid in comm.members:
                 uid_to_comm[uid] = comm.community_id
 
-        bridges = []
-        for uid, comm_id in uid_to_comm.items():
-            # 检查是否有跨社区的边
-            outgoing = self.store.get_outgoing_edges(uid)
-            cross_community = 0
-            for edge in outgoing:
-                target_comm = uid_to_comm.get(edge.target)
-                if target_comm is not None and target_comm != comm_id:
-                    cross_community += 1
+        # 单次查询所有边，内存中计算跨社区连接数
+        all_edges = self.store.get_all_edges_lite()
+        cross_count: dict[str, int] = defaultdict(int)
+        for src, tgt, _etype, _conf in all_edges:
+            src_comm = uid_to_comm.get(src)
+            tgt_comm = uid_to_comm.get(tgt)
+            if src_comm is not None and tgt_comm is not None and src_comm != tgt_comm:
+                cross_count[src] += 1
 
-            if cross_community > 0:
-                node = self.store.get_node(uid)
-                if node:
-                    bridges.append({
-                        "uid": uid,
-                        "name": node.name,
-                        "community": comm_id,
-                        "cross_links": cross_community,
-                    })
+        bridges = []
+        for uid, count in cross_count.items():
+            node = self.store.get_node(uid)
+            if node:
+                bridges.append({
+                    "uid": uid,
+                    "name": node.name,
+                    "community": uid_to_comm[uid],
+                    "cross_links": count,
+                })
 
         bridges.sort(key=lambda x: -x["cross_links"])
         return bridges[:20]

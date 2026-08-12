@@ -126,49 +126,19 @@ class SQLiteClaimsRepository:
         self._init_schema()
 
     def _init_schema(self) -> None:
-        """Initialize the Claims DB schema."""
-        try:
-            self._conn.executescript(CLAIMS_DB_SCHEMA)
-            self._conn.commit()
-            self._migrate_fts_schema()
-        except sqlite3.Error as e:
-            raise ClaimsDBError(f"Failed to initialize Claims DB schema: {e}") from e
+        """Run DB migrations to bring the claims schema up to date.
 
-    def _migrate_fts_schema(self) -> None:
-        """Upgrade pre-CJK-fix fts_index tables.
-
-        Older wikis have an fts_index without the UNINDEXED ``original``
-        column and with untokenized (unsearchable) CJK content. Detect via
-        the missing column, drop + recreate the table, and rebuild the index
-        from the claim table using CJK-aware tokenization. Wiki page entries
-        are re-added by WikiIndexer on the next compile/index run.
+        C4: delegates to ``saw.db.migrations.apply_migrations``, which uses
+        ``PRAGMA user_version`` to track the applied version. The previous
+        ``executescript(CLAIMS_DB_SCHEMA)`` + ad-hoc ``_migrate_fts_schema``
+        are now handled by the v1 migration.
         """
-        cols = {
-            row[1]
-            for row in self._conn.execute("PRAGMA table_info(fts_index)")
-        }
-        if "original" in cols:
-            return
+        try:
+            from saw.db.migrations import apply_migrations
 
-        logger.info("Migrating fts_index to CJK-aware schema (rebuilding index)")
-        self._conn.execute("DROP TABLE IF EXISTS fts_index")
-        self._conn.executescript(FTS_INDEX_DDL)
-        self._rebuild_fts_index()
-        self._conn.commit()
-
-    def _rebuild_fts_index(self) -> None:
-        """Repopulate fts_index from all non-deleted claims."""
-        self._conn.execute("DELETE FROM fts_index")
-        rows = self._conn.execute(
-            "SELECT uuid, content, tags FROM claim WHERE deleted_at IS NULL"
-        ).fetchall()
-        for uuid, content, tags_json in rows:
-            tags = _tags_to_text(tags_json)
-            self._conn.execute(
-                "INSERT INTO fts_index (title, content, tags, original) "
-                "VALUES (?, ?, ?, ?)",
-                (uuid, tokenize_for_fts(content), tokenize_for_fts(tags), content),
-            )
+            apply_migrations(self._conn)
+        except sqlite3.Error as e:
+            raise ClaimsDBError(f"Failed to apply DB migrations: {e}") from e
 
     def get_by_id(self, uuid: str) -> Claim | None:
         """Retrieve a claim by its UUID."""

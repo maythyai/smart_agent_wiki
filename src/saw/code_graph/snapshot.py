@@ -51,7 +51,7 @@ class SnapshotManager:
 
     def list_snapshots(self, limit: int = 20) -> list[dict]:
         """列出历史快照"""
-        conn = self.store._conn
+        conn = self.store.connection
         if conn is None:
             return []
 
@@ -77,7 +77,7 @@ class SnapshotManager:
 
     def diff(self, from_id: str, to_id: str) -> Optional[SnapshotDiff]:
         """比较两个快照"""
-        conn = self.store._conn
+        conn = self.store.connection
         if conn is None:
             return None
 
@@ -110,7 +110,7 @@ class SnapshotManager:
         2. 已追踪但已删除的文件
         3. FTS 索引一致性
         """
-        conn = self.store._conn
+        conn = self.store.connection
         if conn is None:
             return {"status": "error", "message": "No connection"}
 

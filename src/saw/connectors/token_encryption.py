@@ -8,9 +8,12 @@ from __future__ import annotations
 import json
 import os
 from datetime import datetime
+from pathlib import Path
 from typing import Optional
 
 from cryptography.fernet import Fernet, InvalidToken
+
+from saw.adapters.crypto._keyfiles import load_or_create, read_key_file, write_key_file
 
 
 class EncryptionError(Exception):
@@ -33,21 +36,31 @@ class TokenEncryption:
         self._fernet = fernet
 
     @classmethod
-    def from_env(cls) -> "TokenEncryption":
-        """Create instance using SAW_ENCRYPTION_KEY from environment.
+    def from_env(cls, key_path: Path | None = None) -> "TokenEncryption":
+        """Create instance, resolving the Fernet key with persistence.
 
-        Per Decision 1: Use Fernet with env var SAW_ENCRYPTION_KEY.
-        Generate on first run if not set.
+        Resolution order (first wins):
+
+        1. ``SAW_ENCRYPTION_KEY`` environment variable (team/CI deployments).
+        2. The key file at ``key_path`` (default ``.saw/keys/fernet.key``);
+           if it does not exist it is generated and persisted with ``0600``
+           permissions so that previously-encrypted tokens remain readable
+           across restarts.
 
         Returns:
             TokenEncryption instance.
+
+        Raises:
+            EncryptionError: If the resolved key is not a valid Fernet key.
         """
         key = os.environ.get("SAW_ENCRYPTION_KEY")
         if not key:
-            key = cls.generate_key()
-            # In production, log warning that key was generated
-            # User should set SAW_ENCRYPTION_KEY for persistence
-        return cls(Fernet(key.encode()))
+            path = key_path or Path(".saw/keys/fernet.key")
+            key = load_or_create(path, cls.generate_key)
+        try:
+            return cls(Fernet(key.encode()))
+        except Exception as e:
+            raise EncryptionError(f"Invalid Fernet key: {e}") from e
 
     @classmethod
     def from_key(cls, key: str) -> "TokenEncryption":
@@ -70,19 +83,34 @@ class TokenEncryption:
         """
         return Fernet.generate_key().decode()
 
-    @staticmethod
-    def generate_key_if_missing() -> str:
-        """Get existing key from env or generate new one.
+    @classmethod
+    def from_key_file(cls, path: Path) -> "TokenEncryption":
+        """Load the Fernet key from ``path``, persisting a new one if missing.
 
-        Returns:
-            The key to use (from env or newly generated).
+        Equivalent to ``from_env(key_path=path)`` but ignores the env var.
+        Useful for tests and explicit key-file wiring.
         """
-        key = os.environ.get("SAW_ENCRYPTION_KEY")
-        if key:
-            return key
-        new_key = Fernet.generate_key().decode()
-        # In production, persist this key somewhere safe
-        return new_key
+        key = load_or_create(path, cls.generate_key)
+        try:
+            return cls(Fernet(key.encode()))
+        except Exception as e:
+            raise EncryptionError(f"Invalid Fernet key: {e}") from e
+
+    @staticmethod
+    def generate_key_if_missing(key_path: Path | None = None) -> str:
+        """Return an existing key, persisting a new one only if missing.
+
+        Resolution order: ``SAW_ENCRYPTION_KEY`` env var → key file
+        (``key_path`` or ``.saw/keys/fernet.key``) → generate + persist.
+
+        Unlike the previous implementation, a freshly generated key is
+        always persisted so it survives restarts.
+        """
+        env_key = os.environ.get("SAW_ENCRYPTION_KEY")
+        if env_key:
+            return env_key
+        path = key_path or Path(".saw/keys/fernet.key")
+        return load_or_create(path, lambda: Fernet.generate_key().decode())
 
     def encrypt(self, token: str) -> str:
         """Encrypt a token string.

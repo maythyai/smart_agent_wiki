@@ -317,34 +317,28 @@ class ContradictionDetector:
         )
 
     def _store_contradiction(self, record: ContradictionRecord) -> None:
-        """Store contradiction in database.
+        """Store contradiction in database (idempotent, transactional).
 
-        Args:
-            record: Contradiction record to store.
+        C3: delegates to ``ContradictionsSink``'s shared ``store_contradiction``
+        helper so the contradictions table has a single write path (also
+        usable by the outbox dispatcher). Best-effort: errors are logged
+        rather than silently swallowed.
         """
-        # Get the underlying connection from claims_repo
-        if hasattr(self._claims_repo, '_conn'):
-            conn = self._claims_repo._conn
-            try:
-                conn.execute(
-                    """INSERT OR IGNORE INTO contradictions
-                       (uuid, claim_a_uuid, claim_b_uuid, contradiction_type,
-                        resolution, detected_at, resolved_at, blast_radius)
-                       VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
-                    (
-                        record.uuid,
-                        record.claim_a_uuid,
-                        record.claim_b_uuid,
-                        record.contradiction_type.name.lower(),
-                        record.resolution.name.lower(),
-                        record.detected_at.isoformat(),
-                        record.resolved_at.isoformat() if record.resolved_at else None,
-                        json.dumps(record.blast_radius),
-                    ),
-                )
-                conn.commit()
-            except sqlite3.Error:
-                pass  # Silently ignore for now
+        if not hasattr(self._claims_repo, "_conn"):
+            return
+        conn = self._claims_repo._conn
+        try:
+            from saw.write_queue.sinks.contradictions_sink import store_contradiction
+
+            store_contradiction(conn, record)
+        except sqlite3.Error:
+            # Table may not exist yet on a fresh DB; schema is created
+            # lazily elsewhere. Log and continue — detection is best-effort.
+            import logging
+
+            logging.getLogger(__name__).warning(
+                "Failed to store contradiction %s", record.uuid
+            )
 
     def get_all_contradictions(self) -> list[ContradictionRecord]:
         """Get all contradiction records.

@@ -132,7 +132,7 @@ class PostProcessor:
 
     def _get_bare_name_edges(self) -> list[dict]:
         """获取所有裸名边 (target 不含 '::' 分隔符)"""
-        conn = self.store._conn
+        conn = self.store.connection
         if conn is None:
             return []
         rows = conn.execute(
@@ -144,7 +144,7 @@ class PostProcessor:
 
     def _build_name_index(self) -> dict[str, list[str]]:
         """构建 name → [uid] 索引 (轻量级 SQL，避免全量反序列化)"""
-        conn = self.store._conn
+        conn = self.store.connection
         if conn is None:
             return {}
         rows = conn.execute(
@@ -158,7 +158,7 @@ class PostProcessor:
     def _build_import_graph(self) -> dict[str, set[str]]:
         """构建文件导入图: file_path → set(imported_file_paths)"""
         graph: dict[str, set[str]] = defaultdict(set)
-        conn = self.store._conn
+        conn = self.store.connection
         if conn is None:
             return {}
         rows = conn.execute(
@@ -204,7 +204,7 @@ class PostProcessor:
         """更新边的 target 为解析后的完整 UID (处理 UNIQUE 冲突)"""
         import json as _json
 
-        conn = self.store._conn
+        conn = self.store.connection
         if conn is None:
             return
         metadata_json = _json.dumps({"resolved_from": old_target})
@@ -228,7 +228,7 @@ class PostProcessor:
 
     def _compute_signatures(self) -> int:
         """为缺少签名的节点生成人类可读签名"""
-        conn = self.store._conn
+        conn = self.store.connection
         if conn is None:
             return 0
 
@@ -269,7 +269,7 @@ class PostProcessor:
 
     def _verify_fts(self) -> bool:
         """校验 FTS 索引完整性 (触发器已自动维护)"""
-        conn = self.store._conn
+        conn = self.store.connection
         if conn is None:
             return False
         try:

@@ -73,21 +73,19 @@ class SQLiteWriteQueue:
         self._create_tables()
 
     def _create_tables(self) -> None:
-        """Create outbox and sink tracking tables if they don't exist."""
-        try:
-            self._conn.executescript(OUTBOX_DDL)
-            self._conn.commit()
-        except sqlite3.Error as e:
-            raise WriteQueueError(f"Failed to create Write Queue tables: {e}") from e
+        """Ensure outbox tables exist (delegates to the migration framework).
 
-        # Safe migration: add next_retry_at column if missing (existing DBs)
+        C4: the outbox tables are part of the claims DB schema, managed by
+        ``saw.db.migrations.apply_migrations``. The previous ad-hoc
+        ``ALTER TABLE write_outbox ADD COLUMN next_retry_at`` is now
+        migration v2.
+        """
         try:
-            self._conn.execute(
-                "ALTER TABLE write_outbox ADD COLUMN next_retry_at TEXT"
-            )
-            self._conn.commit()
-        except sqlite3.OperationalError:
-            pass  # Column already exists
+            from saw.db.migrations import apply_migrations
+
+            apply_migrations(self._conn)
+        except sqlite3.Error as e:
+            raise WriteQueueError(f"Failed to apply DB migrations: {e}") from e
 
     def enqueue(self, ops: list[WriteOp]) -> None:
         """Atomically enqueue all operations. All-or-nothing."""
@@ -196,10 +194,16 @@ class SQLiteWriteQueue:
                 (new_retry_count, error, now.isoformat(), op_id),
             )
         else:
-            # Schedule next retry with exponential backoff
+            # Schedule next retry with exponential backoff.
+            # First failure (new_retry_count == 1) is NOT delayed so the
+            # dispatcher can retry immediately — this avoids a dead window
+            # where the op is 'failed' but not yet visible to get_pending.
+            # Subsequent failures get 2^retry_count seconds of backoff.
             from datetime import timedelta
-            backoff = timedelta(seconds=2 ** new_retry_count)
-            next_retry_at = now + backoff
+
+            next_retry_at = None
+            if new_retry_count > 1:
+                next_retry_at = (now + timedelta(seconds=2 ** new_retry_count)).isoformat()
             self._conn.execute(
                 """UPDATE write_outbox
                    SET status = 'failed',
@@ -208,7 +212,7 @@ class SQLiteWriteQueue:
                        updated_at = ?,
                        next_retry_at = ?
                    WHERE op_id = ?""",
-                (new_retry_count, error, now.isoformat(), next_retry_at.isoformat(), op_id),
+                (new_retry_count, error, now.isoformat(), next_retry_at, op_id),
             )
         self._conn.commit()
 

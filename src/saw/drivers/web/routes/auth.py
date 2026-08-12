@@ -6,12 +6,12 @@ Provides login, register, refresh, and logout endpoints.
 from __future__ import annotations
 
 import logging
-from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, HTTPException, Request, status
 from pydantic import BaseModel, EmailStr, Field
 
 from saw.auth.jwt_auth import AuthService, AuthConfig, JWTHandler
+from saw.auth.user_store import get_user_store, SQLAlchemyUserStore
 
 logger = logging.getLogger(__name__)
 
@@ -54,55 +54,15 @@ class MessageResponse(BaseModel):
     success: bool = True
 
 
-# ── User Store (in-memory fallback, replace with DB in production) ─────
+# ── User Store ────────────────────────────────────────────────────────
+# C2: user / refresh-token storage is now DB-backed. The implementation
+# lives in ``saw.auth.user_store`` and transparently falls back to an
+# in-memory store when the DB is unavailable. The legacy ``UserStore``
+# name is kept as an alias for backwards compatibility with any code that
+# imported it from here.
+from saw.auth.user_store import InMemoryUserStore as UserStore  # noqa: F401
 
-
-class UserStore:
-    """Simple user store for authentication.
-
-    In production, replace with database-backed implementation.
-    """
-
-    def __init__(self):
-        self._users: dict[str, dict[str, Any]] = {}
-        self._email_index: dict[str, str] = {}  # email -> user_id
-        self._refresh_tokens: set[str] = set()  # Active refresh tokens
-
-    def get_by_email(self, email: str) -> dict | None:
-        user_id = self._email_index.get(email)
-        if user_id:
-            return self._users.get(user_id)
-        return None
-
-    def get_by_id(self, user_id: str) -> dict | None:
-        return self._users.get(user_id)
-
-    def create(self, user_data: dict) -> dict:
-        user_id = user_data["id"]
-        self._users[user_id] = user_data
-        self._email_index[user_data["email"]] = user_id
-        return user_data
-
-    def store_refresh_token(self, token: str) -> None:
-        self._refresh_tokens.add(token)
-
-    def revoke_refresh_token(self, token: str) -> None:
-        self._refresh_tokens.discard(token)
-
-    def is_refresh_token_valid(self, token: str) -> bool:
-        return token in self._refresh_tokens
-
-
-# Global user store (singleton, injected via app.state in production)
-_user_store: UserStore | None = None
-
-
-def get_user_store() -> UserStore:
-    """Get or create the global user store."""
-    global _user_store
-    if _user_store is None:
-        _user_store = UserStore()
-    return _user_store
+__all_user_store_helpers__ = ("get_user_store",)
 
 
 def get_auth_service() -> AuthService:
@@ -146,8 +106,8 @@ async def register(request: RegisterRequest):
         user_data["role"],
     )
 
-    # Store refresh token
-    user_store.store_refresh_token(tokens.refresh_token)
+    # Store refresh token (hashed at rest in the DB-backed store)
+    user_store.store_refresh_token(tokens.refresh_token, user_data["id"])
 
     logger.info("User registered: %s (role=%s)", request.email, request.role)
 
@@ -189,7 +149,15 @@ async def login(request: LoginRequest):
         )
 
     # Store refresh token
-    user_store.store_refresh_token(tokens.refresh_token)
+    user_store.store_refresh_token(tokens.refresh_token, user["id"])
+
+    # C2: persist last_login for the authenticated user.
+    if isinstance(user_store, SQLAlchemyUserStore):
+        try:
+            user_store.touch_last_login(user["id"])
+        except Exception:
+            # Non-critical: best-effort audit timestamp.
+            pass
 
     logger.info("User logged in: %s", request.email)
 
@@ -216,7 +184,7 @@ async def refresh(request: RefreshRequest):
             detail="Invalid or revoked refresh token",
         )
 
-    # Refresh tokens
+    # Refresh tokens: AuthService verifies the JWT and returns a new pair.
     tokens = auth_service.refresh_tokens(
         refresh_token=request.refresh_token,
         get_user_by_id=user_store.get_by_id,
@@ -228,9 +196,16 @@ async def refresh(request: RefreshRequest):
             detail="Invalid refresh token",
         )
 
-    # Revoke old refresh token and store new one
+    # Determine the user_id for the new refresh-token record.
+    try:
+        user_id = auth_service.jwt_handler.verify_refresh_token(request.refresh_token)
+    except ValueError:
+        user_id = ""
+
+    # Revoke old refresh token and store the new one (hashed at rest)
     user_store.revoke_refresh_token(request.refresh_token)
-    user_store.store_refresh_token(tokens.refresh_token)
+    if user_id:
+        user_store.store_refresh_token(tokens.refresh_token, user_id)
 
     return TokenResponse(
         access_token=tokens.access_token,

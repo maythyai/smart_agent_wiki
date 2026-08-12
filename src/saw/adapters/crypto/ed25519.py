@@ -207,6 +207,48 @@ class ReceiptSigner:
         except Exception:
             return False
 
+    def sign_message(self, message: str) -> str:
+        """Sign an arbitrary UTF-8 message with Ed25519.
+
+        Args:
+            message: The message to sign.
+
+        Returns:
+            Base64-encoded signature.
+
+        Raises:
+            ValueError: If no signing key is available.
+        """
+        if not self._signing_key:
+            raise ValueError("No signing key available. Call generate_keypair() first.")
+        signed = self._signing_key.sign(message.encode("utf-8"))
+        return base64.b64encode(signed.signature).decode("ascii")
+
+    def verify_message(
+        self,
+        message: str,
+        signature: str,
+        public_key: str,
+    ) -> bool:
+        """Verify an arbitrary-message signature.
+
+        Args:
+            message: The original message.
+            signature: Base64-encoded signature produced by ``sign_message``.
+            public_key: Base64-encoded public key.
+
+        Returns:
+            True if the signature is valid, False otherwise.
+        """
+        try:
+            public_key_bytes = base64.b64decode(public_key)
+            verify_key = VerifyKey(public_key_bytes)
+            signature_bytes = base64.b64decode(signature)
+            verify_key.verify(message.encode("utf-8"), signature_bytes)
+            return True
+        except Exception:
+            return False
+
     def compute_payload_hash(self, payload: dict[str, Any]) -> str:
         """Compute SHA-256 hash of payload.
 

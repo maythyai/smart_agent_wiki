@@ -7,13 +7,12 @@ from __future__ import annotations
 
 import tempfile
 from pathlib import Path
-from unittest.mock import MagicMock, AsyncMock
+from unittest.mock import MagicMock
 
 import pytest
 
-from saw.plugins.base import PluginBase, PluginContext, PluginMetadata
+from saw.plugins.base import PluginBase, PluginContext
 from saw.plugins.events import (
-    PluginEvent,
     PageCreated,
     PageUpdated,
     PageDeleted,
@@ -22,28 +21,6 @@ from saw.plugins.events import (
     QueryExecuted,
 )
 from saw.plugins.registry import PluginRegistry
-
-
-# ── PluginMetadata Tests ──────────────────────────────────────────────
-
-
-class TestPluginMetadata:
-    """Tests for PluginMetadata."""
-
-    def test_create_metadata(self):
-        meta = PluginMetadata(
-            name="test-plugin",
-            version="1.0.0",
-            description="A test plugin",
-            author="Test Author",
-        )
-        assert meta.name == "test-plugin"
-        assert meta.version == "1.0.0"
-
-    def test_metadata_defaults(self):
-        meta = PluginMetadata(name="minimal")
-        assert meta.name == "minimal"
-        assert meta.version == "0.1.0"
 
 
 # ── PluginContext Tests ───────────────────────────────────────────────
@@ -56,17 +33,27 @@ class TestPluginContext:
         with tempfile.TemporaryDirectory() as tmpdir:
             ctx = PluginContext(
                 data_dir=Path(tmpdir),
-                config={},
+                wiki_read=lambda slug: None,
+                wiki_write=lambda slug, content: True,
+                claims_read=lambda filters: [],
+                graph_query=lambda query: [],
+                subscribe_event=lambda event, handler: None,
+                publish_event=lambda event, data: None,
             )
             assert ctx.data_dir == Path(tmpdir)
-            assert ctx.config == {}
 
     def test_context_with_config(self):
         with tempfile.TemporaryDirectory() as tmpdir:
-            config = {"key": "value", "count": 42}
-            ctx = PluginContext(data_dir=Path(tmpdir), config=config)
-            assert ctx.config["key"] == "value"
-            assert ctx.config["count"] == 42
+            ctx = PluginContext(
+                data_dir=Path(tmpdir),
+                wiki_read=lambda slug: None,
+                wiki_write=lambda slug, content: True,
+                claims_read=lambda filters: [],
+                graph_query=lambda query: [],
+                subscribe_event=lambda event, handler: None,
+                publish_event=lambda event, data: None,
+            )
+            assert ctx.data_dir == Path(tmpdir)
 
 
 # ── PluginBase Tests ──────────────────────────────────────────────────
@@ -77,31 +64,33 @@ class TestPluginBase:
 
     def test_subclass_creation(self):
         class MyPlugin(PluginBase):
-            metadata = PluginMetadata(name="my-plugin")
+            name = "my-plugin"
+            version = "1.0.0"
+            description = "A test plugin"
 
-            async def on_enable(self, ctx):
+            def activate(self, ctx):
                 pass
 
-            async def on_disable(self, ctx):
+            def deactivate(self):
                 pass
 
         plugin = MyPlugin()
-        assert plugin.metadata.name == "my-plugin"
+        assert plugin.name == "my-plugin"
 
     def test_plugin_has_required_methods(self):
         class TestPlugin(PluginBase):
-            metadata = PluginMetadata(name="test")
+            name = "test"
 
-            async def on_enable(self, ctx):
+            def activate(self, ctx):
                 pass
 
-            async def on_disable(self, ctx):
+            def deactivate(self):
                 pass
 
         plugin = TestPlugin()
-        assert hasattr(plugin, "on_enable")
-        assert hasattr(plugin, "on_disable")
-        assert hasattr(plugin, "metadata")
+        assert hasattr(plugin, "activate")
+        assert hasattr(plugin, "deactivate")
+        assert hasattr(plugin, "on_event")
 
 
 # ── Event Tests ───────────────────────────────────────────────────────
@@ -137,26 +126,21 @@ class TestEvents:
     def test_claim_created_event(self):
         event = ClaimCreated(
             claim_id="claim-1",
-            page_id="page-1",
             content="Test claim",
         )
         assert event.claim_id == "claim-1"
 
     def test_ingest_completed_event(self):
         event = IngestCompleted(
-            source="notion",
             items_processed=10,
         )
-        assert event.source == "notion"
         assert event.items_processed == 10
 
     def test_query_executed_event(self):
         event = QueryExecuted(
-            query="test query",
+            query_text="test query",
             results_count=5,
-            duration_ms=42.0,
         )
-        assert event.query == "test query"
         assert event.results_count == 5
 
 
@@ -170,12 +154,12 @@ class TestPluginRegistry:
         registry = PluginRegistry()
         assert registry is not None
 
-    def test_registry_has_list_method(self):
+    def test_registry_has_enable_disable(self):
         registry = PluginRegistry()
-        assert hasattr(registry, "list_plugins") or hasattr(registry, "list")
+        assert hasattr(registry, "enable")
+        assert hasattr(registry, "disable")
 
     def test_registry_plugin_count(self):
         registry = PluginRegistry()
-        # Fresh registry should have no plugins (or only built-in ones)
         plugins = registry.list_plugins() if hasattr(registry, "list_plugins") else []
         assert isinstance(plugins, list)

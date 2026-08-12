@@ -5,8 +5,8 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Release](https://img.shields.io/badge/release-v1.0.1-blue.svg)](https://github.com/maythyai/smart_agent_wiki/releases/tag/v1.0.1)
-[![Tests](https://img.shields.io/badge/tests-106+%20passing-brightgreen.svg)](tests/)
-[![MCP](https://img.shields.io/badge/MCP-30+%20tools-purple.svg)](src/saw/drivers/mcp/)
+[![Tests](https://img.shields.io/badge/tests-292+%20passing-brightgreen.svg)](tests/)
+[![MCP](https://img.shields.io/badge/MCP-56+%20tools-purple.svg)](src/saw/drivers/mcp/)
 [![GitHub Stars](https://img.shields.io/github/stars/chensaics/smart_agent_wiki?style=social)](https://github.com/chensaics/smart_agent_wiki)
 [![GitHub Issues](https://img.shields.io/github/issues/chensaics/smart_agent_wiki)](https://github.com/chensaics/smart_agent_wiki/issues)
 
@@ -21,14 +21,14 @@ Smart Agent Wiki is a local-first knowledge management platform that treats know
 **Highlights:**
 
 - 🔍 **Four-Layer Storage** — Every claim traces back to the exact location in the original document
-- 🤖 **6 Specialized Agents** — Librarian / Writer / Critic / Linker / Scholar / Guardian
+- 🤖 **6 Agent Roles** — Librarian / Writer / Critic / Linker / Scholar / Guardian (DTOs defined, agent implementations dispatched via workflows)
 - 🛡️ **Governance Engine** — 4-tier confidence, 9-level freshness, contradiction detection, Ed25519 audit receipts
 - 🧠 **Code Intelligence** — Full code graph lifecycle: AST parsing, impact analysis, execution flow tracing, community detection, doc↔code anchoring
 - 🔐 **Security** — JWT auth, RBAC, rate limiting, input sanitization, audit logging
-- 🧩 **Plugin System** — Extensible SDK with event-driven hooks and sandbox isolation
-- 💰 **Token Optimizer** — Reduce LLM token consumption by 65%+
+- 🧩 **Plugin System** — Extensible SDK with event-driven hooks (sandbox isolation planned)
+- 💰 **Token Optimizer** — Tracking infrastructure for LLM token consumption (theoretical savings benchmark: ~65% in ideal conditions)
 - 🌐 **Web UI** — React + Cytoscape.js knowledge graph + Milkdown editor
-- 🔌 **MCP Server** — 30+ tools, compatible with Claude Code / Cursor / Copilot
+- 🔌 **MCP Server** — 56+ tools, compatible with Claude Code / Cursor / Copilot
 
 ## Quick Start
 
@@ -199,7 +199,7 @@ print(f"{entry.description} (~{entry.estimated_tokens} tokens)")
 | `saw completion` | — | Shell completion |
 | `saw docs` | — | Offline documentation |
 
-## MCP Tools (24+)
+## MCP Tools (56+)
 
 **Ingestion (2):** `saw_ingest`, `saw_reparse`
 
@@ -207,9 +207,15 @@ print(f"{entry.description} (~{entry.estimated_tokens} tokens)")
 
 **Governance (7):** `saw_lint`, `saw_conflicts`, `saw_verify`, `saw_freshness`, `saw_review`, `saw_audit`, `saw_blast_radius`
 
-**Code Intelligence (3):** `saw_impact`, `saw_process`, `saw_staleness`
+**Code Intelligence (6):** `saw_impact`, `saw_process`, `saw_staleness`, `saw_code_query`, `saw_code_search`, `saw_architecture`
 
 **Learning (5):** `saw_status`, `saw_learn`, `saw_distill`, `saw_suggest`, `saw_wip`
+
+**Collaborate (2):** `saw_workflow`, `saw_feedback`
+
+**Pages & Links (9):** `saw_page_create`, `saw_page_update`, `saw_page_delete`, `saw_page_read`, `saw_page_list`, `saw_wiki_link`, `saw_wiki_unlink`, `saw_backlinks`, `saw_outlinks`
+
+**Compile & Archive (18):** `saw_wiki_compile`, `saw_wiki_index`, `saw_wiki_page`, `saw_wiki_log`, `saw_archive`, `saw_archive_suggest`, `saw_wiki_lint`, `saw_concept_list`, `saw_concept_view`, `saw_concept_relate`, `saw_graph_overview`, `saw_graph_navigate`, `saw_issue_create`, `saw_issue_list`, `saw_cr_create`, `saw_cr_review`, `saw_code_wiki_generate`, `saw_code_wiki_status`
 
 ## Technical Architecture
 
@@ -249,10 +255,16 @@ Hexagonal architecture: `domain/` (pure Python) → `engines/` (business logic) 
 
 ## Roadmap
 
-- Web UI Impact visualization (D3.js graph)
-- Tree-sitter AST zero LLM parsing
-- LadybugDB / KuzuDB graph database
-- Agent Skills Layer (Claude Code Skills)
+| Feature | Status |
+|---------|--------|
+| REST API (govern / query / ingest / learn / collaborate) | ✅ Shipped (v1.1.0) |
+| JWT auth + RBAC + DB-backed users | ✅ Shipped |
+| Write Queue outbox + migration framework | ✅ Shipped |
+| Web UI Impact visualization (D3.js graph) | 🔜 Planned |
+| Tree-sitter AST zero LLM parsing | 🔜 Planned |
+| LadybugDB / KuzuDB graph database | 🔜 Planned |
+| Agent Skills Layer (Claude Code Skills) | 🔜 Planned |
+| Plugin sandbox isolation | 🔜 Planned |
 
 ## Development
 

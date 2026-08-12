@@ -56,9 +56,27 @@ def has_permission(role: str, required: Permission) -> bool:
 class PermissionService:
     """Service for permission management."""
 
-    def __init__(self) -> None:
-        # Cedar policy engine (from Phase 3-01)
-        self._cedar_enabled = False
+    def __init__(self, cedar_engine: "CedarPolicyEngine | None" = None) -> None:
+        # Cedar policy engine (from Phase 3-01). If a policy file is
+        # configured, resource-level policy checks are available.
+        self._cedar = cedar_engine
+        self._cedar_enabled = cedar_engine is not None
+
+    def check_cedar(
+        self,
+        principal: str,
+        action: str,
+        resource: str,
+        context: dict | None = None,
+    ) -> PermissionCheck:
+        """Evaluate a Cedar policy rule (D-14 default deny)."""
+        if not self._cedar:
+            return PermissionCheck(allowed=True, reason="cedar_disabled")
+        try:
+            allowed = self._cedar.is_authorized(principal, action, resource, context)
+            return PermissionCheck(allowed=allowed, reason="cedar_policy")
+        except Exception:
+            return PermissionCheck(allowed=False, reason="cedar_error")
 
     def check_vault_access(
         self,

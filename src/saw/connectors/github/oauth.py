@@ -235,8 +235,7 @@ class GitHubOAuthHandler:
                 token_data = response.json()
         except Exception as e:
             logger.error(f"GitHub OAuth exchange failed: {e}")
-            # Fallback for testing without real OAuth
-            token_data = {"access_token": "test_token", "scope": "repo,read:org"}
+            raise OAuthError(f"GitHub OAuth exchange failed: {e}") from e
 
         if "error" in token_data:
             raise OAuthError(f"GitHub OAuth error: {token_data.get('error_description', token_data['error'])}")

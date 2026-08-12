@@ -219,6 +219,8 @@ async def create_daily_note(
         )
 
     # Create new daily note
+    import uuid
+
     from saw.domain.value_objects import WriteOpStatus
     from saw.write_queue.queue import WriteOp
 
@@ -244,20 +246,41 @@ async def create_daily_note(
 *Created automatically via Timeline*
 """
 
-    write_op = WriteOp(
-        op_type="create_page",
-        payload={
-            "slug": slug,
-            "title": title,
-            "content": content,
-            "entity_type": "note",
-            "properties": {"date": note_date.isoformat()},
-            "tags": ["daily-note"],
-        },
-        status=WriteOpStatus.PENDING,
-    )
+    # C3-1: build a valid WriteOp list (op_id/session_id/sink_name required)
+    # and enqueue atomically. Wiki sink writes to payload['path'] == slug;
+    # fts5 sink indexes the same content.
+    op_id = str(uuid.uuid4())
+    ops = [
+        WriteOp(
+            op_id=op_id,
+            session_id="timeline",
+            sink_name="wiki",
+            payload={
+                "path": slug,
+                "title": title,
+                "content": content,
+                "tags": ["daily-note"],
+                "page_type": "summary",
+                "entity_type": "daily_note",
+                "frontmatter": {"date": note_date.isoformat(), "entity_type": "daily_note"},
+            },
+            status=WriteOpStatus.PENDING,
+        ),
+        WriteOp(
+            op_id=f"{op_id}-index",
+            session_id="timeline",
+            sink_name="fts5",
+            payload={
+                "doc_id": slug,
+                "title": title,
+                "content": content,
+                "tags": "daily-note",
+            },
+            status=WriteOpStatus.PENDING,
+        ),
+    ]
 
-    write_queue.enqueue(write_op)
+    write_queue.enqueue_atomic(ops)
 
     return DailyNoteResponse(
         slug=slug,

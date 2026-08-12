@@ -12,6 +12,7 @@ import json
 import os
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any, Optional
 
 from saw.db.models import AuditLog, generate_uuid
@@ -69,72 +70,68 @@ class AuditEntry:
 
 
 class AuditSigner:
-    """Ed25519 signer for audit logs."""
+    """Ed25519 signer for audit logs.
 
-    def __init__(self, private_key: Optional[str] = None):
-        self._private_key = private_key
-        self._public_key = None
-        self._signing_key = None
+    Thin adapter over :class:`saw.adapters.crypto.ed25519.ReceiptSigner`
+    (PyNaCl). The signing key is loaded from — or generated and persisted
+    to — ``.saw/keys/ed25519.key`` (0600 file / 0700 dir) so that audit
+    signatures remain verifiable across process restarts.
 
-    def _get_signing_key(self):
-        """Get or create signing key."""
-        if self._signing_key is None:
-            try:
-                from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
-                from cryptography.hazmat.primitives import serialization
+    Signatures are base64-encoded, matching :class:`ReceiptSigner`.
+    """
 
-                if self._private_key:
-                    # Load from hex
-                    key_bytes = bytes.fromhex(self._private_key)
-                    self._signing_key = Ed25519PrivateKey.from_private_bytes(key_bytes)
-                else:
-                    # Generate new key
-                    self._signing_key = Ed25519PrivateKey.generate()
+    def __init__(
+        self,
+        private_key: Optional[str] = None,
+        key_path: Path | None = None,
+        signer: "ReceiptSigner | None" = None,
+    ):
+        self._signer = signer  # may be None until needed
 
-                self._public_key = self._signing_key.public_key()
-            except ImportError:
-                # cryptography not available
-                self._signing_key = None
-                self._public_key = None
+        if signer is not None:
+            # Pre-configured ReceiptSigner; trust its key state.
+            return
 
-        return self._signing_key
+        from saw.adapters.crypto.ed25519 import ReceiptSigner
+
+        path = key_path or Path(".saw/keys/ed25519.key")
+        self._signer = ReceiptSigner(key_path=path)
+        if self._signer.get_public_key() is None:
+            # No key on disk yet — generate and persist one.
+            self._signer.generate_keypair()
+
+        # ``private_key`` (hex, legacy) is no longer honoured; if a caller
+        # passes one we ignore it in favour of the persistent key. This is
+        # intentionally lossy: the legacy hex/cryptography keys were
+        # ephemeral and unverifiable across restarts anyway.
+
+    def _ensure(self) -> "ReceiptSigner":
+        if self._signer is None:
+            raise ValueError("AuditSigner has no ReceiptSigner bound")
+        return self._signer
 
     def sign(self, message: str) -> Optional[str]:
-        """Sign a message."""
-        key = self._get_signing_key()
-        if key is None:
+        """Sign a message, returning a base64 signature (or None on failure)."""
+        try:
+            return self._ensure().sign_message(message)
+        except Exception:
             return None
-
-        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
-        signature = key.sign(message.encode("utf-8"))
-        return signature.hex()
 
     def verify(self, message: str, signature: str) -> bool:
-        """Verify a signature."""
-        if self._public_key is None:
+        """Verify a base64 signature against the signer's public key."""
+        signer = self._ensure()
+        public_key = signer.get_public_key()
+        if public_key is None:
             return False
-
-        try:
-            from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
-            self._public_key.verify(
-                bytes.fromhex(signature),
-                message.encode("utf-8")
-            )
-            return True
-        except Exception:
-            return False
+        return signer.verify_message(message, signature, public_key)
 
     def get_public_key_hex(self) -> Optional[str]:
-        """Get public key as hex string."""
-        if self._public_key is None:
+        """Return the public key as a hex string (for diagnostics)."""
+        import base64 as _b64
+        pub = self._ensure().get_public_key()
+        if pub is None:
             return None
-
-        from cryptography.hazmat.primitives import serialization
-        pub_bytes = self._public_key.public_bytes(
-            encoding=serialization.Encoding.Raw,
-            format=serialization.PublicFormat.Raw
-        )
-        return pub_bytes.hex()
+        return _b64.b64decode(pub).hex()
 
 
 class AuditService:

@@ -542,35 +542,3 @@ class NotionConnector(UnifiedConnectorInterface):
             start_cursor = response.get("next_cursor")
 
         return databases
-
-
-# Fallback for testing without notion-client
-class AsyncMock:
-    """Minimal async mock for testing."""
-
-    def __init__(self) -> None:
-        self.databases = MagicMock()
-        self.databases.query = AsyncMock(return_value={"results": [], "has_more": False})
-        self.pages = MagicMock()
-        self.pages.update = AsyncMock()
-        self.pages.create = AsyncMock(return_value={"id": "new-page-id"})
-        self.search = AsyncMock(return_value={"results": [], "has_more": False})
-
-
-class MagicMock:
-    """Minimal mock for testing."""
-
-    def __init__(self, return_value: Any = None) -> None:
-        self._return_value = return_value
-
-    def __call__(self, *args, **kwargs) -> Any:
-        if callable(self._return_value):
-            return self._return_value(*args, **kwargs)
-        return self._return_value
-
-
-class AsyncMock(MagicMock):
-    """Async mock for testing."""
-
-    async def __call__(self, *args, **kwargs) -> Any:
-        return super().__call__(*args, **kwargs)

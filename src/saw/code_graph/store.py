@@ -603,6 +603,18 @@ class CodeGraphStore:
             metadata=json.loads(row["metadata"] or "{}"),
         )
 
+    @property
+    def connection(self) -> sqlite3.Connection:
+        """Public read access to the underlying SQLite connection.
+
+        M9: previously ``postprocess.py`` and ``snapshot.py`` reached into
+        ``self.store._conn`` directly, breaking encapsulation. Use this
+        property instead for raw SQL access that isn't covered by the
+        store's query API (e.g. ``PRAGMA table_info`` checks).
+        """
+        assert self._conn is not None
+        return self._conn
+
     def close(self) -> None:
         """关闭数据库连接"""
         if self._conn:

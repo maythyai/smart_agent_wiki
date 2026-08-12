@@ -1,18 +1,24 @@
 """Wiki page FTS5 indexer.
 
 Indexes wiki pages into the fts_index table for full-text search.
+
+C3: previously duplicated the FTS5 DELETE+INSERT logic that lives in
+``saw.write_queue.sinks.fts5_sink``; both now share the transactional
+helpers in ``saw.adapters.storage.fts5_utils`` so the index update is
+atomic and there is a single source of truth for the upsert.
 """
 from __future__ import annotations
 
+import logging
 import sqlite3
-from pathlib import Path
 from typing import TYPE_CHECKING
 
-from saw.adapters.storage.fts_tokenize import tokenize_for_fts
-from saw.engines.query.wiki_links import extract_unique_targets
+from saw.adapters.storage.fts5_utils import delete_fts_entry, upsert_fts_entry
 
 if TYPE_CHECKING:
     from saw.adapters.storage.wiki_repository import WikiRepository
+
+logger = logging.getLogger(__name__)
 
 
 class WikiIndexer:
@@ -62,57 +68,28 @@ class WikiIndexer:
         return True
 
     def _index_page(self, slug: str, title: str, content: str, tags: list[str]) -> None:
-        """Index a wiki page into fts_index.
+        """Index a wiki page into fts_index (atomic upsert).
 
-        Uses slug as the doc_id (title column in fts_index).
-
-        Args:
-            slug: Page slug/identifier.
-            title: Page title.
-            content: Page markdown content.
-            tags: Page tags.
+        Uses slug as the doc_id (the ``title`` column in fts_index).
         """
+        tags_str = " ".join(tags) if tags else ""
+        searchable = f"{title} {content} {tags_str}"
         try:
-            # Delete existing entry (safe even if not present)
-            self._conn.execute(
-                "DELETE FROM fts_index WHERE title = ?",
-                (slug,),
+            upsert_fts_entry(
+                self._conn,
+                doc_id=slug,
+                content=searchable,
+                tags=tags_str,
+                original=searchable,
             )
-
-            # Combine title + content + tags for search
-            tags_str = " ".join(tags) if tags else ""
-            searchable = f"{title} {content} {tags_str}"
-
-            # Insert new entry (tokenized for CJK-aware matching; the
-            # verbatim text goes into the UNINDEXED original column)
-            self._conn.execute(
-                "INSERT INTO fts_index (title, content, tags, original) "
-                "VALUES (?, ?, ?, ?)",
-                (
-                    slug,
-                    tokenize_for_fts(searchable),
-                    tokenize_for_fts(tags_str),
-                    searchable,
-                ),
-            )
-            self._conn.commit()
         except sqlite3.Error as e:
-            # Log error but don't fail - indexing is best-effort
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.warning(f"Failed to index wiki page {slug}: {e}")
+            # Best-effort: indexing is a derived cache, rebuildable.
+            logger.warning("Failed to index wiki page %s: %s", slug, e)
 
     def remove_page(self, slug: str) -> None:
-        """Remove a wiki page from FTS5 index.
-
-        Args:
-            slug: Page slug to remove.
-        """
+        """Remove a wiki page from the FTS5 index (atomic delete)."""
         try:
-            self._conn.execute(
-                "DELETE FROM fts_index WHERE title = ?",
-                (slug,),
-            )
-            self._conn.commit()
+            delete_fts_entry(self._conn, slug)
         except sqlite3.Error:
-            pass  # Best-effort removal
+            # Best-effort removal.
+            pass

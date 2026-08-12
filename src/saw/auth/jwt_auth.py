@@ -28,14 +28,32 @@ class AuthConfig:
         access_token_expire_minutes: int = 30,
         refresh_token_expire_days: int = 7,
     ):
-        self.secret_key = secret_key or os.environ.get("AUTH_SECRET_KEY", secrets.token_hex(32))
+        self.secret_key = secret_key or AuthConfig._resolve_secret_key()
         self.algorithm = algorithm
         self.access_token_expire_minutes = access_token_expire_minutes
         self.refresh_token_expire_days = refresh_token_expire_days
 
+    @staticmethod
+    def _resolve_secret_key(key_path: Path | None = None) -> str:
+        """Resolve the JWT HMAC secret with persistence.
+
+        Order: ``AUTH_SECRET_KEY`` env var → ``.saw/keys/jwt.key`` file
+        (generated + persisted on first use). A persistent key is required
+        so that access/refresh tokens stay valid across restarts.
+        """
+        env = os.environ.get("AUTH_SECRET_KEY")
+        if env:
+            return env
+        from pathlib import Path
+
+        from saw.adapters.crypto._keyfiles import load_or_create
+
+        path = key_path or Path(".saw/keys/jwt.key")
+        return load_or_create(path, lambda: secrets.token_hex(32))
+
     @classmethod
     def from_env(cls) -> AuthConfig:
-        """Create config from environment."""
+        """Create config from environment + persistent key file."""
         return cls(
             secret_key=os.environ.get("AUTH_SECRET_KEY"),
             algorithm=os.environ.get("JWT_ALGORITHM", "HS256"),
@@ -147,6 +165,7 @@ class JWTHandler:
             "iat": int(now.timestamp()),
             "role": role,
             "type": "access",
+            "jti": secrets.token_hex(16),
         }
 
         return jwt_lib.encode(payload, self.config.secret_key, algorithm=self.config.algorithm)
@@ -156,7 +175,12 @@ class JWTHandler:
         user_id: str,
         expires_delta: timedelta | None = None,
     ) -> str:
-        """Create a refresh token."""
+        """Create a refresh token.
+
+        Includes a random ``jti`` (JWT ID) so that two refresh tokens
+        issued within the same second are still distinct — required because
+        the DB-backed store enforces a UNIQUE constraint on the token hash.
+        """
         jwt_lib = self._get_jwt()
 
         if expires_delta:
@@ -172,6 +196,7 @@ class JWTHandler:
             "exp": int(expire.timestamp()),
             "iat": int(now.timestamp()),
             "type": "refresh",
+            "jti": secrets.token_hex(16),
         }
 
         return jwt_lib.encode(payload, self.config.secret_key, algorithm=self.config.algorithm)

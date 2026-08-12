@@ -48,6 +48,12 @@ def init(
         with open(wip_path, "w", encoding="utf-8") as f:
             yaml.dump(WIP_TEMPLATE, f, default_flow_style=False, allow_unicode=True)
 
+        # 3b. Bootstrap persistent security keys (C1/C4/C5 security wiring).
+        # Each key is generated once and persisted with 0600 perms so that
+        # JWT tokens, Fernet-encrypted connector tokens, and Ed25519 audit
+        # receipts stay valid / verifiable across restarts.
+        _bootstrap_security_keys(saw_dir)
+
         # 4. Create SQLite DB with Claims schema
         db_dir = saw_dir / "db"
         db_dir.mkdir(exist_ok=True)
@@ -63,12 +69,11 @@ def init(
             conn.execute(text("SELECT 1"))
         engine.dispose()
 
-        # Use raw sqlite3 for schema init (FTS5 requires raw SQL)
+        # Use raw sqlite3 for schema migration (FTS5 requires raw SQL)
         import sqlite3
         raw_conn = sqlite3.connect(str(db_path))
-        from saw.adapters.storage.claims_repository import CLAIMS_DB_SCHEMA
-        from saw.write_queue.queue import OUTBOX_DDL
-        raw_conn.executescript(CLAIMS_DB_SCHEMA + OUTBOX_DDL)
+        from saw.db.migrations import apply_migrations
+        apply_migrations(raw_conn)
         raw_conn.close()
 
         # 5. Create vault/ directory
@@ -83,11 +88,15 @@ def init(
 
         # 8. Create .gitignore
         gitignore = wiki_path / ".gitignore"
+        ignore_lines = [".saw/db/*.db-wal", ".saw/db/*.db-shm", ".env", ".saw/keys/"]
         if not gitignore.exists():
-            gitignore.write_text(
-                ".saw/db/*.db-wal\n.saw/db/*.db-shm\n.env\n",
-                encoding="utf-8",
-            )
+            gitignore.write_text("\n".join(ignore_lines) + "\n", encoding="utf-8")
+        else:
+            existing = gitignore.read_text(encoding="utf-8")
+            additions = [ln for ln in ignore_lines if ln not in existing]
+            if additions:
+                with open(gitignore, "a", encoding="utf-8") as f:
+                    f.write("\n" + "\n".join(additions) + "\n")
 
         # 9. Agent compatibility layer
         if agent:
@@ -117,6 +126,38 @@ def init(
         from saw.drivers.cli.main import console
         console.print(f"[red]Error:[/red] {e}")
         raise typer.Exit(code=1)
+
+
+def _bootstrap_security_keys(saw_dir: Path) -> None:
+    """Generate the three persistent secrets under ``.saw/keys/``.
+
+    Idempotent: existing keys are never overwritten. Missing keys are
+    generated and persisted with ``0600`` file / ``0700`` dir perms.
+
+    * ``fernet.key``  — Fernet key for connector OAuth-token encryption
+    * ``ed25519.key`` — Ed25519 private key for audit receipt signing
+    * ``jwt.key``     — HMAC secret for JWT access/refresh tokens
+    """
+    import secrets as _secrets
+
+    from cryptography.fernet import Fernet
+
+    from saw.adapters.crypto._keyfiles import load_or_create
+
+    keys_dir = saw_dir / "keys"
+    keys_dir.mkdir(parents=True, exist_ok=True)
+
+    # Fernet key (base64). Reuses TokenEncryption.generate_key for parity.
+    load_or_create(keys_dir / "fernet.key", lambda: Fernet.generate_key().decode())
+    # JWT HMAC secret (hex). Mirrors AuthConfig._resolve_secret_key.
+    load_or_create(keys_dir / "jwt.key", lambda: _secrets.token_hex(32))
+    # Ed25519 private key (base64). Delegates to ReceiptSigner so that the
+    # keypair is stored exactly as audit/service.py expects to load it.
+    from saw.adapters.crypto.ed25519 import ReceiptSigner
+
+    signer = ReceiptSigner(key_path=keys_dir / "ed25519.key")
+    if signer.get_public_key() is None:
+        signer.generate_keypair()
 
 
 def _init_git(wiki_path: Path) -> None:

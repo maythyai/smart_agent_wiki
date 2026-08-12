@@ -28,7 +28,7 @@ Smart Agent Wiki 是一个 **local-first** 的多代理知识管理平台，采�
 │  Storage │ Connectors │ Plugins │ Crypto │ LLM Gateway  │
 ├─────────────────────────────────────────────────────────┤
 │                   Engines Layer                          │
-│  Ingest │ Query │ Govern │ Learn │ Collaborate          │
+│  Ingest │ Query │ Govern │ Learn │ Collaborate │ Compile │
 ├─────────────────────────────────────────────────────────┤
 │                    Domain Layer                          │
 │  Page │ Claim │ Evidence │ Confidence │ Freshness       │
@@ -54,12 +54,15 @@ Smart Agent Wiki 是一个 **local-first** 的多代理知识管理平台，采�
 src/saw/domain/
 ├── page.py          # Wiki 页面
 ├── claim.py         # 知识声明
-├── evidence.py      # 证据
-├── confidence.py    # 置信度 (0-1)
-├── freshness.py     # 新鲜度 (1-9 级)
-├── contradiction.py # 矛盾检测
-└── graph.py         # 知识图谱
+├── confidence.py    # 置信度枚举 (ConfidenceLevel)
+├── freshness.py     # 新鲜度枚举 (FreshnessLevel)
+├── graph.py         # 知识图谱
+├── value_objects.py # 共享值对象 (WriteOpStatus, ContradictionType, etc.)
+├── utils.py         # 工具函数 (utcnow)
+└── exceptions.py    # 领域异常
 ```
+
+> **Note**: `evidence.py` 已合并到 `claim.py`；`contradiction.py` 的检测逻辑位于 `engines/govern/`。
 
 ### Engines Layer (业务逻辑)
 
@@ -67,11 +70,12 @@ src/saw/domain/
 
 | 引擎 | 职责 | 关键模块 |
 |------|------|----------|
-| **Ingest** | 摄入外部知识 | media, web, rss, connectors |
-| **Query** | 查询与检索 | search, compiler, graph_traverse, tree_mode |
-| **Govern** | 质量治理 | audit, confidence, freshness, linter |
+| **Ingest** | 摄入外部知识 | media, web, rss, connectors, pipeline |
+| **Query** | 查询与检索 | search, compiler, graph_traverse, tree_mode, compare |
+| **Govern** | 质量治理 | linter, contradiction, audit |
 | **Learn** | 学习与适应 | scheduler, distiller, trends |
-| **Collaborate** | 多代理协作 | orchestrator, dispatcher |
+| **Collaborate** | 多代理协作 | orchestrator, dispatcher, workflow_parser, workflow_executor |
+| **Compile** | 上下文编译 | compiler, wiki_indexer, wiki_links |
 
 ### Adapters Layer (基础设施)
 
@@ -99,6 +103,8 @@ src/saw/adapters/
 ---
 
 ## 核心引擎
+
+Smart Agent Wiki 包含 **6 个引擎**（含一个文档中未明确标注的 Compile 引擎）。
 
 ### Ingest Engine
 
@@ -150,7 +156,7 @@ Query → FTS5 Search → Graph Traverse → Context Compile → LLM Enhance →
 
 ### Collaborate Engine
 
-6 个专业代理：
+6 个专业代理角色（DTO 已在 `domain/agent.py` 定义，具体实现由工作流通过 `AgentDispatcher` 按名称字符串派发）：
 
 | Agent | 角色 | 职责 |
 |-------|------|------|
@@ -317,39 +323,41 @@ Engine Event → Event Bus → Plugin Registry → Plugin Handlers
 ### 安全隔离
 
 - 每个插件有独立的 `data_dir`
-- 插件运行在受限沙箱中
-- 不能直接访问数据库
+- 沙箱隔离**计划中** (当前插件拥有完整 Python 解释器权限)
+- 插件不能直接访问数据库（通过 `PluginContext` 提供的受限 API 访问）
 
-详见 [Plugin Development Guide](PLUGIN_DEVELOPMENT.md)。
+> **Note**: 事件总线（`subscribe_event` / `publish_event`）尚未连接到引擎层；`PluginContext` 中的回调在 CLI 中为 `lambda x, y: None`。事件类型定义已完成，钩子分发待实现。
 
 ---
 
 ## 安全体系
 
-### 认证 (SEC-01)
+### 认证 (SEC-01) ✅
 
-- JWT (access_token + refresh_token)
+- JWT (access_token + refresh_token)，密钥持久化（`.saw/keys/jwt.key`）
 - bcrypt 密码哈希
-- Token 刷新和撤销
+- Token 刷新与撤销，支持 `local`（单机信任）与 `team`（强制 JWT）两种模式
+- 用户与 Refresh Token 持久化（SQLAlchemy，`users` / `refresh_tokens` 表）
 
-### 授权 (SEC-02)
+### 授权 (SEC-02) ✅
 
-- RBAC: admin / editor / viewer
-- Vault-level 权限控制
-- 基于 Cedar 策略引擎
+- RBAC: admin / editor / viewer，`require_role` FastAPI 依赖
+- Vault-level 权限控制（`PermissionService`）
+- **Cedar 策略引擎**：代码已实现（`cedar_policy.py`，python binding + CLI 子进程兜底），尚未接线到路由
 
 ### API 安全
 
-- 速率限制 (Redis sliding window)
-- 输入清洗 (XSS, SQL injection 检测)
-- CORS 策略配置
-- 安全头 (CSP, HSTS, X-Frame-Options)
+- 速率限制中间件（`RateLimitMiddleware`），已注册到 `create_app()` ✅
+- 输入清洗（XSS 模式检测，SQL 注入检测），已注册到 `create_app()` ✅
+- CORS 策略配置 ✅
+- 安全头（CSP, HSTS, X-Frame-Options），已注册到 `create_app()` ✅
 
 ### 数据保护
 
-- Fernet 加密 (OAuth tokens at rest)
-- Ed25519 签名 (审计收据)
-- API Key SHA256 哈希存储
+- Fernet 加密（OAuth tokens at rest），密钥持久化（`.saw/keys/fernet.key`）✅
+- Ed25519 签名（审计收据），密钥持久化（`.saw/keys/ed25519.key`），统一为 PyNaCl 实现 ✅
+- API Key SHA256 哈希存储 ✅
+- 迁移框架（`PRAGMA user_version` 驱动，`saw.db.migrations`）✅
 
 ---
 
@@ -418,4 +426,4 @@ Local SQLite DB
 
 ---
 
-*最后更新: 2026-06-22*
+*最后更新: 2026-08-11*

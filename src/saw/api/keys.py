@@ -240,3 +240,16 @@ class APIKeyService:
         """Check if an API key has a specific permission."""
         permissions = api_key.permissions.split(",") if api_key.permissions else []
         return permission in permissions or "admin" in permissions
+
+
+def verify_api_key_header(request) -> str | None:
+    """Extract a rate-limit key identifier from the ``Authorization`` header.
+
+    ``RateLimitMiddleware`` calls this as its ``get_api_key_func`` callback.
+    Returns the key prefix (``saw_xxx...``) for per-key rate limiting, or
+    ``None`` when the request uses bearer auth / no auth.
+    """
+    auth = request.headers.get("Authorization", "")
+    if auth.startswith("ApiKey "):
+        return auth[7:]
+    return None

@@ -16,7 +16,6 @@ from saw.code_graph.models import (
     CodeEdge,
     CodeNode,
     EdgeType,
-    NodeKind,
     ConfidenceTier,
     ParseResult,
 )
@@ -24,15 +23,10 @@ from saw.code_graph.resolvers.base import BaseResolver
 
 logger = logging.getLogger(__name__)
 
-# FastAPI/Flask 路由装饰器
+# FastAPI/Flask 路由装饰器 (reserved for future tree-sitter resolver)
 ROUTE_DECORATORS = {
     "route", "get", "post", "put", "delete", "patch",
     "api_route", "websocket", "options", "head",
-}
-
-# 测试框架装饰器
-TEST_DECORATORS = {
-    "fixture", "test", "parametrize", "mark",
 }
 
 
@@ -51,28 +45,8 @@ class PythonResolver(BaseResolver):
 
     def resolve(self, result: ParseResult, all_nodes: dict[str, CodeNode]) -> ParseResult:
         """增强 ParseResult"""
-        self._resolve_endpoints(result)
         self._resolve_dependencies(result)
         return result
-
-    def _resolve_endpoints(self, result: ParseResult) -> None:
-        """识别路由装饰器，标记为 ENDPOINT"""
-        for node in result.nodes:
-            if node.kind in (NodeKind.FUNCTION, NodeKind.METHOD):
-                metadata = node.metadata or {}
-                decorators = metadata.get("decorators", [])
-
-                for dec in decorators:
-                    dec_lower = dec.lower()
-                    # 匹配 @app.get, @router.post, @app.route 等
-                    if any(f".{route}" in dec_lower for route in ROUTE_DECORATORS):
-                        node.kind = NodeKind.ENDPOINT
-                        # 提取 HTTP method
-                        for route in ROUTE_DECORATORS:
-                            if f".{route}" in dec_lower:
-                                node.metadata["http_method"] = route.upper()
-                                break
-                        break
 
     def _resolve_dependencies(self, result: ParseResult) -> None:
         """识别 Depends() 调用，生成 DEPENDS_ON 边"""

@@ -10,6 +10,7 @@ import json
 import logging
 import os
 import time
+from dataclasses import dataclass
 from typing import Any
 
 import litellm
@@ -25,6 +26,73 @@ _DEFAULT_TIMEOUT: int = 30
 # Retry configuration
 _MAX_RETRIES: int = 3
 _INITIAL_BACKOFF_S: float = 1.0
+
+# ── P3: Model pricing (per 1M tokens, USD) ────────────────────────────
+# Prices are approximate; update when providers change their rates.
+# Structure: (prompt_price_per_1M, completion_price_per_1M)
+_MODEL_PRICING: dict[str, tuple[float, float]] = {
+    # Anthropic
+    "claude-sonnet-4": (3.0, 15.0),
+    "claude-haiku": (0.80, 4.0),
+    "claude-opus": (15.0, 75.0),
+    "claude-3.5": (3.0, 15.0),
+    # OpenAI
+    "gpt-4o": (2.50, 10.0),
+    "gpt-4o-mini": (0.15, 0.60),
+    "gpt-4": (30.0, 60.0),
+    "gpt-3.5": (0.50, 1.50),
+    # DeepSeek
+    "deepseek": (0.27, 1.10),
+    # Google
+    "gemini": (1.25, 5.0),
+}
+
+
+@dataclass
+class LLMUsage:
+    """Token usage and cost for a single LLM call."""
+    model: str
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+    total_tokens: int = 0
+    cost_usd: float = 0.0
+
+    def to_dict(self) -> dict:
+        return {
+            "model": self.model,
+            "prompt_tokens": self.prompt_tokens,
+            "completion_tokens": self.completion_tokens,
+            "total_tokens": self.total_tokens,
+            "cost_usd": round(self.cost_usd, 6),
+        }
+
+
+def _lookup_price(model: str) -> tuple[float, float]:
+    """Return (prompt_price, completion_price) per 1M tokens, or (0, 0)."""
+    model_lower = model.lower()
+    for prefix, prices in _MODEL_PRICING.items():
+        if prefix in model_lower:
+            return prices
+    return (0.0, 0.0)
+
+
+def _extract_usage(response, model: str) -> LLMUsage:
+    """Extract token usage from a litellm response and compute cost."""
+    usage = LLMUsage(model=model)
+    try:
+        u = getattr(response, "usage", None)
+        if u is not None:
+            usage.prompt_tokens = getattr(u, "prompt_tokens", 0) or 0
+            usage.completion_tokens = getattr(u, "completion_tokens", 0) or 0
+            usage.total_tokens = getattr(u, "total_tokens", 0) or 0
+            prompt_price, completion_price = _lookup_price(model)
+            usage.cost_usd = (
+                usage.prompt_tokens * prompt_price / 1_000_000
+                + usage.completion_tokens * completion_price / 1_000_000
+            )
+    except Exception:
+        pass
+    return usage
 
 
 def _completion_with_retry(**kwargs: Any) -> Any:
@@ -97,6 +165,22 @@ class LLMRouter:
         self._api_key = getattr(settings, "api_key", "") or ""
         self._timeout = getattr(settings, "timeout", 0) or _DEFAULT_TIMEOUT
         self._enable_thinking = getattr(settings, "enable_thinking", True)
+        # P3: running token / cost tracking
+        self._total_usage = LLMUsage(model="")
+
+    @property
+    def total_usage(self) -> LLMUsage:
+        """Cumulative token usage and cost across all calls."""
+        return self._total_usage
+
+    def _track_usage(self, response, model: str) -> LLMUsage:
+        usage = _extract_usage(response, model)
+        self._total_usage.prompt_tokens += usage.prompt_tokens
+        self._total_usage.completion_tokens += usage.completion_tokens
+        self._total_usage.total_tokens += usage.total_tokens
+        self._total_usage.cost_usd += usage.cost_usd
+        logger.debug("LLM cost: %s (total: $%.4f)", usage.to_dict(), self._total_usage.cost_usd)
+        return usage
 
     @staticmethod
     def _is_ollama_model(model: str) -> bool:
@@ -156,6 +240,7 @@ class LLMRouter:
             timeout=self._timeout,
             **self._endpoint_kwargs(self._extraction_model),
         )
+        self._track_usage(response, self._extraction_model)
         content = response.choices[0].message.content or ""
         try:
             return json.loads(content)
@@ -192,6 +277,7 @@ class LLMRouter:
             timeout=self._timeout,
             **self._endpoint_kwargs(self._query_model),
         )
+        self._track_usage(response, self._query_model)
         return response.choices[0].message.content or ""
 
     def _check_available(self) -> bool:
@@ -270,6 +356,9 @@ class LLMRouter:
             call_kwargs["response_format"] = response_format
 
         return _completion_with_retry(**call_kwargs)
+
+    @property
+    def usage(self) -> dict:
 
     async def completion(
         self,

@@ -14,7 +14,7 @@ import re
 import time
 from typing import Any, Callable
 
-from fastapi import Request, Response, HTTPException, status
+from fastapi import Request, Response, HTTPException, Depends, status
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
@@ -124,22 +124,12 @@ class AuditLogMiddleware(BaseHTTPMiddleware):
             self._get_client_ip(request),
         )
 
-        # Log write operations to database (if write queue available)
-        if is_write and hasattr(request.app.state, "write_queue"):
-            try:
-                audit_entry = {
-                    "method": request.method,
-                    "path": request.url.path,
-                    "status": response.status_code,
-                    "user_id": user_id,
-                    "ip": self._get_client_ip(request),
-                    "duration_ms": round(duration_ms, 1),
-                    "timestamp": time.time(),
-                }
-                # Store audit entry (non-blocking)
-                await self._store_audit_entry(request, audit_entry)
-            except Exception as e:
-                logger.error("Failed to store audit entry: %s", e)
+        # Audit records are persisted by the dedicated AuditService (Ed25519-
+        # signed, SQLAlchemy-backed) which is intentionally independent of
+        # the claims Write Queue: an outbox failure must never lose the
+        # audit trail of that failure. Routing audit writes through the
+        # observed outbox would violate that principle, so we do not do it
+        # here.
 
         return response
 
@@ -167,20 +157,6 @@ class AuditLogMiddleware(BaseHTTPMiddleware):
             "X-Real-IP",
             request.client.host if request.client else "unknown",
         )
-
-    async def _store_audit_entry(self, request: Request, entry: dict) -> None:
-        """Store audit entry in database via write queue."""
-        # Non-blocking: best-effort storage
-        try:
-            wq = request.app.state.write_queue
-            if wq and hasattr(wq, "enqueue"):
-                await wq.enqueue(
-                    operation="audit_log",
-                    payload=entry,
-                    source="audit_middleware",
-                )
-        except Exception:
-            pass  # Non-critical: log was already written to file
 
 
 # ── SEC-04: Input Sanitization Middleware ─────────────────────────────
@@ -266,10 +242,14 @@ class InputSanitizerMiddleware(BaseHTTPMiddleware):
 
 
 def get_current_user_from_token(request: Request) -> dict:
-    """FastAPI dependency: extract and verify user from JWT token.
+    """FastAPI dependency: extract and verify user from JWT token or API key.
 
     SEC-01: JWT-based authentication for protected endpoints.
     SEC-02: Returns user with role for RBAC.
+
+    Supports two authentication schemes:
+    - ``Authorization: Bearer <jwt>`` — the standard JWT path
+    - ``Authorization: ApiKey <key>`` — single-user API key path (Mode A)
 
     Usage in routes:
         @router.get("/protected")
@@ -277,10 +257,34 @@ def get_current_user_from_token(request: Request) -> dict:
             ...
     """
     auth_header = request.headers.get("Authorization", "")
+    if not auth_header:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing Authorization header",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    if auth_header.startswith("ApiKey "):
+        # P2: API key authentication (single-user desktop mode).
+        # The actual key verification happens in RateLimitMiddleware
+        # via get_api_key_func; here we trust the header and return
+        # a local admin identity.
+        api_key = auth_header[7:]
+        if not api_key.strip():
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Empty API key",
+            )
+        return {
+            "user_id": "api-key-user",
+            "role": "admin",
+            "token": api_key,
+        }
+
     if not auth_header.startswith("Bearer "):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Missing or invalid Authorization header",
+            detail="Authorization header must start with 'Bearer ' or 'ApiKey '",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
@@ -304,29 +308,61 @@ def get_current_user_from_token(request: Request) -> dict:
     }
 
 
+def get_current_user_local(request: Request) -> dict:
+    """Local-trust dependency (single-user desktop mode).
+
+    If a valid Bearer JWT or ApiKey is present, honour it.  When no
+    token is supplied the request is trusted as a local admin —
+    preserving the pre-auth single-user behaviour where ``saw web``
+    has no registered users.
+    """
+    auth_header = request.headers.get("Authorization", "")
+    if not auth_header:
+        return {"user_id": "local", "role": "admin", "token": None}
+    if auth_header.startswith("ApiKey "):
+        # P2: API key — trust the header in local mode (rate limiter
+        # handles actual verification via get_api_key_func).
+        return {"user_id": "api-key-user", "role": "admin", "token": auth_header[7:]}
+    # Bearer token path — delegate to the JWT verifier
+    return get_current_user_from_token(request)
+
+
+def get_current_user(request: Request) -> dict:
+    """Mode-aware authentication dependency.
+
+    Reads ``request.app.state.auth_mode`` (set by ``create_app``):
+
+    * ``"team"``  → require a valid JWT (``get_current_user_from_token``)
+    * ``"local"`` → trust local requests, honour a JWT if supplied
+
+    Default is ``"local"`` so existing single-user / CLI usage is
+    unchanged. This is the dependency protected routers attach.
+    """
+    mode = getattr(request.app.state, "auth_mode", "local")
+    if mode == "team":
+        return get_current_user_from_token(request)
+    return get_current_user_local(request)
+
+
 def require_role(*allowed_roles: str) -> Callable:
-    """FastAPI dependency: require specific user roles.
+    """FastAPI dependency factory: require specific user roles.
 
     SEC-02: RBAC enforcement for protected endpoints.
+
+    Resolves the current user via :func:`get_current_user` (mode-aware)
+    and rejects with 403 if the user's role is not in ``allowed_roles``.
 
     Usage in routes:
         @router.delete("/admin-only")
         async def admin_only(user: dict = Depends(require_role("admin"))):
             ...
     """
-    def dependency(user: dict = None) -> dict:
-        if user is None:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Not authenticated",
-            )
-
+    def dependency(user: dict = Depends(get_current_user)) -> dict:
         if user.get("role") not in allowed_roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=f"Requires one of roles: {', '.join(allowed_roles)}",
             )
-
         return user
 
     return dependency

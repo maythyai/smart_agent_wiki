@@ -10,9 +10,118 @@ from datetime import datetime, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
-from saw.connectors.github.connector import GitHubConnector, MockGithub
+from saw.connectors.github.connector import GitHubConnector
 from saw.connectors.github.models import GitHubAuthType
 from saw.connectors.protocol import AuthResult, ConnectorItem, AuthenticationError
+
+
+# ── Mock classes (M7: moved from production code) ────────────────────
+# These lightweight stubs allow tests to run without PyGithub installed.
+# They were previously in github/connector.py alongside the real connector
+# class, which was a code smell.
+
+class MockGithub:
+    """Minimal mock for testing without PyGithub."""
+
+    def __init__(self) -> None:
+        self._repos: dict[str, "MockRepo"] = {}
+
+    def get_repo(self, full_name: str) -> "MockRepo":
+        """Get or create mock repo."""
+        if full_name not in self._repos:
+            self._repos[full_name] = MockRepo(full_name)
+        return self._repos[full_name]
+
+    def get_repos(self, affiliation: str = "") -> list["MockRepo"]:
+        """Get mock repos list."""
+        return [MockRepo("owner/repo")]
+
+    def get_rate_limit(self) -> "MockRateLimit":
+        """Get mock rate limit."""
+        return MockRateLimit()
+
+
+class MockRepo:
+    """Minimal mock repo for testing."""
+
+    def __init__(self, full_name: str) -> None:
+        self.full_name = full_name
+        self.id = 12345
+        self.owner = MockUser()
+        self.name = full_name.split("/")[-1]
+        self.description = "Mock repository"
+        self.has_issues = True
+        self.has_discussions = False
+        self.topics: list[str] = []
+        self.permissions = MockPermissions()
+        self.html_url = f"https://github.com/{full_name}"
+        self.private = False
+
+    def get_issues(self, state: str = "all", since=None) -> list["MockIssue"]:
+        """Get mock issues."""
+        return [MockIssue()]
+
+
+class MockUser:
+    """Minimal mock user."""
+
+    def __init__(self) -> None:
+        self.login = "mockuser"
+        self.id = 1
+
+
+class MockPermissions:
+    """Minimal mock permissions."""
+
+    admin = False
+    push = True
+    pull = True
+
+
+class MockIssue:
+    """Minimal mock issue for testing."""
+
+    def __init__(self) -> None:
+        self.id = 1
+        self.number = 42
+        self.title = "Mock Issue"
+        self.body = "Mock body"
+        self.state = "open"
+        self.labels: list = []
+        self.assignees: list = []
+        self.milestone = None
+        self.comments = 0
+        self.created_at = utcnow()
+        self.updated_at = utcnow()
+        self.closed_at = None
+        self.user = MockUser()
+        self.html_url = "https://github.com/owner/repo/issues/42"
+
+    def create_comment(self, body: str) -> "MockComment":
+        """Create mock comment."""
+        return MockComment()
+
+
+class MockComment:
+    """Minimal mock comment."""
+
+    def __init__(self) -> None:
+        self.id = 12345
+
+
+class MockRateLimit:
+    """Minimal mock rate limit."""
+
+    def __init__(self) -> None:
+        self.core = MockCoreRateLimit()
+
+
+class MockCoreRateLimit:
+    """Minimal mock core rate limit."""
+
+    limit = 5000
+    remaining = 5000
+    reset = utcnow()
 
 
 def utcnow() -> datetime:

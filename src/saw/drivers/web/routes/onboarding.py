@@ -69,26 +69,52 @@ async def seed_starter_kit(
     pages_created = 0
     errors: list[str] = []
 
+    import uuid
+
     from saw.domain.value_objects import WriteOpStatus
     from saw.write_queue.queue import WriteOp
 
     for page_def in kit["pages"]:
         try:
-            # Create write operation
-            write_op = WriteOp(
-                op_type="create_page",
-                payload={
-                    "slug": page_def["slug"],
-                    "title": page_def["title"],
-                    "content": page_def["content"],
-                    "entity_type": page_def.get("entity_type", "note"),
-                    "properties": page_def.get("properties", {}),
-                    "tags": page_def.get("tags", []),
-                },
-                status=WriteOpStatus.PENDING,
-            )
+            slug = page_def["slug"]
+            # C3-1: build a valid WriteOp (op_id/session_id/sink_name are
+            # required) and enqueue a list. The wiki sink writes to
+            # ``payload['path']`` (== slug); the fts5 sink indexes the
+            # same content. Mirrors the pages.py create_page pattern.
+            op_id = str(uuid.uuid4())
+            content = page_def["content"]
+            tags = page_def.get("tags", [])
+            ops = [
+                WriteOp(
+                    op_id=op_id,
+                    session_id="onboarding",
+                    sink_name="wiki",
+                    payload={
+                        "path": slug,
+                        "title": page_def["title"],
+                        "content": content,
+                        "tags": tags,
+                        "page_type": "summary",
+                        "entity_type": page_def.get("entity_type", "note"),
+                        "frontmatter": {"entity_type": page_def.get("entity_type", "note")},
+                    },
+                    status=WriteOpStatus.PENDING,
+                ),
+                WriteOp(
+                    op_id=f"{op_id}-index",
+                    session_id="onboarding",
+                    sink_name="fts5",
+                    payload={
+                        "doc_id": slug,
+                        "title": page_def["title"],
+                        "content": content,
+                        "tags": " ".join(tags),
+                    },
+                    status=WriteOpStatus.PENDING,
+                ),
+            ]
 
-            write_queue.enqueue(write_op)
+            write_queue.enqueue_atomic(ops)
             pages_created += 1
 
         except Exception as e:

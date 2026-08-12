@@ -151,7 +151,7 @@ class HealthMonitor:
 
         # Check 5: FTS 索引
         try:
-            conn = self.store._conn
+            conn = self.store.connection
             if conn:
                 fts_count = conn.execute("SELECT COUNT(*) FROM code_nodes_fts").fetchone()[0]
                 if fts_count == node_count:
@@ -222,7 +222,7 @@ class HealthMonitor:
 
     def change_log(self, limit: int = 10) -> list[dict]:
         """最近构建的变更日志"""
-        conn = self.store._conn
+        conn = self.store.connection
         if conn is None:
             return []
         rows = conn.execute(
@@ -246,7 +246,7 @@ class HealthMonitor:
 
     def _get_last_build_time(self) -> Optional[str]:
         """获取最近构建时间"""
-        conn = self.store._conn
+        conn = self.store.connection
         if conn is None:
             return None
         row = conn.execute(

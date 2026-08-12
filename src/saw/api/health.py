@@ -60,15 +60,20 @@ async def get_health_monitor() -> HealthMonitor:
     Note: In production, this would use dependency injection.
     For now, creates a new instance with session.
     """
-    # This is a simplified dependency - in production would use proper DI
-    from saw.db.config import get_async_engine
-    from sqlalchemy.ext.asyncio import async_sessionmaker
+    try:
+        from saw.db.config import get_async_engine
+        from sqlalchemy.ext.asyncio import async_sessionmaker
 
-    engine = get_async_engine()
-    async_session = async_sessionmaker(engine, expire_on_commit=False)
+        engine = get_async_engine()
+        async_session = async_sessionmaker(engine, expire_on_commit=False)
 
-    async with async_session() as session:
-        return HealthMonitor(session)
+        async with async_session() as session:
+            return HealthMonitor(session)
+    except (ImportError, ModuleNotFoundError):
+        raise HTTPException(
+            status_code=503,
+            detail="Health monitor unavailable (aiosqlite not installed)",
+        )
 
 
 # API Endpoints
