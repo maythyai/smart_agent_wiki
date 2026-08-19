@@ -79,27 +79,35 @@ class FTS5Search:
             scores = []
 
             for row in rows:
-                uuid = row[0]
+                doc_id = row[0]
                 content = row[1] or ""
                 # bm25 returns negative scores, higher (closer to 0) is better
                 score = -row[2] if row[2] else 0.0
-                # Check if claim is deleted
+                # The ``title`` column stores the FTS doc_id, which is either
+                # a claim UUID (written by Fts5Sink) or a wiki slug (written
+                # by WikiIndexer). Only soft-deleted *claims* should be
+                # filtered out; wiki slugs are not in the claim table and
+                # must be kept, otherwise wiki-only content is unsearchable.
                 deleted_row = self._conn.execute(
-                    "SELECT 1 FROM claim WHERE uuid = ? AND deleted_at IS NULL",
-                    (uuid,),
+                    "SELECT 1 FROM claim WHERE uuid = ? AND deleted_at IS NOT NULL",
+                    (doc_id,),
                 ).fetchone()
                 if deleted_row:
-                    claim_uuids.append(uuid)
-                    contents.append(content)
-                    scores.append(score)
+                    continue
+                claim_uuids.append(doc_id)
+                contents.append(content)
+                scores.append(score)
 
-            # Get total count for pagination
+            # Get total count for pagination. Count every MATCH row that is
+            # NOT a soft-deleted claim (this includes all wiki pages, whose
+            # slugs are absent from the claim table). The previous JOIN on
+            # ``c.uuid = f.title`` dropped every wiki-only row.
             count_row = self._conn.execute(
                 """SELECT COUNT(*)
                    FROM fts_index f
-                   JOIN claim c ON c.uuid = f.title
                    WHERE f.fts_index MATCH ?
-                     AND c.deleted_at IS NULL""",
+                     AND f.title NOT IN
+                         (SELECT uuid FROM claim WHERE deleted_at IS NOT NULL)""",
                 (escaped_query,),
             ).fetchone()
             total = count_row[0] if count_row else 0
@@ -152,18 +160,19 @@ class FTS5Search:
             scores = []
 
             for row in rows:
-                uuid = row[0]
+                doc_id = row[0]
                 content = row[1] or ""
                 score = -row[2] if row[2] else 0.0
-                # Check if claim is deleted
+                # Keep wiki slugs (not in claim table); drop only deleted claims.
                 deleted_row = self._conn.execute(
-                    "SELECT 1 FROM claim WHERE uuid = ? AND deleted_at IS NULL",
-                    (uuid,),
+                    "SELECT 1 FROM claim WHERE uuid = ? AND deleted_at IS NOT NULL",
+                    (doc_id,),
                 ).fetchone()
                 if deleted_row:
-                    claim_uuids.append(uuid)
-                    contents.append(content)
-                    scores.append(score)
+                    continue
+                claim_uuids.append(doc_id)
+                contents.append(content)
+                scores.append(score)
 
             return SearchResult(
                 claim_uuids=claim_uuids,
@@ -194,9 +203,9 @@ class FTS5Search:
             row = self._conn.execute(
                 """SELECT COUNT(*)
                    FROM fts_index f
-                   JOIN claim c ON c.uuid = f.title
                    WHERE f.fts_index MATCH ?
-                     AND c.deleted_at IS NULL""",
+                     AND f.title NOT IN
+                         (SELECT uuid FROM claim WHERE deleted_at IS NOT NULL)""",
                 (escaped_query,),
             ).fetchone()
             return row[0] if row else 0

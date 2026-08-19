@@ -9,6 +9,8 @@ import Page from '../pages/Page';
 vi.mock('../hooks/usePage', () => ({
   usePage: vi.fn(),
   useUpdatePage: vi.fn(),
+  useDeletePage: vi.fn(() => ({ mutate: vi.fn(), isPending: false })),
+  useUpdateProperties: vi.fn(() => ({ mutate: vi.fn(), isPending: false })),
 }));
 
 // Mock the store
@@ -19,9 +21,11 @@ vi.mock('../stores', () => ({
       setMode: vi.fn(),
       isDirty: false,
       setDirty: vi.fn(),
+      setLastSaved: vi.fn(),
       lastSaved: null,
     };
-    return selector(state);
+    // Support both selector-style and no-arg useStore() calls.
+    return typeof selector === 'function' ? selector(state) : state;
   }),
 }));
 
@@ -139,9 +143,10 @@ describe('Page Editor', () => {
           setMode: (m: any) => { currentMode = m; mockSetMode(m); },
           isDirty: false,
           setDirty: vi.fn(),
+          setLastSaved: vi.fn(),
           lastSaved: null,
         };
-        return selector(state);
+        return typeof selector === 'function' ? selector(state) : state;
       });
 
       renderPage();

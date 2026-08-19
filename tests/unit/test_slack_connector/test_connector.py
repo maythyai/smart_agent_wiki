@@ -24,7 +24,35 @@ class TestSlackConnector:
     def test_connector_implements_protocol(self, connector: SlackConnector):
         """Test 1: Connector implements UnifiedConnectorInterface."""
         assert connector.platform_name == "slack"
-        assert connector.supports_push is False  # Read-only via Events API
+        assert connector.supports_push is True  # Bot can post messages (chat:write)
+
+    @pytest.mark.asyncio
+    async def test_put_item_posts_message_and_returns_id(self, connector: SlackConnector):
+        """put_item posts to the channel and returns slack-{channel}-{ts}."""
+        connector._client = MagicMock()
+        connector._client.chat_postMessage = AsyncMock(
+            return_value={"ts": "123.456"}
+        )
+
+        item = ConnectorItem(
+            id="",
+            title="",
+            content="Hello from SAW",
+            metadata={"channel_id": "C123"},
+        )
+
+        result = await connector.put_item(item)
+
+        connector._client.chat_postMessage.assert_called_once_with(channel="C123", text="Hello from SAW")
+        assert result == "slack-C123-123.456"
+
+    @pytest.mark.asyncio
+    async def test_put_item_requires_channel_id(self, connector: SlackConnector):
+        """put_item raises if channel_id is missing."""
+        connector._client = MagicMock()
+        item = ConnectorItem(id="", title="", content="x", metadata={})
+        with pytest.raises(ValueError):
+            await connector.put_item(item)
 
     @pytest.mark.asyncio
     async def test_authenticate_with_bot_token(self, connector: SlackConnector):

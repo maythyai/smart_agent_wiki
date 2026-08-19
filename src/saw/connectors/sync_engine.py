@@ -366,13 +366,34 @@ class SyncEngine:
                 )
             ]
             for c in filtered:
-                payload = {
-                    "content": c.content if hasattr(c, "content") else str(c),
-                    "source_platform": "saw",
-                    "source_id": c.uuid if hasattr(c, "uuid") else "",
-                }
-                await connector.push_item(payload)
-                result.pushed_count += 1
+                # Build a ConnectorItem from the claim — connectors implement
+                # put_item(item: ConnectorItem) -> str, NOT push_item(dict).
+                # The previous code called a non-existent push_item(payload) and
+                # would AttributeError on every push-capable connector.
+                claim_meta = c.metadata if isinstance(getattr(c, "metadata", None), dict) else {}
+                item = ConnectorItem(
+                    id=str(getattr(c, "uuid", "") or ""),
+                    title=(getattr(c, "title", None) or (c.content[:80] if hasattr(c, "content") else "")),
+                    content=getattr(c, "content", str(c)) if hasattr(c, "content") else str(c),
+                    url=getattr(c, "source_url", None),
+                    author=getattr(c, "author", None),
+                    created_at=getattr(c, "created_at", None),
+                    updated_at=getattr(c, "updated_at", None),
+                    metadata={
+                        **claim_meta,
+                        "source_platform": "saw",
+                        "source_id": str(getattr(c, "uuid", "") or ""),
+                    },
+                )
+                try:
+                    result_id = await connector.put_item(item)
+                    if result_id:
+                        result.pushed_count += 1
+                    else:
+                        result.errors.append(f"put_item returned empty id for {item.id}")
+                except Exception as push_exc:
+                    # One item failing must not abort the whole push.
+                    result.errors.append(f"Push of {item.id} failed: {push_exc}")
         except Exception as e:
             result.errors.append(f"Push failed: {str(e)}")
 

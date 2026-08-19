@@ -13,7 +13,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from saw.db.config import get_session
+from saw.db.session import get_db_session as get_session
 from saw.connectors.github.connector import GitHubConnector
 from saw.connectors.github.repository_selector import RepositorySelector
 from saw.connectors.github.models import GitHubRateLimit

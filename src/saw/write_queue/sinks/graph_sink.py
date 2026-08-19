@@ -24,14 +24,25 @@ class GraphSink:
     def write(self, op) -> None:
         """Insert entity and entity_relation records.
 
-        Handles both entity creation and relation creation based on payload.
+        Payload shape (see engines/ingest/pipeline.py):
+          - entity:   ``{"type": "entity", "uuid", "name", "entity_type", ...}``
+          - relation: ``{"type": "relation", "source_uuid", "target_uuid",
+                        "relation_type", ...}``
+          - batch:    ``{"relations": [ {...}, ... ]}``
+
+        Note: the discriminator is ``payload["type"]`` ("entity"/"relation"),
+        NOT a top-level ``entity``/``relation`` key — the previous code checked
+        ``if "entity" in payload`` and never matched, so every graph write was
+        silently skipped and the knowledge graph was never built.
         """
         payload = op.payload
 
         try:
+            node_type = payload.get("type")
+
             # Handle entity creation
-            if "entity" in payload:
-                entity = payload["entity"]
+            if node_type == "entity" or "entity" in payload:
+                entity = payload.get("entity") if "entity" in payload else payload
                 self._conn.execute(
                     """INSERT OR IGNORE INTO entity (uuid, name, aliases, entity_type, description)
                        VALUES (?, ?, ?, ?, ?)""",
@@ -45,8 +56,8 @@ class GraphSink:
                 )
 
             # Handle relation creation
-            if "relation" in payload:
-                rel = payload["relation"]
+            if node_type == "relation" or "relation" in payload:
+                rel = payload.get("relation") if "relation" in payload else payload
                 self._conn.execute(
                     """INSERT INTO entity_relation (source_uuid, target_uuid, relation_type, weight)
                        VALUES (?, ?, ?, ?)""",

@@ -24,7 +24,7 @@ class TestFeishuConnector:
     def test_connector_implements_protocol(self, connector: FeishuConnector):
         """Test 1: Connector implements UnifiedConnectorInterface."""
         assert connector.platform_name == "feishu"
-        assert connector.supports_push is False  # Read-only via webhooks
+        assert connector.supports_push is True  # App can send IM messages
 
     @pytest.mark.asyncio
     async def test_authenticate_with_credentials(self, connector: FeishuConnector):

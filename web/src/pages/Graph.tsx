@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams } from 'react-router';
+import type { Core } from 'cytoscape';
 import { KnowledgeGraph } from '../components/graph/KnowledgeGraph';
 import { GraphControls } from '../components/graph/GraphControls';
 import { NodeDetail } from '../components/graph/NodeDetail';
@@ -50,6 +51,24 @@ export default function Graph() {
     refetch();
   }, [refetch]);
 
+  // Hold the live Cytoscape instance so GraphControls can drive zoom/fit.
+  const cyInstanceRef = useRef<Core | null>(null);
+  const handleCyReady = useCallback((cy: Core) => {
+    cyInstanceRef.current = cy;
+  }, []);
+
+  const handleZoomIn = useCallback(() => {
+    const cy = cyInstanceRef.current;
+    if (cy) cy.zoom(cy.zoom() * 1.2);
+  }, []);
+  const handleZoomOut = useCallback(() => {
+    const cy = cyInstanceRef.current;
+    if (cy) cy.zoom(cy.zoom() / 1.2);
+  }, []);
+  const handleFit = useCallback(() => {
+    cyInstanceRef.current?.fit(undefined, 50);
+  }, []);
+
   return (
     <div className="h-screen flex flex-col">
       <header className="bg-white dark:bg-gray-800 border-b dark:border-gray-700 px-4 md:px-6 py-3 md:py-4">
@@ -96,9 +115,9 @@ export default function Graph() {
         `}>
           <GraphFilters onRefresh={handleRefresh} />
           <GraphControls
-            onZoomIn={() => {/* Handled by Cytoscape internally */}}
-            onZoomOut={() => {/* Handled by Cytoscape internally */}}
-            onFit={() => {/* Handled by Cytoscape internally */}}
+            onZoomIn={handleZoomIn}
+            onZoomOut={handleZoomOut}
+            onFit={handleFit}
           />
           {/* Layout selector */}
           <div className="pt-4 border-t dark:border-gray-700">
@@ -174,6 +193,7 @@ export default function Graph() {
             depth={2}
             maxNodes={100}
             onNodeSelect={handleNodeSelect}
+            onReady={handleCyReady}
           />
 
           {/* Right panel: Node detail */}

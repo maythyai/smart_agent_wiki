@@ -1,7 +1,7 @@
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
 
 interface RequestOptions {
-  method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
+  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   body?: unknown;
   params?: Record<string, string | number | undefined>;
   skipAuth?: boolean;
@@ -132,6 +132,9 @@ export const api = {
 
   put: <T>(path: string, body: unknown) =>
     request<T>(path, { method: 'PUT', body }),
+
+  patch: <T>(path: string, body: unknown) =>
+    request<T>(path, { method: 'PATCH', body }),
 
   delete: <T>(path: string, body?: unknown) =>
     request<T>(path, { method: 'DELETE', body }),

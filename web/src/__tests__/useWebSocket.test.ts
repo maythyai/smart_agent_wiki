@@ -6,6 +6,14 @@ import React from 'react';
 
 // Mock WebSocket
 class MockWebSocket {
+  // Real WebSocket ready-state constants — the hook compares against
+  // WebSocket.OPEN / WebSocket.CONNECTING, so the mock must define them
+  // (otherwise `undefined === undefined` short-circuits connect()/send()).
+  static CONNECTING = 0;
+  static OPEN = 1;
+  static CLOSING = 2;
+  static CLOSED = 3;
+
   static instances: MockWebSocket[] = [];
 
   url: string;

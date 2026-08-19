@@ -42,6 +42,7 @@ def create_app(
     collaborate: CollaborateEngine,
     write_queue: SQLiteWriteQueue,
     event_bus: Any = None,
+    wiki_repo: Any = None,
     cors_origins: list[str] | None = None,
     host: str = "127.0.0.1",
     port: int = 8000,
@@ -80,6 +81,11 @@ def create_app(
     app.state.collaborate = collaborate
     app.state.write_queue = write_queue
     app.state.event_bus = event_bus
+    # wiki_repo is consumed by onboarding/timeline routes (get_wiki_repo);
+    # previously it was constructed in create_app_from_config but never
+    # mounted, so those endpoints raised 500. Fall back to the query
+    # engine's wiki repo if the caller did not pass one explicitly.
+    app.state.wiki_repo = wiki_repo if wiki_repo is not None else getattr(query, "_wiki_repo", None)
     app.state.host = host
     app.state.port = port
     # C1: auth mode consumed by get_current_user() on protected routes.
@@ -210,11 +216,57 @@ def create_app(
     from saw.api.integrations import router as integrations_router
 
     app.include_router(health_router)  # public health check
+
+    # Public Kubernetes-style probes + /metrics (Prometheus). These live on
+    # root paths (/health, /health/live, /health/ready, /metrics) and were
+    # previously defined but never mounted.
+    from saw.drivers.web.health import router as web_health_router
+
+    app.include_router(web_health_router)
     app.include_router(feeds_router, dependencies=auth_dep)
-    app.include_router(oauth_router, dependencies=auth_dep)
+    # OAuth authorize/callback are third-party redirect entry points: the
+    # user is NOT yet authenticated when they hit them (that is the whole
+    # point of OAuth), so they must be public. (GET /platforms is also fine
+    # to leave public.) Previously gated behind auth_dep, which made every
+    # OAuth callback return 401.
+    app.include_router(oauth_router)
     app.include_router(webhook_inbound_router)  # HMAC-verified, no JWT required
     app.include_router(sync_router, dependencies=auth_dep)
     app.include_router(integrations_router, dependencies=auth_dep)
+
+    # Register connector-specific routers (notion, notion_sync, github,
+    # github_webhook, logseq). These define their own prefixes. notion and
+    # notion_sync import cleanly; github was fixed to use the shared
+    # session dependency. logseq requires the optional ``watchdog`` package,
+    # so its registration is guarded — a missing optional dependency must not
+    # prevent the rest of the app from starting.
+    from saw.api.notion import get_notion_router
+    from saw.api.notion_sync import get_notion_sync_router
+
+    app.include_router(get_notion_router(), dependencies=auth_dep)
+    app.include_router(get_notion_sync_router(), dependencies=auth_dep)
+
+    import logging as _logging
+    _app_logger = _logging.getLogger(__name__)
+
+    try:
+        from saw.api.github import router as github_router
+        app.include_router(github_router, dependencies=auth_dep)
+    except ImportError as _e:  # pragma: no cover — optional connector deps
+        _app_logger.warning("GitHub connector router not registered: %s", _e)
+
+    try:
+        from saw.api.github_webhook import router as github_webhook_router
+        app.include_router(github_webhook_router)  # HMAC-verified, no JWT
+    except ImportError as _e:  # pragma: no cover
+        _app_logger.warning("GitHub webhook router not registered: %s", _e)
+
+    try:
+        from saw.api.logseq import router as logseq_router
+        app.include_router(logseq_router, dependencies=auth_dep)
+    except ImportError as _e:  # pragma: no cover — requires watchdog
+        _app_logger.warning("Logseq connector router not registered: %s", _e)
+
 
     # H1-2: govern API routes (claims, contradictions, verify, lint,
     # blast-radius, status) — authenticated
@@ -279,17 +331,22 @@ def create_app_from_config(
         # Fallback to default path
         db_path = Path(".saw/db/claims.db")
 
-    # Create write queue
+    # Create write queue. check_same_thread=False: the shared connection is
+    # touched by the WriteQueue worker thread, by request-threadpool sync
+    # endpoints, and by background workflow tasks that run QueryEngine calls
+    # via a single-worker executor (see api/routes/collaborate.py). Serializing
+    # query work in that executor is what keeps it safe; this flag removes the
+    # hard ProgrammingError that previously aborted every local-mode workflow.
     try:
         if db_path.exists():
-            conn = sqlite3.connect(str(db_path))
+            conn = sqlite3.connect(str(db_path), check_same_thread=False)
             write_queue = SQLiteWriteQueue(conn)
         else:
             # Use in-memory for non-existent DB
-            conn = sqlite3.connect(":memory:")
+            conn = sqlite3.connect(":memory:", check_same_thread=False)
             write_queue = SQLiteWriteQueue(conn)
     except Exception:
-        conn = sqlite3.connect(":memory:")
+        conn = sqlite3.connect(":memory:", check_same_thread=False)
         write_queue = SQLiteWriteQueue(conn)
 
     # Initialize QueryEngine with real repositories
@@ -333,6 +390,7 @@ def create_app_from_config(
         query=query_engine,
         collaborate=None,
         write_queue=write_queue,
+        wiki_repo=wiki_repo,
         cors_origins=cors_origins,
         host=host,
         port=port,

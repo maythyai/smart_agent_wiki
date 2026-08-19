@@ -135,20 +135,46 @@ router = APIRouter(prefix="/api/v1/feeds", tags=["feeds"])
 
 
 # ============================================================================
-# Dependencies (placeholder - should be replaced with actual DI)
+# Dependencies
 # ============================================================================
 
+# Module-level singleton engine so feed data survives across requests.
+# Previously get_db_session built a fresh ``sqlite:///:memory:`` engine on
+# every call, so every feed created/updated in one request vanished by the
+# next. The engine is shared (one persistent file), created once, with
+# check_same_thread=False because FastAPI runs sync endpoints in a threadpool.
+_feeds_engine = None
+_feeds_session_factory = None
+
+
+def _get_feeds_engine():
+    global _feeds_engine, _feeds_session_factory
+    if _feeds_engine is None:
+        from pathlib import Path
+
+        from sqlalchemy import create_engine
+        from sqlalchemy.orm import sessionmaker
+
+        db_path = Path(".saw/db/feeds.db")
+        db_path.parent.mkdir(parents=True, exist_ok=True)
+        _feeds_engine = create_engine(
+            f"sqlite:///{db_path}",
+            connect_args={"check_same_thread": False},
+        )
+        # Create feed/sync tables once. Safe to call repeatedly.
+        from saw.db.models import Base
+
+        Base.metadata.create_all(_feeds_engine)
+        _feeds_session_factory = sessionmaker(
+            bind=_feeds_engine, expire_on_commit=False
+        )
+    return _feeds_engine
+
+
 def get_db_session() -> Session:
-    """Get database session. Override with actual DI in production."""
-    from saw.db.config import get_session_factory
-    from saw.db.models import Base
-    from sqlalchemy import create_engine
-
-    engine = create_engine("sqlite:///:memory:")
-    Base.metadata.create_all(engine)
-
-    factory = get_session_factory(engine)
-    session = factory()
+    """Yield a persistent SQLAlchemy session backed by the shared feed engine."""
+    _get_feeds_engine()
+    session = _feeds_session_factory()
     try:
         yield session
     finally:

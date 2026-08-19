@@ -145,7 +145,10 @@ describe('IntegrationCard', () => {
       />
     );
 
-    expect(screen.getByText('Notion')).toBeInTheDocument();
+    // The card renders both a mobile and a desktop view (toggled via CSS,
+    // both present in the test DOM), so the platform name appears twice —
+    // use getAllByText rather than the brittle getByText.
+    expect(screen.getAllByText('Notion').length).toBeGreaterThan(0);
     expect(screen.getByText('idle')).toBeInTheDocument();
     // Check for health dot (green for healthy)
     const healthDot = document.querySelector('.bg-green-500');
@@ -250,9 +253,11 @@ describe('IntegrationList', () => {
       />
     );
 
-    expect(screen.getByText('Notion')).toBeInTheDocument();
-    expect(screen.getByText('Slack')).toBeInTheDocument();
-    expect(screen.getByText('GitHub')).toBeInTheDocument();
+    // Each platform name appears in both the mobile and desktop card views
+    // (both rendered in the test DOM), so use getAllByText.
+    expect(screen.getAllByText('Notion').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Slack').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('GitHub').length).toBeGreaterThan(0);
   });
 });
 

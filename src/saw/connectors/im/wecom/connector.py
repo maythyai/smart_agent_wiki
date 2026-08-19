@@ -32,7 +32,7 @@ class WeComConnector(BaseConnector):
     """
 
     platform_name = "wecom"
-    supports_push = False  # Read-only ingestion via webhooks
+    supports_push = True  # Bot webhook can post text messages to its bound chat
 
     def __init__(self) -> None:
         """Initialize WeCom connector."""
@@ -50,8 +50,8 @@ class WeComConnector(BaseConnector):
 
     @property
     def supports_push(self) -> bool:
-        """WeCom uses webhooks (read-only)."""
-        return False
+        """WeCom bot webhook can post messages to its bound chat."""
+        return True
 
     async def authenticate(self, credentials: dict) -> AuthResult:
         """Complete WeCom authentication.
@@ -101,12 +101,37 @@ class WeComConnector(BaseConnector):
         return []
 
     async def put_item(self, item: ConnectorItem) -> str:
-        """Push item to WeCom (not supported)."""
-        raise NotImplementedError("WeCom connector is read-only")
+        """Post a text message to the configured WeCom bot webhook.
+
+        WeCom bot webhooks can only send to the chat they are bound to, so no
+        channel selection is needed. Returns the WeCom ``msgid`` (may be empty
+        for some webhook types) on success.
+        """
+        if not self._webhook_url:
+            raise RuntimeError("WeCom webhook URL not configured")
+
+        import httpx
+
+        text = item.content or item.title
+        if not text:
+            raise ValueError("Cannot push an empty WeCom message")
+
+        async with httpx.AsyncClient(timeout=30) as client:
+            resp = await client.post(
+                self._webhook_url,
+                json={"msgtype": "text", "text": {"content": text}},
+            )
+            data = resp.json()
+
+        if data.get("errcode") != 0:
+            raise RuntimeError(f"WeCom push failed: {data.get('errmsg')}")
+
+        return data.get("msgid", "") or ""
 
     async def delete_item(self, item_id: str) -> bool:
-        """Delete item from WeCom (not supported)."""
-        raise NotImplementedError("WeCom connector is read-only")
+        """Delete is not supported by WeCom bot webhooks."""
+        logger.warning("WeCom bot webhooks do not support message deletion")
+        return False
 
     def transform_to_claim(self, item: ConnectorItem) -> dict:
         """Convert WeCom message to SAW Claim dict."""
@@ -129,8 +154,20 @@ class WeComConnector(BaseConnector):
         }
 
     def transform_from_claim(self, claim: dict) -> ConnectorItem:
-        """Convert SAW Claim to WeCom item (not supported)."""
-        raise NotImplementedError("WeCom connector is read-only")
+        """Convert a SAW Claim into a WeCom ConnectorItem for pushing."""
+        meta = claim.get("metadata", {}) or {}
+        return ConnectorItem(
+            id=str(claim.get("source_id") or claim.get("id") or ""),
+            title=str(claim.get("title", "")),
+            content=str(claim.get("content", "")),
+            url=claim.get("source_url"),
+            author=claim.get("author"),
+            metadata={
+                "chat_id": meta.get("chat_id"),
+                "platform": "wecom",
+                "source_platform": "saw",
+            },
+        )
 
     async def process_webhook(
         self,

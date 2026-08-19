@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { api } from '../lib/api';
 import type { DashboardConnector, DashboardResponse, ConnectorError, SyncTriggerResponse } from '../types/integrations';
 import type { ConnectorHealthData, SyncProgressData } from '../types/websocket';
 
@@ -38,11 +39,7 @@ export const useIntegrationsStore = create<IntegrationsState>()(
       fetchDashboard: async () => {
         set({ loading: true, error: null });
         try {
-          const response = await fetch(`${API_BASE}/dashboard`);
-          if (!response.ok) {
-            throw new Error(`Failed to fetch dashboard: ${response.statusText}`);
-          }
-          const data: DashboardResponse = await response.json();
+          const data = await api.get<DashboardResponse>(`${API_BASE}/dashboard`);
           set({
             connectors: data.connectors,
             systemHealth: data.system_health,
@@ -59,12 +56,8 @@ export const useIntegrationsStore = create<IntegrationsState>()(
 
       disconnectPlatform: async (platform: string) => {
         try {
-          const response = await fetch(`${API_BASE}/${encodeURIComponent(platform)}`, {
-            method: 'DELETE',
-          });
-          if (!response.ok && response.status !== 204) {
-            throw new Error(`Failed to disconnect: ${response.statusText}`);
-          }
+          // api.delete sends no body by default; a 204 has no JSON body.
+          await api.delete(`${API_BASE}/${encodeURIComponent(platform)}`);
           // Remove from local state
           const connectors = get().connectors.filter((c) => c.platform !== platform);
           set({ connectors });
@@ -78,13 +71,10 @@ export const useIntegrationsStore = create<IntegrationsState>()(
 
       triggerSync: async (platform: string): Promise<SyncTriggerResponse> => {
         try {
-          const response = await fetch(`${API_BASE}/${encodeURIComponent(platform)}/sync`, {
-            method: 'POST',
-          });
-          if (!response.ok) {
-            throw new Error(`Failed to trigger sync: ${response.statusText}`);
-          }
-          const data: SyncTriggerResponse = await response.json();
+          const data = await api.post<SyncTriggerResponse>(
+            `${API_BASE}/${encodeURIComponent(platform)}/sync`,
+            {},
+          );
 
           // Update connector state to syncing if started
           if (data.sync_started) {
@@ -105,11 +95,9 @@ export const useIntegrationsStore = create<IntegrationsState>()(
 
       getErrors: async (platform: string): Promise<ConnectorError[]> => {
         try {
-          const response = await fetch(`${API_BASE}/${encodeURIComponent(platform)}/errors`);
-          if (!response.ok) {
-            throw new Error(`Failed to fetch errors: ${response.statusText}`);
-          }
-          return await response.json();
+          return await api.get<ConnectorError[]>(
+            `${API_BASE}/${encodeURIComponent(platform)}/errors`,
+          );
         } catch (err) {
           set({
             error: err instanceof Error ? err.message : 'Failed to fetch errors',

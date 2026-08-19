@@ -22,7 +22,7 @@ class TestDiscordConnector:
     def test_connector_implements_protocol(self, connector: DiscordConnector):
         """Test 1: Connector implements UnifiedConnectorInterface."""
         assert connector.platform_name == "discord"
-        assert connector.supports_push is False  # Read-only via Gateway
+        assert connector.supports_push is True  # Bot can send messages
 
     @pytest.mark.asyncio
     async def test_authenticate_with_bot_token(self, connector: DiscordConnector):

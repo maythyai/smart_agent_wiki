@@ -34,7 +34,7 @@ class DiscordConnector(BaseConnector):
     """
 
     platform_name = "discord"
-    supports_push = False  # Read-only ingestion
+    supports_push = True  # Bot can send messages to channels it can see
 
     def __init__(self) -> None:
         """Initialize Discord connector."""
@@ -53,8 +53,8 @@ class DiscordConnector(BaseConnector):
 
     @property
     def supports_push(self) -> bool:
-        """Discord uses Gateway push (read-only)."""
-        return False
+        """Discord bot can send messages to channels."""
+        return True
 
     async def authenticate(self, credentials: dict) -> AuthResult:
         """Complete Discord authentication.
@@ -95,12 +95,53 @@ class DiscordConnector(BaseConnector):
         return []
 
     async def put_item(self, item: ConnectorItem) -> str:
-        """Push item to Discord (not supported)."""
-        raise NotImplementedError("Discord connector is read-only")
+        """Send a message to a Discord channel.
+
+        Requires ``item.metadata['channel_id']``. Returns
+        ``discord-{channel_id}-{message_id}`` on success.
+        """
+        if not self._bot or not self._bot.is_ready():
+            raise RuntimeError("Discord bot is not connected")
+
+        channel_id = item.metadata.get("channel_id")
+        if not channel_id:
+            raise ValueError("channel_id is required in item.metadata to push to Discord")
+
+        channel = self._bot.get_channel(int(channel_id))
+        if channel is None:
+            raise RuntimeError(f"Discord channel {channel_id} not found or not visible to bot")
+
+        text = item.content or item.title
+        if not text:
+            raise ValueError("Cannot push an empty Discord message")
+
+        message = await channel.send(text)
+        return f"discord-{channel_id}-{message.id}"
 
     async def delete_item(self, item_id: str) -> bool:
-        """Delete item from Discord (not supported)."""
-        raise NotImplementedError("Discord connector is read-only")
+        """Delete a previously posted Discord message.
+
+        ``item_id`` must be the ``discord-{channel_id}-{message_id}`` form
+        returned by ``put_item``.
+        """
+        if not self._bot or not self._bot.is_ready():
+            return False
+
+        parts = item_id.split("-", 2)
+        if len(parts) < 3 or parts[0] != "discord":
+            logger.warning("Discord delete requires 'discord-{channel}-{msg}' id, got %s", item_id)
+            return False
+        _, channel_id, msg_id = parts
+        channel = self._bot.get_channel(int(channel_id))
+        if channel is None:
+            return False
+        try:
+            msg = await channel.fetch_message(int(msg_id))
+            await msg.delete()
+            return True
+        except Exception as e:
+            logger.warning("Discord delete failed for %s: %s", item_id, e)
+            return False
 
     def transform_to_claim(self, item: ConnectorItem) -> dict:
         """Convert Discord message to SAW Claim dict."""
@@ -130,8 +171,20 @@ class DiscordConnector(BaseConnector):
         }
 
     def transform_from_claim(self, claim: dict) -> ConnectorItem:
-        """Convert SAW Claim to Discord item (not supported)."""
-        raise NotImplementedError("Discord connector is read-only")
+        """Convert a SAW Claim into a Discord ConnectorItem for pushing."""
+        meta = claim.get("metadata", {}) or {}
+        return ConnectorItem(
+            id=str(claim.get("source_id") or claim.get("id") or ""),
+            title=str(claim.get("title", "")),
+            content=str(claim.get("content", "")),
+            url=claim.get("source_url"),
+            author=claim.get("author"),
+            metadata={
+                "channel_id": meta.get("channel_id"),
+                "platform": "discord",
+                "source_platform": "saw",
+            },
+        )
 
     async def start_gateway(self) -> None:
         """Start Discord Gateway connection.

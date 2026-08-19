@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router';
-import { usePage, useUpdatePage } from '../hooks/usePage';
+import { usePage, useUpdatePage, useDeletePage, useUpdateProperties } from '../hooks/usePage';
 import { WikiEditorWrapper } from '../components/editor/WikiEditor';
 import { useStore } from '../stores';
 import { ConfidenceBadge } from '../components/common/ConfidenceBadge';
@@ -8,7 +8,7 @@ import { BacklinksPanel } from '../components/links/BacklinksPanel';
 import { RelatedPagesPanel } from '../components/related/RelatedPagesPanel';
 import EntityTypeBadge from '../components/entity/EntityTypeBadge';
 import PropertiesEditor from '../components/entity/PropertiesEditor';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 /**
  * Page component displays a Wiki page with view/edit modes.
@@ -32,6 +32,20 @@ export default function Page() {
   // Query and mutation hooks
   const { data: page, isLoading, error } = usePage(slug || '');
   const { mutate: updatePage, isPending: isSaving } = useUpdatePage(slug || '');
+  const { mutate: deletePage, isPending: isDeleting } = useDeletePage(slug || '');
+  const { mutate: updateProperties, isPending: isSavingProps } = useUpdateProperties(slug || '');
+
+  // Local editable copy of the page's properties; re-syncs when the page
+  // reloads (e.g. after a save invalidates and refetches the query).
+  const [localProperties, setLocalProperties] = useState<Record<string, unknown>>(
+    page?.properties ?? {},
+  );
+  const [propsSaved, setPropsSaved] = useState(true);
+
+  useEffect(() => {
+    setLocalProperties(page?.properties ?? {});
+    setPropsSaved(true);
+  }, [page?.properties]);
 
   // Handle save action — 断裂点 #4 fix: actually call updatePage
   const handleSave = (content: string) => {
@@ -56,6 +70,40 @@ export default function Page() {
   // Handle edit mode toggle
   const handleEdit = () => {
     setMode('edit');
+  };
+
+  // Handle delete with confirmation — wires the previously-unused useDeletePage hook
+  const handleDelete = () => {
+    if (window.confirm(`Delete "${page?.title ?? slug}"? This cannot be undone.`)) {
+      deletePage();
+    }
+  };
+
+  // Handle Markdown export — browser-side download (works in `saw web`, no Tauri needed)
+  const handleExport = () => {
+    const content = page?.content ?? '';
+    const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${slug}.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  // Track property edits and persist them via the PATCH /properties endpoint.
+  const handlePropertiesChange = (next: Record<string, unknown>) => {
+    setLocalProperties(next);
+    setPropsSaved(false);
+  };
+
+  const handleSaveProperties = () => {
+    updateProperties(
+      { properties: localProperties },
+      { onSuccess: () => setPropsSaved(true) },
+    );
   };
 
   // Handle cancel - revert to view mode
@@ -148,12 +196,28 @@ export default function Page() {
         <div className="flex items-center justify-between border-b pb-3">
           <div className="flex items-center gap-2">
             {mode === 'view' ? (
-              <button
-                onClick={handleEdit}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-medium"
-              >
-                Edit
-              </button>
+              <>
+                <button
+                  onClick={handleEdit}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-medium"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={handleExport}
+                  className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200 rounded font-medium"
+                  title="Download this page as Markdown"
+                >
+                  Export
+                </button>
+                <button
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                  className="px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-900/30 dark:hover:bg-red-900/50 dark:text-red-300 rounded font-medium disabled:opacity-50"
+                >
+                  {isDeleting ? 'Deleting...' : 'Delete'}
+                </button>
+              </>
             ) : (
               <>
                 <button
@@ -196,11 +260,25 @@ export default function Page() {
 
       {/* Properties Editor */}
       {page.entity_type && page.entity_type !== 'note' && (
-        <div className="mt-4 bg-white rounded-lg border shadow-sm p-4">
+        <div className="mt-4 bg-white rounded-lg border shadow-sm p-4 dark:bg-gray-800 dark:border-gray-700">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-semibold text-gray-500 dark:text-gray-400">
+              Properties
+            </span>
+            {mode === 'edit' && (
+              <button
+                onClick={handleSaveProperties}
+                disabled={isSavingProps || propsSaved}
+                className="px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded font-medium disabled:opacity-50"
+              >
+                {isSavingProps ? 'Saving...' : propsSaved ? 'Saved' : 'Save Properties'}
+              </button>
+            )}
+          </div>
           <PropertiesEditor
             typeId={page.entity_type}
-            properties={page.properties ?? {}}
-            onChange={() => {}} // read-only in view mode for now
+            properties={localProperties}
+            onChange={handlePropertiesChange}
             readOnly={mode === 'view'}
           />
         </div>

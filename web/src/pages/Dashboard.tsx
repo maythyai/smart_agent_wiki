@@ -2,6 +2,7 @@ import { useWebSocket } from '../hooks/useWebSocket';
 import { AgentList } from '../components/dashboard/AgentList';
 import { ConnectionStatus } from '../components/dashboard/ConnectionStatus';
 import { useStore } from '../stores';
+import { api } from '../lib/api';
 import { useState, useEffect } from 'react';
 
 interface StatsData {
@@ -34,23 +35,45 @@ export default function Dashboard() {
     uptime_hours: 0,
   });
 
-  // Fetch statistics periodically
+  // Workflow launch state — POSTing starts a background workflow whose
+  // progress streams in over WebSocket (see activeWorkflow / agents below).
+  const [wfTopic, setWfTopic] = useState('');
+  const [launching, setLaunching] = useState(false);
+
+  const handleLaunchWorkflow = async () => {
+    setLaunching(true);
+    try {
+      await api.post('/api/v1/workflows?workflow=knowledge_review', {
+        question: wfTopic.trim() || 'recent wiki changes',
+      });
+    } catch (err) {
+      console.error('Failed to launch workflow:', err);
+    } finally {
+      setLaunching(false);
+    }
+  };
+
+  // Fetch statistics periodically. Goes through api.ts so the JWT
+  // Authorization header is attached (the dashboard-stats router is
+  // auth-gated) and a 401 redirects to /login instead of being swallowed.
   useEffect(() => {
+    let active = true;
     const fetchStats = async () => {
       try {
-        const response = await fetch('/api/dashboard/stats');
-        if (response.ok) {
-          const data = await response.json();
-          setStats(data);
-        }
+        const data = await api.get<StatsData>('/api/dashboard/stats');
+        if (active) setStats(data);
       } catch (err) {
-        console.error('Failed to fetch stats:', err);
+        // api.ts already handles 401 → /login; just log other failures.
+        if (active) console.error('Failed to fetch stats:', err);
       }
     };
 
     fetchStats();
     const interval = setInterval(fetchStats, 30000); // Refresh every 30s
-    return () => clearInterval(interval);
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
   }, []);
 
   // Count agents by status
@@ -225,6 +248,36 @@ export default function Dashboard() {
             className="px-3 py-1.5 text-sm bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
           >
             Manage Integrations
+          </button>
+        </div>
+      </div>
+
+      {/* Run a workflow */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-6 border border-gray-200 dark:border-gray-700">
+        <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+          Run Workflow
+        </h3>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+          Launch a search → synthesize → review → publish pipeline. Progress
+          appears live in the banner and agent list below.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <input
+            type="text"
+            value={wfTopic}
+            onChange={(e) => setWfTopic(e.target.value)}
+            placeholder="Topic or question (e.g. 'react hooks')"
+            className="flex-1 px-3 py-2 text-sm border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !launching) handleLaunchWorkflow();
+            }}
+          />
+          <button
+            onClick={handleLaunchWorkflow}
+            disabled={launching}
+            className="px-4 py-2 text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 transition-colors font-medium"
+          >
+            {launching ? 'Launching...' : 'Run'}
           </button>
         </div>
       </div>

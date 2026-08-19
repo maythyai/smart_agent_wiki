@@ -44,6 +44,39 @@ def _contradiction_detector(request: Request):
     return engine
 
 
+def _wiki_repo(request: Request):
+    """Get the wiki repository from the query engine (best-effort)."""
+    engine = getattr(request.app.state, "query", None)
+    if engine is None:
+        return None
+    return getattr(engine, "_wiki_repo", None) or getattr(engine, "wiki", None)
+
+
+def _graph_traverse(request: Request):
+    """Get the GraphTraverse from the query engine (best-effort)."""
+    engine = getattr(request.app.state, "query", None)
+    if engine is None:
+        return None
+    return getattr(engine, "_graph", None) or getattr(engine, "graph", None)
+
+
+def _write_queue_govern(request: Request):
+    """Get the write queue from app.state (best-effort)."""
+    return getattr(request.app.state, "write_queue", None)
+
+
+def _safe_count(repo, sql: str, *params) -> int:
+    """Run a COUNT query against the claims repo, returning 0 on any error."""
+    try:
+        conn = getattr(repo, "_conn", None)
+        if conn is None:
+            return 0
+        row = conn.execute(sql, params).fetchone()
+        return int(row[0]) if row else 0
+    except Exception:
+        return 0
+
+
 # ── Claims ───────────────────────────────────────────────────────────
 
 
@@ -240,13 +273,17 @@ async def verify_claims(
 @router.post("/lint")
 async def lint_knowledge(
     scope: str = Query("full", description="full / quick"),
+    request: Request = None,
     repo=Depends(_claims_repo),
 ):
     """Run a health check on the knowledge base (per api_contract §5.4)."""
     try:
         total = repo.count()
-        # Count by confidence level
-        distributions: dict[str, int] = {}
+    except Exception:
+        total = 0
+
+    distributions: dict[str, int] = {}
+    try:
         if hasattr(repo, "_conn"):
             rows = repo._conn.execute(
                 "SELECT confidence, COUNT(*) FROM claim WHERE deleted_at IS NULL GROUP BY confidence"
@@ -254,17 +291,44 @@ async def lint_knowledge(
             for conf, cnt in rows:
                 distributions[conf] = cnt
     except Exception:
-        total = 0
-        distributions = {}
+        pass
+
+    # Contradictions: pending = unresolved, resolved = resolved_at set.
+    pending = _safe_count(
+        repo, "SELECT COUNT(*) FROM contradictions WHERE resolved_at IS NULL"
+    )
+    resolved = _safe_count(
+        repo, "SELECT COUNT(*) FROM contradictions WHERE resolved_at IS NOT NULL"
+    )
+
+    # Orphan pages + broken links via the Govern Linter (real scanner).
+    orphan_pages = 0
+    broken_links = 0
+    wiki = _wiki_repo(request)
+    if wiki is not None:
+        try:
+            from saw.engines.govern.linter import Linter
+
+            report = Linter(repo, wiki).lint()
+            orphan_pages = len(getattr(report, "orphan_pages", []) or [])
+            broken_links = len(getattr(report, "broken_links", []) or [])
+        except Exception as e:  # pragma: no cover — lint is best-effort
+            import logging
+
+            logging.getLogger(__name__).warning("Linter run failed: %s", e)
+
+    # Overall health: degrade as orphans/broken/contradictions rise.
+    penalty = orphan_pages + broken_links + pending
+    overall = max(0.0, 1.0 - (penalty / 100.0)) if total or penalty else 0.0
 
     return {
         "report": {
-            "overall_health": 1.0 if total > 0 else 0.0,
+            "overall_health": round(overall, 3),
             "total_claims": total,
             "confidence_distribution": distributions,
-            "contradictions": {"pending": 0, "resolved": 0},
-            "orphan_pages": 0,
-            "broken_links": 0,
+            "contradictions": {"pending": pending, "resolved": resolved},
+            "orphan_pages": orphan_pages,
+            "broken_links": broken_links,
         },
     }
 
@@ -277,31 +341,57 @@ async def blast_radius(
     target_type: str = Query("claim", description="claim / page"),
     target_id: str = Query(..., description="Target UUID or slug"),
     depth: int = Query(2, ge=1, le=5),
+    request: Request = None,
     repo=Depends(_claims_repo),
 ):
     """Compute the blast radius of a modification (per api_contract §5.4)."""
     if target_type not in ("claim", "page"):
         raise HTTPException(400, "target_type must be 'claim' or 'page'")
 
-    # Simplified: count related claims via claim_relation
-    direct = 0
-    try:
-        if hasattr(repo, "_conn"):
-            direct = repo._conn.execute(
-                "SELECT COUNT(*) FROM claim_relation WHERE source_claim_uuid = ? OR target_claim_uuid = ?",
-                (target_id, target_id),
-            ).fetchone()[0]
-    except Exception:
-        pass
+    # Direct impact count via claim_relation (fallback when analyzer absent).
+    direct = _safe_count(
+        repo,
+        "SELECT COUNT(*) FROM claim_relation WHERE source_claim_uuid = ? OR target_claim_uuid = ?",
+        target_id, target_id,
+    )
+
+    affected_claims: list[str] = []
+    affected_pages: list[str] = []
+    risk_level = "low"
+
+    wiki = _wiki_repo(request)
+    graph = _graph_traverse(request)
+    if wiki is not None and graph is not None:
+        try:
+            from saw.engines.govern.blast_radius import BlastRadiusAnalyzer
+
+            analyzer = BlastRadiusAnalyzer(repo, wiki, graph)
+            if target_type == "claim":
+                report = analyzer.analyze(target_id)
+            else:
+                report = analyzer.analyze_page(target_id)
+            affected_claims = list(getattr(report, "affected_claims", []) or [])
+            affected_pages = list(getattr(report, "affected_pages", []) or [])
+            risk_score = int(getattr(report, "risk_score", 0) or 0)
+            if risk_score >= 50:
+                risk_level = "high"
+            elif risk_score >= 20:
+                risk_level = "medium"
+        except Exception as e:  # pragma: no cover — best-effort
+            import logging
+
+            logging.getLogger(__name__).warning("Blast-radius analysis failed: %s", e)
+
+    indirect = max(0, len(affected_claims) - direct)
 
     return {
         "target_type": target_type,
         "target_id": target_id,
         "direct_impacts": direct,
-        "indirect_impacts": 0,
-        "affected_pages": [],
-        "affected_claims": [],
-        "risk_level": "medium" if direct > 5 else "low",
+        "indirect_impacts": indirect,
+        "affected_pages": affected_pages,
+        "affected_claims": affected_claims,
+        "risk_level": risk_level,
     }
 
 
@@ -324,19 +414,63 @@ async def get_status(request: Request, repo=Depends(_claims_repo)):
     except Exception:
         pass
 
-    # Count wiki pages from the query engine's wiki repo
+    # Wiki page count + orphan pages.
     wiki_count = 0
+    orphan_pages = 0
+    wiki = _wiki_repo(request)
+    if wiki is not None:
+        try:
+            wiki_count = len(wiki.list_pages())
+        except Exception:
+            pass
+        try:
+            from saw.engines.govern.linter import Linter
+
+            orphan_pages = len(getattr(Linter(repo, wiki).lint(), "orphan_pages", []) or [])
+        except Exception:
+            pass
+
+    # Graph entity / relation counts (raw SQL on the claims DB).
+    entities = _safe_count(repo, "SELECT COUNT(*) FROM entity")
+    relations = _safe_count(repo, "SELECT COUNT(*) FROM entity_relation")
+
+    # Outbox depth from the write queue.
+    wq = _write_queue_govern(request)
+    outbox = {"pending": 0, "failed": 0, "dead_letter": 0}
+    if wq is not None:
+        try:
+            outbox["pending"] = len(wq.get_pending() or [])
+        except Exception:
+            pass
+        try:
+            outbox["dead_letter"] = len(wq.get_dead_letter() or [])
+        except Exception:
+            pass
+        try:
+            outbox["failed"] = _safe_count(
+                repo, "SELECT COUNT(*) FROM write_outbox WHERE status = 'failed'"
+            )
+        except Exception:
+            pass
+
+    # Vault: count + size of the local vault/ directory if present.
+    doc_count = 0
+    total_size_mb = 0.0
     try:
-        engine = request.app.state.query
-        if hasattr(engine, "_wiki_repo") and engine._wiki_repo is not None:
-            wiki_count = len(engine._wiki_repo.list_pages())
+        from pathlib import Path
+
+        vault = Path("vault")
+        if vault.exists():
+            files = [f for f in vault.rglob("*") if f.is_file()]
+            doc_count = len(files)
+            total_size_mb = round(sum(f.stat().st_size for f in files) / (1024 * 1024), 3)
     except Exception:
         pass
 
     return {
-        "vault": {"document_count": 0, "total_size_mb": 0},
+        "vault": {"document_count": doc_count, "total_size_mb": total_size_mb},
         "claims": {"total": total_claims, "by_confidence": by_confidence},
-        "wiki": {"page_count": wiki_count, "orphan_pages": 0},
-        "graph": {"entities": 0, "relations": 0},
-        "outbox": {"pending": 0, "failed": 0, "dead_letter": 0},
+        "wiki": {"page_count": wiki_count, "orphan_pages": orphan_pages},
+        "graph": {"entities": entities, "relations": relations},
+        "outbox": outbox,
     }

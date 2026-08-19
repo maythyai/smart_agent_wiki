@@ -10,7 +10,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any
 
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, Request, Response
 
 
 router = APIRouter(tags=["health"])
@@ -107,15 +107,57 @@ async def readiness_check(response: Response):
 
 
 @router.get("/metrics")
-async def metrics():
+async def metrics(request: Request):
     """Prometheus-compatible metrics endpoint.
 
-    Returns basic application metrics.
+    Returns real counts: registered users, wiki pages, and claims. Each is
+    best-effort — a missing component yields 0 rather than a 500.
     """
-    # In production, this would query the database for actual counts
+    from pathlib import Path
+
+    saw_version = "2.0.0"
+
+    # Claims total via the query engine's claims repo.
+    claims_total = 0
+    try:
+        engine = getattr(request.app.state, "query", None)
+        repo = (
+            getattr(engine, "_claims_repo", None) or getattr(engine, "claims_repo", None)
+            if engine is not None else None
+        )
+        if repo is not None:
+            claims_total = int(repo.count())
+    except Exception:
+        claims_total = 0
+
+    # Pages: count markdown files under the wiki root (cwd), matching the
+    # dashboard-stats pattern.
+    pages_total = 0
+    try:
+        pages_total = sum(1 for _ in Path(".").rglob("*.md"))
+    except Exception:
+        pass
+
+    # Users: best-effort count. SQLAlchemyUserStore exposes a session factory;
+    # InMemoryUserStore exposes ._users.
+    users_total = 0
+    try:
+        from saw.auth.user_store import get_user_store
+
+        store = get_user_store()
+        if hasattr(store, "_users"):
+            users_total = len(getattr(store, "_users", {}) or {})
+        elif hasattr(store, "count"):
+            try:
+                users_total = int(store.count())  # type: ignore[attr-defined]
+            except Exception:
+                users_total = 0
+    except Exception:
+        users_total = 0
+
     return {
-        "saw_users_total": 0,
-        "saw_vaults_total": 0,
-        "saw_claims_total": 0,
-        "saw_version": "2.0.0",
+        "saw_users_total": users_total,
+        "saw_pages_total": pages_total,
+        "saw_claims_total": claims_total,
+        "saw_version": saw_version,
     }

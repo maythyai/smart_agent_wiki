@@ -23,7 +23,7 @@ class TestWeComConnector:
     def test_connector_implements_protocol(self, connector: WeComConnector):
         """Test 1: Connector implements UnifiedConnectorInterface."""
         assert connector.platform_name == "wecom"
-        assert connector.supports_push is False  # Read-only via webhooks
+        assert connector.supports_push is True  # Bot webhook can post messages
 
     @pytest.mark.asyncio
     async def test_authenticate_with_webhook_url(self, connector: WeComConnector):

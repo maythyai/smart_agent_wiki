@@ -33,7 +33,7 @@ class FeishuConnector(BaseConnector):
     """
 
     platform_name = "feishu"
-    supports_push = False  # Read-only ingestion via webhooks
+    supports_push = True  # App can send IM messages (im:message scope)
 
     def __init__(self) -> None:
         """Initialize Feishu connector."""
@@ -50,8 +50,8 @@ class FeishuConnector(BaseConnector):
 
     @property
     def supports_push(self) -> bool:
-        """Feishu uses webhooks (read-only)."""
-        return False
+        """Feishu app can send IM messages."""
+        return True
 
     async def authenticate(self, credentials: dict) -> AuthResult:
         """Complete Feishu authentication.
@@ -119,12 +119,62 @@ class FeishuConnector(BaseConnector):
         return items
 
     async def put_item(self, item: ConnectorItem) -> str:
-        """Push item to Feishu (not supported)."""
-        raise NotImplementedError("Feishu connector is read-only")
+        """Send a text message to a Feishu chat.
+
+        Requires ``item.metadata['chat_id']``. Returns the Feishu ``message_id``
+        on success.
+        """
+        if not self._token_manager:
+            raise RuntimeError("Feishu connector not authenticated")
+
+        chat_id = item.metadata.get("chat_id") or item.metadata.get("receive_id")
+        if not chat_id:
+            raise ValueError("chat_id is required in item.metadata to push to Feishu")
+
+        import httpx
+        import json
+
+        token = await self._token_manager.get_tenant_token()
+        body = {
+            "receive_id": chat_id,
+            "msg_type": "text",
+            "content": json.dumps({"text": item.content or item.title}),
+        }
+        async with httpx.AsyncClient(timeout=30) as client:
+            resp = await client.post(
+                "https://open.feishu.cn/open-apis/im/v1/messages",
+                params={"receive_id_type": "chat_id"},
+                headers={
+                    "Authorization": f"Bearer {token}",
+                    "Content-Type": "application/json",
+                },
+                json=body,
+            )
+            data = resp.json()
+
+        if data.get("code") != 0:
+            raise RuntimeError(f"Feishu push failed: {data.get('msg')}")
+
+        return data.get("data", {}).get("message_id", "")
 
     async def delete_item(self, item_id: str) -> bool:
-        """Delete item from Feishu (not supported)."""
-        raise NotImplementedError("Feishu connector is read-only")
+        """Delete a previously posted Feishu message by message_id."""
+        if not self._token_manager:
+            return False
+        try:
+            import httpx
+
+            token = await self._token_manager.get_tenant_token()
+            async with httpx.AsyncClient(timeout=30) as client:
+                resp = await client.delete(
+                    f"https://open.feishu.cn/open-apis/im/v1/messages/{item_id}",
+                    headers={"Authorization": f"Bearer {token}"},
+                )
+                data = resp.json()
+            return data.get("code") == 0
+        except Exception as e:
+            logger.warning("Feishu delete failed for %s: %s", item_id, e)
+            return False
 
     def transform_to_claim(self, item: ConnectorItem) -> dict:
         """Convert Feishu message to SAW Claim dict."""
@@ -149,8 +199,20 @@ class FeishuConnector(BaseConnector):
         }
 
     def transform_from_claim(self, claim: dict) -> ConnectorItem:
-        """Convert SAW Claim to Feishu item (not supported)."""
-        raise NotImplementedError("Feishu connector is read-only")
+        """Convert a SAW Claim into a Feishu ConnectorItem for pushing."""
+        meta = claim.get("metadata", {}) or {}
+        return ConnectorItem(
+            id=str(claim.get("source_id") or claim.get("id") or ""),
+            title=str(claim.get("title", "")),
+            content=str(claim.get("content", "")),
+            url=claim.get("source_url"),
+            author=claim.get("author"),
+            metadata={
+                "chat_id": meta.get("chat_id"),
+                "platform": "feishu",
+                "source_platform": "saw",
+            },
+        )
 
     async def get_tenant_token(self) -> str:
         """Get tenant access token.

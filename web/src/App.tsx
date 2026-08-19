@@ -4,6 +4,7 @@ import { CommandPalette } from './components/search/CommandPalette';
 import { QuickCapture } from './components/capture/QuickCapture';
 import { useStore } from './stores';
 import { useAuthStore } from './stores/authStore';
+import { api } from './lib/api';
 
 /**
  * Main App layout with responsive navigation.
@@ -15,8 +16,18 @@ export default function App() {
   const navigate = useNavigate();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const logout = useAuthStore((s) => s.logout);
+  const refreshToken = useAuthStore((s) => s.refreshToken);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    // Revoke the refresh token server-side before clearing local state,
+    // so the token cannot be reused after logout.
+    if (refreshToken) {
+      try {
+        await api.post('/api/auth/logout', { refresh_token: refreshToken });
+      } catch {
+        // Best-effort: clear the local session even if the call fails.
+      }
+    }
     logout();
     navigate('/login');
   };

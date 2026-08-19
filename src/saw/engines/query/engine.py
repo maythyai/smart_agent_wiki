@@ -186,19 +186,39 @@ class QueryEngine:
 
         sources: list[dict] = []
 
-        for i, (uuid, content, score) in enumerate(
+        for i, (doc_id, content, score) in enumerate(
             zip(result.claim_uuids, result.contents, result.scores), 1
         ):
-            claim = self._claims_repo.get_by_id(uuid)
+            claim = self._claims_repo.get_by_id(doc_id)
             if claim:
                 answer_lines.append(f"{i}. {claim.content[:100]}...")
                 sources.append({
-                    "claim_uuid": uuid,
+                    "claim_uuid": doc_id,
                     "content": claim.content,
                     "confidence": claim.confidence.name.lower(),
                     "source_uuid": claim.source_uuid,
                     "page_number": claim.page_number,
                     "line_number": claim.line_number,
+                    "score": score,
+                })
+                continue
+            # doc_id is a wiki slug (FTS rows written by WikiIndexer), not a
+            # claim UUID — surface the actual page so wiki-only content is
+            # searchable instead of being silently dropped.
+            page = self._wiki_repo.read(doc_id) if self._wiki_repo else None
+            if page is not None:
+                answer_lines.append(f"{i}. [[{doc_id}]] {page.title}")
+                sources.append({
+                    "page_slug": doc_id,
+                    "title": page.title,
+                    "content": page.content,
+                    "score": score,
+                })
+            else:
+                answer_lines.append(f"{i}. {(content or '')[:100]}...")
+                sources.append({
+                    "doc_id": doc_id,
+                    "content": (content or "")[:200],
                     "score": score,
                 })
 

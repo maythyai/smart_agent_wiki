@@ -66,9 +66,9 @@ class ConflictResolveRequest(BaseModel):
 
 
 async def get_session():
-    """Get database session."""
-    session_factory = get_session_factory()
-    async for session in session_factory():
+    """Get database session (delegates to the shared async session helper)."""
+    from saw.db.session import get_session as _shared_session
+    async with _shared_session() as session:
         yield session
 
 

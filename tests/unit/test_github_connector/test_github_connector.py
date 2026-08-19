@@ -121,7 +121,7 @@ class MockCoreRateLimit:
 
     limit = 5000
     remaining = 5000
-    reset = utcnow()
+    reset = datetime.now(timezone.utc)
 
 
 def utcnow() -> datetime:

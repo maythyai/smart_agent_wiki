@@ -43,11 +43,27 @@ export default function Login() {
       });
 
       setTokens(response.access_token, response.refresh_token);
-      setUser({
-        id: '',
-        email,
-        role: 'viewer',
-      });
+
+      // Fetch the real user profile so the UI has id/role/display_name
+      // instead of a stubbed empty id.
+      try {
+        const me = await api.get<{
+          id: string;
+          email: string;
+          role: string;
+          display_name?: string;
+        }>('/api/auth/me');
+        setUser({
+          id: me.id,
+          email: me.email,
+          role: me.role,
+          display_name: me.display_name,
+        });
+      } catch {
+        // Profile fetch failed — keep the session authenticated with a
+        // minimal user object so the user is not blocked.
+        setUser({ id: '', email, role: 'viewer' });
+      }
 
       navigate('/dashboard');
     } catch (err) {

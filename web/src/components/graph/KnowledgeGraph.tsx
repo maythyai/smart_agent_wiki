@@ -14,6 +14,7 @@ interface KnowledgeGraphProps {
   depth?: number;
   maxNodes?: number;
   onNodeSelect?: (nodeId: string) => void;
+  onReady?: (cy: Core) => void;
 }
 
 export function KnowledgeGraph({
@@ -21,6 +22,7 @@ export function KnowledgeGraph({
   depth = 2,
   maxNodes = 50,
   onNodeSelect,
+  onReady,
 }: KnowledgeGraphProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const cyRef = useRef<Core | null>(null);
@@ -109,11 +111,15 @@ export function KnowledgeGraph({
 
     // Per D-11: Drag support is built-in with Cytoscape
 
+    // Expose the Cytoscape instance to the parent so controls (zoom/fit)
+    // can drive it directly — fixes the previous no-op GraphControls handlers.
+    onReady?.(cyRef.current);
+
     return () => {
       cyRef.current?.destroy();
       cyRef.current = null;
     };
-  }, [filteredData, viewMode, selectNode, onNodeSelect, navigate]);
+  }, [filteredData, viewMode, selectNode, onNodeSelect, navigate, onReady]);
 
   // Update selection state
   useEffect(() => {

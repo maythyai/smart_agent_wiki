@@ -34,6 +34,13 @@ class PageUpdate(BaseModel):
     properties: dict[str, Any] | None = None
 
 
+class PagePropertiesUpdate(BaseModel):
+    """Partial update of a page's entity_type and/or properties."""
+
+    entity_type: str | None = None
+    properties: dict[str, Any] | None = None
+
+
 class PageDelete(BaseModel):
     """Page delete request (per D-16)."""
 

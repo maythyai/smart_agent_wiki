@@ -54,25 +54,29 @@ class BriefHealthResponse(BaseModel):
 
 # Dependency to get health monitor
 
-async def get_health_monitor() -> HealthMonitor:
-    """Get HealthMonitor instance.
+async def get_health_monitor():
+    """Yield a HealthMonitor backed by the shared async session.
 
-    Note: In production, this would use dependency injection.
-    For now, creates a new instance with session.
+    Uses ``saw.db.session.get_session`` so the schema is bootstrapped on
+    first use (the ``sync_state`` / connector tables are created if missing)
+    and the session stays open for the duration of the request. Previously
+    this constructed the monitor inside an ``async with`` that closed the
+    session before the handler could query it.
     """
     try:
-        from saw.db.config import get_async_engine
-        from sqlalchemy.ext.asyncio import async_sessionmaker
+        from saw.db.session import get_session
 
-        engine = get_async_engine()
-        async_session = async_sessionmaker(engine, expire_on_commit=False)
-
-        async with async_session() as session:
-            return HealthMonitor(session)
+        async with get_session() as session:
+            yield HealthMonitor(session)
     except (ImportError, ModuleNotFoundError):
         raise HTTPException(
             status_code=503,
             detail="Health monitor unavailable (aiosqlite not installed)",
+        )
+    except Exception as e:  # pragma: no cover — degrade to 503, never 500-crash
+        raise HTTPException(
+            status_code=503,
+            detail=f"Health monitor unavailable: {e}",
         )
 
 

@@ -117,3 +117,14 @@ class WikiRepository:
     def count(self) -> int:
         """Count total wiki pages."""
         return sum(1 for _ in self._root.rglob("*.md"))
+
+    def delete(self, path: str) -> bool:
+        """Delete a wiki page file. Returns True if a file was removed."""
+        page_path = self._root / path
+        if not page_path.is_file():
+            return False
+        try:
+            page_path.unlink()
+            return True
+        except OSError as e:
+            raise StorageError(f"Failed to delete wiki page {path}: {e}") from e

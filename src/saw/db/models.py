@@ -92,7 +92,7 @@ class Claim(Base):
     id: Mapped[str] = mapped_column(String, primary_key=True, default=generate_uuid)
     vault_id: Mapped[str] = mapped_column(String, ForeignKey("vaults.id"), nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)
-    content_hash: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    content_hash: Mapped[str] = mapped_column(String(64), nullable=False)
     source_uuid: Mapped[str] = mapped_column(String, nullable=False)
     confidence: Mapped[int] = mapped_column(Integer, default=1)
     source_mark: Mapped[int] = mapped_column(Integer, default=1)

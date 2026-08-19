@@ -9,7 +9,7 @@ import logging
 from datetime import datetime, timezone
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi import status as http_status
 from pydantic import BaseModel, Field
 from sqlalchemy import select, desc
@@ -18,9 +18,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from saw.connectors.registry import ConnectorRegistry
 from saw.connectors.health_monitor import HealthMonitor, HealthStatus
 from saw.connectors.sync_status import SyncStatusTracker, SyncState
+from saw.connectors.sync_engine import SyncEngine, SyncOptions, SyncMode
+from saw.connectors.protocol import SyncDirection
 from saw.db.connector_models import ConnectorConfigModel
 from saw.db.sync_models import SyncStateModel, SyncLogModel
-from saw.connectors.sync_engine import SyncEngine
 
 
 logger = logging.getLogger(__name__)
@@ -222,11 +223,15 @@ async def disconnect_platform(
 @router.post("/{platform}/sync", response_model=SyncTriggerResponse)
 async def trigger_sync(
     platform: str,
+    request: Request,
     session: AsyncSession = Depends(get_db_session),
 ) -> SyncTriggerResponse:
     """Trigger manual sync for a platform.
 
-    Rate limited to 1 request per minute per connector.
+    Runs the :class:`SyncEngine` for the registered connector and returns a
+    summary of pulled/pushed items and any errors. The sync executes inline
+    within the request so the session lifecycle stays valid; for long
+    running connectors a background task queue should replace this (TODO).
     """
     registry = ConnectorRegistry()
     connector = registry.get(platform)
@@ -248,27 +253,43 @@ async def trigger_sync(
             message="Sync already in progress"
         )
 
-    # Trigger sync (async background task)
-    # In production, this would use a task queue like Celery
+    # Construct SyncEngine with the correct (registry, write_queue, session)
+    # signature and actually run the sync. The write queue is injected via
+    # app.state so pulled items are persisted through the normal outbox.
+    write_queue = getattr(request.app.state, "write_queue", None)
+    sync_engine = SyncEngine(registry, write_queue, session)
+
+    bidirectional = _get_sync_direction(platform) == "bidirectional"
+    options = SyncOptions(
+        direction=SyncDirection.BIDIRECTIONAL if bidirectional else SyncDirection.PULL,
+        mode=SyncMode.FULL,
+        force=True,
+    )
+
     try:
-        sync_engine = SyncEngine(session)
-        # Schedule sync as background task
-        # For now, just mark as started
-        await sync_tracker.mark_sync_started(f"{platform}-main", platform)
-
-        logger.info(f"Sync triggered for platform: {platform}")
-
+        result = await sync_engine.sync(f"{platform}-main", connector, options)
+    except Exception as e:
+        logger.error(f"Sync failed for platform {platform}: {e}", exc_info=True)
         return SyncTriggerResponse(
             platform=platform,
-            sync_started=True,
-            message="Sync started successfully"
+            sync_started=False,
+            message=f"Sync failed: {e}",
         )
-    except Exception as e:
-        logger.error(f"Failed to trigger sync for {platform}: {e}")
-        raise HTTPException(
-            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to start sync: {str(e)}"
+
+    if result.success:
+        message = (
+            f"Synced {result.pulled_count} pulled, {result.pushed_count} pushed"
         )
+    else:
+        message = f"Sync completed with errors: {'; '.join(result.errors)}"
+
+    logger.info(f"Sync finished for {platform}: {message}")
+
+    return SyncTriggerResponse(
+        platform=platform,
+        sync_started=True,
+        message=message
+    )
 
 
 @router.get("/{platform}/errors", response_model=list[ConnectorError])

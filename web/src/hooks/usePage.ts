@@ -56,3 +56,28 @@ export function useDeletePage(slug: string) {
     },
   });
 }
+
+/**
+ * TanStack Query hook for updating a page's entity_type and/or properties.
+ * @param slug Page slug/identifier
+ * @returns Mutation result with mutate (updateProperties), isPending
+ */
+export function useUpdateProperties(slug: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    PageStatus,
+    Error,
+    { entity_type?: string; properties?: Record<string, unknown> }
+  >({
+    mutationFn: (data) =>
+      api.patch<PageStatus>(
+        `/api/pages/${encodeURIComponent(slug)}/properties`,
+        data,
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['page', slug] });
+      queryClient.invalidateQueries({ queryKey: ['pages'] });
+    },
+  });
+}

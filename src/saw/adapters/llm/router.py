@@ -359,6 +359,8 @@ class LLMRouter:
 
     @property
     def usage(self) -> dict:
+        """Cumulative token usage and cost as a dict (for logging/API)."""
+        return self._total_usage.to_dict()
 
     async def completion(
         self,

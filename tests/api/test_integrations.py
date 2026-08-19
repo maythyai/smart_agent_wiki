@@ -203,12 +203,27 @@ class TestSyncEndpoint:
         mock_status.state = MagicMock(value="idle")
         mock_sync_tracker.get_status.return_value = mock_status
 
-        # Mock SyncEngine
-        with patch("saw.api.integrations.SyncEngine"):
-            response = await trigger_sync(platform="notion", session=mock_session)
+        # Mock SyncEngine — configure .sync as an awaitable returning success
+        from saw.connectors.models import SyncResult, SyncDirection
+        from unittest.mock import AsyncMock
+
+        with patch("saw.api.integrations.SyncEngine") as MockEngine:
+            mock_engine = MagicMock()
+            mock_engine.sync = AsyncMock(return_value=SyncResult(
+                connector_id="notion-main",
+                direction=SyncDirection.BIDIRECTIONAL,
+                pulled_count=3,
+                pushed_count=1,
+            ))
+            MockEngine.return_value = mock_engine
+
+            mock_request = MagicMock()
+            mock_request.app.state.write_queue = None
+            response = await trigger_sync(platform="notion", request=mock_request, session=mock_session)
 
         assert response.sync_started is True
         assert response.platform == "notion"
+        assert "3 pulled" in response.message
 
     @pytest.mark.asyncio
     async def test_sync_already_in_progress(self, mock_session, mock_registry, mock_sync_tracker):
@@ -225,7 +240,9 @@ class TestSyncEndpoint:
         mock_status.state = SyncState.SYNCING
         mock_sync_tracker.get_status.return_value = mock_status
 
-        response = await trigger_sync(platform="notion", session=mock_session)
+        mock_request = MagicMock()
+        mock_request.app.state.write_queue = None
+        response = await trigger_sync(platform="notion", request=mock_request, session=mock_session)
 
         assert response.sync_started is False
         assert "already in progress" in response.message.lower()
@@ -239,7 +256,9 @@ class TestSyncEndpoint:
         mock_registry.get.return_value = None
 
         with pytest.raises(HTTPException) as exc_info:
-            await trigger_sync(platform="unknown", session=mock_session)
+            mock_request = MagicMock()
+            mock_request.app.state.write_queue = None
+            await trigger_sync(platform="unknown", request=mock_request, session=mock_session)
 
         assert exc_info.value.status_code == 404
 

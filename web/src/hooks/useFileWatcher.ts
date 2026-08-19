@@ -8,11 +8,6 @@ interface WatchConfig {
   file_types: string[];
 }
 
-interface WatchedFolder {
-  path: string;
-  config?: WatchConfig;
-}
-
 interface UseFileWatcherReturn {
   watchedFolders: string[];
   addWatchFolder: (path: string, config: WatchConfig) => Promise<void>;

@@ -75,7 +75,7 @@ class FeedEntry(Base):
     guid: Mapped[str] = mapped_column(String(2048), nullable=False)  # Original GUID from feed
     title: Mapped[str] = mapped_column(String(500), nullable=False)
     url: Mapped[Optional[str]] = mapped_column(String(2048), nullable=True)  # Entry link
-    content_hash: Mapped[Optional[str]] = mapped_column(String(64), nullable=True, index=True)
+    content_hash: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
     content: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # Full content
     summary: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # Entry summary
     published_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)

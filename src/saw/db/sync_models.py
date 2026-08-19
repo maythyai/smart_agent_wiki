@@ -41,7 +41,7 @@ class SyncStateModel(Base):
     connector_id: Mapped[str] = mapped_column(
         String(36), ForeignKey("connector_configs.id"), nullable=False, unique=True
     )
-    platform: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    platform: Mapped[str] = mapped_column(String(50), nullable=False)
     last_sync_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )

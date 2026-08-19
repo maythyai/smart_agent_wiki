@@ -21,6 +21,7 @@ from saw.drivers.web.schemas.pages import (
     PageCreate,
     PageDelete,
     PageListResponse,
+    PagePropertiesUpdate,
     PageResponse,
     PageStatus,
     PageUpdate,
@@ -184,6 +185,61 @@ async def update_page(
 
     # Enqueue atomically
     write_queue.enqueue_atomic(ops)
+
+    return PageStatus(
+        status="queued",
+        slug=slug,
+        op_id=op_id,
+    )
+
+
+@router.patch("/pages/{slug}/properties", response_model=PageStatus)
+async def update_page_properties(
+    slug: str = Path(..., description="Page slug"),
+    update: PagePropertiesUpdate = ...,
+    engine=Depends(get_query_engine),
+    write_queue=Depends(get_write_queue),
+) -> PageStatus:
+    """Update a page's entity_type and/or properties via the Write Queue.
+
+    Preserves the existing page content and all other frontmatter fields —
+    only ``entity_type`` and ``properties`` are touched. Properties are merged
+    into (not replacing) the existing property dict unless the caller supplies
+    a full dict, in which case it overwrites.
+    """
+    wiki = getattr(engine, "_wiki_repo", None) or getattr(engine, "wiki", None)
+    if wiki is None:
+        raise HTTPException(status_code=503, detail="Wiki repository unavailable")
+
+    existing = wiki.read(slug)
+    if existing is None:
+        raise HTTPException(status_code=404, detail=f"Page '{slug}' not found")
+
+    new_entity_type = update.entity_type or existing.entity_type
+    if update.properties is not None:
+        # Merge supplied properties over the existing ones.
+        new_properties = {**existing.properties, **update.properties}
+    else:
+        new_properties = existing.properties
+
+    from saw.domain.value_objects import WriteOpStatus
+    from saw.write_queue.queue import WriteOp
+
+    op_id = str(uuid.uuid4())
+    op = WriteOp(
+        op_id=op_id,
+        session_id="web-api",
+        sink_name="wiki",
+        payload={
+            "op": "write",
+            "slug": slug,
+            "content": existing.content,
+            "entity_type": new_entity_type,
+            "properties": new_properties,
+        },
+        status=WriteOpStatus.PENDING,
+    )
+    write_queue.enqueue_atomic([op])
 
     return PageStatus(
         status="queued",
