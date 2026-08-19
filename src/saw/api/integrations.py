@@ -366,8 +366,18 @@ async def get_reauth_url(
 
 
 def _get_sync_direction(platform: str) -> str:
-    """Get sync direction for a platform."""
-    # Bidirectional: Notion, Logseq
-    # Pull-only: Slack, Discord, Feishu, WeCom, GitHub
-    bidirectional = {"notion", "logseq"}
-    return "bidirectional" if platform in bidirectional else "pull"
+    """Get sync direction for a platform.
+
+    Derived from the connector's ``supports_push`` capability rather than a
+    hardcoded platform allowlist, so newly push-capable connectors (the IM
+    connectors that now implement ``put_item``) are reflected automatically
+    instead of being silently forced to pull-only. A connector that cannot
+    be resolved (e.g. its optional SDK is not installed) defaults to pull.
+    """
+    try:
+        connector = ConnectorRegistry().get(platform)
+    except Exception:
+        connector = None
+    if connector is not None and getattr(connector, "supports_push", False):
+        return "bidirectional"
+    return "pull"

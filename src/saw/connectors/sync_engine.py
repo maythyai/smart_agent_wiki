@@ -341,18 +341,30 @@ class SyncEngine:
             result.errors.append("Connector does not support push")
             return result
 
-        # Query claims modified since last_sync_at via ClaimRepository
-        from saw.adapters.storage.claims_repository import ClaimsRepository
+        # Query claims modified since last_sync_at via the claims repository.
+        # The claims DB lives at .saw/db/claims.db (the same path the web/CLI
+        # drivers open). Previously this imported a non-existent
+        # ``ClaimsRepository`` symbol and pointed at ``~/.saw/claims.db``, so
+        # sync_push always raised ImportError before reaching any put_item
+        # call — the entire push path was dead.
+        import sqlite3
         from pathlib import Path as _Path
 
-        db_path = _Path.home() / ".saw" / "claims.db"
-        if not db_path.exists():
-            result.pushed_count = 0
+        from saw.adapters.storage.claims_repository import SQLiteClaimsRepository
+
+        db_path = _Path(".saw/db/claims.db")
+        try:
+            if not db_path.exists():
+                # No claims DB → nothing to push.
+                return result
+            claims_conn = sqlite3.connect(str(db_path), check_same_thread=False)
+            repo = SQLiteClaimsRepository(claims_conn)
+        except Exception as e:
+            result.errors.append(f"Push failed: cannot open claims DB: {e}")
             return result
 
-        repo = ClaimsRepository(str(db_path))
         status = await self._status_tracker.get_status(connector.platform_name)
-        since = None if options.force or options.mode == SyncMode.FULL else status.last_sync_at
+        since = None if options.force or options.mode == SyncMode.FULL else getattr(status, "last_sync_at", None)
 
         try:
             claims = repo.list_modified_since(since) if hasattr(repo, "list_modified_since") else []
@@ -386,11 +398,14 @@ class SyncEngine:
                     },
                 )
                 try:
-                    result_id = await connector.put_item(item)
-                    if result_id:
-                        result.pushed_count += 1
-                    else:
-                        result.errors.append(f"put_item returned empty id for {item.id}")
+                    await connector.put_item(item)
+                    # Count as pushed whenever put_item returns without raising.
+                    # Some connectors (e.g. WeCom bot webhooks) cannot return a
+                    # platform message id even on a successful push — an empty
+                    # return is NOT an error. Real failures raise and are
+                    # caught below, appended to result.errors, and do not abort
+                    # the rest of the push.
+                    result.pushed_count += 1
                 except Exception as push_exc:
                     # One item failing must not abort the whole push.
                     result.errors.append(f"Push of {item.id} failed: {push_exc}")

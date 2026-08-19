@@ -223,7 +223,10 @@ class TestCreatePage:
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "queued"
-        assert data["slug"] == "new-page"
+        # create_page normalizes bare slugs to ``<slug>.md`` so the page is
+        # listed by wiki_repo.list_pages() (which globs *.md) and shares the
+        # same queryKey namespace as the list / page_updated broadcast.
+        assert data["slug"] == "new-page.md"
         mock_write_queue.enqueue_atomic.assert_called_once()
 
     def test_create_page_returns_op_id(

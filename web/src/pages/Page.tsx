@@ -79,14 +79,17 @@ export default function Page() {
     }
   };
 
-  // Handle Markdown export — browser-side download (works in `saw web`, no Tauri needed)
+  // Handle Markdown export — browser-side download (works in `saw web`, no Tauri needed).
+  // Strip a trailing ``.md`` so the file is named ``foo.md`` rather than
+  // ``foo.md.md`` (the slug already carries the extension).
   const handleExport = () => {
     const content = page?.content ?? '';
     const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${slug}.md`;
+    const base = (slug ?? '').replace(/\.md$/i, '') || 'page';
+    a.download = `${base}.md`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

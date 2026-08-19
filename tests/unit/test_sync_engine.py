@@ -166,6 +166,42 @@ class TestSyncEngine:
         assert result.pushed_count == 0
 
     @pytest.mark.asyncio
+    async def test_sync_push_counts_success_with_empty_id(
+        self, sync_engine, mock_connector, mock_session, tmp_path, monkeypatch
+    ):
+        """A connector whose put_item returns "" on success (e.g. WeCom bot
+        webhooks, which reply with no msgid) must still count as pushed,
+        not be reported as a sync error."""
+        from types import SimpleNamespace
+
+        mock_connector.put_item = AsyncMock(return_value="")
+        mock_connector.platform_name = "wecom"
+
+        # Point sync_push at a claims DB that exists + exposes one claim.
+        monkeypatch.chdir(tmp_path)
+        (tmp_path / ".saw" / "db").mkdir(parents=True)
+        (tmp_path / ".saw" / "db" / "claims.db").write_bytes(b"")
+
+        with patch("saw.adapters.storage.claims_repository.SQLiteClaimsRepository") as MockRepo:
+            claim = SimpleNamespace(
+                uuid="u-1", content="hello", title="t",
+                source_url=None, author=None,
+                created_at=None, updated_at=None, metadata={},
+            )
+            mock_repo = MockRepo.return_value
+            mock_repo.list_modified_since.return_value = [claim]
+
+            status = MagicMock()
+            status.last_sync_at = None
+            sync_engine._status_tracker.get_status = AsyncMock(return_value=status)
+
+            options = SyncOptions(direction=SyncDirection.PUSH, force=True)
+            result = await sync_engine.sync_push(mock_connector, options)
+
+        assert result.pushed_count == 1
+        assert result.errors == []
+
+    @pytest.mark.asyncio
     async def test_sync_loop_detection(self, sync_engine, mock_connector):
         """Test 3: SyncEngine detects sync loop (skips items with source_platform matching target)."""
         # Item that originated from slack (same as target platform)

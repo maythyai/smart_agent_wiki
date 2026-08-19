@@ -437,6 +437,16 @@ async def create_page(
 
     op_id = str(uuid.uuid4())
 
+    # Normalize the slug so the page lands at ``<slug>.md`` on disk. The wiki
+    # repository's list_pages() globs ``*.md``, so a bare slug ("my-page")
+    # would be written to a file with no extension and never appear in the
+    # page list — and the frontend queryKey namespace would split between
+    # bare slugs (from create) and ``.md`` slugs (from list / workflow
+    # broadcasts), breaking real-time invalidation. Returning the normalized
+    # slug keeps create → list → get → page_updated all on the same key.
+    raw_slug = (create.slug or "").strip()
+    slug = raw_slug if raw_slug.endswith(".md") else f"{raw_slug}.md" if raw_slug else f"concepts/{op_id}.md"
+
     ops = [
         WriteOp(
             op_id=op_id,
@@ -444,7 +454,7 @@ async def create_page(
             sink_name="wiki",
             payload={
                 "op": "create",
-                "slug": create.slug,
+                "slug": slug,
                 "title": create.title,
                 "content": create.content,
                 "tags": create.tags,
@@ -460,6 +470,6 @@ async def create_page(
 
     return PageStatus(
         status="queued",
-        slug=create.slug,
+        slug=slug,
         op_id=op_id,
     )
