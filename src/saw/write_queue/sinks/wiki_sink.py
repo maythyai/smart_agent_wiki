@@ -39,8 +39,21 @@ class WikiSink:
 
         # Read the existing page so an update preserves fields the caller
         # did not supply (title, tags, confidence, freshness, entity_type,
-        # properties, related, frontmatter).
-        existing = self._repo.read(path)
+        # properties, related, frontmatter). A corrupted/unparseable file
+        # (invalid UTF-8, malformed YAML) makes read() raise StorageError;
+        # previously that exception propagated and permanently blocked every
+        # subsequent write to this path. Treat an unreadable page as "no
+        # existing page" so the write overwrites and repairs it instead.
+        existing: WikiPage | None = None
+        try:
+            existing = self._repo.read(path)
+        except Exception as e:  # noqa: BLE001 — best-effort preservation
+            import logging
+
+            logging.getLogger(__name__).warning(
+                "Could not read existing wiki page %s for merge (will overwrite): %s",
+                path, e,
+            )
 
         # The managed frontmatter keys are rebuilt from the explicit WikiPage
         # fields below. If we pass the existing frontmatter verbatim, the

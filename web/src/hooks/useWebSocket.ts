@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useStore } from '../stores';
+import { getAccessToken } from '../lib/api';
 import type { AgentStatus, WorkflowProgress } from '../types/api';
 import type { ConnectionStatus, WSMessage } from '../types/websocket';
 
@@ -138,7 +139,11 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
     setStatus('connecting');
     setConnectionStatus('connecting');
 
-    const url = `${WS_URL}/${sessionId}`;
+    // Attach the JWT access token as ?token= so team-mode servers accept the
+    // upgrade (local mode ignores it). Without this the WS is rejected in
+    // team deployments.
+    const token = getAccessToken();
+    const url = `${WS_URL}/${sessionId}${token ? `?token=${encodeURIComponent(token)}` : ''}`;
     const ws = new WebSocket(url);
     wsRef.current = ws;
 

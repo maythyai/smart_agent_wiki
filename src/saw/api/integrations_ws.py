@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 from saw.api.websocket import ConnectionManager
+from saw.drivers.web.routes.websocket import _verify_ws_token
 
 
 if TYPE_CHECKING:
@@ -57,6 +58,16 @@ async def integrations_websocket(websocket: WebSocket) -> None:
     - T-16-03: Message handling is stateless, no amplification
     """
     from saw.api.websocket import manager
+
+    # SEC: in team mode the integrations WS is gated behind ?token=<jwt
+    # access token>, matching the main /ws/{session_id} endpoint and the
+    # protected REST routes. Local mode trusts the loopback connection.
+    auth_mode = getattr(websocket.app.state, "auth_mode", "local")
+    if auth_mode == "team":
+        token = websocket.query_params.get("token")
+        if not token or not _verify_ws_token(token):
+            await websocket.close(code=4401, reason="unauthorized")
+            return
 
     # Generate client ID server-side (T-16-01)
     client_id = str(uuid.uuid4())[:8]

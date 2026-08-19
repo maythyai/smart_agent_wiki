@@ -33,7 +33,7 @@ function buildUrl(path: string, params?: Record<string, string | number | undefi
   return url.toString();
 }
 
-function getAccessToken(): string | null {
+export function getAccessToken(): string | null {
   try {
     const stored = localStorage.getItem('saw-auth');
     if (stored) {

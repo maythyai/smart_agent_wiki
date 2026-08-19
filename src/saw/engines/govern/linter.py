@@ -219,7 +219,7 @@ class Linter:
         - Level 8 (red): > 180 days
         """
         import sqlite3
-        from datetime import datetime, timedelta
+        from datetime import datetime, timedelta, timezone
 
         distribution = {i: 0 for i in range(9)}
 
@@ -232,12 +232,19 @@ class Linter:
                 )
                 rows = cursor.fetchall()
 
-                now = datetime.now()
+                # ``now`` is timezone-aware; claim timestamps may be naive
+                # (SQLite DEFAULT datetime('now')) or aware (Python
+                # .isoformat()). Subtracting aware from naive raises
+                # TypeError, which would silently drop those claims from the
+                # distribution. Normalize each parsed datetime to UTC first.
+                now = datetime.now(timezone.utc)
                 for row in rows:
                     created_str = row[0]
                     if created_str:
                         try:
-                            created = datetime.fromisoformat(created_str)
+                            created = datetime.fromisoformat(str(created_str))
+                            if created.tzinfo is None:
+                                created = created.replace(tzinfo=timezone.utc)
                             days_old = (now - created).days
 
                             # Map age to freshness level

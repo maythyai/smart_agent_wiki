@@ -52,20 +52,34 @@ class TrendSenser:
     def detect_gaps(self) -> list[KnowledgeGap]:
         """Identify knowledge gaps (per D-21 gap detection).
 
-        Analyzes query patterns for high-query, low-coverage topics.
-
-        Returns:
-            List of detected knowledge gaps.
+        Without a query log, we approximate "low coverage" as: wiki pages
+        for which a claim search on the page stem returns no claims. Bounded
+        to the first 50 pages to keep the per-page search costable.
         """
         gaps: list[KnowledgeGap] = []
 
-        # In production, this would analyze query logs
-        # For now, we return a placeholder implementation
+        try:
+            pages = self._wiki.list_pages() or []
+        except Exception:
+            pages = []
 
-        # Would iterate through topics and check:
-        # 1. Query count from logs
-        # 2. Coverage from claims search
-        # 3. If query_count > threshold AND coverage < threshold -> gap
+        for slug in pages[:50]:
+            stem = slug.rsplit("/", 1)[-1]
+            if stem.endswith(".md"):
+                stem = stem[:-3]
+            if not stem:
+                continue
+            try:
+                found = self._claims.search(stem, limit=1)
+            except Exception:
+                found = []
+            if not found:
+                gaps.append(KnowledgeGap(
+                    topic=stem,
+                    query_count=0,
+                    coverage=0.0,
+                    suggested_sources=[],
+                ))
 
         return gaps
 
@@ -97,12 +111,41 @@ class TrendSenser:
     def get_growth_patterns(self) -> dict[str, int]:
         """Get topic growth over time.
 
-        Returns:
-            Dict mapping topic to growth count.
+        Aggregates the ``entities`` JSON column of every non-deleted claim
+        and returns the top topics by occurrence count.
         """
-        # In production, this would analyze claims over time
-        # For now, return placeholder
-        return {}
+        import json
+        import sqlite3
+
+        conn = getattr(self._claims, "_conn", None)
+        # Guard against non-connection objects (e.g. unittest Mocks) so the
+        # method degrades to {} instead of raising on attribute/iteration.
+        if not isinstance(conn, sqlite3.Connection):
+            return {}
+
+        counter: dict[str, int] = {}
+        try:
+            rows = conn.execute(
+                "SELECT entities FROM claim WHERE deleted_at IS NULL"
+            ).fetchall()
+        except Exception:
+            return {}
+
+        for (entities_json,) in rows:
+            try:
+                names = json.loads(entities_json) if entities_json else []
+            except Exception:
+                continue
+            if isinstance(names, str):
+                names = [names] if names else []
+            if not isinstance(names, list):
+                continue
+            for n in names:
+                key = str(n)
+                if key:
+                    counter[key] = counter.get(key, 0) + 1
+
+        return dict(sorted(counter.items(), key=lambda kv: -kv[1])[:10])
 
     def analyze_coverage(self, topic: str) -> float:
         """Analyze coverage ratio for a topic.

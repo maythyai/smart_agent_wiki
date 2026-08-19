@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useIntegrationsStore } from '../stores/integrationsStore';
+import { getAccessToken } from '../lib/api';
 import type { ConnectionStatus, IntegrationWSMessage, ConnectorHealthData, SyncProgressData } from '../types/websocket';
 
 // WebSocket URL construction
@@ -66,7 +67,10 @@ export function useIntegrationWebSocket(
     }
 
     setStatus('connecting');
-    const ws = new WebSocket(`${WS_URL}/integrations`);
+    // Attach the JWT access token as ?token= for team-mode auth (local mode
+    // ignores it).
+    const token = getAccessToken();
+    const ws = new WebSocket(`${WS_URL}/integrations${token ? `?token=${encodeURIComponent(token)}` : ''}`);
     wsRef.current = ws;
 
     ws.onopen = () => {

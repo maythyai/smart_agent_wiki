@@ -335,6 +335,14 @@ async def trigger_prune(
                         if isinstance(ca, str):
                             ca = datetime.datetime.fromisoformat(ca.replace("Z", "+00:00"))
                         if ca is not None:
+                            # SQLite's DEFAULT datetime('now') stores a naive
+                            # "YYYY-MM-DD HH:MM:SS" string; fromisoformat yields
+                            # a naive datetime. ``now`` is timezone-aware, so
+                            # subtracting a naive ``ca`` raises TypeError and the
+                            # except below silently sets age_days=0 — such claims
+                            # would never be pruned. Normalize naive -> UTC first.
+                            if ca.tzinfo is None:
+                                ca = ca.replace(tzinfo=datetime.timezone.utc)
                             age_days = (now - ca).days
                     except Exception:
                         age_days = 0

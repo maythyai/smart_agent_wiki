@@ -96,29 +96,63 @@ class KnowledgeExpiry:
 
         Per D-18: Returns candidates only, does NOT auto-delete.
 
-        Returns:
-            List of claims that may need expiry review.
+        Enumerates non-deleted claims via the repository's backing sqlite
+        connection (the same pattern the Govern Linter uses), classifies each
+        as tactical/strategic, and returns tactical claims older than
+        ``TACTICAL_REVIEW_THRESHOLD``. Timestamps are normalized to aware UTC
+        so SQLite's naive ``datetime('now')`` default is handled correctly.
         """
+        import json
+        import sqlite3
+        from types import SimpleNamespace
+
         candidates: list[ExpiryCandidate] = []
 
-        # Would iterate through claims and check:
-        # 1. Classification (tactical vs strategic)
-        # 2. Age
-        # 3. Freshness level
+        conn = getattr(self._claims, "_conn", None)
+        # Only proceed with a real sqlite3 connection; degrade to [] otherwise
+        # (e.g. when the repository is a unittest Mock without a backing conn).
+        if not isinstance(conn, sqlite3.Connection):
+            return candidates
 
-        # Placeholder - in production would query DB
-        # for claim in self._claims.get_all(limit=10000):
-        #     classification = self.classify_knowledge(claim)
-        #     if classification == "tactical":
-        #         age_days = (datetime.now(timezone.utc) - claim.created_at).days
-        #         if age_days > self.TACTICAL_REVIEW_THRESHOLD:
-        #             candidates.append(ExpiryCandidate(
-        #                 claim_uuid=claim.uuid,
-        #                 content=claim.content[:100],
-        #                 classification=classification,
-        #                 age_days=age_days,
-        #                 reason=f"Tactical knowledge older than {self.TACTICAL_REVIEW_THRESHOLD} days",
-        #             ))
+        try:
+            rows = conn.execute(
+                "SELECT uuid, content, tags, created_at FROM claim WHERE deleted_at IS NULL"
+            ).fetchall()
+        except Exception:
+            return candidates
+
+        now = datetime.now(timezone.utc)
+        for uuid, content, tags_json, created_at in rows:
+            try:
+                tags = json.loads(tags_json) if tags_json else []
+                if not isinstance(tags, list):
+                    tags = []
+            except Exception:
+                tags = []
+
+            claim_like = SimpleNamespace(content=content or "", tags=tags)
+            try:
+                if self.classify_knowledge(claim_like) != "tactical":
+                    continue
+                ca = created_at
+                if isinstance(ca, str):
+                    ca = datetime.fromisoformat(ca.replace("Z", "+00:00"))
+                if ca is None:
+                    continue
+                if ca.tzinfo is None:
+                    ca = ca.replace(tzinfo=timezone.utc)
+                age_days = (now - ca).days
+            except Exception:
+                continue
+
+            if age_days > self.TACTICAL_REVIEW_THRESHOLD:
+                candidates.append(ExpiryCandidate(
+                    claim_uuid=uuid,
+                    content=(content or "")[:100],
+                    classification="tactical",
+                    age_days=age_days,
+                    reason=f"Tactical knowledge older than {self.TACTICAL_REVIEW_THRESHOLD} days",
+                ))
 
         return candidates
 

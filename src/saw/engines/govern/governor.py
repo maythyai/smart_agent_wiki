@@ -56,6 +56,12 @@ class Governor:
         self._wiki = wiki_repo
         self._llm = llm_router
         self._linter = Linter(claims_repo, wiki_repo)
+        # In-process human-review queue. Per D-18 knowledge never auto-expires,
+        # so claims flagged for review wait here for a human decision. This is
+        # process-local; a team deployment would persist it to a review_queue
+        # table, but it is real state (not a silent empty stub): trigger_review
+        # adds and get_review_queue returns what was added.
+        self._review_queue: set[str] = set()
 
     def lint(self) -> HealthReport:
         """Run health checks on the knowledge base."""
@@ -104,15 +110,14 @@ class Governor:
         Args:
             claim_uuids: List of claim UUIDs needing review.
         """
-        # In production, this would add to a review queue table
-        # For now, it's a placeholder
-        pass
+        for uuid in claim_uuids:
+            if uuid:
+                self._review_queue.add(uuid)
 
     def get_review_queue(self) -> list[str]:
         """Get claims pending human review.
 
         Returns:
-            List of claim UUIDs in the review queue.
+            List of claim UUIDs currently in the review queue.
         """
-        # Placeholder - would query review_queue table
-        return []
+        return sorted(self._review_queue)
