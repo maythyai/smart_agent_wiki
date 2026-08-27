@@ -7,11 +7,14 @@ Per XCUT-06 and FEATURES.md (Memex pattern):
 """
 from __future__ import annotations
 
+import logging
 import time
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
+
+logger = logging.getLogger(__name__)
 
 import yaml
 
@@ -205,18 +208,46 @@ class AdaptiveIndexManager:
     def build_concept_clusters(self) -> list[ConceptCluster]:
         """Build concept-based clustering for indexed mode.
 
-        Uses embedding similarity to cluster related pages.
-        Falls back to namespace-based clustering if embeddings unavailable.
-
-        Returns:
-            List of ConceptCluster objects.
+        M-19: uses real embedding similarity (sentence-transformers) when the
+        optional dependency is installed; falls back to namespace-based
+        clustering otherwise. Previously this was a "would use embeddings"
+        stub.
         """
         clusters: list[ConceptCluster] = []
 
-        # For now, use namespace-based clustering as fallback
-        # In production, would use embeddings for semantic clustering
-        tree = self.build_category_tree()
+        # M-19: semantic clustering when embeddings are available.
+        try:
+            from saw.adapters.embeddings import cluster_by_embedding, embeddings_available
 
+            if embeddings_available() and self._wiki_repo is not None:
+                pages = self._wiki_repo.list_pages() or []
+                if pages:
+                    texts: list[str] = []
+                    valid: list[str] = []
+                    for slug in pages[:200]:
+                        page = self._wiki_repo.read(slug)
+                        content = getattr(page, "content", None) or ""
+                        if content:
+                            texts.append(content[:2000])
+                            valid.append(slug)
+                    grouped = cluster_by_embedding(texts)
+                    for cid, idxs in grouped.items():
+                        names = [valid[i] for i in idxs]
+                        clusters.append(
+                            ConceptCluster(
+                                name=f"semantic-{cid}",
+                                page_paths=names,
+                                summary=f"Semantic cluster {cid} ({len(names)} pages)",
+                                keywords=names[:5],
+                            )
+                        )
+                    if clusters:
+                        return clusters
+        except Exception as e:
+            logger.debug("Semantic clustering unavailable, falling back: %s", e)
+
+        # Fallback: namespace-based clustering (LIGHTWEIGHT tier).
+        tree = self.build_category_tree()
         for category, pages in tree.items():
             cluster = ConceptCluster(
                 name=category,

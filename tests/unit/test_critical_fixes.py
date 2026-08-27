@@ -427,3 +427,25 @@ def test_code_graph_fts_cjk_search():
     assert "用户管理" in cjk_hits, f"CJK search failed: {cjk_hits}"
     en_hits = [n.name for n in store.search_nodes_fts("get_users")]
     assert "get_users" in en_hits
+
+
+# ── M-19: embeddings adapter degrades gracefully ───────────────────
+
+
+def test_embeddings_adapter_fallback_and_math():
+    """M-19: cosine math correct; embed/cluster degrade when dep absent."""
+    from saw.adapters.embeddings import (
+        cluster_by_embedding,
+        cosine_similarity,
+        embed_texts,
+        embeddings_available,
+    )
+
+    assert isinstance(embeddings_available(), bool)
+    # cosine_similarity is pure math (always works).
+    assert abs(cosine_similarity([1, 0], [1, 0]) - 1.0) < 1e-9
+    assert abs(cosine_similarity([1, 0], [0, 1])) < 1e-9
+    # Without sentence-transformers installed these return None / {} (no crash).
+    if not embeddings_available():
+        assert embed_texts(["hello"]) is None
+        assert cluster_by_embedding(["a", "b"]) == {}

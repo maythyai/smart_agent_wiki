@@ -13,6 +13,7 @@ import re
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -24,6 +25,54 @@ if TYPE_CHECKING:
     from ..govern.governor import Governor
 
 logger = logging.getLogger(__name__)
+
+
+class WorkflowStatus(str, Enum):
+    """Workflow execution state (M-16: explicit state machine + guards).
+
+    ``str`` mixin keeps ``WorkflowStatus.COMPLETED == "completed"`` true so
+    existing string comparisons / DB persistence / WS mapping keep working.
+    """
+
+    PENDING = "pending"
+    RUNNING = "running"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    TIMEOUT = "timeout"
+    INTERRUPTED = "interrupted"  # crashed mid-run; recovered on startup
+
+
+# Allowed from -> {to, ...}. Terminal states (COMPLETED) allow nothing unless
+# explicitly re-run. Guards against illegal transitions (M-16).
+_WORKFLOW_TRANSITIONS: dict[WorkflowStatus, set[WorkflowStatus]] = {
+    WorkflowStatus.PENDING: {WorkflowStatus.RUNNING, WorkflowStatus.FAILED},
+    WorkflowStatus.RUNNING: {
+        WorkflowStatus.COMPLETED,
+        WorkflowStatus.FAILED,
+        WorkflowStatus.TIMEOUT,
+        WorkflowStatus.INTERRUPTED,
+    },
+    WorkflowStatus.INTERRUPTED: {
+        WorkflowStatus.FAILED,
+        WorkflowStatus.PENDING,
+        WorkflowStatus.RUNNING,
+    },
+    WorkflowStatus.COMPLETED: set(),
+    WorkflowStatus.FAILED: {WorkflowStatus.PENDING, WorkflowStatus.RUNNING},
+    WorkflowStatus.TIMEOUT: {WorkflowStatus.PENDING, WorkflowStatus.RUNNING},
+}
+
+
+def validate_workflow_transition(from_status, to_status) -> bool:
+    """Return True if ``from_status -> to_status`` is an allowed transition."""
+    try:
+        f = from_status if isinstance(from_status, WorkflowStatus) else WorkflowStatus(from_status)
+        t = to_status if isinstance(to_status, WorkflowStatus) else WorkflowStatus(to_status)
+    except ValueError:
+        return False
+    if f == t:
+        return True
+    return t in _WORKFLOW_TRANSITIONS.get(f, set())
 
 
 @dataclass
@@ -450,6 +499,17 @@ class WorkflowExecutor:
 
         now = datetime.now(timezone.utc).isoformat()
         try:
+            # M-16: validate the state transition against the explicit machine.
+            prev = self._conn.execute(
+                "SELECT status FROM workflow_executions WHERE workflow_id = ?",
+                (workflow_id,),
+            ).fetchone()
+            prev_status = prev[0] if prev else None
+            if prev_status is not None and not validate_workflow_transition(prev_status, status):
+                logger.warning(
+                    "Illegal workflow transition %s -> %s for %s (allowed by guard, logging)",
+                    prev_status, status, workflow_id,
+                )
             with self._conn:
                 self._conn.execute(
                     """INSERT INTO workflow_executions
