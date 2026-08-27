@@ -12,7 +12,7 @@ FROM python:3.11-slim-bookworm
 
 # Metadata
 LABEL maintainer="chensaics"
-LABEL version="3.4.0"
+LABEL version="1.0.1"
 LABEL description="Smart Agent Wiki - Intelligent Multi-Agent Knowledge Platform"
 LABEL homepage="https://github.com/chensaics/smart_agent_wiki"
 
@@ -28,8 +28,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
-# Install Smart Agent Wiki
-RUN pip install smart-agent-wiki
+# Install Smart Agent Wiki from local source (not PyPI) so the image matches
+# the checked-out code (CR-5/E-2). A .dockerignore excludes venvs/build artefacts.
+COPY . /app
+RUN pip install /app
+
+# Run as a non-root user (HI-15).
+RUN useradd --create-home --uid 1000 saw
+USER saw
 
 # Create working directory
 WORKDIR /wiki
@@ -39,9 +45,9 @@ WORKDIR /wiki
 # 3000 - Web UI frontend (if bundled)
 EXPOSE 8000 3000
 
-# Health check
+# Health check — probe the real readiness endpoint, not just the binary (HI-15).
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD saw --version || exit 1
+    CMD curl -f http://localhost:8000/health/ready || exit 1
 
 # Set entrypoint
 ENTRYPOINT ["saw"]

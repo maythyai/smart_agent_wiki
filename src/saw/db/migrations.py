@@ -168,6 +168,45 @@ def _add_next_retry_at(conn: sqlite3.Connection) -> None:
 
 _register(2, _add_next_retry_at)
 
+
+# v3: add last_accessed column to claim. Enables FreshnessTracker.refresh_on_access
+# (D-13) to persist access timestamps so freshness actually decreases on read.
+# Previously refresh_on_access was a no-op ("Would update last_accessed to now()
+# in production"). Idempotent via column-existence check.
+def _add_last_accessed(conn: sqlite3.Connection) -> None:
+    cols = {r[1] for r in conn.execute("PRAGMA table_info(claim)")}
+    if "last_accessed" not in cols:
+        conn.execute("ALTER TABLE claim ADD COLUMN last_accessed TEXT")
+
+_register(3, _add_last_accessed)
+
+# v4: workflow_executions — durable per-run state for crash recovery (HI-9).
+# Stores progress so a process killed mid-workflow leaves a stranded
+# status='running' row that startup recovery can detect and mark, rather than
+# silently losing the execution (and its audit trail).
+def _create_workflow_executions(conn: sqlite3.Connection) -> None:
+    conn.execute(
+        """CREATE TABLE IF NOT EXISTS workflow_executions (
+    workflow_id TEXT PRIMARY KEY,
+    definition_name TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'running',
+    steps_completed INTEGER NOT NULL DEFAULT 0,
+    steps_total INTEGER NOT NULL DEFAULT 0,
+    context_json TEXT,
+    errors_json TEXT,
+    started_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT,
+    finished_at TEXT
+)"""
+    )
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_workflow_exec_status "
+        "ON workflow_executions(status)"
+    )
+
+
+_register(4, _create_workflow_executions)
+
 # ── Public API ────────────────────────────────────────────────────────
 
 TARGET_VERSION = max(v for v, _ in _MIGRATIONS) if _MIGRATIONS else 1

@@ -141,5 +141,32 @@ class TestReviewItem(unittest.TestCase):
         self.assertEqual(item.freshness_level, FreshnessLevel.LEVEL_6)
 
 
+import pytest
+
+
+def test_default_data_dir_does_not_double_nest_saw(tmp_path, monkeypatch):
+    """Regression: default ``data_dir`` must write to ``.saw/fsrs_cards.yaml``,
+    not ``.saw/.saw/fsrs_cards.yaml``.
+
+    Previously ``data_dir`` defaulted to ``Path(".saw")`` and the cards file was
+    computed as ``data_dir / ".saw" / "fsrs_cards.yaml"`` → ``.saw/.saw/...``
+    (double-nested). The fix is to default ``data_dir`` to ``Path(".")``.
+    """
+    monkeypatch.chdir(tmp_path)
+    mock_wiki_repo = Mock()
+    mock_claims_repo = Mock()
+    mock_wiki_repo.list_pages.return_value = []
+
+    # No data_dir → uses default (was the buggy path)
+    scheduler = FSRSScheduler(mock_wiki_repo, mock_claims_repo)
+
+    scheduler.schedule_review("default-path-page.md", rating=3)
+
+    correct = tmp_path / ".saw" / "fsrs_cards.yaml"
+    double_nested = tmp_path / ".saw" / ".saw" / "fsrs_cards.yaml"
+    assert correct.exists()
+    assert not double_nested.exists(), "FSRS cards written to double-nested .saw/.saw/"
+
+
 if __name__ == "__main__":
     unittest.main()

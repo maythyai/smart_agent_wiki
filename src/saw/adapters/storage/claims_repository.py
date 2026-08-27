@@ -13,6 +13,8 @@ from __future__ import annotations
 import json
 import logging
 import sqlite3
+import threading
+from datetime import datetime, timezone
 from pathlib import Path
 
 from saw.adapters.storage.fts_tokenize import build_match_query, tokenize_for_fts
@@ -123,6 +125,7 @@ class SQLiteClaimsRepository:
 
     def __init__(self, conn: sqlite3.Connection) -> None:
         self._conn = conn
+        self._write_lock = threading.Lock()
         self._init_schema()
 
     def _init_schema(self) -> None:
@@ -213,6 +216,72 @@ class SQLiteClaimsRepository:
             "SELECT count(*) FROM claim WHERE deleted_at IS NULL"
         ).fetchone()
         return row[0] if row else 0
+
+    # ── HI-1: SQL previously inline in API routes (govern.py /
+    #    query_ingest_learn.py) is moved here so routes depend on the
+    #    repository contract, not on ``repo._conn`` / ``import sqlite3``. ──
+
+    def update_confidence(self, claim_uuid: str, confidence: str) -> None:
+        """Set a claim's confidence level."""
+        with self._write_lock:
+            self._conn.execute(
+                "UPDATE claim SET confidence = ?, updated_at = ? WHERE uuid = ?",
+                (confidence, datetime.now(timezone.utc).isoformat(), claim_uuid),
+            )
+            self._conn.commit()
+
+    def soft_delete_claim(self, claim_uuid: str) -> None:
+        """Soft-delete a claim (sets ``deleted_at``)."""
+        with self._write_lock:
+            self._conn.execute(
+                "UPDATE claim SET deleted_at = ? WHERE uuid = ?",
+                (datetime.now(timezone.utc).isoformat(), claim_uuid),
+            )
+            self._conn.commit()
+
+    def list_contradictions(self, status: str = "pending") -> list[dict]:
+        """List contradictions by status (``pending``/``resolved``/``all``)."""
+        if status == "resolved":
+            rows = self._conn.execute(
+                "SELECT * FROM contradictions WHERE resolved_at IS NOT NULL"
+            ).fetchall()
+        elif status == "pending":
+            rows = self._conn.execute(
+                "SELECT * FROM contradictions WHERE resolved_at IS NULL"
+            ).fetchall()
+        else:
+            rows = self._conn.execute("SELECT * FROM contradictions").fetchall()
+        results = []
+        for row in rows:
+            results.append({
+                "uuid": row[0],
+                "claim_a_uuid": row[1],
+                "claim_b_uuid": row[2],
+                "contradiction_type": row[3],
+                "resolution": row[4],
+                "detected_at": row[5],
+                "resolved_at": row[6],
+                "blast_radius": json.loads(row[7]) if row[7] else [],
+            })
+        return results
+
+    def resolve_contradiction(self, contradiction_id: str, strategy: str) -> None:
+        """Mark a contradiction resolved with the given strategy."""
+        with self._write_lock:
+            self._conn.execute(
+                "UPDATE contradictions SET resolution = ?, resolved_at = ? WHERE uuid = ?",
+                (strategy, datetime.now(timezone.utc).isoformat(), contradiction_id),
+            )
+            self._conn.commit()
+
+    def count_relations(self, claim_uuid: str) -> int:
+        """Count claim_relation rows touching *claim_uuid* (either side)."""
+        row = self._conn.execute(
+            "SELECT COUNT(*) FROM claim_relation "
+            "WHERE source_claim_uuid = ? OR target_claim_uuid = ?",
+            (claim_uuid, claim_uuid),
+        ).fetchone()
+        return int(row[0]) if row else 0
 
     @staticmethod
     def _row_to_claim(row) -> Claim:

@@ -64,7 +64,7 @@ def _safe_repo_count(repo, sql: str, *params) -> int:
 
 
 @router.post("/query")
-async def query_knowledge(
+def query_knowledge(
     question: str = Query(..., description="Natural language question"),
     mode: str = Query("auto", description="auto / search / graph / reasoning / compare / synthesize"),
     max_tokens: int = Query(2000, ge=1, le=32000),
@@ -95,7 +95,7 @@ async def query_knowledge(
 
 
 @router.post("/compare")
-async def compare_pages(
+def compare_pages(
     targets: list[str] = Query(..., description="Page slugs or claim UUIDs to compare"),
     engine=Depends(_query_engine),
 ):
@@ -124,7 +124,7 @@ async def compare_pages(
 
 
 @router.post("/compile")
-async def compile_context(
+def compile_context(
     topic: str = Query(..., description="Topic to compile context for"),
     max_tokens: int = Query(4000, ge=1, le=32000),
     engine=Depends(_query_engine),
@@ -144,7 +144,7 @@ async def compile_context(
 
 
 @router.post("/ingest")
-async def ingest_document(
+def ingest_document(
     source: str = Query("file", description="file / url / text"),
     path: str = Query("", description="File path or URL"),
     content: str = Query("", description="Raw text content"),
@@ -184,7 +184,7 @@ async def ingest_document(
 
 
 @router.get("/ingest/{job_id}/status")
-async def ingest_status(job_id: str, wq=Depends(_write_queue)):
+def ingest_status(job_id: str, wq=Depends(_write_queue)):
     """Check ingest job progress (per api_contract §5.2)."""
     try:
         sink_statuses = wq.get_sink_status(job_id) or {}
@@ -212,7 +212,7 @@ async def ingest_status(job_id: str, wq=Depends(_write_queue)):
 
 
 @router.post("/feedback")
-async def submit_feedback(
+def submit_feedback(
     type: str = Query(..., description="approved / rejected"),
     page_id: str = Query("", description="Related page slug"),
     action: str = Query("", description="Action context"),
@@ -249,7 +249,7 @@ async def submit_feedback(
 
 
 @router.post("/distill")
-async def trigger_distill(
+def trigger_distill(
     request: Request = None,
     scope: str = Query("all", description="all / recent"),
     min_pattern_occurrences: int = Query(3, ge=1),
@@ -304,7 +304,7 @@ async def trigger_distill(
 
 
 @router.post("/prune")
-async def trigger_prune(
+def trigger_prune(
     request: Request = None,
     dry_run: bool = Query(True),
     scope: str = Query("tactical_only", description="tactical_only / all"),
@@ -370,16 +370,9 @@ async def trigger_prune(
     pruned = 0
     if not dry_run and repo is not None and items:
         try:
-            conn = getattr(repo, "_conn", None)
-            if conn is not None:
-                now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
-                for it in items:
-                    conn.execute(
-                        "UPDATE claim SET deleted_at = ? WHERE uuid = ?",
-                        (now_iso, it["uuid"]),
-                    )
-                conn.commit()
-                pruned = len(items)
+            for it in items:
+                repo.soft_delete_claim(it["uuid"])
+            pruned = len(items)
         except Exception:
             pruned = 0
 
@@ -393,7 +386,7 @@ async def trigger_prune(
 
 
 @router.get("/trends")
-async def get_trends(
+def get_trends(
     request: Request = None,
     period: str = Query("30d", description="7d / 30d / 90d"),
     metric: str = Query("growth", description="growth / hot_topics / coverage_gaps"),
@@ -451,7 +444,7 @@ async def get_trends(
 
 
 @router.get("/wip")
-async def get_wip():
+def get_wip():
     """Read cross-session work-in-progress momentum (per api_contract §5.5)."""
     import yaml
     from pathlib import Path
@@ -467,7 +460,7 @@ async def get_wip():
 
 
 @router.put("/wip")
-async def update_wip(
+def update_wip(
     current_task: str = Query(""),
     momentum: int = Query(0),
 ):

@@ -79,13 +79,23 @@ class TestCreateApp:
     def test_create_app_has_correct_version(
         self, mock_query_engine, mock_collaborate_engine, mock_write_queue
     ):
-        """App should have correct version."""
+        """App should report the version derived from pyproject.toml (M-18)."""
         app = create_app(
             query=mock_query_engine,
             collaborate=mock_collaborate_engine,
             write_queue=mock_write_queue,
         )
-        assert app.version == "1.1.0"
+        # M-18: version is no longer hardcoded; it comes from the installed
+        # package metadata. It must be a non-empty string matching the package.
+        try:
+            from importlib.metadata import version as _pkg_version
+
+            expected = _pkg_version("smart-agent-wiki")
+        except Exception:
+            expected = None
+        assert app.version
+        if expected:
+            assert app.version == expected
 
 
 class TestCORS:
@@ -218,3 +228,21 @@ class TestLifespan:
         assert hasattr(client.app.state, "query")
         assert hasattr(client.app.state, "collaborate")
         assert hasattr(client.app.state, "write_queue")
+
+
+class TestCreateAppFromConfigWiresCollaborate:
+    """DEF-1: create_app_from_config must wire a real CollaborateEngine with
+    the 6 agents registered, instead of passing collaborate=None (which left
+    the workflow API's execute_workflow branch unreachable and
+    get_available_agents() returning []).
+    """
+
+    def test_collaborate_engine_is_wired_with_agents(self, tmp_path, monkeypatch):
+        monkeypatch.chdir(tmp_path)
+        from saw.drivers.web.app import create_app_from_config
+
+        app = create_app_from_config()
+        assert app.state.collaborate is not None
+        agents = app.state.collaborate.get_available_agents()
+        for name in ("Librarian", "Writer", "Critic", "Linker", "Scholar", "Guardian"):
+            assert name in agents, f"{name} not registered in collaborate engine"

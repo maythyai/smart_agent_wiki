@@ -13,6 +13,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 from saw.domain.value_objects import FreshnessLevel
+from saw.engines.govern.freshness import FreshnessTracker
 
 if TYPE_CHECKING:
     from saw.domain.protocols import ClaimsRepository, WikiRepository
@@ -171,19 +172,39 @@ class Linter:
     def _check_stale_claims(self) -> list[str]:
         """Find claims with high freshness level (>= LEVEL_6).
 
-        Returns:
-            List of claim UUIDs that are stale.
+        Freshness is derived from claim age (``created_at``) using the
+        canonical ``FreshnessTracker`` thresholds (0,1,3,7,14,30,90,180,999
+        days). A claim whose age maps to LEVEL_6 (>= 90 days) or higher is
+        stale and returned by UUID. Previously this was a ``return []`` stub.
         """
-        # In production, this would query claims with freshness >= LEVEL_6
-        # For now, return empty list (would need freshness column in DB)
+        conn = getattr(self._claims, "_conn", None)
+        if not isinstance(conn, __import__("sqlite3").Connection):
+            return []  # non-SQLite repo (e.g. a Mock) — nothing to query
+        import sqlite3
+        from datetime import datetime, timezone
+
         stale: list[str] = []
-
-        # Placeholder - would iterate through claims and check freshness
-        # claims = self._claims.get_all(limit=10000)
-        # for claim in claims:
-        #     if claim.freshness >= FreshnessLevel.LEVEL_6:
-        #         stale.append(claim.uuid)
-
+        tracker = FreshnessTracker()
+        now = datetime.now(timezone.utc)
+        try:
+            rows = conn.execute(
+                "SELECT uuid, created_at FROM claim WHERE deleted_at IS NULL"
+            ).fetchall()
+        except sqlite3.Error:
+            return stale
+        for row in rows:
+            created_str = row[1]
+            if not created_str:
+                continue
+            try:
+                created = datetime.fromisoformat(str(created_str))
+                if created.tzinfo is None:
+                    created = created.replace(tzinfo=timezone.utc)
+                age_days = (now - created).days
+                if tracker._time_to_level(age_days) >= FreshnessLevel.LEVEL_6:
+                    stale.append(row[0])
+            except (ValueError, TypeError):
+                continue
         return stale
 
     def _check_missing_metadata(self) -> list[str]:
@@ -212,57 +233,41 @@ class Linter:
     def _get_freshness_distribution(self) -> dict[int, int]:
         """Get distribution of claims by freshness level.
 
-        Freshness is calculated from claim age:
-        - Level 0-2 (green): < 30 days
-        - Level 3-5 (yellow): 30-90 days
-        - Level 6-7 (orange): 90-180 days
-        - Level 8 (red): > 180 days
+        Uses the canonical ``FreshnessTracker.LEVEL_THRESHOLDS``
+        (0,1,3,7,14,30,90,180,999 days) so levels agree with the documented
+        9-level system (D-10/D-11) and with ``FreshnessTracker`` itself —
+        previously the linter used ad-hoc 30/90/180 thresholds that disagreed.
         """
         import sqlite3
-        from datetime import datetime, timedelta, timezone
+        from datetime import datetime, timezone
 
         distribution = {i: 0 for i in range(9)}
+        conn = getattr(self._claims, "_conn", None)
+        if not isinstance(conn, sqlite3.Connection):
+            return distribution  # non-SQLite repo (e.g. a Mock) — no data
 
-        # Access the DB connection from claims_repo
-        if hasattr(self._claims, '_conn'):
-            conn = self._claims._conn
+        try:
+            rows = conn.execute(
+                "SELECT created_at FROM claim WHERE deleted_at IS NULL"
+            ).fetchall()
+        except sqlite3.Error:
+            return distribution
+
+        now = datetime.now(timezone.utc)
+        tracker = FreshnessTracker()
+        for row in rows:
+            created_str = row[0]
+            if not created_str:
+                continue
             try:
-                cursor = conn.execute(
-                    "SELECT created_at FROM claim WHERE deleted_at IS NULL"
-                )
-                rows = cursor.fetchall()
-
-                # ``now`` is timezone-aware; claim timestamps may be naive
-                # (SQLite DEFAULT datetime('now')) or aware (Python
-                # .isoformat()). Subtracting aware from naive raises
-                # TypeError, which would silently drop those claims from the
-                # distribution. Normalize each parsed datetime to UTC first.
-                now = datetime.now(timezone.utc)
-                for row in rows:
-                    created_str = row[0]
-                    if created_str:
-                        try:
-                            created = datetime.fromisoformat(str(created_str))
-                            if created.tzinfo is None:
-                                created = created.replace(tzinfo=timezone.utc)
-                            days_old = (now - created).days
-
-                            # Map age to freshness level
-                            if days_old < 30:
-                                level = min(2, days_old // 10)  # 0, 1, 2
-                            elif days_old < 90:
-                                level = 3 + min(2, (days_old - 30) // 20)  # 3, 4, 5
-                            elif days_old < 180:
-                                level = 6 + min(1, (days_old - 90) // 45)  # 6, 7
-                            else:
-                                level = 8  # stale
-
-                            distribution[level] += 1
-                        except (ValueError, TypeError):
-                            distribution[8] += 1  # Treat unparseable as stale
-            except sqlite3.Error:
-                pass  # Return zeros on DB error
-
+                created = datetime.fromisoformat(str(created_str))
+                if created.tzinfo is None:
+                    created = created.replace(tzinfo=timezone.utc)
+                age_days = (now - created).days
+                level = tracker._time_to_level(age_days)
+                distribution[level] += 1
+            except (ValueError, TypeError):
+                distribution[8] += 1  # unparseable → treat as stale
         return distribution
 
     def _get_confidence_distribution(self) -> dict[int, int]:
@@ -270,28 +275,25 @@ class Linter:
         import sqlite3
 
         distribution = {i: 0 for i in range(1, 5)}
+        conn = getattr(self._claims, "_conn", None)
+        if not isinstance(conn, sqlite3.Connection):
+            return distribution  # non-SQLite repo (e.g. a Mock) — no data
 
-        # Access the DB connection from claims_repo
-        if hasattr(self._claims, '_conn'):
-            conn = self._claims._conn
-            try:
-                cursor = conn.execute(
-                    "SELECT confidence, COUNT(*) FROM claim "
-                    "WHERE deleted_at IS NULL GROUP BY confidence"
-                )
-                rows = cursor.fetchall()
+        try:
+            rows = conn.execute(
+                "SELECT confidence, COUNT(*) FROM claim "
+                "WHERE deleted_at IS NULL GROUP BY confidence"
+            ).fetchall()
+        except sqlite3.Error:
+            return distribution
 
-                for confidence_str, count in rows:
-                    # Map confidence string to int (1-4)
-                    confidence_map = {
-                        "unverified": 1,
-                        "verified": 2,
-                        "trusted": 3,
-                        "authoritative": 4,
-                    }
-                    level = confidence_map.get(confidence_str, 1)
-                    distribution[level] += count
-            except sqlite3.Error:
-                pass  # Return zeros on DB error
-
+        confidence_map = {
+            "unverified": 1,
+            "verified": 2,
+            "trusted": 3,
+            "authoritative": 4,
+        }
+        for confidence_str, count in rows:
+            level = confidence_map.get(confidence_str, 1)
+            distribution[level] += count
         return distribution

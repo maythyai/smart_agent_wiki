@@ -253,3 +253,38 @@ def verify_api_key_header(request) -> str | None:
     if auth.startswith("ApiKey "):
         return auth[7:]
     return None
+
+
+def verify_api_key_sync(key_str: str) -> "APIKey | None":
+    """Verify an API key against the database (sync).
+
+    Looks up the SHA-256 hash, checks active + expiry, and returns the
+    ``APIKey`` model or ``None``. This is the actual authentication authority
+    for the ``Authorization: ApiKey <key>`` scheme — both
+    ``get_current_user_from_token`` and ``RateLimitMiddleware`` call it.
+    """
+    if not key_str:
+        return None
+    from saw.db.config import DatabaseConfig, get_engine
+    from sqlalchemy.orm import sessionmaker
+
+    try:
+        engine = get_engine(DatabaseConfig.from_env())
+        factory = sessionmaker(engine, expire_on_commit=False)
+        with factory() as session:
+            return APIKeyService(session).verify_key(key_str)
+    except Exception:
+        return None
+
+
+async def verify_api_key_for_rate_limit(key_str: str) -> "APIKey | None":
+    """Rate limiter callback: verify a key and return the model.
+
+    ``RateLimitMiddleware`` calls this as ``get_api_key_func`` and expects an
+    object with ``.id``/``.rate_limit_hour``/``.rate_limit_day``. The DB
+    lookup is sync SQLAlchemy, so run it in a threadpool to avoid blocking
+    the event loop.
+    """
+    import asyncio
+
+    return await asyncio.to_thread(verify_api_key_sync, key_str)

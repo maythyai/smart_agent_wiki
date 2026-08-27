@@ -36,8 +36,14 @@ class PhaseResults:
             raise PhaseNotFoundError(f"Phase '{name}' not found in results")
         return self._results[name]
 
-    def get_output[T](self, name: str) -> T:
-        """Type-safe output access."""
+    def get_output(self, name: str) -> T:
+        """Type-safe output access.
+
+        Note: previously used PEP 695 ``def get_output[T](...)`` syntax which
+        is a ``SyntaxError`` on Python 3.11 (a declared CI target). The bare
+        ``TypeVar`` ``T`` (defined at module top) preserves the type hint
+        without requiring 3.12+; no call site used the subscript form.
+        """
         return self.get(name).output
 
     def has(self, name: str) -> bool:

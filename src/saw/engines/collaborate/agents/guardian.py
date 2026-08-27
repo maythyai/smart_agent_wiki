@@ -131,7 +131,16 @@ class GuardianAgent(BaseAgent):
                 payload={"allowed": True, "reason": "Permit rule matched"},
             )
 
-        # D-14: Default deny - NO permit matched means deny
+        # No rules configured → fail-open. A local-first deployment is
+        # permissive until an operator adds rules; requiring boilerplate
+        # permit rules for safe "read" actions would make the tool unusable.
+        if not self._rules:
+            return AgentResult(
+                success=True,
+                payload={"allowed": True, "reason": "No rules configured (default permit)"},
+            )
+
+        # D-14: Default deny - rules exist but no permit matched.
         return AgentResult(
             success=False,
             payload={"allowed": False, "reason": "No permit rule matched (default deny)"},

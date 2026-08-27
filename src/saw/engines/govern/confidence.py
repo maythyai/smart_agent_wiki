@@ -129,8 +129,32 @@ class ConfidenceAssessor:
         if new_level == ConfidenceLevel.HUMAN_VERIFIED and not require_explicit:
             return False
 
-        # Perform upgrade (would be done via WriteQueue in production)
-        return True
+        # Persist the upgrade. The repository protocol has no update method,
+        # so we write via the concrete SQLite connection; on a non-SQLite repo
+        # (e.g. a Mock) we report False honestly instead of pretending success.
+        # Previously this returned True without doing anything.
+        # NOTE: this bypasses the Write Queue outbox; routing govern mutations
+        # through the outbox is tracked separately (DEF-6).
+        import sqlite3
+        from datetime import datetime, timezone
+
+        conn = getattr(claims_repo, "_conn", None)
+        if not isinstance(conn, sqlite3.Connection):
+            return False
+        try:
+            cursor = conn.execute(
+                "UPDATE claim SET confidence = ?, updated_at = ? "
+                "WHERE uuid = ? AND deleted_at IS NULL",
+                (
+                    new_level.name.lower(),
+                    datetime.now(timezone.utc).isoformat(),
+                    claim_uuid,
+                ),
+            )
+            conn.commit()
+            return cursor.rowcount > 0
+        except sqlite3.Error:
+            return False
 
     def get_confidence_distribution(
         self,
@@ -138,12 +162,27 @@ class ConfidenceAssessor:
     ) -> dict[ConfidenceLevel, int]:
         """Get distribution of claims by confidence level.
 
-        Args:
-            claims_repo: Repository to query.
-
-        Returns:
-            Dict mapping confidence level to count.
+        Returns zeros on a non-SQLite repo (e.g. a Mock) or DB error.
+        Previously a placeholder returning all-zeros.
         """
-        # This would query the DB for distribution
-        # Placeholder implementation
-        return {level: 0 for level in ConfidenceLevel}
+        import sqlite3
+
+        distribution = {level: 0 for level in ConfidenceLevel}
+        conn = getattr(claims_repo, "_conn", None)
+        if not isinstance(conn, sqlite3.Connection):
+            return distribution
+        try:
+            rows = conn.execute(
+                "SELECT confidence, COUNT(*) FROM claim "
+                "WHERE deleted_at IS NULL GROUP BY confidence"
+            ).fetchall()
+        except sqlite3.Error:
+            return distribution
+
+        for conf_str, count in rows:
+            try:
+                level = ConfidenceLevel[str(conf_str).upper()]
+            except KeyError:
+                continue
+            distribution[level] += count
+        return distribution

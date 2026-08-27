@@ -265,20 +265,32 @@ def get_current_user_from_token(request: Request) -> dict:
         )
 
     if auth_header.startswith("ApiKey "):
-        # P2: API key authentication (single-user desktop mode).
-        # The actual key verification happens in RateLimitMiddleware
-        # via get_api_key_func; here we trust the header and return
-        # a local admin identity.
-        api_key = auth_header[7:]
-        if not api_key.strip():
+        # SEC (CR-1): verify the API key against the database. The previous
+        # implementation returned role="admin" for any non-empty ApiKey header
+        # without any DB lookup — a direct auth bypass in team mode.
+        api_key_str = auth_header[7:].strip()
+        if not api_key_str:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Empty API key",
+                headers={"WWW-Authenticate": "ApiKey"},
             )
+        from saw.api.keys import verify_api_key_sync
+        api_key = verify_api_key_sync(api_key_str)
+        if api_key is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid or expired API key",
+                headers={"WWW-Authenticate": "ApiKey"},
+            )
+        _perms = set(
+            p.strip() for p in (api_key.permissions or "").split(",") if p.strip()
+        )
+        _role = "admin" if "admin" in _perms else ("editor" if "write" in _perms else "viewer")
         return {
-            "user_id": "api-key-user",
-            "role": "admin",
-            "token": api_key,
+            "user_id": api_key.user_id,
+            "role": _role,
+            "token": api_key_str,
         }
 
     if not auth_header.startswith("Bearer "):

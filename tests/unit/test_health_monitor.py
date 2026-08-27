@@ -147,9 +147,9 @@ class TestHealthMonitor:
         events = []
         original_emit = monitor._emit_event
 
-        def capture_event(event):
+        async def capture_event(event, health=None):
             events.append(event)
-            original_emit(event)
+            await original_emit(event, health)
 
         monitor._emit_event = capture_event
 

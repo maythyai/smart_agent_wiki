@@ -11,6 +11,7 @@ from __future__ import annotations
 import base64
 import hashlib
 import json
+import logging
 import os
 import stat
 from dataclasses import dataclass, field
@@ -19,6 +20,8 @@ from pathlib import Path
 from typing import Any
 
 from nacl.signing import SigningKey, VerifyKey
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -132,6 +135,13 @@ class ReceiptSigner:
 
         Args:
             key_path: Path to private key file.
+
+        DEF-2: a corrupt key file used to be silently swallowed (``except:
+        pass``), leaving the signer with no key. That made
+        ``AuditTrail.verify_chain`` skip signature checks entirely (every
+        receipt "valid"). We still do not raise from ``__init__`` (to keep app
+        startup stable), but we log the failure loudly; ``verify_chain`` now
+        treats a missing public key as an unverifiable (invalid) chain.
         """
         try:
             private_key_b64 = key_path.read_text(encoding="ascii").strip()
@@ -141,9 +151,12 @@ class ReceiptSigner:
             self._public_key = base64.b64encode(
                 bytes(verify_key)
             ).decode("ascii")
-        except Exception:
-            # If loading fails, will need to generate new key
-            pass
+        except Exception as e:  # noqa: BLE001
+            logger.critical(
+                "Failed to load Ed25519 key from %s: %s. Audit signature "
+                "verification will treat the chain as INVALID until a valid "
+                "key is (re)generated.", key_path, e,
+            )
 
     def get_public_key(self) -> str | None:
         """Get public key for verification.

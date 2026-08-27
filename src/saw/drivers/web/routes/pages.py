@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Request
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request
 
 from saw.drivers.web.schemas.pages import (
     PageCreate,
@@ -45,6 +45,8 @@ def get_write_queue(request: Request):
 async def list_pages(
     q: str | None = None,
     entity_type: str | None = None,
+    limit: int = Query(50, ge=1, le=200, description="Page size (hard-capped at 200)"),
+    offset: int = Query(0, ge=0, description="Pagination offset"),
     engine=Depends(get_query_engine),
 ) -> PageListResponse:
     """List all wiki pages with optional search (per D-13).
@@ -57,9 +59,13 @@ async def list_pages(
     elif hasattr(engine, "wiki") and engine.wiki is not None:
         slug_list = engine.wiki.list_pages()
 
+    # M-7: hard-capped pagination — slice before materialising full page
+    # objects to bound memory (was returning every page with full content).
+    page_window = slug_list[offset : offset + limit]
+
     # Build full page responses with search filtering
     pages: list[PageResponse] = []
-    for slug in slug_list:
+    for slug in page_window:
         page = None
         if hasattr(engine, "_wiki_repo") and engine._wiki_repo is not None:
             page = engine._wiki_repo.read(slug)
@@ -100,8 +106,8 @@ async def list_pages(
 
     return PageListResponse(
         pages=pages,
-        slugs=slug_list,
-        total=len(pages),
+        slugs=page_window,
+        total=len(slug_list),
     )
 
 

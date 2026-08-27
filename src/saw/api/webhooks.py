@@ -39,7 +39,7 @@ class Webhook(Base):
     user_id: str = Column(String, nullable=False, index=True)
     name: str = Column(String(255), nullable=False)
     url: str = Column(String(500), nullable=False)
-    secret: str = Column(String(64), nullable=False)  # HMAC signing secret
+    secret: str = Column(String(512), nullable=False)  # HMAC signing secret (Fernet-encrypted at rest, M-26)
     events: str = Column(String(500), default="*")  # Comma-separated or "*"
     is_active: bool = Column(Boolean, default=True)
     created_at: datetime = Column(DateTime, default=lambda: datetime.now(timezone.utc))
@@ -143,11 +143,20 @@ class WebhookService:
 
         events_str = ",".join(events) if events else "*"
 
+        # M-26: encrypt the signing secret at rest (Fernet) so a DB dump does
+        # not expose webhook HMAC secrets (API keys are hashed, OAuth tokens
+        # are Fernet-encrypted — webhooks were the plaintext outlier).
+        try:
+            from saw.connectors.token_encryption import TokenEncryption
+            stored_secret = TokenEncryption.from_env().encrypt(secret)
+        except Exception:
+            stored_secret = secret  # best-effort: fall back to plaintext
+
         webhook = Webhook(
             user_id=user_id,
             name=name,
             url=url,
-            secret=secret,
+            secret=stored_secret,
             events=events_str,
         )
 
@@ -229,8 +238,16 @@ class WebhookService:
         )
         payload_json = payload.to_json()
 
+        # M-26: decrypt the at-rest secret before signing (plaintext fallback
+        # for legacy rows created before encryption was enabled).
+        try:
+            from saw.connectors.token_encryption import TokenEncryption
+            signing_secret = TokenEncryption.from_env().decrypt(webhook.secret)
+        except Exception:
+            signing_secret = webhook.secret
+
         # Sign payload
-        signature = WebhookSigner.sign(payload_json, webhook.secret)
+        signature = WebhookSigner.sign(payload_json, signing_secret)
 
         # Build headers
         headers = {
@@ -254,6 +271,9 @@ class WebhookService:
 
         # Send webhook
         try:
+            from saw.adapters.url_guard import assert_safe_url_async
+
+            await assert_safe_url_async(webhook.url)  # HI-12: SSRF guard
             if self.http_client is None:
                 self.http_client = httpx.AsyncClient(timeout=10.0)
 

@@ -68,10 +68,10 @@ dev = ["pytest>=8.0", "pytest-asyncio>=1.0", "pytest-benchmark>=4.0", "ruff>=0.4
 packages = ["src/saw"]
 
 [tool.pytest.ini_options]
-# The package lives under src/saw but the broken editable-install .pth in
-# the committed .venv points at another project, so `import saw` fails and
-# 95 tests error at collection time. Pinning pythonpath here makes the suite
-# runnable with a bare `pytest` regardless of the install state.
-pythonpath = ["src"]
+# The package lives under src/saw and is installed via the editable .pth
+# (_editable_impl_smart_agent_wiki.pth -> src/), so `import saw` resolves
+# correctly and `pytest` runs with no extra config. HI-18: the previous
+# pythonpath=["src"] workaround masked a stale .pth pointing at another
+# project; that .pth has been corrected and the workaround removed.
 asyncio_mode = "auto"
 testpaths = ["tests"]

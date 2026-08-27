@@ -34,6 +34,9 @@ class HTMLParser:
         Raises:
             ValueError: If URL cannot be fetched.
         """
+        from saw.adapters.url_guard import assert_safe_url
+
+        assert_safe_url(url)  # HI-12: SSRF guard before external fetch
         downloaded = trafilatura.fetch_url(url)
         if not downloaded:
             raise ValueError(f"Failed to fetch URL: {url}")

@@ -17,15 +17,25 @@ services:
     restart: unless-stopped
     volumes:
       - ./wiki:/wiki
-      - saw-data:/root/.local/share/saw
+      - saw-data:/home/saw/.local/share/saw
     working_dir: /wiki
     environment:
       - SAW_LOG_LEVEL=INFO
+      # CR-2: never expose the admin API unauthenticated on 0.0.0.0. Register
+      # an admin user (POST /auth/register) and set AUTH_SECRET_KEY before
+      # enabling networked deploy. Override with SAW_ALLOW_UNAUTH_NETWORK=1
+      # only for an isolated, trusted network.
+      - SAW_AUTH_MODE=team
     ports:
       - "8000:8000"
     command: web --host 0.0.0.0 --port 8000
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+          cpus: "2.0"
     healthcheck:
-      test: ["CMD", "saw", "--version"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/ready"]
       interval: 30s
       timeout: 10s
       retries: 3

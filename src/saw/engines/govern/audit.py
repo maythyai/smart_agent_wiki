@@ -5,6 +5,7 @@ Per GOVE-08: Offline-verifiable receipt chain.
 """
 from __future__ import annotations
 
+import logging
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -14,6 +15,18 @@ from typing import Any
 import yaml
 
 from saw.adapters.crypto.ed25519 import Receipt, ReceiptSigner
+
+logger = logging.getLogger(__name__)
+
+
+class AuditStoreError(Exception):
+    """Raised when the audit receipt store cannot be read or parsed.
+
+    DEF-2: a corrupt receipts file must NOT be silently treated as an empty
+    (hence "valid") chain. Callers that need to keep the app running (e.g.
+    ``AuditTrail.__init__``) catch this; verification surfaces it as an
+    invalid chain instead of a false "all good".
+    """
 
 
 @dataclass
@@ -62,7 +75,13 @@ class AuditTrail:
 
     def _load_chain_state(self) -> None:
         """Load existing receipts to restore chain state."""
-        receipts = self._load_receipts()
+        try:
+            receipts = self._load_receipts()
+        except AuditStoreError as e:
+            # Don't crash app startup on a corrupt store; verification will
+            # surface the problem honestly (see verify_chain).
+            logger.warning("Audit store unreadable at init: %s", e)
+            return
         if receipts:
             # Get the last receipt ID for chaining
             self._prev_receipt_id = receipts[-1].get("operation_id")
@@ -151,6 +170,12 @@ class AuditTrail:
 
         Returns:
             List of receipt dictionaries.
+
+        Raises:
+            AuditStoreError: if the file exists but cannot be parsed (corrupt
+                YAML) or read. A missing file returns ``[]`` (legitimate empty
+                chain). DEF-2: corrupt stores must not be silently treated as
+                empty/valid.
         """
         if not self._receipts_file.exists():
             return []
@@ -159,8 +184,10 @@ class AuditTrail:
             with open(self._receipts_file, encoding="utf-8") as f:
                 data = yaml.safe_load(f) or {}
                 return data.get("receipts", [])
-        except Exception:
-            return []
+        except yaml.YAMLError as e:
+            raise AuditStoreError(f"Corrupt receipts file {self._receipts_file}: {e}") from e
+        except OSError as e:
+            raise AuditStoreError(f"Cannot read receipts file {self._receipts_file}: {e}") from e
 
     def _save_receipts(self, receipts: list[dict[str, Any]]) -> None:
         """Save receipts to storage.
@@ -195,11 +222,23 @@ class AuditTrail:
         Returns:
             Tuple of (is_valid, list_of_invalid_receipt_ids).
         """
-        receipts = self._load_receipts()
+        try:
+            receipts = self._load_receipts()
+        except AuditStoreError as e:
+            logger.warning("Cannot verify audit chain: %s", e)
+            return False, []  # corrupt store → unverifiable → invalid
         public_key = self._signer.get_public_key()
 
         if not receipts:
             return True, []
+
+        # DEF-2: without a public key, no signature can be verified, so the
+        # entire chain is untrustworthy. Previously this was silently treated
+        # as "valid" because the ``if public_key and signature`` guard skipped
+        # verification entirely — a corrupt/missing key file then made every
+        # receipt appear to pass.
+        if not public_key:
+            return False, [r.get("operation_id") for r in receipts]
 
         invalid_ids: list[str] = []
         seen_ids: set[str] = set()
@@ -238,8 +277,12 @@ class AuditTrail:
                 prev_receipt_id=r.get("prev_receipt_id"),
             )
 
-            signature = r.get("signature", "")
-            if public_key and signature:
+            signature = r.get("signature")
+            # DEF-2: every receipt must carry a signature; a receipt without
+            # one is not trustworthy (it was never signed per D-08).
+            if not signature:
+                invalid_ids.append(receipt_id)
+            else:
                 is_valid = self._signer.verify_receipt(
                     receipt_obj, signature, public_key
                 )
@@ -337,7 +380,11 @@ class AuditTrail:
         Returns:
             AuditSummary with operation counts and chain status.
         """
-        receipts = self._load_receipts()
+        try:
+            receipts = self._load_receipts()
+        except AuditStoreError as e:
+            logger.warning("Audit store unreadable: %s", e)
+            return AuditSummary(chain_valid=False)
 
         if not receipts:
             return AuditSummary()

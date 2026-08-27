@@ -108,14 +108,23 @@ async def readiness_check(response: Response):
 
 @router.get("/metrics")
 async def metrics(request: Request):
-    """Prometheus-compatible metrics endpoint.
+    """Prometheus metrics endpoint (text exposition format, HI-17).
 
-    Returns real counts: registered users, wiki pages, and claims. Each is
-    best-effort — a missing component yields 0 rather than a 500.
+    Returns real counts (users, wiki pages, claims, write-queue depth) in the
+    Prometheus 0.0.4 text format so standard scrapers can ingest it. Each
+    counter is best-effort — a missing component yields 0 rather than a 500.
     """
     from pathlib import Path
 
-    saw_version = "2.0.0"
+    from fastapi.responses import PlainTextResponse
+
+    # M-18: version derived from pyproject.toml (was hardcoded "2.0.0").
+    try:
+        from importlib.metadata import version as _pkg_version
+
+        saw_version = _pkg_version("smart-agent-wiki")
+    except Exception:  # pragma: no cover
+        saw_version = "0.0.0"
 
     # Claims total via the query engine's claims repo.
     claims_total = 0
@@ -155,9 +164,35 @@ async def metrics(request: Request):
     except Exception:
         users_total = 0
 
-    return {
-        "saw_users_total": users_total,
-        "saw_pages_total": pages_total,
-        "saw_claims_total": claims_total,
-        "saw_version": saw_version,
-    }
+    # Write-queue depth (pending + dead-letter).
+    outbox_pending = 0
+    outbox_dead = 0
+    try:
+        wq = getattr(request.app.state, "write_queue", None)
+        if wq is not None:
+            outbox_pending = len(wq.get_pending() or [])
+            outbox_dead = len(wq.get_dead_letter() or [])
+    except Exception:
+        pass
+
+    lines = [
+        "# HELP saw_users_total Total registered users.",
+        "# TYPE saw_users_total gauge",
+        f"saw_users_total {users_total}",
+        "# HELP saw_pages_total Total wiki markdown pages.",
+        "# TYPE saw_pages_total gauge",
+        f"saw_pages_total {pages_total}",
+        "# HELP saw_claims_total Total claims in the knowledge base.",
+        "# TYPE saw_claims_total gauge",
+        f"saw_claims_total {claims_total}",
+        "# HELP saw_write_outbox_pending Pending write-queue operations.",
+        "# TYPE saw_write_outbox_pending gauge",
+        f"saw_write_outbox_pending {outbox_pending}",
+        "# HELP saw_write_outbox_dead_letter Dead-lettered write-queue operations.",
+        "# TYPE saw_write_outbox_dead_letter gauge",
+        f"saw_write_outbox_dead_letter {outbox_dead}",
+        "",
+    ]
+    return PlainTextResponse(
+        "\n".join(lines), media_type="text/plain; version=0.0.4; charset=utf-8"
+    )

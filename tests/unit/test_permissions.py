@@ -262,3 +262,31 @@ class TestRequirePermission:
         viewer = MockUser(id="v1", email="v@test.com", role="viewer")
         with pytest.raises(HTTPException):
             await write_endpoint(current_user=viewer)
+
+
+class TestCedarDefaultDeny:
+    """DEF-5: when Cedar is not configured, the Cedar policy verdict must be
+    DENY (D-14 default deny), not allow. Previously returned allowed=True."""
+
+    def test_check_cedar_denies_when_not_configured(self) -> None:
+        svc = PermissionService(cedar_engine=None)
+        result = svc.check_cedar("user-1", "read", "vault-x")
+        assert result.allowed is False
+        assert result.reason == "cedar_not_configured"
+
+    def test_check_cedar_delegates_when_configured(self) -> None:
+        cedar = MagicMock()
+        cedar.is_authorized.return_value = True
+        svc = PermissionService(cedar_engine=cedar)
+        result = svc.check_cedar("user-1", "read", "vault-x")
+        assert result.allowed is True
+        assert result.reason == "cedar_policy"
+        cedar.is_authorized.assert_called_once()
+
+    def test_check_cedar_denies_on_engine_error(self) -> None:
+        cedar = MagicMock()
+        cedar.is_authorized.side_effect = RuntimeError("boom")
+        svc = PermissionService(cedar_engine=cedar)
+        result = svc.check_cedar("user-1", "read", "vault-x")
+        assert result.allowed is False
+        assert result.reason == "cedar_error"

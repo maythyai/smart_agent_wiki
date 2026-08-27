@@ -234,7 +234,7 @@ class BatchMediaProcessor:
 
         Runs transcription in thread pool to avoid blocking.
         """
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         start_time = time.time()
 
         try:

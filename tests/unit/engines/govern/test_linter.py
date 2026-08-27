@@ -182,5 +182,75 @@ class TestGovernor(unittest.TestCase):
         self.assertEqual(provenance.claim_uuid, "claim-1")
 
 
+def test_check_stale_claims_finds_old_claims_via_real_db(tmp_path) -> None:
+    """DEF-8: ``_check_stale_claims`` must really detect stale claims against
+    a SQLite store, not just ``return []``. Uses the canonical
+    FreshnessTracker thresholds (>= 90 days = LEVEL_6)."""
+    import sqlite3
+    from datetime import datetime, timedelta, timezone
+
+    from saw.adapters.storage.claims_repository import SQLiteClaimsRepository
+    from saw.domain.claims import Claim
+    from saw.domain.value_objects import ConfidenceLevel
+
+    conn = sqlite3.connect(str(tmp_path / "claims.db"))
+    repo = SQLiteClaimsRepository(conn)
+
+    old = Claim(
+        uuid="old-1",
+        content="an old claim",
+        source_uuid="s1",
+        content_hash="h1",
+        confidence=ConfidenceLevel.SINGLE_SOURCE,
+        created_at=datetime.now(timezone.utc) - timedelta(days=200),
+    )
+    fresh = Claim(
+        uuid="fresh-1",
+        content="a fresh claim",
+        source_uuid="s2",
+        content_hash="h2",
+        confidence=ConfidenceLevel.SINGLE_SOURCE,
+        created_at=datetime.now(timezone.utc),
+    )
+    repo.insert(old)
+    repo.insert(fresh)
+
+    linter = Linter(repo, MagicMock())
+    stale = linter._check_stale_claims()
+
+    assert "old-1" in stale
+    assert "fresh-1" not in stale
+
+
+def test_freshness_distribution_uses_canonical_thresholds(tmp_path) -> None:
+    """DEF-8 / D-11: the linter freshness distribution must agree with the
+    FreshnessTracker 9-level system (a 200-day-old claim lands in LEVEL_8)."""
+    import sqlite3
+    from datetime import datetime, timedelta, timezone
+
+    from saw.adapters.storage.claims_repository import SQLiteClaimsRepository
+    from saw.domain.claims import Claim
+    from saw.domain.value_objects import ConfidenceLevel
+
+    conn = sqlite3.connect(str(tmp_path / "claims.db"))
+    repo = SQLiteClaimsRepository(conn)
+    repo.insert(
+        Claim(
+            uuid="old-1",
+            content="old",
+            source_uuid="s1",
+            content_hash="h1",
+            confidence=ConfidenceLevel.SINGLE_SOURCE,
+            created_at=datetime.now(timezone.utc) - timedelta(days=200),
+        )
+    )
+
+    linter = Linter(repo, MagicMock())
+    dist = linter._get_freshness_distribution()
+
+    assert sum(dist.values()) == 1
+    assert dist[8] == 1  # 200 days → LEVEL_8 (red), per FreshnessTracker
+
+
 if __name__ == "__main__":
     unittest.main()

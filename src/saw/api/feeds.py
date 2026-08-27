@@ -11,7 +11,7 @@ import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy.orm import Session
 
@@ -191,9 +191,11 @@ async def get_feed_manager(db: Session = Depends(get_db_session)) -> FeedManager
 # ============================================================================
 
 @router.get("", response_model=FeedListResponse)
-async def list_feeds(
+def list_feeds(
     category: Optional[str] = None,
     active_only: bool = True,
+    limit: int = Query(50, ge=1, le=200, description="Page size (hard-capped at 200)"),
+    offset: int = Query(0, ge=0, description="Pagination offset"),
     db: Session = Depends(get_db_session),
 ) -> FeedListResponse:
     """List all feed subscriptions.
@@ -206,7 +208,8 @@ async def list_feeds(
     if category:
         query = query.filter(Feed.category == category)
 
-    feeds = query.all()
+    # M-7: hard-capped pagination (was unbounded query.all()).
+    feeds = query.offset(offset).limit(limit).all()
 
     # Build response with entry counts
     feed_responses = []
@@ -283,7 +286,7 @@ async def create_feed(
 
 
 @router.get("/{feed_id}", response_model=FeedResponse)
-async def get_feed(
+def get_feed(
     feed_id: str,
     db: Session = Depends(get_db_session),
 ) -> FeedResponse:
@@ -317,7 +320,7 @@ async def get_feed(
 
 
 @router.put("/{feed_id}", response_model=FeedResponse)
-async def update_feed(
+def update_feed(
     feed_id: str,
     request: FeedUpdateRequest,
     db: Session = Depends(get_db_session),
@@ -369,7 +372,7 @@ async def update_feed(
 
 
 @router.delete("/{feed_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_feed(
+def delete_feed(
     feed_id: str,
     db: Session = Depends(get_db_session),
 ) -> None:
@@ -393,7 +396,7 @@ async def delete_feed(
 # ============================================================================
 
 @router.get("/{feed_id}/entries", response_model=FeedEntryListResponse)
-async def list_feed_entries(
+def list_feed_entries(
     feed_id: str,
     status_filter: Optional[str] = None,
     limit: int = 20,
@@ -517,7 +520,7 @@ async def import_opml(
 
 
 @router.get("/export", response_model=OPMLExportResponse)
-async def export_opml(
+def export_opml(
     db: Session = Depends(get_db_session),
 ) -> OPMLExportResponse:
     """Export feeds as OPML.

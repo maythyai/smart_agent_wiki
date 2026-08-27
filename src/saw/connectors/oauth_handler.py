@@ -267,9 +267,12 @@ class OAuthHandler:
                     headers={"Accept": "application/json"},
                 )
                 token = response.json()
-        except Exception:
-            # Fallback for testing without real OAuth
-            token = {"access_token": "test_token", "expires_in": 3600}
+        except Exception as e:
+            # HI-13: never silently substitute a fake "test_token" — that
+            # stored invalid credentials as if they were real and swallowed
+            # the actual error. Surface the failure so the caller knows auth
+            # failed.
+            raise OAuthError(f"OAuth token exchange failed: {e}") from e
 
         # Calculate expiration
         expires_at = None

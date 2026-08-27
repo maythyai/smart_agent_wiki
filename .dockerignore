@@ -1,0 +1,44 @@
+# Build artefacts / caches
+**/__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+build/
+dist/
+
+# Virtualenvs (never belong in the image)
+venv_test/
+.venv/
+venv/
+env/
+
+# Local data + secrets (CR: never bake into image)
+.saw/
+saw.db
+*.sqlite3
+*.db
+*.pem
+*.key
+.env
+.env.*
+
+# VCS / CI / tooling caches
+.git/
+.github/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.planning/
+.claude/
+.omc/
+
+# Frontend / desktop build output
+node_modules/
+web/dist/
+web/node_modules/
+desktop/src-tauri/target/
+desktop/src-tauri/gen/
+
+# Docs/tests kept out of runtime image
+docs/
+tests/

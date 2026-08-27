@@ -147,6 +147,9 @@ class FeedManager:
         Returns:
             Parsed feed data.
         """
+        from saw.adapters.url_guard import assert_safe_url_async
+
+        await assert_safe_url_async(url)  # HI-12: SSRF guard
         response = await self._http.get(url)
         response.raise_for_status()
 
@@ -204,6 +207,9 @@ class FeedManager:
             headers["If-Modified-Since"] = feed.last_modified
 
         try:
+            from saw.adapters.url_guard import assert_safe_url_async
+
+            await assert_safe_url_async(feed.url)  # HI-12: SSRF guard
             response = await self._http.get(feed.url, headers=headers)
         except httpx.HTTPError as e:
             return PollResult(
@@ -449,6 +455,9 @@ class FeedManager:
         # Fetch from URL and extract with trafilatura
         if link:
             try:
+                from saw.adapters.url_guard import assert_safe_url_async
+
+                await assert_safe_url_async(link)  # HI-12: SSRF guard
                 response = await self._http.get(link)
                 extracted = trafilatura.extract(
                     response.text,

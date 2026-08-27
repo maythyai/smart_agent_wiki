@@ -70,6 +70,7 @@ class WorkflowExecutor:
         a2a_adapter: A2AAdapter,
         governor: Governor | None,
         event_bus: Any | None = None,
+        conn: Any = None,
     ) -> None:
         """Initialize workflow executor.
 
@@ -78,11 +79,14 @@ class WorkflowExecutor:
             a2a_adapter: A2A adapter for agent communication
             governor: Governance engine (optional, for confidence checks)
             event_bus: Event bus for progress publishing (optional)
+            conn: Optional sqlite3 connection for durable execution state
+                (HI-9: crash recovery). When None, execution is in-memory only.
         """
         self._dispatcher = dispatcher
         self._a2a = a2a_adapter
         self._governor = governor
         self._event_bus = event_bus
+        self._conn = conn
         self._parser = WorkflowParser()
 
     async def execute(
@@ -126,6 +130,12 @@ class WorkflowExecutor:
 
         start_time = datetime.now(timezone.utc)
 
+        # HI-9: record the execution as 'running' so a crash leaves a stranded
+        # row that startup recovery can detect (instead of silent loss).
+        self._persist_workflow(
+            workflow_id, workflow.name, "running", 0, len(workflow.steps), []
+        )
+
         # Publish workflow start event
         await self._publish_event({
             "type": "WorkflowStarted",
@@ -153,6 +163,10 @@ class WorkflowExecutor:
 
         except asyncio.TimeoutError:
             errors.append(f"Workflow timeout after {workflow.timeout}s")
+            self._persist_workflow(
+                workflow_id, workflow.name, "timeout",
+                steps_completed, len(workflow.steps), errors,
+            )
             return WorkflowResult(
                 workflow_id=workflow_id,
                 name=workflow.name,
@@ -172,6 +186,11 @@ class WorkflowExecutor:
 
         status = "completed" if not errors else "failed"
         end_time = datetime.now(timezone.utc)
+
+        self._persist_workflow(
+            workflow_id, workflow.name, status,
+            steps_completed, len(workflow.steps), errors,
+        )
 
         # Publish workflow complete event
         await self._publish_event({
@@ -380,19 +399,21 @@ class WorkflowExecutor:
             }
 
     def _eval_condition(self, condition: str, context: dict[str, Any]) -> bool:
-        """Evaluate a conditional expression.
+        """Evaluate a conditional expression to a native bool.
 
-        Args:
-            condition: Jinja2-compatible condition string
-            context: Execution context
-
-        Returns:
-            True if condition is satisfied
+        Uses ``jinja2.Environment.compile_expression`` so the result is a real
+        Python value (bool/int/None), not the string ``"True"``/``"False"``.
+        The previous ``bool(Template(...).render(...))`` was *always* truthy
+        because ``bool("False") == True`` (any non-empty string is truthy),
+        so step conditions never skipped — conditional branching was
+        silently broken (HI-8).
         """
         try:
-            from jinja2 import Template
+            from jinja2 import Environment
 
-            return bool(Template(f"{{{{ {condition} }}}}").render(**context))
+            env = Environment()
+            expr = env.compile_expression(condition)
+            return bool(expr(**context))
         except Exception as e:
             # WR-08: Log condition evaluation failures for debugging
             logger.warning(f"Condition evaluation failed: {condition}, error: {e}")
@@ -407,3 +428,52 @@ class WorkflowExecutor:
         if self._event_bus and hasattr(self._event_bus, "publish"):
             await self._event_bus.publish(event)
         logger.debug(f"Workflow event: {event}")
+
+    def _persist_workflow(
+        self,
+        workflow_id: str,
+        name: str,
+        status: str,
+        steps_completed: int,
+        steps_total: int,
+        errors: list[str] | None = None,
+    ) -> None:
+        """HI-9: upsert workflow execution state for crash recovery.
+
+        When a process dies mid-workflow the row is left at status='running';
+        startup recovery (lifespan) marks such rows 'interrupted' so they are
+        visible rather than silently lost. No-op when no connection was wired.
+        """
+        if self._conn is None:
+            return
+        import json as _json
+
+        now = datetime.now(timezone.utc).isoformat()
+        try:
+            with self._conn:
+                self._conn.execute(
+                    """INSERT INTO workflow_executions
+                       (workflow_id, definition_name, status, steps_completed,
+                        steps_total, errors_json, updated_at, finished_at)
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                       ON CONFLICT(workflow_id) DO UPDATE SET
+                         status=excluded.status,
+                         steps_completed=excluded.steps_completed,
+                         steps_total=excluded.steps_total,
+                         errors_json=excluded.errors_json,
+                         updated_at=excluded.updated_at,
+                         finished_at=excluded.finished_at""",
+                    (
+                        workflow_id,
+                        name,
+                        status,
+                        steps_completed,
+                        steps_total,
+                        _json.dumps(errors or []),
+                        now,
+                        now if status in ("completed", "failed", "timeout", "interrupted") else None,
+                    ),
+                )
+        except Exception:
+            # Persistence must never break workflow execution.
+            pass

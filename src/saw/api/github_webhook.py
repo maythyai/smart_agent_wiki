@@ -42,6 +42,16 @@ async def get_webhook_handler(
     """
     import os
     webhook_secret = os.getenv("GITHUB_WEBHOOK_SECRET", "")
+    # M-23: refuse to verify with an empty/default secret — anyone could forge
+    # valid HMAC-SHA256 signatures against the empty-string secret. The unified
+    # webhook endpoint already guards this (webhook_inbound.py); GitHub's own
+    # endpoint must too.
+    if not webhook_secret:
+        from fastapi import HTTPException
+        raise HTTPException(
+            status_code=503,
+            detail="GITHUB_WEBHOOK_SECRET not configured; GitHub webhook verification refused.",
+        )
     return GitHubWebhookHandler(session=session, webhook_secret=webhook_secret)
 
 

@@ -142,8 +142,13 @@ class TestCreateAppFromConfig:
         assert app is not None
 
     def test_create_app_from_config_with_host_port(self) -> None:
-        """Test factory accepts host and port."""
+        """CR-2: non-loopback host + local auth mode is refused (security)."""
         from saw.drivers.web.app import create_app_from_config
 
-        app = create_app_from_config(host="0.0.0.0", port=9000)
+        # 0.0.0.0 + local mode must be refused — it would expose the admin API
+        # unauthenticated. A loopback host with a custom port still works.
+        with __import__("pytest").raises(RuntimeError, match="non-loopback"):
+            create_app_from_config(host="0.0.0.0", port=9000)
+
+        app = create_app_from_config(host="127.0.0.1", port=9000)
         assert app is not None

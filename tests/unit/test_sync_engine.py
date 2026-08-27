@@ -103,9 +103,20 @@ class TestSyncEngine:
 
     @pytest.fixture
     def mock_session(self):
-        """Create mock async session."""
+        """Create mock async session.
+
+        ``AsyncSession.execute()`` returns a sync ``Result``; its
+        ``scalar_one_or_none()`` is a sync call. A bare ``AsyncMock()`` for
+        ``execute`` makes ``result.scalar_one_or_none()`` return an
+        un-awaited coroutine → ``AttributeError: 'coroutine' object has no
+        attribute 'connector_id'``. Return a sync Result mock whose
+        ``scalar_one_or_none`` returns None (→ SyncStatusTracker default
+        status).
+        """
         session = AsyncMock()
-        session.execute = AsyncMock()
+        result_mock = MagicMock()
+        result_mock.scalar_one_or_none.return_value = None
+        session.execute = AsyncMock(return_value=result_mock)
         session.flush = AsyncMock()
         session.add = MagicMock()
         return session

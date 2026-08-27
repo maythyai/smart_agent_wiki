@@ -7,12 +7,15 @@ Integrates with Cedar policy engine from Phase 3-01.
 """
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from enum import IntEnum
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from saw.db.models import User, Vault
+
+logger = logging.getLogger(__name__)
 
 
 class Permission(IntEnum):
@@ -69,13 +72,22 @@ class PermissionService:
         resource: str,
         context: dict | None = None,
     ) -> PermissionCheck:
-        """Evaluate a Cedar policy rule (D-14 default deny)."""
+        """Evaluate a Cedar policy rule (D-14 default deny).
+
+        DEF-5: when Cedar is not configured, the Cedar policy verdict is
+        ``deny`` (no policy permits the action), not ``allow``. Previously
+        this returned ``allowed=True, reason="cedar_disabled"`` — a default
+        *allow* that contradicted D-14. Callers that want to fall back to
+        RBAC when Cedar is absent should do so explicitly rather than
+        relying on Cedar claiming to allow.
+        """
         if not self._cedar:
-            return PermissionCheck(allowed=True, reason="cedar_disabled")
+            return PermissionCheck(allowed=False, reason="cedar_not_configured")
         try:
             allowed = self._cedar.is_authorized(principal, action, resource, context)
             return PermissionCheck(allowed=allowed, reason="cedar_policy")
-        except Exception:
+        except Exception as e:
+            logger.warning("Cedar check error: %s", e)
             return PermissionCheck(allowed=False, reason="cedar_error")
 
     def check_vault_access(

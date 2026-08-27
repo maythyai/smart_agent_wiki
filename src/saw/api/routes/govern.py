@@ -81,7 +81,7 @@ def _safe_count(repo, sql: str, *params) -> int:
 
 
 @router.get("/claims/{claim_id}")
-async def get_claim_detail(
+def get_claim_detail(
     claim_id: str = Path(..., description="Claim UUID"),
     include_relations: bool = Query(False),
     repo=Depends(_claims_repo),
@@ -134,7 +134,7 @@ async def get_claim_detail(
 
 
 @router.patch("/claims/{claim_id}/confidence")
-async def update_claim_confidence(
+def update_claim_confidence(
     claim_id: str = Path(..., description="Claim UUID"),
     confidence: str = Query(..., description="New confidence level"),
     repo=Depends(_claims_repo),
@@ -152,14 +152,7 @@ async def update_claim_confidence(
         raise HTTPException(404, f"Claim '{claim_id}' not found")
 
     try:
-        if hasattr(repo, "_conn"):
-            import datetime
-
-            repo._conn.execute(
-                "UPDATE claim SET confidence = ?, updated_at = ? WHERE uuid = ?",
-                (confidence, datetime.datetime.now(datetime.timezone.utc).isoformat(), claim_id),
-            )
-            repo._conn.commit()
+        repo.update_confidence(claim_id, confidence)
     except Exception as e:
         raise HTTPException(500, f"Failed to update confidence: {e}")
 
@@ -170,49 +163,28 @@ async def update_claim_confidence(
 
 
 @router.get("/contradictions")
-async def list_contradictions(
+def list_contradictions(
     status: str = Query("pending", description="Filter: pending / resolved / escalated"),
+    limit: int = Query(50, ge=1, le=200, description="Page size (hard-capped at 200)"),
+    offset: int = Query(0, ge=0, description="Pagination offset"),
     repo=Depends(_claims_repo),
 ):
     """List contradictions with optional status filter (per api_contract §5.4)."""
     try:
-        if hasattr(repo, "_conn"):
-            if status == "resolved":
-                rows = repo._conn.execute(
-                    "SELECT * FROM contradictions WHERE resolved_at IS NOT NULL"
-                ).fetchall()
-            elif status == "pending":
-                rows = repo._conn.execute(
-                    "SELECT * FROM contradictions WHERE resolved_at IS NULL"
-                ).fetchall()
-            else:
-                rows = repo._conn.execute(
-                    "SELECT * FROM contradictions"
-                ).fetchall()
-
-            import json as _json
-
-            results = []
-            for row in rows:
-                results.append({
-                    "uuid": row[0],
-                    "claim_a_uuid": row[1],
-                    "claim_b_uuid": row[2],
-                    "contradiction_type": row[3],
-                    "resolution": row[4],
-                    "detected_at": row[5],
-                    "resolved_at": row[6],
-                    "blast_radius": _json.loads(row[7]) if row[7] else [],
-                })
-            return {"contradictions": results, "total": len(results)}
-        return {"contradictions": [], "total": 0}
+        all_results = repo.list_contradictions(status)
+        return {
+            "contradictions": all_results[offset : offset + limit],
+            "total": len(all_results),
+            "limit": limit,
+            "offset": offset,
+        }
     except Exception as e:
         # Table may not exist on a fresh DB
         return {"contradictions": [], "total": 0, "note": str(e)}
 
 
 @router.post("/contradictions/{contradiction_id}/resolve")
-async def resolve_contradiction(
+def resolve_contradiction(
     contradiction_id: str = Path(...),
     strategy: str = Query(
         "superseded",
@@ -227,17 +199,8 @@ async def resolve_contradiction(
         raise HTTPException(400, f"Strategy must be one of: {', '.join(sorted(allowed))}")
 
     try:
-        if hasattr(repo, "_conn"):
-            import datetime
-
-            now = datetime.datetime.now(datetime.timezone.utc).isoformat()
-            repo._conn.execute(
-                "UPDATE contradictions SET resolution = ?, resolved_at = ? WHERE uuid = ?",
-                (strategy, now, contradiction_id),
-            )
-            repo._conn.commit()
-            return {"message": "contradiction resolved", "uuid": contradiction_id, "strategy": strategy}
-        raise HTTPException(503, "Database not available")
+        repo.resolve_contradiction(contradiction_id, strategy)
+        return {"message": "contradiction resolved", "uuid": contradiction_id, "strategy": strategy}
     except Exception as e:
         raise HTTPException(500, f"Failed to resolve contradiction: {e}")
 
@@ -246,7 +209,7 @@ async def resolve_contradiction(
 
 
 @router.post("/verify")
-async def verify_claims(
+def verify_claims(
     claim_ids: list[str] = Query(..., description="List of claim UUIDs"),
     repo=Depends(_claims_repo),
 ):
@@ -271,7 +234,7 @@ async def verify_claims(
 
 
 @router.post("/lint")
-async def lint_knowledge(
+def lint_knowledge(
     scope: str = Query("full", description="full / quick"),
     request: Request = None,
     repo=Depends(_claims_repo),
@@ -337,7 +300,7 @@ async def lint_knowledge(
 
 
 @router.post("/blast-radius")
-async def blast_radius(
+def blast_radius(
     target_type: str = Query("claim", description="claim / page"),
     target_id: str = Query(..., description="Target UUID or slug"),
     depth: int = Query(2, ge=1, le=5),
@@ -349,7 +312,7 @@ async def blast_radius(
         raise HTTPException(400, "target_type must be 'claim' or 'page'")
 
     # Direct impact count via claim_relation (fallback when analyzer absent).
-    direct = _safe_count(
+    direct = repo.count_relations(target_id) if hasattr(repo, "count_relations") else _safe_count(
         repo,
         "SELECT COUNT(*) FROM claim_relation WHERE source_claim_uuid = ? OR target_claim_uuid = ?",
         target_id, target_id,
@@ -399,7 +362,7 @@ async def blast_radius(
 
 
 @router.get("/status")
-async def get_status(request: Request, repo=Depends(_claims_repo)):
+def get_status(request: Request, repo=Depends(_claims_repo)):
     """Get knowledge base status overview (per api_contract §5.1)."""
     total_claims = 0
     by_confidence: dict[str, int] = {}

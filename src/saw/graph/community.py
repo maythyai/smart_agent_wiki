@@ -82,8 +82,14 @@ class CommunityDetector:
 
         # Phase 1: 局部移动
         improved = True
-        while improved:
+        # Convergence cap: a node can oscillate between two communities (move
+        # A→B then B→A next pass), leaving ``improved`` True forever — an
+        # infinite busy-loop. Cap iterations so detect() always terminates.
+        max_iterations = 100
+        iteration = 0
+        while improved and iteration < max_iterations:
             improved = self._phase_one(nodes, edges)
+            iteration += 1
 
         # Phase 2: 社区聚合（简化实现）
         # 不迭代多层，保持单层结果

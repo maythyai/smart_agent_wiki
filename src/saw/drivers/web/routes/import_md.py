@@ -35,6 +35,31 @@ def get_write_queue(request: Request) -> SQLiteWriteQueue:
     return request.app.state.write_queue
 
 
+def _index_page(write_queue: SQLiteWriteQueue, wiki_repo: WikiRepository, page) -> None:
+    """Best-effort: index a just-written wiki page into FTS5 so it's searchable.
+
+    DEF-6 (symptom fix): the import routes previously called
+    ``wiki_repo.write(page)`` directly and never updated the FTS5 index, so
+    imported pages were invisible to search until a full re-index. This
+    indexes the page immediately. Full routing through the Write Queue
+    outbox (a ``wiki`` + ``fts5`` WriteOp dispatched via a sink) is a
+    separate architectural task — the app does not yet wire a dispatcher +
+    worker, so enqueueing without dispatching would silently drop writes.
+    This indexed-write closes the searchability gap directly and safely.
+    """
+    import sqlite3
+
+    from saw.engines.query.wiki_indexer import WikiIndexer
+
+    conn = getattr(write_queue, "_conn", None)
+    if not isinstance(conn, sqlite3.Connection):
+        return
+    try:
+        WikiIndexer(conn, wiki_repo).index_page(page.path)
+    except Exception:  # noqa: BLE001 — indexing is a rebuildable cache
+        pass
+
+
 @router.post("/import/markdown")
 async def import_markdown(
     files: list[UploadFile] = File(..., description="Markdown files to import"),
@@ -88,7 +113,7 @@ async def import_markdown(
             page = WikiPage(
                 path=f"imported/{slug}.md",
                 title=title,
-                page_type=PageType.CONCEPT,
+                page_type=PageType.SUMMARY,
                 tags=tags,
                 related=[],
                 confidence=ConfidenceLevel.UNVERIFIED,
@@ -99,6 +124,7 @@ async def import_markdown(
 
             # Write to wiki repo
             wiki_repo.write(page)
+            _index_page(write_queue, wiki_repo, page)
             imported.append(slug)
 
         except Exception as e:
@@ -175,7 +201,7 @@ async def import_zip(
                     page = WikiPage(
                         path=f"imported/{slug}.md",
                         title=title,
-                        page_type=PageType.CONCEPT,
+                        page_type=PageType.SUMMARY,
                         tags=tags,
                         related=[],
                         confidence=ConfidenceLevel.UNVERIFIED,
@@ -185,6 +211,7 @@ async def import_zip(
                     )
 
                     wiki_repo.write(page)
+                    _index_page(write_queue, wiki_repo, page)
                     imported.append(slug)
 
                 except Exception as e:

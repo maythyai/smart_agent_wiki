@@ -239,12 +239,33 @@ class IngestPipeline:
     def _get_existing_claims(self, new_claims: list[Claim]) -> list[Claim]:
         """Get existing claims that might overlap with new claims.
 
-        For now, returns empty list since we can't easily query by content_hash.
-        Phase 2 will implement more sophisticated overlap detection.
+        Queries by ``content_hash`` (which has a partial index) so the fuser
+        can dedup re-ingested claims instead of always inserting duplicates.
+        Returns ``[]`` on a non-SQLite repo (e.g. a Mock) or DB error.
+        Previously a ``return []`` placeholder.
         """
-        # Placeholder: no existing claims to check against
-        # In production, would query by source_uuid or content_hash
-        return []
+        import sqlite3
+
+        conn = getattr(self._claims_repo, "_conn", None)
+        if not isinstance(conn, sqlite3.Connection):
+            return []
+        hashes = {c.content_hash for c in new_claims if c.content_hash}
+        if not hashes:
+            return []
+        placeholders = ",".join("?" for _ in hashes)
+        try:
+            rows = conn.execute(
+                f"SELECT * FROM claim WHERE content_hash IN ({placeholders}) "
+                f"AND deleted_at IS NULL",
+                tuple(hashes),
+            ).fetchall()
+        except sqlite3.Error:
+            return []
+        # Use the concrete repo's row converter when available.
+        row_to_claim = getattr(self._claims_repo, "_row_to_claim", None)
+        if row_to_claim is None:
+            return []
+        return [row_to_claim(r) for r in rows]
 
     def _build_write_ops(
         self,

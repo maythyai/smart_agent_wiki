@@ -382,3 +382,69 @@ class TestAuditSummary:
         assert summary.by_type["ingest"] == 5
         assert summary.by_agent["Writer"] == 7
         assert summary.chain_valid is True
+
+
+class TestVerifyChainSecurityHardening:
+    """DEF-2: receipts must NOT be silently treated as valid when the signer
+    has no key, when a receipt has no signature, or when the receipt store is
+    corrupt. Previously all three returned ``(True, [])``.
+    """
+
+    def test_invalid_when_signer_has_no_public_key(self, tmp_path) -> None:
+        """Receipts signed by key A must fail verification when the verifier
+        has no key at all (e.g. corrupt/missing key file)."""
+        signer_a = ReceiptSigner()
+        signer_a.generate_keypair()
+        audit = AuditTrail(signer_a, tmp_path)
+        audit.record_operation("ingest", "Writer", "c-1", None, {})
+
+        empty_signer = ReceiptSigner()  # no key_path → no key loaded
+        assert empty_signer.get_public_key() is None
+
+        audit2 = AuditTrail(empty_signer, tmp_path)
+        is_valid, invalid = audit2.verify_chain()
+        assert is_valid is False
+        assert len(invalid) == 1
+
+    def test_flags_receipt_without_signature(self, tmp_path) -> None:
+        """A receipt missing its signature must be flagged invalid."""
+        signer = ReceiptSigner()
+        signer.generate_keypair()
+        audit = AuditTrail(signer, tmp_path)
+        audit.record_operation("ingest", "Writer", "c-1", None, {})
+
+        # Strip the signature from the persisted receipt
+        receipts = audit._load_receipts()
+        assert receipts  # sanity
+        op_id = receipts[0]["operation_id"]
+        receipts[0]["signature"] = None
+        audit._save_receipts(receipts)
+
+        is_valid, invalid = audit.verify_chain()
+        assert is_valid is False
+        assert op_id in invalid
+
+    def test_returns_false_on_corrupt_receipts_file(self, tmp_path) -> None:
+        """A corrupt receipts.yaml must not be silently treated as an empty
+        (hence valid) chain."""
+        signer = ReceiptSigner()
+        signer.generate_keypair()
+        audit = AuditTrail(signer, tmp_path)
+        audit.record_operation("ingest", "Writer", "c-1", None, {})
+
+        (tmp_path / "receipts.yaml").write_text("a: {unclosed flow\n")
+
+        is_valid, invalid = audit.verify_chain()
+        assert is_valid is False
+        assert invalid == []
+
+    def test_init_survives_corrupt_store(self, tmp_path) -> None:
+        """AuditTrail construction must not crash on a corrupt store; the
+        summary must report chain_valid=False instead."""
+        signer = ReceiptSigner()
+        signer.generate_keypair()
+        # Pre-corrupt before construction
+        (tmp_path / "receipts.yaml").write_text("a: {unclosed flow\n")
+        audit = AuditTrail(signer, tmp_path)  # must not raise
+        summary = audit.get_audit_summary()
+        assert summary.chain_valid is False

@@ -22,9 +22,10 @@ class Dispatcher:
     inside ``SQLiteWriteQueue.mark_failed``).
     """
 
-    def __init__(self, queue: SQLiteWriteQueue, sinks: list | None = None) -> None:
+    def __init__(self, queue: SQLiteWriteQueue, sinks: list | None = None, event_bus=None) -> None:
         self._queue = queue
         self._sinks: dict[str, object] = {}
+        self._event_bus = event_bus
         if sinks:
             for sink in sinks:
                 self.register_sink(sink)
@@ -64,12 +65,24 @@ class Dispatcher:
                 logger.warning("No sink registered for: %s", op.sink_name)
                 continue
 
-            self._queue.mark_processing(op.op_id)
+            if not self._queue.mark_processing(op.op_id):
+                # CAS guard (HI-6): another dispatcher already claimed this op.
+                continue
             try:
                 sink.write(op)
                 self._queue.track_sink(op.op_id, op.sink_name, "done")
                 self._queue.mark_done(op.op_id)
                 processed += 1
+                # HI-2: emit a write event so the WebSocket broadcaster and
+                # plugins are notified. publish_nowait is sync (the dispatcher
+                # is not async) and safe — it fans out via queue.put_nowait.
+                if self._event_bus is not None:
+                    self._event_bus.publish_nowait({
+                        "type": "PageUpdated" if op.sink_name == "wiki" else "WriteCompleted",
+                        "sink": op.sink_name,
+                        "op_id": op.op_id,
+                        **(op.payload or {}),
+                    })
             except Exception as e:
                 error_msg = str(e)
                 logger.error(
@@ -101,14 +114,15 @@ class Dispatcher:
         """
         conn = self._queue._conn
         now = datetime.now(timezone.utc).isoformat()
-        cursor = conn.execute(
-            """UPDATE write_outbox
-               SET status = 'pending', updated_at = ?
-               WHERE status = 'processing'""",
-            (now,),
-        )
-        rowcount = cursor.rowcount
-        if rowcount > 0:
-            conn.commit()
-            logger.info("Recovered %d PROCESSING ops to PENDING", rowcount)
+        with self._queue._lock:
+            cursor = conn.execute(
+                """UPDATE write_outbox
+                   SET status = 'pending', updated_at = ?
+                   WHERE status = 'processing'""",
+                (now,),
+            )
+            rowcount = cursor.rowcount
+            if rowcount > 0:
+                conn.commit()
+                logger.info("Recovered %d PROCESSING ops to PENDING", rowcount)
         return rowcount

@@ -211,6 +211,7 @@ Source: {item.source_url}
         """
         # 生成综合页面
         page_id = f"synthesis-{hashlib.md5(research_topic.encode()).hexdigest()[:12]}"
+        self.wiki_path.mkdir(parents=True, exist_ok=True)
         path = self.wiki_path / f"{page_id}.md"
 
         # 构建内容

@@ -123,19 +123,28 @@ class FreshnessTracker:
     ) -> None:
         """Refresh freshness when user accesses a claim (per D-13).
 
-        Updates the last_accessed timestamp, which reduces staleness
-        in subsequent freshness calculations.
-
-        Args:
-            claim_uuid: UUID of the accessed claim.
-            claims_repo: Repository for claim operations.
+        Updates the claim's ``last_accessed`` timestamp (column added by
+        migration v3), which reduces staleness in subsequent freshness
+        calculations. No-op on a non-SQLite repo or when the column is absent.
         """
-        # In production, this would update the claim's last_accessed field
-        # via WriteQueue. For now, we just record the access.
-        claim = claims_repo.get_by_id(claim_uuid)
-        if claim is None:
+        import sqlite3
+        from datetime import datetime, timezone
+
+        conn = getattr(claims_repo, "_conn", None)
+        if not isinstance(conn, sqlite3.Connection):
             return
-        # Would update last_accessed to now() in production
+        cols = {r[1] for r in conn.execute("PRAGMA table_info(claim)")}
+        if "last_accessed" not in cols:
+            return
+        try:
+            conn.execute(
+                "UPDATE claim SET last_accessed = ? "
+                "WHERE uuid = ? AND deleted_at IS NULL",
+                (datetime.now(timezone.utc).isoformat(), claim_uuid),
+            )
+            conn.commit()
+        except sqlite3.Error:
+            pass
 
     def get_freshness_distribution(
         self,
@@ -143,14 +152,49 @@ class FreshnessTracker:
     ) -> dict[FreshnessLevel, int]:
         """Get distribution of claims by freshness level.
 
-        Args:
-            claims_repo: Repository to query.
-
-        Returns:
-            Dict mapping freshness level to count.
+        Computes each claim's level from ``created_at`` (and ``last_accessed``
+        when present) via ``calculate_freshness``. Returns zeros on a
+        non-SQLite repo (e.g. a Mock) or DB error. Previously a placeholder
+        returning all-zeros.
         """
-        # Placeholder - would query DB for distribution
-        return {level: 0 for level in FreshnessLevel}
+        import sqlite3
+        from datetime import datetime, timezone
+
+        distribution = {level: 0 for level in FreshnessLevel}
+        conn = getattr(claims_repo, "_conn", None)
+        if not isinstance(conn, sqlite3.Connection):
+            return distribution
+        try:
+            cols = {r[1] for r in conn.execute("PRAGMA table_info(claim)")}
+            has_la = "last_accessed" in cols
+            sql = (
+                "SELECT created_at, last_accessed FROM claim WHERE deleted_at IS NULL"
+                if has_la
+                else "SELECT created_at FROM claim WHERE deleted_at IS NULL"
+            )
+            rows = conn.execute(sql).fetchall()
+        except sqlite3.Error:
+            return distribution
+
+        for row in rows:
+            created_str = row[0]
+            if not created_str:
+                continue
+            try:
+                created = datetime.fromisoformat(str(created_str))
+                if created.tzinfo is None:
+                    created = created.replace(tzinfo=timezone.utc)
+                last_accessed = created
+                if has_la and row[1]:
+                    la = datetime.fromisoformat(str(row[1]))
+                    if la.tzinfo is None:
+                        la = la.replace(tzinfo=timezone.utc)
+                    last_accessed = la
+                level = self.calculate_freshness(created, last_accessed, 0, False)
+                distribution[level] += 1
+            except (ValueError, TypeError):
+                distribution[FreshnessLevel.LEVEL_8] += 1
+        return distribution
 
     def get_stale_claims(
         self,
@@ -166,5 +210,31 @@ class FreshnessTracker:
         Returns:
             List of claim UUIDs needing review.
         """
-        # Placeholder - would query DB for stale claims
-        return []
+        import sqlite3
+        from datetime import datetime, timezone
+
+        conn = getattr(claims_repo, "_conn", None)
+        if not isinstance(conn, sqlite3.Connection):
+            return []
+        try:
+            rows = conn.execute(
+                "SELECT uuid, created_at FROM claim WHERE deleted_at IS NULL"
+            ).fetchall()
+        except sqlite3.Error:
+            return []
+
+        stale: list[str] = []
+        for row in rows:
+            created_str = row[1]
+            if not created_str:
+                continue
+            try:
+                created = datetime.fromisoformat(str(created_str))
+                if created.tzinfo is None:
+                    created = created.replace(tzinfo=timezone.utc)
+                level = self.calculate_freshness(created, created, 0, False)
+                if level >= threshold:
+                    stale.append(row[0])
+            except (ValueError, TypeError):
+                continue
+        return stale

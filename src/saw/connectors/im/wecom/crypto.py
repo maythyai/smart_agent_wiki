@@ -7,7 +7,9 @@ from __future__ import annotations
 
 import base64
 import hashlib
+import hmac
 import logging
+import time
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend
 from typing import Optional
@@ -98,7 +100,17 @@ class WeComCrypto:
         # SHA1(sort(token, timestamp, nonce, encrypted))
         sorted_str = "".join(sorted([self._token, timestamp, nonce, encrypted]))
         computed = hashlib.sha1(sorted_str.encode()).hexdigest()
-        return computed == signature
+        # M-24: constant-time comparison (was `==`, timing-attack vulnerable).
+        if not hmac.compare_digest(computed, signature):
+            return False
+        # M-25: reject replayed webhooks (matching the Slack/Feishu 300s window).
+        try:
+            ts = int(timestamp)
+            if abs(time.time() - ts) > 300:
+                return False
+        except (TypeError, ValueError):
+            return False
+        return True
 
     def encrypt(self, message: str) -> str:
         """Encrypt message for WeCom (for reply).

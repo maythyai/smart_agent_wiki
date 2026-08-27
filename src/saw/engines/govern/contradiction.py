@@ -276,15 +276,34 @@ class ContradictionDetector:
             return ResolutionStrategy.HISTORICAL
 
     def apply_resolution(self, record: ContradictionRecord) -> None:
-        """Apply resolution to claims in DB.
+        """Apply resolution: persist the resolved state of a contradiction.
 
-        Args:
-            record: The contradiction record with resolution.
+        Per D-09 the resolution strategy is chosen when the record is created.
+        This stamps ``resolved_at`` (and re-persists the strategy) so records
+        that were left unresolved (e.g. HISTORICAL awaiting human review) are
+        marked resolved. Previously a ``pass`` no-op, so contradictions stayed
+        "unresolved" forever. Best-effort: errors are logged, not raised.
         """
-        # Update claim status based on resolution
-        # This would normally go through WriteQueue
-        # Placeholder: mark claims with resolution status
-        pass
+        conn = getattr(self._claims_repo, "_conn", None)
+        if not isinstance(conn, sqlite3.Connection):
+            return
+        from datetime import datetime, timezone
+
+        now = datetime.now(timezone.utc).isoformat()
+        try:
+            conn.execute(
+                "UPDATE contradictions SET resolved_at = ?, resolution = ? "
+                "WHERE uuid = ?",
+                (now, record.resolution.name.lower(), record.uuid),
+            )
+            conn.commit()
+            record.resolved_at = datetime.fromisoformat(now)
+        except sqlite3.Error:
+            import logging
+
+            logging.getLogger(__name__).warning(
+                "Failed to apply resolution for contradiction %s", record.uuid
+            )
 
     def _create_record(
         self,

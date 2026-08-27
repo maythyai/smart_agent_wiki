@@ -195,7 +195,7 @@ class TestSchedulerStaggering:
             with patch.object(scheduler._scheduler, 'add_job') as mock_add_job:
                 # Run the start method to schedule all feeds
                 import asyncio
-                asyncio.get_event_loop().run_until_complete(scheduler.start())
+                asyncio.run(scheduler.start())
 
                 # Collect the initial delays from call args
                 for call in mock_add_job.call_args_list:

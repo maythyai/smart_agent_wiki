@@ -17,6 +17,7 @@ from saw.code_graph.models import (
     CodeNode,
     EdgeType,
     ConfidenceTier,
+    NodeKind,
     ParseResult,
 )
 from saw.code_graph.resolvers.base import BaseResolver
@@ -45,8 +46,37 @@ class PythonResolver(BaseResolver):
 
     def resolve(self, result: ParseResult, all_nodes: dict[str, CodeNode]) -> ParseResult:
         """增强 ParseResult"""
+        self._resolve_endpoints(result)
         self._resolve_dependencies(result)
         return result
+
+    def _resolve_endpoints(self, result: ParseResult) -> None:
+        """Mark route-decorated functions as ENDPOINT nodes (Sprint 4).
+
+        A decorator like ``app.get('/users')`` or ``@router.post('/x')`` marks
+        the function as an ENDPOINT with ``http_method`` metadata. Previously
+        ``ROUTE_DECORATORS`` was defined but never used, so no endpoint was
+        ever detected.
+        """
+        import re
+
+        verb_re = re.compile(
+            r"@?[\w.]+\.(" + "|".join(ROUTE_DECORATORS) + r")\b"
+        )
+        for node in result.nodes:
+            if node.kind != NodeKind.FUNCTION:
+                continue
+            decorators = node.metadata.get("decorators") or []
+            for dec in decorators:
+                m = verb_re.search(dec)
+                if m:
+                    verb = m.group(1)
+                    node.kind = NodeKind.ENDPOINT
+                    node.metadata["http_method"] = (
+                        verb.upper() if verb != "route" else "ANY"
+                    )
+                    node.metadata["is_endpoint"] = True
+                    break
 
     def _resolve_dependencies(self, result: ParseResult) -> None:
         """识别 Depends() 调用，生成 DEPENDS_ON 边"""

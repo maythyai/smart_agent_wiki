@@ -108,6 +108,6 @@ class TestWriteOpStatus:
     """Test WriteOpStatus enum."""
 
     def test_members(self):
-        assert len(WriteOpStatus) == 4
+        assert len(WriteOpStatus) == 5
         members = {m.name for m in WriteOpStatus}
-        assert members == {"PENDING", "PROCESSING", "DONE", "FAILED"}
+        assert members == {"PENDING", "PROCESSING", "DONE", "FAILED", "DEAD_LETTER"}

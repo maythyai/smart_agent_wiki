@@ -9,6 +9,7 @@ from typing import Any
 from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from saw.domain.exceptions import (
     SAWError,
@@ -99,6 +100,34 @@ def register_exception_handlers(app: FastAPI) -> None:
                 "title": "Request validation failed",
                 "status": 422,
                 "detail": exc.errors(),
+            },
+        )
+
+    @app.exception_handler(StarletteHTTPException)
+    async def http_exception_handler(
+        request: Request, exc: StarletteHTTPException
+    ) -> JSONResponse:
+        """Reshape HTTPException (raised pervasively by routes) to RFC 7807.
+
+        M-6: previously FastAPI's built-in handler returned ``{"detail": ...}``,
+        producing two incompatible error schemas. For 5xx the detail is masked
+        (routes interpolate ``{e}`` into 500 messages, leaking internals);
+        4xx detail is preserved (useful, client-facing).
+        """
+        if exc.status_code >= 500:
+            logging.exception(
+                "HTTP %d in %s: %s", exc.status_code, request.url, exc.detail
+            )
+            detail = "An internal error occurred"
+        else:
+            detail = exc.detail if isinstance(exc.detail, str) else "Bad request"
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={
+                "type": f"https://smart-agent.wiki/errors/http-{exc.status_code}",
+                "title": exc.__class__.__name__,
+                "status": exc.status_code,
+                "detail": detail,
             },
         )
 

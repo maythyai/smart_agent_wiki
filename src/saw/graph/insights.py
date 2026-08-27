@@ -126,7 +126,7 @@ class InsightGenerator:
         self._find_sparse_communities(communities)
 
         # 4. 发现桥接节点
-        self._find_bridge_nodes(nodes, node_communities)
+        self._find_bridge_nodes(nodes, edges, node_communities)
 
         analysis_time = time() - start_time
 
@@ -275,9 +275,10 @@ class InsightGenerator:
     def _find_bridge_nodes(
         self,
         nodes: dict[str, dict],
+        edges: dict[tuple[str, str], dict],
         node_communities: dict[str, int],
     ) -> None:
-        """发现桥接节点"""
+        """发现桥接节点（连接多个社区的节点）."""
         # 计算每个节点连接的社区数
         node_connections: dict[str, set[int]] = {}
 
@@ -285,13 +286,15 @@ class InsightGenerator:
             comm = node_communities.get(node_id, -1)
             node_connections[node_id] = {comm}
 
-        # 从 edges 扩展
-        for (a, b) in nodes.keys():  # 简化：遍历所有节点
-            for other_node in nodes.keys():
-                if other_node == a:
-                    continue
-                # 实际应该从 edges 获取
-                # 这里简化处理
+        # 从 edges 扩展：每条边把对端社区加入本端连接集。此前代码错误地
+        # 遍历 ``nodes.keys()``（字符串）并按 (a, b) 解包 → ValueError。
+        for (a, b) in edges.keys():
+            ca = node_communities.get(a)
+            cb = node_communities.get(b)
+            if ca is not None:
+                node_connections.setdefault(a, set()).add(ca)
+            if cb is not None:
+                node_connections.setdefault(b, set()).add(cb)
 
         # 识别桥接节点
         for node_id, connected_comms in node_connections.items():

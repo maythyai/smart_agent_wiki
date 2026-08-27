@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+import threading
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 
@@ -70,7 +71,23 @@ class SQLiteWriteQueue:
 
     def __init__(self, conn: sqlite3.Connection) -> None:
         self._conn = conn
+        # Per DEF-7: the shared connection is opened with
+        # check_same_thread=False (see drivers/web/app.py) so dispatcher +
+        # request threads can both write. All mutations must serialize on this
+        # lock to avoid "database is locked" / interleaved commits. Mirrors the
+        # locking pattern in code_graph/store.py.
+        self._lock = threading.Lock()
+        self._dispatcher = None
         self._create_tables()
+
+    def attach_dispatcher(self, dispatcher) -> None:
+        """Attach a dispatcher used by ``enqueue_atomic`` for inline dispatch.
+
+        CR-3: without an attached dispatcher, ``enqueue_atomic`` enqueued ops
+        but nothing ever dispatched them to sinks — web writes were silently
+        lost. With one attached, pending ops are drained inline after enqueue.
+        """
+        self._dispatcher = dispatcher
 
     def _create_tables(self) -> None:
         """Ensure outbox tables exist (delegates to the migration framework).
@@ -89,35 +106,40 @@ class SQLiteWriteQueue:
 
     def enqueue(self, ops: list[WriteOp]) -> None:
         """Atomically enqueue all operations. All-or-nothing."""
-        try:
-            with self._conn:
-                for op in ops:
-                    self._conn.execute(
-                        """INSERT INTO write_outbox
-                           (op_id, session_id, sink_name, payload, status,
-                            retry_count, max_retries, created_at)
-                           VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
-                        (
-                            op.op_id,
-                            op.session_id,
-                            op.sink_name,
-                            json.dumps(op.payload),
-                            op.status.name.lower(),
-                            op.retry_count,
-                            op.max_retries,
-                            op.created_at.isoformat(),
-                        ),
-                    )
-        except sqlite3.IntegrityError as e:
-            raise WriteQueueError(f"Duplicate op_id in enqueue: {e}") from e
-        except sqlite3.Error as e:
-            raise WriteQueueError(f"Failed to enqueue operations: {e}") from e
+        with self._lock:
+            try:
+                with self._conn:
+                    for op in ops:
+                        self._conn.execute(
+                            """INSERT INTO write_outbox
+                               (op_id, session_id, sink_name, payload, status,
+                                retry_count, max_retries, created_at)
+                               VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                            (
+                                op.op_id,
+                                op.session_id,
+                                op.sink_name,
+                                json.dumps(op.payload),
+                                op.status.name.lower(),
+                                op.retry_count,
+                                op.max_retries,
+                                op.created_at.isoformat(),
+                            ),
+                        )
+            except sqlite3.IntegrityError as e:
+                raise WriteQueueError(f"Duplicate op_id in enqueue: {e}") from e
+            except sqlite3.Error as e:
+                raise WriteQueueError(f"Failed to enqueue operations: {e}") from e
 
     def enqueue_atomic(self, ops: list[WriteOp]) -> None:
-        """Enqueue then immediately dispatch to sinks."""
+        """Enqueue then immediately dispatch to sinks.
+
+        If a dispatcher has been attached via ``attach_dispatcher``, pending
+        ops are dispatched inline so writes reach their sink synchronously.
+        """
         self.enqueue(ops)
-        # Dispatcher is set externally; caller should invoke dispatch_pending
-        # after enqueue_atomic. This method exists for the protocol contract.
+        if self._dispatcher is not None:
+            self._dispatcher.dispatch_pending()
 
     def get_pending(self) -> list[WriteOp]:
         """Get pending and retryable operations.
@@ -127,38 +149,48 @@ class SQLiteWriteQueue:
         their retries (moved to ``dead_letter``).
         """
         now = datetime.now(timezone.utc).isoformat()
-        rows = self._conn.execute(
-            """SELECT op_id, session_id, sink_name, payload, status,
-                      retry_count, max_retries, error_message, created_at,
-                      updated_at, next_retry_at
-               FROM write_outbox
-               WHERE status IN ('pending', 'failed')
-                 AND retry_count < max_retries
-                 AND (next_retry_at IS NULL OR next_retry_at <= ?)
-               ORDER BY created_at ASC""",
-            (now,),
-        ).fetchall()
+        with self._lock:
+            rows = self._conn.execute(
+                """SELECT op_id, session_id, sink_name, payload, status,
+                          retry_count, max_retries, error_message, created_at,
+                          updated_at, next_retry_at
+                   FROM write_outbox
+                   WHERE status IN ('pending', 'failed')
+                     AND retry_count < max_retries
+                     AND (next_retry_at IS NULL OR next_retry_at <= ?)
+                   ORDER BY created_at ASC""",
+                (now,),
+            ).fetchall()
         return [self._row_to_op(row) for row in rows]
 
-    def mark_processing(self, op_id: str) -> None:
-        """Mark an operation as processing."""
-        self._conn.execute(
-            """UPDATE write_outbox
-               SET status = 'processing', updated_at = ?
-               WHERE op_id = ?""",
-            (datetime.now(timezone.utc).isoformat(), op_id),
-        )
-        self._conn.commit()
+    def mark_processing(self, op_id: str) -> bool:
+        """Atomically claim an operation for processing.
+
+        Uses a CAS guard (``status IN ('pending','failed')``) so two concurrent
+        dispatchers cannot both claim the same op (HI-6). Returns ``True`` if
+        this caller claimed the op (1 row updated), ``False`` if another
+        dispatcher already did (0 rows).
+        """
+        with self._lock:
+            cursor = self._conn.execute(
+                """UPDATE write_outbox
+                   SET status = 'processing', updated_at = ?
+                   WHERE op_id = ? AND status IN ('pending', 'failed')""",
+                (datetime.now(timezone.utc).isoformat(), op_id),
+            )
+            self._conn.commit()
+            return cursor.rowcount > 0
 
     def mark_done(self, op_id: str) -> None:
         """Mark an operation as done."""
-        self._conn.execute(
-            """UPDATE write_outbox
-               SET status = 'done', updated_at = ?
-               WHERE op_id = ?""",
-            (datetime.now(timezone.utc).isoformat(), op_id),
-        )
-        self._conn.commit()
+        with self._lock:
+            self._conn.execute(
+                """UPDATE write_outbox
+                   SET status = 'done', updated_at = ?
+                   WHERE op_id = ?""",
+                (datetime.now(timezone.utc).isoformat(), op_id),
+            )
+            self._conn.commit()
 
     def mark_failed(self, op_id: str, error: str) -> None:
         """Mark an operation as failed, apply exponential backoff, or move to dead letter.
@@ -168,75 +200,78 @@ class SQLiteWriteQueue:
         the op is moved to ``dead_letter`` status instead of remaining
         ``failed`` indefinitely.
         """
-        now = datetime.now(timezone.utc)
-        # Read current retry_count and max_retries
-        row = self._conn.execute(
-            "SELECT retry_count, max_retries FROM write_outbox WHERE op_id = ?",
-            (op_id,),
-        ).fetchone()
-        if row is None:
-            return
+        with self._lock:
+            now = datetime.now(timezone.utc)
+            # Read current retry_count and max_retries
+            row = self._conn.execute(
+                "SELECT retry_count, max_retries FROM write_outbox WHERE op_id = ?",
+                (op_id,),
+            ).fetchone()
+            if row is None:
+                return
 
-        current_retry = row[0]
-        max_retries = row[1]
-        new_retry_count = current_retry + 1
+            current_retry = row[0]
+            max_retries = row[1]
+            new_retry_count = current_retry + 1
 
-        if new_retry_count >= max_retries:
-            # Exhausted retries — move to dead letter queue
-            self._conn.execute(
-                """UPDATE write_outbox
-                   SET status = 'dead_letter',
-                       retry_count = ?,
-                       error_message = ?,
-                       updated_at = ?,
-                       next_retry_at = NULL
-                   WHERE op_id = ?""",
-                (new_retry_count, error, now.isoformat(), op_id),
-            )
-        else:
-            # Schedule next retry with exponential backoff.
-            # First failure (new_retry_count == 1) is NOT delayed so the
-            # dispatcher can retry immediately — this avoids a dead window
-            # where the op is 'failed' but not yet visible to get_pending.
-            # Subsequent failures get 2^retry_count seconds of backoff.
-            from datetime import timedelta
+            if new_retry_count >= max_retries:
+                # Exhausted retries — move to dead letter queue
+                self._conn.execute(
+                    """UPDATE write_outbox
+                       SET status = 'dead_letter',
+                           retry_count = ?,
+                           error_message = ?,
+                           updated_at = ?,
+                           next_retry_at = NULL
+                       WHERE op_id = ?""",
+                    (new_retry_count, error, now.isoformat(), op_id),
+                )
+            else:
+                # Schedule next retry with exponential backoff.
+                # First failure (new_retry_count == 1) is NOT delayed so the
+                # dispatcher can retry immediately — this avoids a dead window
+                # where the op is 'failed' but not yet visible to get_pending.
+                # Subsequent failures get 2^retry_count seconds of backoff.
+                from datetime import timedelta
 
-            next_retry_at = None
-            if new_retry_count > 1:
-                next_retry_at = (now + timedelta(seconds=2 ** new_retry_count)).isoformat()
-            self._conn.execute(
-                """UPDATE write_outbox
-                   SET status = 'failed',
-                       retry_count = ?,
-                       error_message = ?,
-                       updated_at = ?,
-                       next_retry_at = ?
-                   WHERE op_id = ?""",
-                (new_retry_count, error, now.isoformat(), next_retry_at, op_id),
-            )
-        self._conn.commit()
+                next_retry_at = None
+                if new_retry_count > 1:
+                    next_retry_at = (now + timedelta(seconds=2 ** new_retry_count)).isoformat()
+                self._conn.execute(
+                    """UPDATE write_outbox
+                       SET status = 'failed',
+                           retry_count = ?,
+                           error_message = ?,
+                           updated_at = ?,
+                           next_retry_at = ?
+                       WHERE op_id = ?""",
+                    (new_retry_count, error, now.isoformat(), next_retry_at, op_id),
+                )
+            self._conn.commit()
 
     def track_sink(self, op_id: str, sink_name: str, status: str,
                    error: str | None = None) -> None:
         """Record per-sink completion status."""
-        completed_at = datetime.now(timezone.utc).isoformat() if status == "done" else None
-        self._conn.execute(
-            """INSERT INTO sink_tracking (op_id, sink_name, status, completed_at, error_message)
-               VALUES (?, ?, ?, ?, ?)
-               ON CONFLICT(op_id, sink_name)
-               DO UPDATE SET status=excluded.status,
-                             completed_at=excluded.completed_at,
-                             error_message=excluded.error_message""",
-            (op_id, sink_name, status, completed_at, error),
-        )
-        self._conn.commit()
+        with self._lock:
+            completed_at = datetime.now(timezone.utc).isoformat() if status == "done" else None
+            self._conn.execute(
+                """INSERT INTO sink_tracking (op_id, sink_name, status, completed_at, error_message)
+                   VALUES (?, ?, ?, ?, ?)
+                   ON CONFLICT(op_id, sink_name)
+                   DO UPDATE SET status=excluded.status,
+                                 completed_at=excluded.completed_at,
+                                 error_message=excluded.error_message""",
+                (op_id, sink_name, status, completed_at, error),
+            )
+            self._conn.commit()
 
     def get_sink_status(self, op_id: str) -> dict[str, str]:
         """Return per-sink completion status for an operation."""
-        rows = self._conn.execute(
-            "SELECT sink_name, status FROM sink_tracking WHERE op_id = ?",
-            (op_id,),
-        ).fetchall()
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT sink_name, status FROM sink_tracking WHERE op_id = ?",
+                (op_id,),
+            ).fetchall()
         return {row[0]: row[1] for row in rows}
 
     @staticmethod
@@ -265,14 +300,15 @@ class SQLiteWriteQueue:
         These are ops whose ``retry_count >= max_retries`` and have been
         permanently parked for manual inspection or retry.
         """
-        rows = self._conn.execute(
-            """SELECT op_id, session_id, sink_name, payload, status,
-                      retry_count, max_retries, error_message, created_at,
-                      updated_at, next_retry_at
-               FROM write_outbox
-               WHERE status = 'dead_letter'
-               ORDER BY created_at ASC"""
-        ).fetchall()
+        with self._lock:
+            rows = self._conn.execute(
+                """SELECT op_id, session_id, sink_name, payload, status,
+                          retry_count, max_retries, error_message, created_at,
+                          updated_at, next_retry_at
+                   FROM write_outbox
+                   WHERE status = 'dead_letter'
+                   ORDER BY created_at ASC"""
+            ).fetchall()
         return [self._row_to_op(row) for row in rows]
 
     def retry_dead_letter(self, op_id: str) -> None:
@@ -284,20 +320,21 @@ class SQLiteWriteQueue:
         Raises:
             WriteQueueError: If the op_id is not found or is not in dead_letter status.
         """
-        now = datetime.now(timezone.utc).isoformat()
-        cursor = self._conn.execute(
-            """UPDATE write_outbox
-               SET status = 'pending',
-                   retry_count = 0,
-                   error_message = NULL,
-                   updated_at = ?,
-                   next_retry_at = NULL
-               WHERE op_id = ?
-                 AND status = 'dead_letter'""",
-            (now, op_id),
-        )
-        self._conn.commit()
-        if cursor.rowcount == 0:
-            raise WriteQueueError(
-                f"Op {op_id} not found in dead_letter queue"
+        with self._lock:
+            now = datetime.now(timezone.utc).isoformat()
+            cursor = self._conn.execute(
+                """UPDATE write_outbox
+                   SET status = 'pending',
+                       retry_count = 0,
+                       error_message = NULL,
+                       updated_at = ?,
+                       next_retry_at = NULL
+                   WHERE op_id = ?
+                     AND status = 'dead_letter'""",
+                (now, op_id),
             )
+            self._conn.commit()
+            if cursor.rowcount == 0:
+                raise WriteQueueError(
+                    f"Op {op_id} not found in dead_letter queue"
+                )

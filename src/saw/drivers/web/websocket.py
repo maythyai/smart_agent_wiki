@@ -180,31 +180,36 @@ class ConnectionManager:
             pass
 
     def _event_to_message(self, event: Any) -> WSMessage:
-        """Convert domain event to WebSocket message.
+        """Convert an event (dict or dataclass) to a WebSocket message.
 
         Per D-05: Map event types to WebSocket message types.
         - AgentProgress -> agent_status
-        - WorkflowStep -> workflow_progress
-        - PageUpdated -> page_updated
+        - WorkflowStep/WorkflowStarted/WorkflowCompleted -> workflow_progress
+        - PageCreated/PageUpdated/PageDeleted -> page_updated
         - ContradictionFound -> page_updated
         - ClaimsReady -> page_updated
         - IngestCompleted -> page_updated
 
-        Args:
-            event: Domain event to convert.
-
-        Returns:
-            WSMessage ready for WebSocket transmission.
+        Events may be plain dicts (WorkflowExecutor and the Write Queue
+        dispatcher publish ``{"type": "WorkflowStep", ...}``) or dataclass
+        instances (domain/plugin events). Both are normalized here.
         """
         event_type_map = {
             "AgentProgress": "agent_status",
             "WorkflowStep": "workflow_progress",
+            "WorkflowStarted": "workflow_progress",
+            "WorkflowCompleted": "workflow_progress",
+            "PageCreated": "page_updated",
             "PageUpdated": "page_updated",
+            "PageDeleted": "page_updated",
             "ContradictionFound": "page_updated",
             "ClaimsReady": "page_updated",
             "IngestCompleted": "page_updated",
         }
-        event_name = type(event).__name__
+        if isinstance(event, dict):
+            event_name = str(event.get("type") or "unknown")
+        else:
+            event_name = type(event).__name__
         return WSMessage(
             type=event_type_map.get(event_name, "unknown"),
             payload=self._event_to_payload(event),
@@ -212,29 +217,29 @@ class ConnectionManager:
         )
 
     def _event_to_payload(self, event: Any) -> dict[str, Any]:
-        """Extract payload from event.
-
-        Args:
-            event: Domain event to extract from.
-
-        Returns:
-            Dictionary of event attributes.
-        """
+        """Extract a JSON-safe payload from an event (dict or dataclass)."""
         from enum import Enum
 
-        if hasattr(event, "__dict__"):
-            payload: dict[str, Any] = {}
-            for key, value in event.__dict__.items():
-                # Convert non-serializable types
-                if hasattr(value, "isoformat"):
-                    payload[key] = value.isoformat()
-                elif isinstance(value, Enum):
-                    # For enums, use .value (actual string/int value)
-                    payload[key] = value.value
-                else:
-                    payload[key] = value
-            return payload
-        return {}
+        if isinstance(event, dict):
+            source = event
+        elif hasattr(event, "__dict__"):
+            source = event.__dict__
+        else:
+            return {}
+        payload: dict[str, Any] = {}
+        for key, value in source.items():
+            if key == "type":
+                # Already represented as the WS message type; skip duplication.
+                continue
+            # Convert non-serializable types
+            if hasattr(value, "isoformat"):
+                payload[key] = value.isoformat()
+            elif isinstance(value, Enum):
+                # For enums, use .value (actual string/int value)
+                payload[key] = value.value
+            else:
+                payload[key] = value
+        return payload
 
 
 # Global manager instance (per D-04)

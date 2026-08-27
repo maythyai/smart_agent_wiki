@@ -64,7 +64,7 @@ class FSRSScheduler:
     ) -> None:
         self._wiki = wiki_repo
         self._claims = claims_repo
-        self._data_dir = data_dir or Path(".saw")
+        self._data_dir = data_dir or Path(".")
         self._fsrs = Scheduler()  # Use default parameters
         self._cards: dict[str, Card] = {}  # page_path -> FSRS Card
 

@@ -240,3 +240,60 @@ class TestTimelineEnqueueContract:
         assert len(ops) == 2
         wiki_op = next(o for o in ops if o.sink_name == "wiki")
         assert wiki_op.payload["path"] == result.slug
+
+
+class TestWriteQueueThreadSafety:
+    """DEF-7: SQLiteWriteQueue must serialize all conn access under a lock.
+
+    The production connection is opened with ``check_same_thread=False`` (see
+    drivers/web/app.py) so the dispatcher thread and request threads share it.
+    Without locking, concurrent commits raise ``sqlite3.OperationalError:
+    database is locked`` or interleave writes.
+    """
+
+    def test_concurrent_enqueue_and_mark_done_no_corruption(self, tmp_path):
+        import threading
+
+        conn = sqlite3.connect(str(tmp_path / "cq.db"), check_same_thread=False)
+        conn.executescript(OUTBOX_DDL)
+        queue = SQLiteWriteQueue(conn)
+
+        errors: list[Exception] = []
+
+        def worker(i: int) -> None:
+            try:
+                ops = [
+                    WriteOp(
+                        op_id=f"op-{i}-{j}",
+                        session_id="s",
+                        sink_name="x",
+                        payload={"i": i, "j": j},
+                    )
+                    for j in range(20)
+                ]
+                queue.enqueue(ops)
+                for op in ops:
+                    queue.mark_processing(op.op_id)
+                    queue.track_sink(op.op_id, "x", "done")
+                    queue.mark_done(op.op_id)
+            except Exception as e:  # noqa: BLE001
+                errors.append(e)
+
+        threads = [threading.Thread(target=worker, args=(i,)) for i in range(8)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        assert not errors, f"concurrent queue ops raised: {errors}"
+        total = 8 * 20
+        n = conn.execute("SELECT COUNT(*) FROM write_outbox").fetchone()[0]
+        assert n == total
+        done = conn.execute(
+            "SELECT COUNT(*) FROM write_outbox WHERE status='done'"
+        ).fetchone()[0]
+        assert done == total
+        tracked = conn.execute(
+            "SELECT COUNT(*) FROM sink_tracking WHERE status='done'"
+        ).fetchone()[0]
+        assert tracked == total

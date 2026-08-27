@@ -14,16 +14,23 @@ class TestCollaborateEngine:
 
     @pytest.fixture
     def mock_dispatcher(self):
-        """Create mock AgentDispatcher."""
+        """Create mock AgentDispatcher.
+
+        DEF-1: ``CollaborateEngine.get_available_agents`` delegates to
+        ``dispatcher.get_registered_agents()``, so the mock must return the
+        agent roster from that method (not just set ``_agents``).
+        """
         from saw.engines.collaborate.dispatcher import AgentDispatcher
 
         dispatcher = MagicMock(spec=AgentDispatcher)
-        dispatcher._agents = {
+        agents = {
             "Librarian": MagicMock(),
             "Scholar": MagicMock(),
             "Critic": MagicMock(),
             "Writer": MagicMock(),
         }
+        dispatcher._agents = agents
+        dispatcher.get_registered_agents.return_value = agents
         dispatcher.dispatch = AsyncMock()
         return dispatcher
 

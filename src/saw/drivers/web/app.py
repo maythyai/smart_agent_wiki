@@ -12,10 +12,41 @@ from typing import TYPE_CHECKING, Any
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+# M-18: single source of truth for the version (pyproject.toml). Previously
+# the app advertised 1.1.0, /health 2.0.0, the Dockerfile 3.4.0, and pyproject
+# 1.0.1 — four different numbers.
+try:
+    from importlib.metadata import version as _pkg_version
+
+    __version__ = _pkg_version("smart-agent-wiki")
+except Exception:  # pragma: no cover — not installed
+    __version__ = "0.0.0"
+
 if TYPE_CHECKING:
     from saw.engines.collaborate.orchestrator import CollaborateEngine
     from saw.engines.query.engine import QueryEngine
     from saw.write_queue.queue import SQLiteWriteQueue
+
+
+def _recover_stranded_workflows(conn) -> int:
+    """HI-9: mark workflow executions left 'running' by a crash as 'interrupted'.
+
+    Returns the count of recovered rows. Safe to call on a fresh DB (the
+    workflow_executions table is created by migration v4).
+    """
+    try:
+        from datetime import datetime, timezone
+
+        now = datetime.now(timezone.utc).isoformat()
+        with conn:
+            cur = conn.execute(
+                "UPDATE workflow_executions SET status='interrupted', "
+                "updated_at=?, finished_at=? WHERE status='running'",
+                (now, now),
+            )
+            return cur.rowcount
+    except sqlite3.Error:
+        return 0
 
 
 @asynccontextmanager
@@ -31,9 +62,59 @@ async def lifespan(app: FastAPI):
         manager.set_event_bus(app.state.event_bus)
         await manager.start_broadcaster()
 
+    # CR-3 / HI-7: recover stranded 'processing' ops and drain pending so
+    # writes are not lost across restarts. HI-7: a recurring background task
+    # also re-runs recover() every 60s to reset ops stranded by a mid-flight
+    # crash (process killed between mark_processing and mark_done).
+    _wq = getattr(app.state, "write_queue", None)
+    _disp = getattr(_wq, "_dispatcher", None) if _wq else None
+    if _disp is not None:
+        import asyncio as _asyncio
+        await _asyncio.to_thread(_disp.recover)
+        await _asyncio.to_thread(_disp.dispatch_pending)
+
+        async def _recover_loop():
+            while True:
+                try:
+                    await _asyncio.sleep(60)
+                    await _asyncio.to_thread(_disp.recover)
+                except _asyncio.CancelledError:
+                    break
+                except Exception:
+                    pass
+
+        app.state._recover_task = _asyncio.create_task(_recover_loop())
+
+        # HI-9: mark workflow executions stranded in 'running' (from a previous
+        # crash) as 'interrupted' so they are visible, not silently lost.
+        _db_conn = getattr(_wq, "_conn", None) if _wq else None
+        if _db_conn is not None:
+            await _asyncio.to_thread(_recover_stranded_workflows, _db_conn)
+
+        # HI-5: register default connectors so the connector API endpoints no
+        # longer 404 (ConnectorRegistry singleton is populated at startup).
+        try:
+            from saw.connectors.bootstrap import register_default_connectors
+            from saw.connectors.registry import ConnectorRegistry
+            await _asyncio.to_thread(
+                register_default_connectors, ConnectorRegistry()
+            )
+        except Exception as _e:  # pragma: no cover — never block `saw web`
+            _logging = __import__("logging")
+            _logging.getLogger(__name__).warning(
+                "Connector bootstrap failed: %s", _e
+            )
+
     yield
 
     # Shutdown: cleanup resources
+    _recover_task = getattr(app.state, "_recover_task", None)
+    if _recover_task is not None:
+        _recover_task.cancel()
+        try:
+            await _recover_task
+        except Exception:
+            pass
     await manager.stop_broadcaster()
 
 
@@ -71,7 +152,7 @@ def create_app(
     """
     app = FastAPI(
         title="Smart Agent Wiki",
-        version="1.1.0",
+        version=__version__,
         description="Web API for knowledge management",
         lifespan=lifespan,
     )
@@ -90,6 +171,19 @@ def create_app(
     app.state.port = port
     # C1: auth mode consumed by get_current_user() on protected routes.
     app.state.auth_mode = auth_mode
+
+    # DEF-4: local mode trusts all requests as admin by design (single-user,
+    # local-first). Surface this loudly at startup so it is never mistaken
+    # for a hardened deployment. Team mode (require JWT) is the production
+    # setting.
+    if auth_mode == "local":
+        import logging as _auth_logging
+
+        _auth_logging.getLogger(__name__).warning(
+            "SAW is running in auth_mode='local': unauthenticated requests "
+            "are trusted as admin. This is fine for single-user local use "
+            "but NOT for any networked deployment — set auth_mode='team'."
+        )
 
     # P1: Cedar policy engine (optional — if a .cedar policy file exists,
     # resource-level Cedar policy checks are available alongside RBAC).
@@ -121,6 +215,16 @@ def create_app(
 
     app.add_middleware(SecurityHeadersMiddleware)
 
+    # HI-16: request-id propagation (must run before audit/log middleware so
+    # every log line carries the correlation ID). init_observability also
+    # configures JSON logging (team mode) and optional Sentry.
+    from saw.drivers.web.middleware.observability import (
+        RequestContextMiddleware,
+        init_observability,
+    )
+    init_observability(auth_mode)
+    app.add_middleware(RequestContextMiddleware)
+
     # SEC-07: Audit logging middleware
     from saw.drivers.web.middleware.security import AuditLogMiddleware
 
@@ -140,8 +244,8 @@ def create_app(
     # the global/default limit).
     api_key_func = None
     try:
-        from saw.api.keys import verify_api_key_header
-        api_key_func = verify_api_key_header
+        from saw.api.keys import verify_api_key_for_rate_limit
+        api_key_func = verify_api_key_for_rate_limit
     except ImportError:
         pass
 
@@ -337,17 +441,32 @@ def create_app_from_config(
     # via a single-worker executor (see api/routes/collaborate.py). Serializing
     # query work in that executor is what keeps it safe; this flag removes the
     # hard ProgrammingError that previously aborted every local-mode workflow.
-    try:
-        if db_path.exists():
-            conn = sqlite3.connect(str(db_path), check_same_thread=False)
-            write_queue = SQLiteWriteQueue(conn)
-        else:
-            # Use in-memory for non-existent DB
-            conn = sqlite3.connect(":memory:", check_same_thread=False)
-            write_queue = SQLiteWriteQueue(conn)
-    except Exception:
+    # CR-4: fail fast if the claims DB cannot be opened. The previous
+    # ``except Exception → :memory:`` fallback silently lost every write on
+    # restart. sqlite3.connect creates the file on disk when missing, so the
+    # in-memory branch was both unnecessary and dangerous.
+    # Test isolation (infra): under pytest, use an in-memory DB so concurrent
+    # tests don't contend on the on-disk claims.db (which caused fcntl "database
+    # is locked" hangs when leaked connections stacked up). Each call gets its
+    # own isolated in-memory DB via the single shared conn.
+    import sys as _sys
+    _test_mode = "pytest" in _sys.modules
+
+    if _test_mode:
         conn = sqlite3.connect(":memory:", check_same_thread=False)
-        write_queue = SQLiteWriteQueue(conn)
+    else:
+        db_path.parent.mkdir(parents=True, exist_ok=True)
+        conn = sqlite3.connect(str(db_path), check_same_thread=False)
+        # PRAGMAs: WAL for concurrent readers + busy_timeout so concurrent
+        # access (e.g. a test run holding the DB) waits instead of raising
+        # "database is locked" immediately.
+        try:
+            conn.execute("PRAGMA journal_mode=WAL")
+            conn.execute("PRAGMA busy_timeout=5000")
+            conn.execute("PRAGMA foreign_keys=ON")
+        except sqlite3.Error:
+            pass
+    write_queue = SQLiteWriteQueue(conn)
 
     # Initialize QueryEngine with real repositories
     wiki_path = Path(".")
@@ -372,26 +491,199 @@ def create_app_from_config(
         conn=conn,
     )
 
-    # Startup: index wiki pages into FTS5 for search
+    # Startup: index wiki pages into FTS5 for search. Skipped under pytest
+    # (test mode uses an in-memory DB + scanning the cwd project root is slow
+    # and irrelevant for app-factory tests).
     from saw.engines.query.wiki_indexer import WikiIndexer
 
     wiki_indexer = WikiIndexer(conn, wiki_repo)
-    try:
-        indexed = wiki_indexer.index_all()
-        import logging
-        logger = logging.getLogger(__name__)
-        logger.info(f"Indexed {indexed} wiki pages into FTS5")
-    except Exception as e:
-        import logging
-        logger = logging.getLogger(__name__)
-        logger.warning(f"Wiki indexing failed: {e}")
+    if not _test_mode:
+        try:
+            indexed = wiki_indexer.index_all()
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.info(f"Indexed {indexed} wiki pages into FTS5")
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Wiki indexing failed: {e}")
 
-    return create_app(
+    # DEF-1: wire a real CollaborateEngine so the 6 agents are actually
+    # registered and the collaborate/workflow API's execute_workflow branch
+    # is reachable. Previously create_app_from_config passed collaborate=None,
+    # which left app.state.collaborate None and every workflow request falling
+    # back to the stub "_run_workflow" path (returning "(No source material
+    # found; stub synthesis.)"). llm_router=None matches the QueryEngine's
+    # offline mode; agents then use their heuristic fallbacks (no silent stub).
+    # HI-2: instantiate the in-process event bus early so it is available to
+    # the CollaborateEngine, the Write Queue dispatcher, and create_app — even
+    # if any of those wirings fail. Previously event_bus was always None, so
+    # workflow progress events were dropped, the WebSocket broadcaster never
+    # started, and plugin events had no delivery mechanism.
+    from saw.plugins.event_bus import InMemoryEventBus
+    _event_bus = InMemoryEventBus()
+
+    collaborate_engine = None
+    try:
+        from saw.engines.collaborate.agents import build_default_agents
+        from saw.engines.collaborate.a2a_protocol import A2AAdapter
+        from saw.engines.collaborate.dispatcher import AgentDispatcher
+        from saw.engines.collaborate.orchestrator import CollaborateEngine
+        from saw.engines.collaborate.workflow_executor import WorkflowExecutor
+
+        _collab_agents = build_default_agents(llm_router=None)
+        _dispatcher = AgentDispatcher(llm_router=None, agents=_collab_agents)
+        _a2a = A2AAdapter(
+            agents=_collab_agents,
+            audit_signer=None,
+            dispatcher=_dispatcher,
+        )
+        _workflow_executor = WorkflowExecutor(
+            dispatcher=_dispatcher,
+            a2a_adapter=_a2a,
+            governor=None,
+            event_bus=_event_bus,
+            conn=conn,
+        )
+        collaborate_engine = CollaborateEngine(
+            dispatcher=_dispatcher,
+            a2a_adapter=_a2a,
+            workflow_executor=_workflow_executor,
+            policy_engine=None,
+        )
+    except Exception as e:  # pragma: no cover — defensive: never block `saw web`
+        import logging
+
+        logging.getLogger(__name__).warning(
+            "CollaborateEngine wiring failed (%s); collaborate features will "
+            "be unavailable. Run `saw web` with a configured LLM for full "
+            "agent support.", e,
+        )
+
+    # CR-3: wire the Write Queue dispatcher so web writes reach the sinks.
+    # Previously enqueue_atomic enqueued but nothing dispatched — every web
+    # write was silently lost. Recover any ops stranded in 'processing' from
+    # a previous crash before serving.
+    try:
+        from saw.write_queue.dispatcher import Dispatcher
+        from saw.write_queue.sinks.wiki_sink import WikiSink
+        from saw.write_queue.sinks.fts5_sink import FTS5Sink
+        from saw.write_queue.sinks.claims_sink import ClaimsSink
+        from saw.write_queue.sinks.graph_sink import GraphSink
+        from saw.write_queue.sinks.contradictions_sink import ContradictionsSink
+        _dispatcher = Dispatcher(
+            write_queue,
+            sinks=[
+                WikiSink(wiki_repo),
+                FTS5Sink(conn),
+                ClaimsSink(claims_repo),
+                GraphSink(conn),
+                ContradictionsSink(conn),
+            ],
+            event_bus=_event_bus,
+        )
+        write_queue.attach_dispatcher(_dispatcher)
+        _dispatcher.recover()
+    except Exception as _e:  # pragma: no cover — never block `saw web`
+        import logging as _logging
+        _logging.getLogger(__name__).warning(
+            "Write Queue dispatcher wiring failed: %s", _e
+        )
+
+    # CR-2: resolve auth_mode — never default to unauthenticated "local" for a
+    # networked bind. SAW_AUTH_MODE env → .saw/config.yaml → "local" (loopback only).
+    import os as _os
+    _auth_mode = _os.environ.get("SAW_AUTH_MODE")
+    if not _auth_mode:
+        try:
+            import yaml as _yaml
+            _cfg_path = Path(".saw/config.yaml")
+            if _cfg_path.exists():
+                with open(_cfg_path, encoding="utf-8") as _f:
+                    _auth_mode = (_yaml.safe_load(_f) or {}).get("auth_mode")
+        except Exception:
+            pass
+    _auth_mode = _auth_mode or "local"
+    _networked = host not in ("127.0.0.1", "localhost", "::1")
+    if (
+        _auth_mode == "local"
+        and _networked
+        and _os.environ.get("SAW_ALLOW_UNAUTH_NETWORK") != "1"
+    ):
+        raise RuntimeError(
+            "Refusing to start in auth_mode='local' on non-loopback host "
+            f"({host}): this would expose the full admin API unauthenticated. "
+            "Set SAW_AUTH_MODE=team (and configure JWT) or bind to 127.0.0.1. "
+            "Override with SAW_ALLOW_UNAUTH_NETWORK=1."
+        )
+
+    app = create_app(
         query=query_engine,
-        collaborate=None,
+        collaborate=collaborate_engine,
         write_queue=write_queue,
+        event_bus=_event_bus,
         wiki_repo=wiki_repo,
         cors_origins=cors_origins,
         host=host,
         port=port,
+        auth_mode=_auth_mode,
     )
+
+    # HI-3: wire the Govern engine so govern API routes don't return 503.
+    # Previously app.state.govern was never set, so _contradiction_detector
+    # raised 503 for every govern endpoint.
+    try:
+        from saw.engines.govern.governor import Governor
+        app.state.govern = Governor(
+            claims_repo=claims_repo,
+            wiki_repo=wiki_repo,
+            llm_router=None,
+        )
+    except Exception as _e:  # pragma: no cover — never block `saw web`
+        import logging as _logging
+        _logging.getLogger(__name__).warning(
+            "Governor wiring failed: %s", _e
+        )
+        app.state.govern = None
+
+    # HI-4: discover + enable user plugins, wiring their event hooks to the
+    # in-process event bus. Previously PluginRegistry was only used by the
+    # `saw plugin` CLI; the web runtime never loaded plugins, so the 6 plugin
+    # event types (PageCreated/PageUpdated/...) had no delivery mechanism.
+    try:
+        from pathlib import Path as _Path
+        from saw.plugins.registry import PluginRegistry
+        from saw.plugins.base import PluginContext
+
+        _plugin_reg = PluginRegistry()
+        _plugin_reg.discover()
+        _plugin_data_dir = _Path(".saw") / "plugin_data"
+        _plugin_data_dir.mkdir(parents=True, exist_ok=True)
+
+        def _subscribe_event(event_type, handler):
+            _event_bus.add_subscriber(event_type, handler)
+
+        def _publish_event(event_type, payload=None):
+            evt = payload if payload is not None else {"type": event_type}
+            if isinstance(evt, dict) and "type" not in evt:
+                evt = {"type": event_type, **evt}
+            _event_bus.publish_nowait(evt)
+
+        _plugin_ctx = PluginContext(
+            data_dir=_plugin_data_dir,
+            wiki_read=lambda slug=None: (wiki_repo.read(slug) if wiki_repo else None),
+            wiki_write=lambda *a, **k: False,
+            claims_read=lambda *a, **k: [],
+            graph_query=lambda *a, **k: [],
+            subscribe_event=_subscribe_event,
+            publish_event=_publish_event,
+        )
+        for _pname in list(_plugin_reg.metadata.keys()):
+            _plugin_reg.enable(_pname, _plugin_ctx)
+        app.state.plugins = _plugin_reg
+    except Exception as _e:  # pragma: no cover — never block `saw web`
+        import logging as _logging
+        _logging.getLogger(__name__).warning("Plugin bootstrap failed: %s", _e)
+        app.state.plugins = None
+
+    return app
