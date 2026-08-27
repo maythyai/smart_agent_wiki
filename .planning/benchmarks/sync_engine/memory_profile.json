@@ -6,15 +6,15 @@
   },
   "results": {
     "items_processed": 1000,
-    "baseline_memory_mb": 0.781,
-    "peak_memory_mb": 0.842,
+    "baseline_memory_mb": 0.776,
+    "peak_memory_mb": 0.837,
     "final_memory_mb": 0.079,
     "memory_growth_mb": 0.061,
-    "memory_released_mb": 0.764,
+    "memory_released_mb": 0.758,
     "bytes_per_item": 64.2,
     "memory_stable": true,
     "memory_released": true
   },
-  "date": "2026-08-27T04:55:07.071316+00:00",
+  "date": "2026-08-27T05:26:02.210981+00:00",
   "version": "1.0"
 }

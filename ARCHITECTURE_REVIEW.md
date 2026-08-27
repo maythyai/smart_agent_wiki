@@ -373,9 +373,15 @@ SAW 的架构意图与文档质量远超其执行成熟度。六边形分层、o
 
 ### 决策
 - **批次 A 已完成(2026-08-26)**:M-6/7/18/23/24/25/26 全部落地,15 项回归测试通过,309 项测试零回归。安全 + 契约加固到位。
-- **批次 B 已完成(2026-08-27)**:M-13 FK 索引迁移 v5、M-9/M-10 探针 threadpool offload+复用连接池、M-17 CodeGraphStore 读方法加锁、M-28 code_graph FTS CJK 预分词(jieba SQL 函数+触发器+build_match_query)、feeds 混合 handler sync DB offload。全套 1752 passed 0 fail。
-- **下一轮执行批次 C**(长期 backlog):M-3 统一持久化(需架构评审)、M-19 FULL 能力层、M-4 god file 拆分、M-21/M-22 架构守护测试、M-14/15/16 工作流加固。
+- **批次 B 已完成(2026-08-27)**:M-13 FK 索引迁移 v5、M-9/M-10 探针 threadpool offload+复用连接池、M-17 CodeGraphStore 读方法加锁、M-28 code_graph FTS CJK 预分词、feeds 混合 handler sync DB offload。全套 1752 passed 0 fail。
+- **批次 C 已完成(2026-08-27)**:
+  - M-21 架构守护测试(分层/循环导入/file-size 750 阈值)+ M-22 write-queue 并发/崩溃恢复测试。
+  - M-16 WorkflowStatus str-enum + 迁移表 + validate_workflow_transition + _persist_workflow 校验非法迁移。
+  - M-19 真实 embeddings 适配器(adapters/embeddings.py)+ adaptive_index 语义聚类(带 fallback)+ sentence-transformers 入 [learn] extra。
+  - M-4 god file 拆分:compiler.py 701→626(纯解析函数提取至 compile/parsers.py,行为保持);守护测试防增长;其余 13 文件为增量债务(守护已挡增长)。
+  - M-3 持久化统一:出具 ADR(`docs/ADR-persistence-unification.md`)——双栈现状/三选项/推荐分阶段(先 UnifiedStore facade+同文件,后 Option A 旗后迁移)+ 待评审开放问题。标记"需评审",不盲改。
 - **HI-14 人工轮换密钥**请同步进行(不阻塞代码,但网络化部署前必须完成)。
+- **全套 1763 passed, 0 failed**(从 hang 死到 84s 跑完)。
 
 ---
 
