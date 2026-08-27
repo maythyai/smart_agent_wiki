@@ -207,6 +207,33 @@ def _create_workflow_executions(conn: sqlite3.Connection) -> None:
 
 _register(4, _create_workflow_executions)
 
+# v5: FK / filter indexes for the graph tables (M-13). claim_relation,
+# entity_relation, and contradictions had no indexes on their FK/filter
+# columns, so govern blast-radius, contradiction listing, and graph
+# traversal degraded to full table scans as the KB grew.
+def _add_graph_fk_indexes(conn: sqlite3.Connection) -> None:
+    conn.executescript(
+        """
+CREATE INDEX IF NOT EXISTS idx_claim_relation_source
+    ON claim_relation(source_claim_uuid);
+CREATE INDEX IF NOT EXISTS idx_claim_relation_target
+    ON claim_relation(target_claim_uuid);
+CREATE INDEX IF NOT EXISTS idx_entity_relation_source
+    ON entity_relation(source_uuid);
+CREATE INDEX IF NOT EXISTS idx_entity_relation_target
+    ON entity_relation(target_uuid);
+CREATE INDEX IF NOT EXISTS idx_contradictions_resolved
+    ON contradictions(resolved_at);
+CREATE INDEX IF NOT EXISTS idx_contradictions_claim_a
+    ON contradictions(claim_a_uuid);
+CREATE INDEX IF NOT EXISTS idx_contradictions_claim_b
+    ON contradictions(claim_b_uuid);
+"""
+    )
+
+
+_register(5, _add_graph_fk_indexes)
+
 # ── Public API ────────────────────────────────────────────────────────
 
 TARGET_VERSION = max(v for v, _ in _MIGRATIONS) if _MIGRATIONS else 1

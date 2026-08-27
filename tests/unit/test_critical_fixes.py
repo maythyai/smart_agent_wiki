@@ -361,3 +361,69 @@ def test_version_derived_from_metadata():
     assert __version__
     if expected:
         assert __version__ == expected
+
+
+# ── M-13: FK indexes on graph tables (migration v5) ─────────────────
+
+
+def test_migration_v5_adds_graph_fk_indexes():
+    """M-13: claim_relation/entity_relation/contradictions FK indexes exist."""
+    import sqlite3
+
+    from saw.db.migrations import apply_migrations, get_version
+
+    conn = sqlite3.connect(":memory:")
+    apply_migrations(conn)
+    assert get_version(conn) >= 5
+    idx = {
+        r[1]
+        for r in conn.execute("SELECT * FROM sqlite_master WHERE type='index'").fetchall()
+    }
+    for n in (
+        "idx_claim_relation_source",
+        "idx_claim_relation_target",
+        "idx_entity_relation_source",
+        "idx_entity_relation_target",
+        "idx_contradictions_resolved",
+    ):
+        assert n in idx, f"missing index {n}"
+
+
+# ── M-28: CJK-aware code graph FTS search ─────────────────────────────
+
+
+def test_code_graph_fts_cjk_search():
+    """M-28: CJK code-node names are searchable (was bare unicode61 → no match)."""
+    import os
+    import tempfile
+
+    from saw.code_graph.models import CodeNode, NodeKind
+    from saw.code_graph.store import CodeGraphStore
+
+    store = CodeGraphStore(os.path.join(tempfile.mkdtemp(), "cg.db"))
+    store.upsert_node(
+        CodeNode(
+            uid="cjk1",
+            name="用户管理",
+            kind=NodeKind.FUNCTION,
+            file_path="app.py",
+            language="python",
+            content_hash="h",
+            metadata={},
+        )
+    )
+    store.upsert_node(
+        CodeNode(
+            uid="en1",
+            name="get_users",
+            kind=NodeKind.FUNCTION,
+            file_path="app.py",
+            language="python",
+            content_hash="h2",
+            metadata={},
+        )
+    )
+    cjk_hits = [n.name for n in store.search_nodes_fts("用户管理")]
+    assert "用户管理" in cjk_hits, f"CJK search failed: {cjk_hits}"
+    en_hits = [n.name for n in store.search_nodes_fts("get_users")]
+    assert "get_users" in en_hits

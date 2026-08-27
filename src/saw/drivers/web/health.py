@@ -7,6 +7,7 @@ Provides Kubernetes-compatible health probes.
 """
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime, timezone
 from typing import Any
 
@@ -16,21 +17,39 @@ from fastapi import APIRouter, Request, Response
 router = APIRouter(tags=["health"])
 
 
-def check_database() -> dict[str, Any]:
-    """Check database connectivity."""
-    import os
-
-    # Try to import and check database
+def _saw_version() -> str:
+    """M-18: version from package metadata (single source of truth)."""
     try:
-        from sqlalchemy import create_engine, text
-        from saw.db.config import DatabaseConfig
+        from importlib.metadata import version as _pkg_version
 
-        config = DatabaseConfig.from_env()
-        engine = create_engine(config.url)
+        return _pkg_version("smart-agent-wiki")
+    except Exception:  # pragma: no cover
+        return "0.0.0"
 
-        with engine.connect() as conn:
+
+_db_engine = None  # cached SQLAlchemy engine for /health/ready (M-10)
+
+
+def check_database() -> dict[str, Any]:
+    """Check database connectivity (M-10: reuse a cached pooled engine)."""
+    global _db_engine
+    if _db_engine is None:
+        try:
+            from sqlalchemy import create_engine
+            from saw.db.config import DatabaseConfig
+
+            _db_engine = create_engine(
+                DatabaseConfig.from_env().url, pool_pre_ping=True
+            )
+        except Exception:
+            _db_engine = False  # mark unavailable so we don't retry every probe
+    if _db_engine is False:
+        return {"status": "unhealthy", "error": "engine unavailable"}
+    try:
+        from sqlalchemy import text
+
+        with _db_engine.connect() as conn:
             conn.execute(text("SELECT 1"))
-
         return {"status": "healthy"}
     except Exception as e:
         return {"status": "unhealthy", "error": str(e)}
@@ -63,7 +82,7 @@ async def health_check():
     """
     return {
         "status": "healthy",
-        "version": "2.0.0",
+        "version": _saw_version(),
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 
@@ -86,8 +105,8 @@ async def readiness_check(response: Response):
     Verifies database and Redis connectivity.
     """
     checks = {
-        "database": check_database(),
-        "redis": check_redis(),
+        "database": await asyncio.to_thread(check_database),
+        "redis": await asyncio.to_thread(check_redis),
     }
 
     # Determine overall status
@@ -106,30 +125,17 @@ async def readiness_check(response: Response):
     }
 
 
-@router.get("/metrics")
-async def metrics(request: Request):
-    """Prometheus metrics endpoint (text exposition format, HI-17).
+def _compute_metrics(state: Any) -> dict:
+    """Sync metrics computation (M-9: offloaded to a threadpool).
 
-    Returns real counts (users, wiki pages, claims, write-queue depth) in the
-    Prometheus 0.0.4 text format so standard scrapers can ingest it. Each
-    counter is best-effort — a missing component yields 0 rather than a 500.
+    Path.rglob + repo.count + wq.get_pending are all blocking sync calls;
+    running them in the event loop stalled the server under /metrics scrapes.
     """
     from pathlib import Path
 
-    from fastapi.responses import PlainTextResponse
-
-    # M-18: version derived from pyproject.toml (was hardcoded "2.0.0").
-    try:
-        from importlib.metadata import version as _pkg_version
-
-        saw_version = _pkg_version("smart-agent-wiki")
-    except Exception:  # pragma: no cover
-        saw_version = "0.0.0"
-
-    # Claims total via the query engine's claims repo.
     claims_total = 0
     try:
-        engine = getattr(request.app.state, "query", None)
+        engine = getattr(state, "query", None)
         repo = (
             getattr(engine, "_claims_repo", None) or getattr(engine, "claims_repo", None)
             if engine is not None else None
@@ -139,16 +145,12 @@ async def metrics(request: Request):
     except Exception:
         claims_total = 0
 
-    # Pages: count markdown files under the wiki root (cwd), matching the
-    # dashboard-stats pattern.
     pages_total = 0
     try:
         pages_total = sum(1 for _ in Path(".").rglob("*.md"))
     except Exception:
         pass
 
-    # Users: best-effort count. SQLAlchemyUserStore exposes a session factory;
-    # InMemoryUserStore exposes ._users.
     users_total = 0
     try:
         from saw.auth.user_store import get_user_store
@@ -164,33 +166,62 @@ async def metrics(request: Request):
     except Exception:
         users_total = 0
 
-    # Write-queue depth (pending + dead-letter).
     outbox_pending = 0
     outbox_dead = 0
     try:
-        wq = getattr(request.app.state, "write_queue", None)
+        wq = getattr(state, "write_queue", None)
         if wq is not None:
             outbox_pending = len(wq.get_pending() or [])
             outbox_dead = len(wq.get_dead_letter() or [])
     except Exception:
         pass
 
+    return {
+        "claims_total": claims_total,
+        "pages_total": pages_total,
+        "users_total": users_total,
+        "outbox_pending": outbox_pending,
+        "outbox_dead": outbox_dead,
+    }
+
+
+@router.get("/metrics")
+async def metrics(request: Request):
+    """Prometheus metrics endpoint (text exposition format, HI-17; M-9).
+
+    Returns real counts in Prometheus 0.0.4 text format. All computation is
+    offloaded to a threadpool so sync rglob/SQLite calls don't block the loop.
+    """
+    import asyncio
+
+    from fastapi.responses import PlainTextResponse
+
+    # M-18: version derived from pyproject.toml (was hardcoded "2.0.0").
+    try:
+        from importlib.metadata import version as _pkg_version
+
+        saw_version = _pkg_version("smart-agent-wiki")
+    except Exception:  # pragma: no cover
+        saw_version = "0.0.0"
+
+    m = await asyncio.to_thread(_compute_metrics, request.app.state)
+
     lines = [
         "# HELP saw_users_total Total registered users.",
         "# TYPE saw_users_total gauge",
-        f"saw_users_total {users_total}",
+        f"saw_users_total {m['users_total']}",
         "# HELP saw_pages_total Total wiki markdown pages.",
         "# TYPE saw_pages_total gauge",
-        f"saw_pages_total {pages_total}",
+        f"saw_pages_total {m['pages_total']}",
         "# HELP saw_claims_total Total claims in the knowledge base.",
         "# TYPE saw_claims_total gauge",
-        f"saw_claims_total {claims_total}",
+        f"saw_claims_total {m['claims_total']}",
         "# HELP saw_write_outbox_pending Pending write-queue operations.",
         "# TYPE saw_write_outbox_pending gauge",
-        f"saw_write_outbox_pending {outbox_pending}",
+        f"saw_write_outbox_pending {m['outbox_pending']}",
         "# HELP saw_write_outbox_dead_letter Dead-lettered write-queue operations.",
         "# TYPE saw_write_outbox_dead_letter gauge",
-        f"saw_write_outbox_dead_letter {outbox_dead}",
+        f"saw_write_outbox_dead_letter {m['outbox_dead']}",
         "",
     ]
     return PlainTextResponse(

@@ -373,8 +373,8 @@ SAW 的架构意图与文档质量远超其执行成熟度。六边形分层、o
 
 ### 决策
 - **批次 A 已完成(2026-08-26)**:M-6/7/18/23/24/25/26 全部落地,15 项回归测试通过,309 项测试零回归。安全 + 契约加固到位。
-- **下一轮执行批次 B**(数据层性能 + 异步收尾:M-13 FK 索引迁移 v5、M-9/M-10 探针异步、M-17 CodeGraph 读隔离、M-28 code_graph FTS CJK、feeds 混合 handler)。
-- 批次 C 列入 backlog,按需启动(M-3 统一持久化需架构评审,不宜盲改)。
+- **批次 B 已完成(2026-08-27)**:M-13 FK 索引迁移 v5、M-9/M-10 探针 threadpool offload+复用连接池、M-17 CodeGraphStore 读方法加锁、M-28 code_graph FTS CJK 预分词(jieba SQL 函数+触发器+build_match_query)、feeds 混合 handler sync DB offload。全套 1752 passed 0 fail。
+- **下一轮执行批次 C**(长期 backlog):M-3 统一持久化(需架构评审)、M-19 FULL 能力层、M-4 god file 拆分、M-21/M-22 架构守护测试、M-14/15/16 工作流加固。
 - **HI-14 人工轮换密钥**请同步进行(不阻塞代码,但网络化部署前必须完成)。
 
 ---

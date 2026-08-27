@@ -22,6 +22,7 @@ from saw.code_graph.models import (
     GraphSnapshot,
     ParseResult,
 )
+from saw.adapters.storage.fts_tokenize import build_match_query, tokenize_for_fts
 
 logger = logging.getLogger(__name__)
 
@@ -83,22 +84,29 @@ CREATE VIRTUAL TABLE IF NOT EXISTS code_nodes_fts USING fts5(
     tokenize='porter unicode61'
 );
 
--- FTS5 同步触发器
-CREATE TRIGGER IF NOT EXISTS code_nodes_ai AFTER INSERT ON code_nodes BEGIN
+-- FTS5 全文索引 (M-28: CJK-aware — values are segmented via the
+-- saw_tokenize_fts SQL function registered on the connection, mirroring the
+-- claims fts_index's Python-side jieba pre-tokenization. Drop + recreate so
+-- existing DBs pick up the new trigger bodies.)
+DROP TRIGGER IF EXISTS code_nodes_ai;
+DROP TRIGGER IF EXISTS code_nodes_ad;
+DROP TRIGGER IF EXISTS code_nodes_au;
+
+CREATE TRIGGER code_nodes_ai AFTER INSERT ON code_nodes BEGIN
     INSERT INTO code_nodes_fts(rowid, name, signature, file_path)
-    VALUES (new.rowid, new.name, new.signature, new.file_path);
+    VALUES (new.rowid, saw_tokenize_fts(new.name), saw_tokenize_fts(new.signature), saw_tokenize_fts(new.file_path));
 END;
 
-CREATE TRIGGER IF NOT EXISTS code_nodes_ad AFTER DELETE ON code_nodes BEGIN
+CREATE TRIGGER code_nodes_ad AFTER DELETE ON code_nodes BEGIN
     INSERT INTO code_nodes_fts(code_nodes_fts, rowid, name, signature, file_path)
-    VALUES ('delete', old.rowid, old.name, old.signature, old.file_path);
+    VALUES ('delete', old.rowid, saw_tokenize_fts(old.name), saw_tokenize_fts(old.signature), saw_tokenize_fts(old.file_path));
 END;
 
-CREATE TRIGGER IF NOT EXISTS code_nodes_au AFTER UPDATE ON code_nodes BEGIN
+CREATE TRIGGER code_nodes_au AFTER UPDATE ON code_nodes BEGIN
     INSERT INTO code_nodes_fts(code_nodes_fts, rowid, name, signature, file_path)
-    VALUES ('delete', old.rowid, old.name, old.signature, old.file_path);
+    VALUES ('delete', old.rowid, saw_tokenize_fts(old.name), saw_tokenize_fts(old.signature), saw_tokenize_fts(old.file_path));
     INSERT INTO code_nodes_fts(rowid, name, signature, file_path)
-    VALUES (new.rowid, new.name, new.signature, new.file_path);
+    VALUES (new.rowid, saw_tokenize_fts(new.name), saw_tokenize_fts(new.signature), saw_tokenize_fts(new.file_path));
 END;
 
 -- 索引
@@ -143,6 +151,7 @@ class CodeGraphStore:
             self._conn.execute("PRAGMA synchronous=NORMAL")
             self._conn.execute("PRAGMA foreign_keys=ON")
             self._conn.execute("PRAGMA busy_timeout=5000")
+            self._register_fts_function(self._conn)
             self._conn.executescript(_SCHEMA_SQL)
             self._conn.commit()
         except sqlite3.DatabaseError as e:
@@ -173,8 +182,28 @@ class CodeGraphStore:
             self._conn.execute("PRAGMA synchronous=NORMAL")
             self._conn.execute("PRAGMA foreign_keys=ON")
             self._conn.execute("PRAGMA busy_timeout=5000")
+            self._register_fts_function(self._conn)
             self._conn.executescript(_SCHEMA_SQL)
             self._conn.commit()
+
+    @staticmethod
+    def _register_fts_function(conn: sqlite3.Connection) -> None:
+        """Register the CJK-aware tokenizer as a SQL function (M-28).
+
+        The FTS5 triggers call ``saw_tokenize_fts(col)`` so CJK text is
+        segmented (jieba/bigram fallback) at index time — otherwise a CJK
+        run becomes one token and Chinese code search silently returns
+        nothing. Non-CJK text passes through unchanged.
+        """
+        def _tok(s):
+            if not s:
+                return ""
+            try:
+                return tokenize_for_fts(s)
+            except Exception:
+                return s
+
+        conn.create_function("saw_tokenize_fts", 1, _tok)
 
     @contextmanager
     def _transaction(self):
@@ -228,9 +257,10 @@ class CodeGraphStore:
     def find_nodes_by_name(self, name: str) -> list[CodeNode]:
         """按名称查找节点"""
         assert self._conn is not None
-        rows = self._conn.execute(
-            "SELECT * FROM code_nodes WHERE name = ?", (name,)
-        ).fetchall()
+        with self._lock:  # M-17: serialize against concurrent writes on the shared conn
+            rows = self._conn.execute(
+                "SELECT * FROM code_nodes WHERE name = ?", (name,)
+            ).fetchall()
         return [self._row_to_node(r) for r in rows]
 
     def get_nodes_by_uids(self, uids: list[str]) -> dict[str, "CodeNode"]:
@@ -239,9 +269,10 @@ class CodeGraphStore:
         if not uids:
             return {}
         placeholders = ",".join("?" * len(uids))
-        rows = self._conn.execute(
-            f"SELECT * FROM code_nodes WHERE uid IN ({placeholders})", uids
-        ).fetchall()
+        with self._lock:  # M-17
+            rows = self._conn.execute(
+                f"SELECT * FROM code_nodes WHERE uid IN ({placeholders})", uids
+            ).fetchall()
         return {r["uid"]: self._row_to_node(r) for r in rows}
 
     def get_all_edges_lite(self, edge_types: Optional[list[str]] = None) -> list[tuple]:
@@ -251,61 +282,68 @@ class CodeGraphStore:
         用于社区检测、流追踪等需要全图边信息的场景。
         """
         assert self._conn is not None
-        if edge_types:
-            ph = ",".join("?" * len(edge_types))
-            rows = self._conn.execute(
-                f"SELECT source, target, edge_type, confidence FROM code_edges WHERE edge_type IN ({ph})",
-                edge_types,
-            ).fetchall()
-        else:
-            rows = self._conn.execute(
-                "SELECT source, target, edge_type, confidence FROM code_edges"
-            ).fetchall()
+        with self._lock:  # M-17
+            if edge_types:
+                ph = ",".join("?" * len(edge_types))
+                rows = self._conn.execute(
+                    f"SELECT source, target, edge_type, confidence FROM code_edges WHERE edge_type IN ({ph})",
+                    edge_types,
+                ).fetchall()
+            else:
+                rows = self._conn.execute(
+                    "SELECT source, target, edge_type, confidence FROM code_edges"
+                ).fetchall()
         return [(r[0], r[1], r[2], r[3]) for r in rows]
 
     def get_called_targets(self, edge_type: str = "CALLS") -> set[str]:
         """获取所有被指定类型边指向的 target UID 集合 (单次查询)"""
         assert self._conn is not None
-        rows = self._conn.execute(
-            "SELECT DISTINCT target FROM code_edges WHERE edge_type = ?", (edge_type,)
-        ).fetchall()
+        with self._lock:  # M-17
+            rows = self._conn.execute(
+                "SELECT DISTINCT target FROM code_edges WHERE edge_type = ?", (edge_type,)
+            ).fetchall()
         return {r[0] for r in rows}
 
     def get_nodes_by_file(self, file_path: str) -> list[CodeNode]:
         """获取文件的所有节点"""
         assert self._conn is not None
-        rows = self._conn.execute(
-            "SELECT * FROM code_nodes WHERE file_path = ?", (file_path,)
-        ).fetchall()
+        with self._lock:  # M-17
+            rows = self._conn.execute(
+                "SELECT * FROM code_nodes WHERE file_path = ?", (file_path,)
+            ).fetchall()
         return [self._row_to_node(r) for r in rows]
 
     def get_all_nodes(self) -> list[CodeNode]:
         """获取所有节点"""
         assert self._conn is not None
-        rows = self._conn.execute("SELECT * FROM code_nodes").fetchall()
+        with self._lock:  # M-17
+            rows = self._conn.execute("SELECT * FROM code_nodes").fetchall()
         return [self._row_to_node(r) for r in rows]
 
     def search_nodes_fts(self, query: str, limit: int = 20) -> list[CodeNode]:
         """FTS5 全文搜索 (安全处理特殊字符)"""
         assert self._conn is not None
         limit = max(1, min(limit, 1000))
-        # 转义 FTS5 语法字符，防止 OperationalError
-        safe_query = '"' + query.replace('"', '""') + '"'
-        try:
-            rows = self._conn.execute(
-                """SELECT cn.* FROM code_nodes cn
-                   JOIN code_nodes_fts fts ON cn.rowid = fts.rowid
-                   WHERE code_nodes_fts MATCH ?
-                   ORDER BY rank
-                   LIMIT ?""",
-                (safe_query, limit),
-            ).fetchall()
-        except sqlite3.OperationalError:
-            # FTS 语法错误降级为 LIKE 查询
-            rows = self._conn.execute(
-                "SELECT * FROM code_nodes WHERE name LIKE ? OR signature LIKE ? LIMIT ?",
-                (f"%{query}%", f"%{query}%", limit),
-            ).fetchall()
+        # M-28: build a CJK-aware MATCH expression (jieba/bigram segmentation
+        # on the query side, matching the index-side saw_tokenize_fts). Falls
+        # back to a phrase query / LIKE on FTS syntax errors.
+        match_expr = build_match_query(query) or ('"' + query.replace('"', '""') + '"')
+        with self._lock:  # M-17
+            try:
+                rows = self._conn.execute(
+                    """SELECT cn.* FROM code_nodes cn
+                       JOIN code_nodes_fts fts ON cn.rowid = fts.rowid
+                       WHERE code_nodes_fts MATCH ?
+                       ORDER BY rank
+                       LIMIT ?""",
+                    (match_expr, limit),
+                ).fetchall()
+            except sqlite3.OperationalError:
+                # FTS 语法错误降级为 LIKE 查询
+                rows = self._conn.execute(
+                    "SELECT * FROM code_nodes WHERE name LIKE ? OR signature LIKE ? LIMIT ?",
+                    (f"%{query}%", f"%{query}%", limit),
+                ).fetchall()
         return [self._row_to_node(r) for r in rows]
 
     # ─── Edge CRUD ───────────────────────────────────────────────
@@ -336,16 +374,17 @@ class CodeGraphStore:
     ) -> list[CodeEdge]:
         """获取节点的出边"""
         assert self._conn is not None
-        if edge_types:
-            placeholders = ",".join("?" * len(edge_types))
-            rows = self._conn.execute(
-                f"SELECT * FROM code_edges WHERE source = ? AND edge_type IN ({placeholders})",
-                [uid] + edge_types,
-            ).fetchall()
-        else:
-            rows = self._conn.execute(
-                "SELECT * FROM code_edges WHERE source = ?", (uid,)
-            ).fetchall()
+        with self._lock:  # M-17
+            if edge_types:
+                placeholders = ",".join("?" * len(edge_types))
+                rows = self._conn.execute(
+                    f"SELECT * FROM code_edges WHERE source = ? AND edge_type IN ({placeholders})",
+                    [uid] + edge_types,
+                ).fetchall()
+            else:
+                rows = self._conn.execute(
+                    "SELECT * FROM code_edges WHERE source = ?", (uid,)
+                ).fetchall()
         return [self._row_to_edge(r) for r in rows]
 
     def get_incoming_edges(
@@ -353,16 +392,17 @@ class CodeGraphStore:
     ) -> list[CodeEdge]:
         """获取节点的入边"""
         assert self._conn is not None
-        if edge_types:
-            placeholders = ",".join("?" * len(edge_types))
-            rows = self._conn.execute(
-                f"SELECT * FROM code_edges WHERE target = ? AND edge_type IN ({placeholders})",
-                [uid] + edge_types,
-            ).fetchall()
-        else:
-            rows = self._conn.execute(
-                "SELECT * FROM code_edges WHERE target = ?", (uid,)
-            ).fetchall()
+        with self._lock:  # M-17
+            if edge_types:
+                placeholders = ",".join("?" * len(edge_types))
+                rows = self._conn.execute(
+                    f"SELECT * FROM code_edges WHERE target = ? AND edge_type IN ({placeholders})",
+                    [uid] + edge_types,
+                ).fetchall()
+            else:
+                rows = self._conn.execute(
+                    "SELECT * FROM code_edges WHERE target = ?", (uid,)
+                ).fetchall()
         return [self._row_to_edge(r) for r in rows]
 
     # ─── 原子文件替换 ─────────────────────────────────────────────

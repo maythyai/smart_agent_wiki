@@ -12,6 +12,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from starlette.concurrency import run_in_threadpool
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy.orm import Session
 
@@ -261,7 +262,9 @@ async def create_feed(
             detail=str(e),
         )
 
-    feed = db.query(Feed).filter(Feed.id == feed_id).first()
+    feed = await run_in_threadpool(
+        lambda: db.query(Feed).filter(Feed.id == feed_id).first()
+    )
     if not feed:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -491,7 +494,9 @@ async def import_opml(
                 continue
 
             # Check if feed already exists
-            existing = db.query(Feed).filter(Feed.url == url).first()
+            existing = await run_in_threadpool(
+                lambda: db.query(Feed).filter(Feed.url == url).first()
+            )
             if existing:
                 skipped += 1
                 continue
