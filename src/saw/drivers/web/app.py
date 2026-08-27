@@ -78,6 +78,18 @@ async def lifespan(app: FastAPI):
                 try:
                     await _asyncio.sleep(60)
                     await _asyncio.to_thread(_disp.recover)
+                    # M-15: alert on dead-lettered ops (exhausted retries) so
+                    # they don't accumulate silently — needs operator attention.
+                    dl = await _asyncio.to_thread(
+                        lambda: _wq.get_dead_letter() if _wq is not None else []
+                    )
+                    if dl:
+                        import logging as _logging
+                        _logging.getLogger(__name__).warning(
+                            "Write queue has %d dead-lettered ops "
+                            "(exhausted retries) — operator attention required",
+                            len(dl),
+                        )
                 except _asyncio.CancelledError:
                     break
                 except Exception:

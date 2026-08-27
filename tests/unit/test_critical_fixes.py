@@ -449,3 +449,25 @@ def test_embeddings_adapter_fallback_and_math():
     if not embeddings_available():
         assert embed_texts(["hello"]) is None
         assert cluster_by_embedding(["a", "b"]) == {}
+
+
+# ── M-14: on_failure="rollback" rejected at parse ───────────────────
+
+
+def test_workflow_rollback_rejected_at_parse(tmp_path):
+    """M-14: 'rollback' is advertised but unimplemented — reject at parse."""
+    from saw.engines.collaborate.workflow_parser import (
+        WorkflowParseError,
+        WorkflowParser,
+    )
+
+    p = tmp_path / "w.yaml"
+    p.write_text(
+        "name: t\n"
+        "steps:\n"
+        "  - agent: Writer\n"
+        "    action: write\n"
+        "on_failure: rollback\n"
+    )
+    with pytest.raises(WorkflowParseError, match="rollback"):
+        WorkflowParser().parse(p)

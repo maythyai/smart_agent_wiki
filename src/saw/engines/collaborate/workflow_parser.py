@@ -70,6 +70,8 @@ class WorkflowParser:
 
     REQUIRED_STEP_FIELDS = ["agent", "action"]
     VALID_FALLBACK_ACTIONS = ["abort", "accept_with_flag", "escalate_to_human"]
+    # M-14: only "abort" is implemented; "rollback" rejected at parse.
+    VALID_ON_FAILURE = ["abort"]
 
     def parse(self, yaml_path: Path) -> WorkflowDefinition:
         """Parse a YAML file into a workflow definition.
@@ -106,11 +108,20 @@ class WorkflowParser:
             except WorkflowParseError as e:
                 raise WorkflowParseError(f"Step {i + 1}: {e}")
 
+        # M-14: validate on_failure — only "abort" is implemented. "rollback"
+        # was silently treated as abort; reject at parse so users aren't misled.
+        on_failure = raw.get("on_failure", "abort")
+        if on_failure not in self.VALID_ON_FAILURE:
+            raise WorkflowParseError(
+                f"on_failure='{on_failure}' is not implemented; use 'abort' "
+                f"(rollback requires compensating actions, not yet built)"
+            )
+
         return WorkflowDefinition(
             name=raw["name"],
             steps=steps,
             timeout=raw.get("timeout", 300),
-            on_failure=raw.get("on_failure", "abort"),
+            on_failure=on_failure,
             metadata=raw.get("metadata", {}),
         )
 
