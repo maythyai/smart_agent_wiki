@@ -5,12 +5,15 @@ Discovers, loads, and manages plugin instances.
 
 import importlib.util
 import sys
+import logging
 from pathlib import Path
 from typing import Optional, Dict, List
 from dataclasses import dataclass, field
 import yaml
 
 from saw.plugins.base import PluginBase, PluginContext
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -72,6 +75,8 @@ class PluginRegistry:
                 )
                 discovered.append(name)
             except Exception:
+                # F-PLUG-01: log instead of silently skipping bad metadata.
+                logger.warning("Failed to load plugin metadata from %s", yaml_path, exc_info=True)
                 continue
 
         return discovered
@@ -108,6 +113,8 @@ class PluginRegistry:
                     self.plugins[name] = instance
                     return instance
         except Exception:
+            # F-PLUG-01: log load failures so bad plugins are visible.
+            logger.warning("Failed to load plugin '%s'", name, exc_info=True)
             return None
 
         return None
@@ -131,6 +138,8 @@ class PluginRegistry:
             self.enabled[name] = True
             return True
         except Exception:
+            # F-PLUG-01: log activation failures.
+            logger.warning("Failed to enable plugin '%s'", name, exc_info=True)
             return False
 
     def disable(self, name: str) -> bool:
@@ -151,6 +160,8 @@ class PluginRegistry:
             self.enabled[name] = False
             return True
         except Exception:
+            # F-PLUG-01: log deactivation failures.
+            logger.warning("Failed to disable plugin '%s'", name, exc_info=True)
             return False
 
     def list_plugins(self) -> List[dict]:

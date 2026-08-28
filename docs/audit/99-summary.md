@@ -163,6 +163,10 @@ SAW 架构设计成熟，但在**功能接线完整性**与**用户可见性**�
 | Batch 7 | F-RS-06 | ✅ fixed | 综合传入真实 ingested items（原传 []），溯源链不再断裂 |
 | Batch 7 | F-RS-07 | ✅ fixed | execute_research 异常时标 failed（原恒 completed）；零结果正常完成 |
 | Batch 7 | F-RS-11 | ✅ fixed | synthesize_research 无 LLM 时诚实标注"仅来源列表"，不再静默忽略 llm_client |
+| Batch 8 | F-PLUG-01 | ✅ fixed | 插件 discover/load/enable/disable 裸 except 现记录错误，失败可见 |
+| Batch 8 | F-PLUG-02 | ✅ fixed | event_bus 队列满/处理器异常现记录，不再静默丢/吞 |
+| Batch 8 | F-PLUG-05 | ❌ refuted | 误报：app.py create_app_from_config 已用闭包把 PluginContext.subscribe_event/publish_event 桥接到 InMemoryEventBus |
+| Batch 8 | F-ONB-01 | ❌ refuted | 误报：onboarding 路由提供 GET /status + POST /seed 流程（经 WriteQueue 创建页面 + 逐页错误处理）；starter_kits 是数据文件，本应静态 |
 
 > 验证：Batch 1 改动通过 462 项测试（auth/reconcile/dispatcher/query/web/engines/integration），0 回归。
 > 验证：Batch 2 改动通过全套件 1569 项测试，0 回归。

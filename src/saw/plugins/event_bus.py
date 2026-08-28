@@ -24,7 +24,11 @@ plugin events). The WebSocket manager normalizes both.
 from __future__ import annotations
 
 import asyncio
+import logging
 from typing import Any, AsyncIterator, Callable
+
+
+logger = logging.getLogger(__name__)
 
 
 class InMemoryEventBus:
@@ -48,17 +52,18 @@ class InMemoryEventBus:
             try:
                 q.put_nowait(event)
             except asyncio.QueueFull:
-                # A slow subscriber must not stall the publisher or block the
-                # event loop — drop for this subscriber only.
-                pass
+                # F-PLUG-02: a slow subscriber must not stall the publisher, but
+                # log the drop instead of swallowing it silently.
+                logger.warning("Event '%s' dropped: subscriber queue full", name)
         name = self._event_name(event)
         for etype, handler in list(self._handlers):
             if etype is None or etype == name:
                 try:
                     handler(event)
                 except Exception:
-                    # A faulty handler must not break other subscribers.
-                    pass
+                    # F-PLUG-02: a faulty handler must not break other
+                    # subscribers, but log it instead of hiding it.
+                    logger.warning("Event handler raised for '%s'", name, exc_info=True)
 
     async def publish(self, event: Any) -> None:
         """Publish an event (async callers, e.g. WorkflowExecutor)."""
