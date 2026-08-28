@@ -183,7 +183,14 @@ def _get_summary(impacts: list[ImpactNode]) -> dict:
         'depth_2_count': sum(1 for i in impacts if i['depth'] == 2),
         'depth_3_count': sum(1 for i in impacts if i['depth'] == 3),
         'high_risk_count': sum(1 for i in impacts if i['risk_level'] == 'WILL_BREAK'),
-        'total_affected': len(impacts)
+        'total_affected': len(impacts),
+        # F-COMP-04: explain the risk labels so consumers don't misread bare
+        # strings like 'WILL_BREAK' as 'guaranteed compile breakage'.
+        'risk_legend': {
+            'WILL_BREAK': 'directly depends on the target — likely breaks',
+            'LIKELY_AFFECTED': 'second-level dependency — probably affected',
+            'MAY_NEED_TESTING': 'third-level dependency — retest recommended',
+        },
     }
 
 

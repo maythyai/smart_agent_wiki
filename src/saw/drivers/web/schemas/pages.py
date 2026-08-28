@@ -73,6 +73,8 @@ class PageStatus(BaseModel):
     status: str
     slug: str
     op_id: str | None = None
+    # F-WEB-10: optional warnings (e.g. backlink count) for destructive ops.
+    warnings: list[str] | None = None
 
 
 class QuickCaptureRequest(BaseModel):

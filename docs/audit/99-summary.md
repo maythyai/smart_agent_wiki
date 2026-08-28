@@ -194,6 +194,8 @@ SAW 架构设计成熟，但在**功能接线完整性**与**用户可见性**�
 | Batch 16 | F-CONN-05 | ✅ fixed | SyncEngine 接入 HealthMonitor，sync 成功/失败时 record_success/record_failure（best-effort 不阻断同步） |
 | Batch 16 | F-CONN-09 | ❌ refuted | 误报：trigger_sync 实际构造 SyncEngine 并 `await sync_engine.sync()`，非空操作 |
 | Batch 16 | F-CONN-04 | ⏳ deferred | 冲突检测需按 source_id 查既有 claim，但 claim 表无 source_id 列（仅 source_uuid）——需 schema 变更，盲接有风险 |
+| Batch 17 | F-WEB-10 | ✅ fixed | DELETE 端点加存在性检查（404）+ 反链扫描警告（PageStatus.warnings） |
+| Batch 17 | F-COMP-04 | ✅ fixed | impact summary 增加 risk_legend，解释 WILL_BREAK 等标签含义 |
 
 > 验证：Batch 1 改动通过 462 项测试（auth/reconcile/dispatcher/query/web/engines/integration），0 回归。
 > 验证：Batch 2 改动通过全套件 1569 项测试，0 回归。

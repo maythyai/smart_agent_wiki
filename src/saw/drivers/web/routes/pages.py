@@ -260,6 +260,7 @@ async def update_page_properties(
 async def delete_page(
     slug: str = Path(..., description="Page slug"),
     delete: PageDelete = None,
+    engine=Depends(get_query_engine),
     write_queue=Depends(get_write_queue),
 ) -> PageStatus:
     """Delete page via Write Queue (per D-16).
@@ -267,6 +268,35 @@ async def delete_page(
     All mutations flow through Write Queue for durability.
     The deletion will be applied asynchronously by the Write Queue dispatcher.
     """
+    # F-WEB-10: existence check + backlink warning before enqueuing the
+    # destructive delete (was: enqueue blindly, 200 even for missing pages).
+    wiki = getattr(engine, "_wiki_repo", None) or getattr(engine, "wiki", None)
+    warnings: list[str] = []
+    if wiki is not None:
+        if wiki.read(slug) is None:
+            raise HTTPException(status_code=404, detail=f"Page '{slug}' not found")
+        try:
+            from saw.engines.query.wiki_links import parse_wiki_links
+
+            target = slug.strip("/")
+            backlink_count = 0
+            for other_slug in wiki.list_pages():
+                if other_slug == slug:
+                    continue
+                other = wiki.read(other_slug)
+                if other is None:
+                    continue
+                if any(l.target == target for l in parse_wiki_links(other.content)):
+                    backlink_count += 1
+            if backlink_count:
+                warnings.append(
+                    f"{backlink_count} page(s) link to this page; "
+                    "they will show broken links after deletion."
+                )
+        except Exception:
+            # Backlink scan must never block deletion.
+            pass
+
     from saw.domain.value_objects import WriteOpStatus
     from saw.write_queue.queue import WriteOp
 
@@ -304,6 +334,7 @@ async def delete_page(
         status="queued",
         slug=slug,
         op_id=op_id,
+        warnings=warnings or None,
     )
 
 
