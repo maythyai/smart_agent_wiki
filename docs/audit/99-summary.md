@@ -191,6 +191,9 @@ SAW 架构设计成熟，但在**功能接线完整性**与**用户可见性**�
 | Batch 14 | F-CONF-01 | ❌ refuted | 误报：ConfigError 暴露的是用户自有配置路径 + yaml 解析错误，属可操作用户面信息，非内部泄露 |
 | Batch 15 | F-GOV-01 | ✅ fixed | linter confidence_map 键名改为枚举名（single_source/cross_validated/human_verified）+ .lower()，分布统计不再全塌缩到 1 级 |
 | Batch 15 | F-COMP-06 | ✅ fixed | code_wiki status() 改为从 .status 文件读取真实生成时间（原硬编码 utcnow） |
+| Batch 16 | F-CONN-05 | ✅ fixed | SyncEngine 接入 HealthMonitor，sync 成功/失败时 record_success/record_failure（best-effort 不阻断同步） |
+| Batch 16 | F-CONN-09 | ❌ refuted | 误报：trigger_sync 实际构造 SyncEngine 并 `await sync_engine.sync()`，非空操作 |
+| Batch 16 | F-CONN-04 | ⏳ deferred | 冲突检测需按 source_id 查既有 claim，但 claim 表无 source_id 列（仅 source_uuid）——需 schema 变更，盲接有风险 |
 
 > 验证：Batch 1 改动通过 462 项测试（auth/reconcile/dispatcher/query/web/engines/integration），0 回归。
 > 验证：Batch 2 改动通过全套件 1569 项测试，0 回归。

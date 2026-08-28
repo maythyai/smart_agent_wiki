@@ -22,6 +22,7 @@ from saw.connectors.registry import ConnectorRegistry
 from saw.connectors.sync_status import SyncStatusTracker, SyncState, SyncStatus
 from saw.connectors.sync_logger import SyncLogger
 from saw.connectors.conflict_resolver import ConflictResolver, ConflictStrategy
+from saw.connectors.health_monitor import HealthMonitor
 from saw.domain.utils import utcnow  # noqa: F401
 
 
@@ -101,10 +102,28 @@ class SyncEngine:
         self._status_tracker = SyncStatusTracker(session)
         self._logger = SyncLogger(session)
         self._conflict_resolver = ConflictResolver(session, ConflictStrategy.LAST_MODIFIED_WINS)
+        self._health_monitor = HealthMonitor(session)  # F-CONN-05
 
         # Track paused state for backpressure
         self._is_paused: bool = False
         self._paused_at: Optional[datetime] = None
+
+    async def _record_health(
+        self,
+        success: bool,
+        connector_id: str,
+        platform: str,
+        error: str = "",
+    ) -> None:
+        """F-CONN-05: update connector health after a sync. Best-effort —
+        a health-monitor failure must never break the sync flow."""
+        try:
+            if success:
+                await self._health_monitor.record_success(connector_id, platform)
+            else:
+                await self._health_monitor.record_failure(connector_id, platform, error)
+        except Exception as e:
+            logger.warning("Health monitor update failed for %s: %s", platform, e)
 
     async def _broadcast_sync_progress(
         self,
@@ -197,12 +216,18 @@ class SyncEngine:
 
             # Update status on success
             await self._status_tracker.mark_sync_completed(connector_id, result)
+            # F-CONN-05: record health on success.
+            await self._record_health(True, connector_id, connector.platform_name)
 
         except Exception as e:
             result.errors.append(str(e))
             await self._status_tracker.mark_error(connector_id, str(e))
             await self._logger.log_error(
                 connector_id, connector.platform_name, str(e)
+            )
+            # F-CONN-05: record health on failure.
+            await self._record_health(
+                False, connector_id, connector.platform_name, str(e)
             )
 
         result.completed_at = utcnow()
