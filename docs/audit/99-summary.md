@@ -175,6 +175,11 @@ SAW 架构设计成熟，但在**功能接线完整性**与**用户可见性**�
 | Batch 11 | F-WEB-05 | ✅ fixed | RFC7807 `title` 改为人类可读（如 "Knowledge store unavailable"），不再暴露异常类名 |
 | Batch 11 | F-WEB-06 | ✅ fixed | import_md 500 不再暴露 str(e)（改通用消息 + 服务端 log） |
 | Batch 11 | F-WEB-09 | ✅ fixed | 前端 ApiError 解析 RFC7807 title/detail，组件显示有意义消息而非原始 HTTP 状态文本 |
+| Batch 12 | F-AUTH-03 | ✅ fixed | 登录用户不存在时跑 dummy bcrypt 均衡时序，防用户枚举 |
+| Batch 12 | F-AUTH-05 | ✅ fixed | 403 不再暴露内部角色名，改通用"无权限"消息 |
+| Batch 12 | F-AUTH-06 | ✅ partial | query 输入检查扩至全方法 + 窄 XSS 检测（sanitize_string/check_xss 现已使用）；请求体 XSS 由 Pydantic+渲染层兜底，专用 body sanitizer 留后续 |
+| Batch 12 | F-AUTH-08 | ✅ fixed | 429 响应增加标准 Retry-After 头 |
+| Batch 12 | F-AUTH-09 | ❌ refuted | 误报：登录表单不应有 minLength（会误拒有效短密码）；"Invalid email or password" 是防枚举的正确通用消息 |
 
 > 验证：Batch 1 改动通过 462 项测试（auth/reconcile/dispatcher/query/web/engines/integration），0 回归。
 > 验证：Batch 2 改动通过全套件 1569 项测试，0 回归。

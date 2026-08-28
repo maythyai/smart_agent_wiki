@@ -70,6 +70,26 @@ def get_auth_service() -> AuthService:
     return AuthService(AuthConfig.from_env())
 
 
+# F-AUTH-03: equalize the user-not-found path with the wrong-password path
+# (which runs a bcrypt compare) to prevent user enumeration via response
+# timing. The dummy verify always fails; best-effort if bcrypt is missing.
+_DUMMY_HASH: str | None = None
+
+
+def _timing_dummy_verify(auth_service: AuthService, password: str) -> None:
+    global _DUMMY_HASH
+    if _DUMMY_HASH is None:
+        try:
+            _DUMMY_HASH = auth_service.hasher.hash_password("dummy-timing-equalizer")
+        except Exception:
+            _DUMMY_HASH = ""
+    if _DUMMY_HASH:
+        try:
+            auth_service.hasher.verify_password(password, _DUMMY_HASH)
+        except Exception:
+            pass
+
+
 # ── Endpoints ─────────────────────────────────────────────────────────
 
 
@@ -141,6 +161,9 @@ async def login(request: LoginRequest):
     # Find user
     user = user_store.get_by_email(request.email)
     if not user:
+        # F-AUTH-03: burn a bcrypt compare so user-not-found takes about as
+        # long as wrong-password (prevents enumeration via timing).
+        _timing_dummy_verify(auth_service, request.password)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password",

@@ -256,17 +256,25 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
         # Rate limited?
         if self.limiter.is_rate_limited(status):
+            # F-AUTH-08: include a standard Retry-After header (seconds) so
+            # clients can back off correctly, not just a body field.
+            retry_after = max(
+                1,
+                min(
+                    status.hour_reset - int(time.time()),
+                    status.day_reset - int(time.time()),
+                ),
+            )
+            headers = status.to_headers()
+            headers["Retry-After"] = str(retry_after)
             return JSONResponse(
                 status_code=429,
                 content={
                     "error": "rate_limit_exceeded",
                     "message": "Rate limit exceeded. Please try again later.",
-                    "retry_after": min(
-                        status.hour_reset - int(time.time()),
-                        status.day_reset - int(time.time())
-                    ),
+                    "retry_after": retry_after,
                 },
-                headers=status.to_headers(),
+                headers=headers,
             )
 
         # Process request

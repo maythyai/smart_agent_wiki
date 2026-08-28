@@ -210,6 +210,22 @@ def check_sql_injection(value: str) -> bool:
     return False
 
 
+def check_xss(value: str) -> bool:
+    """Check if a string contains clear XSS patterns.
+
+    F-AUTH-06: narrower than ``sanitize_string`` (which also strips
+    ``onload=``-style attributes that can appear in legitimate text) so it
+    can be used to *reject* suspicious query input without false positives.
+    """
+    if not isinstance(value, str):
+        return False
+    # _XSS_PATTERNS: 0=<script>, 1=javascript:, 2=on\w+=, 3=<iframe>, 4=<object>
+    for pattern in (_XSS_PATTERNS[0], _XSS_PATTERNS[1], _XSS_PATTERNS[3], _XSS_PATTERNS[4]):
+        if pattern.search(value):
+            return True
+    return False
+
+
 class InputSanitizerMiddleware(BaseHTTPMiddleware):
     """Sanitize input and detect injection attempts.
 
@@ -217,23 +233,39 @@ class InputSanitizerMiddleware(BaseHTTPMiddleware):
     """
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
-        # Only check requests with body
-        if request.method in ("POST", "PUT", "PATCH"):
-            # Check query parameters
-            for key, value in request.query_params.items():
-                if check_sql_injection(value):
-                    logger.warning(
-                        "SQL injection attempt detected: param=%s ip=%s",
-                        key,
-                        request.client.host if request.client else "unknown",
-                    )
-                    return JSONResponse(
-                        status_code=status.HTTP_400_BAD_REQUEST,
-                        content={
-                            "error": "invalid_input",
-                            "message": "Suspicious input detected in query parameters",
-                        },
-                    )
+        # F-AUTH-06: check query parameters on ALL methods (previously only
+        # POST/PUT/PATCH and only SQL injection). sanitize_string/check_xss
+        # are now actually used. Request-body XSS is mitigated at the
+        # Pydantic schema + render layers (a dedicated body sanitizer is a
+        # follow-up — body streams can't be safely rewritten in middleware).
+        client_ip = request.client.host if request.client else "unknown"
+        for key, value in request.query_params.items():
+            if check_sql_injection(value):
+                logger.warning(
+                    "SQL injection attempt detected: param=%s ip=%s",
+                    key,
+                    client_ip,
+                )
+                return JSONResponse(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    content={
+                        "error": "invalid_input",
+                        "message": "Suspicious input detected in query parameters",
+                    },
+                )
+            if check_xss(value):
+                logger.warning(
+                    "XSS pattern in query parameter: param=%s ip=%s",
+                    key,
+                    client_ip,
+                )
+                return JSONResponse(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    content={
+                        "error": "invalid_input",
+                        "message": "Disallowed HTML in query parameters",
+                    },
+                )
 
         return await call_next(request)
 
@@ -371,9 +403,10 @@ def require_role(*allowed_roles: str) -> Callable:
     """
     def dependency(user: dict = Depends(get_current_user)) -> dict:
         if user.get("role") not in allowed_roles:
+            # F-AUTH-05: do not leak internal role names to the client.
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Requires one of roles: {', '.join(allowed_roles)}",
+                detail="You do not have permission to perform this action.",
             )
         return user
 
