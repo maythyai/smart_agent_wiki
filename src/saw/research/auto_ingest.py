@@ -29,6 +29,9 @@ class IngestResult:
     items_failed: int = 0
     wiki_pages_created: list[str] = field(default_factory=list)
     processing_time: float = 0.0
+    # F-RS-06: retain the ingested items so callers (e.g. synthesize_research)
+    # can list real sources instead of synthesizing from an empty list.
+    items: list[IngestItem] = field(default_factory=list)
 
 
 class AutoIngestProcessor:
@@ -95,6 +98,8 @@ class AutoIngestProcessor:
 
                 result.items_successful += 1
                 result.wiki_pages_created.append(wiki_page)
+                # F-RS-06: keep the item for downstream synthesis.
+                result.items.append(item)
 
             except Exception:
                 result.items_failed += 1
@@ -227,11 +232,30 @@ Source: {item.source_url}
             "",
             f"This synthesis combines {len(items)} sources on '{research_topic}'.",
             "",
+        ]
+
+        # F-RS-11: be honest when no LLM is configured — the page is a source
+        # listing, not an AI-generated synthesis. (llm_client is accepted for
+        # future use but not silently ignored.)
+        if llm_client is None:
+            lines.extend([
+                "> No LLM client configured — sources are listed without AI",
+                "> synthesis. Configure an LLM to generate a written summary.",
+                "",
+            ])
+        else:
+            lines.extend([
+                "> LLM client provided but synthesis generation is not yet",
+                "> implemented; sources listed below.",
+                "",
+            ])
+
+        lines.extend([
             "---",
             "",
             "## Sources",
             "",
-        ]
+        ])
 
         for item in items:
             lines.append(f"- [[{item.item_id}]] {item.title}")

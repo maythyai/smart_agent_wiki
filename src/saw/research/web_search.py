@@ -8,6 +8,9 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Optional
 import json
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -123,7 +126,9 @@ class WebSearchClient:
             )
 
         except Exception as e:
-            # 失败时返回空结果
+            # F-RS-02: log the failure instead of silently swallowing it
+            # (the exception variable was previously captured but unused).
+            logger.warning("Web search failed for query '%s': %s", query, e)
             return SearchResponse(
                 query=query,
                 results=[],

@@ -149,42 +149,53 @@ class DeepResearchEngine:
 
         # 1. 生成搜索查询
         context = purpose_summary or overview_summary
-        task.search_queries = self.generate_search_queries(
-            topic, context, num_queries
-        )
 
-        # 2. 执行搜索
-        web_search = self._get_web_search()
-        responses = web_search.multi_search(
-            task.search_queries,
-            max_results_per_query,
-        )
-
-        # 3. 去重
-        unique_results = web_search.deduplicate(responses)
-
-        # 4. 自动摄入
-        auto_ingest = self._get_auto_ingest()
-        ingest_result = auto_ingest.process_search_results(
-            [r.__dict__ for r in unique_results],
-            topic,
-        )
-
-        # 5. 综合
+        # F-RS-07: surface failures — mark the task failed on exception
+        # instead of always "completed". (No API key / empty results still
+        # complete normally; only an actual error is "failed".)
+        unique_results = []
+        ingest_result = None
         synthesis_page = None
-        if auto_synthesize and ingest_result.items_successful > 0:
-            synthesis_page = auto_ingest.synthesize_research(
-                [],  # 简化：不传入 items
+        try:
+            task.search_queries = self.generate_search_queries(
+                topic, context, num_queries
+            )
+
+            # 2. 执行搜索
+            web_search = self._get_web_search()
+            responses = web_search.multi_search(
+                task.search_queries,
+                max_results_per_query,
+            )
+
+            # 3. 去重
+            unique_results = web_search.deduplicate(responses)
+
+            # 4. 自动摄入
+            auto_ingest = self._get_auto_ingest()
+            ingest_result = auto_ingest.process_search_results(
+                [r.__dict__ for r in unique_results],
                 topic,
             )
 
-        task.status = "completed"
+            # 5. 综合 — F-RS-06: pass the actual ingested items so the
+            # synthesis page lists real sources (was [] -> 0 sources,
+            # breaking the source traceability chain).
+            if auto_synthesize and ingest_result.items_successful > 0:
+                synthesis_page = auto_ingest.synthesize_research(
+                    ingest_result.items,
+                    topic,
+                )
+
+            task.status = "completed"
+        except Exception:
+            task.status = "failed"
         task.completed_at = datetime.now()
 
         return ResearchResult(
             task=task,
             sources_found=len(unique_results),
-            pages_created=ingest_result.items_successful,
+            pages_created=ingest_result.items_successful if ingest_result else 0,
             synthesis_page=synthesis_page,
             total_time=time() - start_time,
         )

@@ -159,6 +159,10 @@ SAW 架构设计成熟，但在**功能接线完整性**与**用户可见性**�
 | Batch 6 | F-WEB-03 | ✅ fixed | 401 由硬跳转改为刷新→重试→失败才登出跳转 |
 | Batch 6 | F-WEB-02 | ✅ fixed | WebSocket 重连加上限（10 次），不再无限重连 |
 | Batch 6 | F-WEB-04 | ⏳ deferred | 路由守卫需 auth-mode 感知：local-first 模式后端信任无 token 请求，硬守卫会破坏本地单用户使用——留作后续（加 /api/auth/mode 端点 + 条件守卫） |
+| Batch 7 | F-RS-02 | ✅ fixed | web 搜索 except 现记录错误（变量 e 原未用），不再静默吞错 |
+| Batch 7 | F-RS-06 | ✅ fixed | 综合传入真实 ingested items（原传 []），溯源链不再断裂 |
+| Batch 7 | F-RS-07 | ✅ fixed | execute_research 异常时标 failed（原恒 completed）；零结果正常完成 |
+| Batch 7 | F-RS-11 | ✅ fixed | synthesize_research 无 LLM 时诚实标注"仅来源列表"，不再静默忽略 llm_client |
 
 > 验证：Batch 1 改动通过 462 项测试（auth/reconcile/dispatcher/query/web/engines/integration），0 回归。
 > 验证：Batch 2 改动通过全套件 1569 项测试，0 回归。
