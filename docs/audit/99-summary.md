@@ -170,6 +170,8 @@ SAW 架构设计成熟，但在**功能接线完整性**与**用户可见性**�
 | Batch 9 | F-INGEST-01 | ✅ fixed | ingest() 新增可选 progress_callback，classify/extract/fuse/validate/enqueue/done 各阶段回调，不再静默长跑 |
 | Batch 9 | F-INGEST-02 | ✅ fixed | 摄入错误消息改为可操作三段式提示（含修复建议），不再裸技术串 |
 | Batch 9 | F-INGEST-03 | ✅ clarified | JSON/TABLE 无 extractor 已优雅返回错误（非崩溃）；消息已澄清"暂不支持"。加 extractor 属特性任务 |
+| Batch 10 | F-MCP-02 | ❌ refuted | 误报：所有 query 工具均 `if _engine is None: return {error}`（如 "Query engine not initialized"），且 server.py 已 `logger.warning` 记录初始化失败——非静默吞没 |
+| Batch 10 | F-COMP-02 | ❌ refuted | 误报：`_build_call_tree` 用 `visited` 集合在递归前检查，已防止死循环/挂死；循环已检测并标记 "(loop)"。报告完整环路路径是增强项，非正确性 bug |
 
 > 验证：Batch 1 改动通过 462 项测试（auth/reconcile/dispatcher/query/web/engines/integration），0 回归。
 > 验证：Batch 2 改动通过全套件 1569 项测试，0 回归。
