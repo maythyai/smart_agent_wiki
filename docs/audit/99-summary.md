@@ -199,6 +199,7 @@ SAW 架构设计成熟，但在**功能接线完整性**与**用户可见性**�
 | Batch 18 | F-CONN-07 | ✅ fixed | OAuth callback 处理用户拒绝授权（error/无 code → 友好 400，原 422） |
 | Batch 18 | F-CONN-10 | ✅ fixed | OAuth 授权 URL 参数 URL-编码（urlencode，原裸拼接） |
 | Batch 18 | F-COMP-03 | ⏳ deferred | _cascade_update 为 pass 桩 + CompileResult schema 不明，需先设计降级标记字段 |
+| Batch 19 | F-QS-08 | ✅ fixed | Tree Mode 实现真实标题层级树：解析 wiki 页 markdown ATX 标题构建嵌套 HeadingNode，按查询词定位章节并返回 root→section 路径（原扁平 stub）；claim 路径保留为回退 |
 
 > 验证：Batch 1 改动通过 462 项测试（auth/reconcile/dispatcher/query/web/engines/integration），0 回归。
 > 验证：Batch 2 改动通过全套件 1569 项测试，0 回归。
