@@ -227,16 +227,9 @@ class ResearchOnMissHandler:
         """
         results: list[dict] = []
 
-        # In production, would call DuckDuckGo or SerpAPI
-        # For now, return placeholder
-        try:
-            # Simulate web search
-            results = [
-                {"url": f"https://example.com/search?q={query}", "title": query, "snippet": ""}
-            ]
-        except Exception:
-            pass
-
+        # F-MCP-03: do NOT fabricate placeholder URLs. Returning fake
+        # example.com "results" caused bogus sources to be auto-ingested
+        # into the wiki. Return empty until a real search backend is wired.
         return results
 
     async def _academic_search(self, query: str) -> list[dict]:
@@ -250,14 +243,9 @@ class ResearchOnMissHandler:
         """
         results: list[dict] = []
 
-        # In production, would call arXiv or Semantic Scholar API
-        try:
-            results = [
-                {"url": f"https://arxiv.org/search/?query={query}", "title": f"Academic: {query}", "snippet": ""}
-            ]
-        except Exception:
-            pass
-
+        # F-MCP-03: no real academic search backend is wired; return empty
+        # instead of fabricating arxiv.org placeholder URLs that would be
+        # auto-ingested as bogus sources.
         return results
 
     async def _code_search(self, query: str) -> list[dict]:
@@ -271,14 +259,9 @@ class ResearchOnMissHandler:
         """
         results: list[dict] = []
 
-        # In production, would call GitHub search API
-        try:
-            results = [
-                {"url": f"https://github.com/search?q={query}", "title": f"Code: {query}", "snippet": ""}
-            ]
-        except Exception:
-            pass
-
+        # F-MCP-03: no real code search backend is wired; return empty
+        # instead of fabricating github.com placeholder URLs that would be
+        # auto-ingested as bogus sources.
         return results
 
     def _dedupe_sources(self, sources: list[dict]) -> list[dict]:

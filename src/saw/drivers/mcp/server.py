@@ -158,6 +158,23 @@ def create_server(wiki_path: Path, db_path: Path | None = None) -> FastMCP:
                 vault_repo=vault_repo,
                 wiki_repo=wiki_repo,
             )
+
+            # F-MCP-04: wire the LearnEngine so the learn/* MCP tools work
+            # instead of every call returning "Learn engine not initialized".
+            # Best-effort: a construction failure is logged and leaves
+            # _learn_engine None (the tools degrade gracefully).
+            try:
+                from saw.config.settings import WikiSettings
+                from saw.engines.learn.engine import LearnEngine
+                _learn_engine = LearnEngine(
+                    settings=WikiSettings(path=wiki_path),
+                    claims_repo=claims_repo,
+                    wiki_repo=wiki_repo,
+                    llm_router=_llm_router,
+                )
+                logger.info("Learn engine initialized")
+            except Exception as e:
+                logger.warning("Failed to initialize learn engine: %s", e)
         else:
             logger.warning("Database not found at %s — tools will return empty results", db_path)
     except Exception as e:

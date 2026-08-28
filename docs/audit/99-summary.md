@@ -151,7 +151,11 @@ SAW 架构设计成熟，但在**功能接线完整性**与**用户可见性**�
 | Batch 3 | F-CONN-01 | ✅ fixed | TokenEncryption() → from_env()，token 解密不再 TypeError |
 | Batch 3 | F-CONN-02 | ✅ fixed | PyGithub 缺失/无 token 时显式 raise，不再 MagicMock 假数据 |
 | Batch 3 | F-CONN-03 | ✅ fixed | reauth 端点移除 await + 传 user_id，不再 500（测试 mock 改同步以反映真实） |
+| Batch 4 | F-MCP-03 | ✅ fixed | research_on_miss 停止返回伪造 placeholder URL，改为空结果（不再摄入假源） |
+| Batch 4 | F-MCP-04 | ✅ fixed | MCP server 接线 LearnEngine，learn 工具不再恒为 None |
+| Batch 4 | F-MCP-01 | ⏳ deferred | 7 个 thinking 工具注册需逐工具 schema 设计 + 引擎接线，强行注册未接线工具会引入新缺陷——留作后续特性任务 |
 
 > 验证：Batch 1 改动通过 462 项测试（auth/reconcile/dispatcher/query/web/engines/integration），0 回归。
 > 验证：Batch 2 改动通过全套件 1569 项测试，0 回归。
 > 验证：Batch 3 改动通过全套件 1569 项测试，0 回归。
+> 验证：Batch 4 改动通过全套件 1569 项测试，0 回归。
