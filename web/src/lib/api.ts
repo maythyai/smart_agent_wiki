@@ -1,3 +1,5 @@
+import { useAuthStore } from '../stores/authStore';
+
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
 
 interface RequestOptions {
@@ -46,6 +48,67 @@ export function getAccessToken(): string | null {
   return null;
 }
 
+// F-AUTH-02 / F-WEB-03: refresh an expired access token once before bouncing
+// the user to /login. Without this, a silently-expired 30-min access token
+// caused in-flight form edits to be discarded by the hard redirect. A single
+// in-flight refresh promise dedups concurrent 401s.
+let refreshInFlight: Promise<string | null> | null = null;
+
+export async function refreshAccessToken(): Promise<string | null> {
+  if (refreshInFlight) return refreshInFlight;
+  refreshInFlight = (async () => {
+    try {
+      const stored = localStorage.getItem('saw-auth');
+      const refreshToken: string | null = stored
+        ? JSON.parse(stored)?.state?.refreshToken ?? null
+        : null;
+      if (!refreshToken) return null;
+      const res = await fetch(buildUrl('/api/auth/refresh'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh_token: refreshToken }),
+      });
+      if (!res.ok) return null;
+      const data = await res.json();
+      if (!data?.access_token) return null;
+      useAuthStore.getState().setTokens(data.access_token, data.refresh_token ?? refreshToken);
+      return data.access_token as string;
+    } catch {
+      return null;
+    }
+  })();
+  try {
+    return await refreshInFlight;
+  } finally {
+    refreshInFlight = null;
+  }
+}
+
+// F-WEB-03: on a 401, try to refresh once and retry the original request.
+// Returns the retried response on success, or null if the session is truly
+// gone (caller should log out + redirect). Headers are mutable here.
+async function retryAfterRefresh(
+  url: string,
+  method: string,
+  headers: HeadersInit,
+  buildBody: () => BodyInit | undefined,
+): Promise<Response | null> {
+  const newToken = await refreshAccessToken();
+  if (!newToken) return null;
+  const retryHeaders = { ...(headers as Record<string, string>), Authorization: `Bearer ${newToken}` };
+  const retry = await fetch(url, { method, headers: retryHeaders, body: buildBody() });
+  if (retry.status === 401) return null;
+  return retry;
+}
+
+function bailSession(): never {
+  useAuthStore.getState().logout();
+  if (window.location.pathname !== '/login') {
+    window.location.href = '/login';
+  }
+  throw new ApiError(401, 'Unauthorized', { message: 'Session expired' });
+}
+
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { method = 'GET', body, params, skipAuth = false } = options;
   const url = buildUrl(path, params);
@@ -68,10 +131,21 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     body: body ? JSON.stringify(body) : undefined,
   });
 
-  // Handle 401 by redirecting to login
+  // F-WEB-03: on 401, try to refresh the access token and retry once
+  // before discarding in-flight work / redirecting to /login.
   if (response.status === 401 && !skipAuth && !path.includes('/auth/')) {
-    window.location.href = '/login';
-    throw new ApiError(401, 'Unauthorized', { message: 'Session expired' });
+    const retry = await retryAfterRefresh(url, method, headers, () =>
+      body ? JSON.stringify(body) : undefined,
+    );
+    if (retry) {
+      if (!retry.ok) {
+        let errorBody: unknown;
+        try { errorBody = await retry.json(); } catch { errorBody = null; }
+        throw new ApiError(retry.status, retry.statusText, errorBody);
+      }
+      return retry.json();
+    }
+    bailSession();
   }
 
   if (!response.ok) {
@@ -107,8 +181,16 @@ async function requestForm<T>(path: string, formData: FormData): Promise<T> {
   });
 
   if (response.status === 401 && !path.includes('/auth/')) {
-    window.location.href = '/login';
-    throw new ApiError(401, 'Unauthorized', { message: 'Session expired' });
+    const retry = await retryAfterRefresh(url, 'POST', headers, () => formData);
+    if (retry) {
+      if (!retry.ok) {
+        let errorBody: unknown;
+        try { errorBody = await retry.json(); } catch { errorBody = null; }
+        throw new ApiError(retry.status, retry.statusText, errorBody);
+      }
+      return retry.json();
+    }
+    bailSession();
   }
 
   if (!response.ok) {

@@ -155,9 +155,14 @@ SAW 架构设计成熟，但在**功能接线完整性**与**用户可见性**�
 | Batch 4 | F-MCP-04 | ✅ fixed | MCP server 接线 LearnEngine，learn 工具不再恒为 None |
 | Batch 4 | F-MCP-01 | ⏳ deferred | 7 个 thinking 工具注册需逐工具 schema 设计 + 引擎接线，强行注册未接线工具会引入新缺陷——留作后续特性任务 |
 | Batch 5 | F-COMP-01 | ❌ refuted | 误报：`analysis/impact.analyze_impact` 是真实 BFS（test_impact.py 覆盖），`KnowledgeGraph` 代理到 `CodeGraphStore`——API 与 MCP 最终查同一存储，非 stub-vs-complete。不改代码以免破坏已通过测试的路径 |
+| Batch 6 | F-AUTH-02 | ✅ fixed | api.ts 新增 refreshAccessToken，401 时刷新+重试，access token 过期不再丢表单 |
+| Batch 6 | F-WEB-03 | ✅ fixed | 401 由硬跳转改为刷新→重试→失败才登出跳转 |
+| Batch 6 | F-WEB-02 | ✅ fixed | WebSocket 重连加上限（10 次），不再无限重连 |
+| Batch 6 | F-WEB-04 | ⏳ deferred | 路由守卫需 auth-mode 感知：local-first 模式后端信任无 token 请求，硬守卫会破坏本地单用户使用——留作后续（加 /api/auth/mode 端点 + 条件守卫） |
 
 > 验证：Batch 1 改动通过 462 项测试（auth/reconcile/dispatcher/query/web/engines/integration），0 回归。
 > 验证：Batch 2 改动通过全套件 1569 项测试，0 回归。
 > 验证：Batch 3 改动通过全套件 1569 项测试，0 回归。
 > 验证：Batch 4 改动通过全套件 1569 项测试，0 回归。
 > 验证：Batch 5 F-COMP-01 经主审核为误报（同 F-DB-01），无代码改动。
+> 验证：Batch 6 改动通过前端 51 项测试 + tsc 干净，0 回归。

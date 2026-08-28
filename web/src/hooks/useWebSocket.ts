@@ -29,6 +29,10 @@ const INITIAL_RECONNECT_DELAY = 1_000;
 const MAX_RECONNECT_DELAY = 30_000;
 const RECONNECT_MULTIPLIER = 2;
 
+// F-WEB-02: stop reconnecting after this many failed attempts so a down
+// server doesn't retry forever (and silently). Manual reconnect() resets it.
+const MAX_RECONNECT_ATTEMPTS = 10;
+
 /**
  * React hook for WebSocket connection management.
  * Provides auto-reconnect with exponential backoff and heartbeat.
@@ -163,6 +167,12 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
       setStatus('disconnected');
       setConnectionStatus('disconnected');
       clearHeartbeat();
+
+      // F-WEB-02: cap reconnect attempts so a down server doesn't retry
+      // forever and silently. Manual reconnect() resets the counter.
+      if (reconnectAttemptsRef.current >= MAX_RECONNECT_ATTEMPTS) {
+        return;
+      }
 
       // Schedule reconnect with exponential backoff
       const delay = getReconnectDelay();
