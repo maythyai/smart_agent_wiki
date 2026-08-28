@@ -180,14 +180,39 @@ async def receive_webhook(
         f"Webhook received: platform={platform}, type={event_type}, event_id={event_id}"
     )
 
-    # Queue webhook for processing (implementation in Phase 11)
-    # For now, just acknowledge receipt
     webhook_event = WebhookEvent(
         platform=platform,
         event_type=event_type,
         payload=payload,
         received_at=datetime.now(timezone.utc),
     )
+
+    # F-CONN-06: process the verified webhook into a claim via the Write
+    # Queue. Previously the endpoint only acknowledged receipt, so push-based
+    # intake was a dead end — verified webhook content never reached the KB.
+    write_queue = getattr(request.app.state, "write_queue", None)
+    if write_queue is not None:
+        try:
+            content = _extract_text(platform, payload)
+            if content:
+                from saw.write_queue.queue import WriteOp
+                from saw.domain.value_objects import WriteOpStatus
+
+                op = WriteOp(
+                    op_id=f"webhook-{platform}-{event_id}",
+                    session_id=f"webhook-{platform}",
+                    sink_name="claims",
+                    payload={
+                        "content": content,
+                        "source_platform": platform,
+                        "source_id": str(event_id),
+                        "source_url": payload.get("event_url") or payload.get("url"),
+                    },
+                    status=WriteOpStatus.PENDING,
+                )
+                write_queue.enqueue([op])
+        except Exception as e:
+            logger.warning("Failed to enqueue webhook claim for %s: %s", platform, e)
 
     return JSONResponse(
         status_code=200,
@@ -223,3 +248,33 @@ def _get_webhook_secret(platform: str, request: Request) -> str | None:
         "feishu": "SAW_FEISHU_SIGNING_SECRET",
     }
     return os.environ.get(env_var_map.get(platform, ""))
+
+
+def _extract_text(platform: str, payload: dict) -> str:
+    """Best-effort extraction of a text snippet from a webhook payload.
+
+    F-CONN-06: platform-specific field paths; falls back to a truncated JSON
+    dump so a verified webhook is never silently dropped.
+    """
+    try:
+        if platform == "slack":
+            event = payload.get("event", {}) or {}
+            return (event.get("text") or payload.get("text") or "").strip()
+        if platform == "github":
+            action = payload.get("action", "")
+            issue = payload.get("issue") or payload.get("pull_request") or {}
+            title = issue.get("title", "")
+            body = issue.get("body", "")
+            return f"{action} {title}".strip() + (f"\n\n{body}" if body else "")
+        if platform == "discord":
+            return (
+                payload.get("content")
+                or (payload.get("data") or {}).get("content")
+                or ""
+            ).strip()
+        if platform == "feishu":
+            event = payload.get("event") or {}
+            return (event.get("text") or event.get("content") or "").strip()
+    except Exception:
+        pass
+    return json.dumps(payload, ensure_ascii=False)[:2000]
