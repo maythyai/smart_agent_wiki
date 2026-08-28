@@ -180,6 +180,11 @@ SAW 架构设计成熟，但在**功能接线完整性**与**用户可见性**�
 | Batch 12 | F-AUTH-06 | ✅ partial | query 输入检查扩至全方法 + 窄 XSS 检测（sanitize_string/check_xss 现已使用）；请求体 XSS 由 Pydantic+渲染层兜底，专用 body sanitizer 留后续 |
 | Batch 12 | F-AUTH-08 | ✅ fixed | 429 响应增加标准 Retry-After 头 |
 | Batch 12 | F-AUTH-09 | ❌ refuted | 误报：登录表单不应有 minLength（会误拒有效短密码）；"Invalid email or password" 是防枚举的正确通用消息 |
+| Batch 13 | F-QS-04 | ✅ fixed | CommandPalette 实现 ↑↓ 键盘导航 + 高亮 + Enter 选中（原仅提示无实现） |
+| Batch 13 | F-QS-06 | ✅ fixed | 新增前端 slugify（镜像后端），图节点/搜索建议 slug 不再与后端不一致导致 404 |
+| Batch 13 | F-WEB-07 | ✅ fixed | useShortcuts 网页模式注册原生 keydown，Cmd+S/O/N/, 在浏览器生效（原仅 Tauri） |
+| Batch 13 | F-QS-09 | ⏳ deferred | 暗色模式为纯 CSS 美容项，留作 UI 统一刷 |
+| Batch 13 | F-WEB-08 | ⏳ deferred | 面包屑为新组件特性，留作后续 |
 
 > 验证：Batch 1 改动通过 462 项测试（auth/reconcile/dispatcher/query/web/engines/integration），0 回归。
 > 验证：Batch 2 改动通过全套件 1569 项测试，0 回归。

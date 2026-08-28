@@ -21,6 +21,7 @@ export function openCommandPalette() {
 export function CommandPalette() {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState('');
+  const [activeIndex, setActiveIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
@@ -61,6 +62,11 @@ export function CommandPalette() {
       setTimeout(() => inputRef.current?.focus(), 100);
     }
   }, [isOpen]);
+
+  // F-QS-04: reset keyboard selection when the result set changes.
+  useEffect(() => {
+    setActiveIndex(0);
+  }, [query, searchResults]);
 
   const handleSelect = useCallback((slug: string) => {
     setIsOpen(false);
@@ -105,7 +111,21 @@ export function CommandPalette() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter') handleSearchFull();
+                if (e.key === 'ArrowDown') {
+                  e.preventDefault();
+                  setActiveIndex((i) => Math.min(i + 1, results.length - 1));
+                } else if (e.key === 'ArrowUp') {
+                  e.preventDefault();
+                  setActiveIndex((i) => Math.max(i - 1, 0));
+                } else if (e.key === 'Enter') {
+                  // F-QS-04: ↑↓ to move, Enter selects the highlighted
+                  // result; Enter on an empty list runs a full search.
+                  if (results.length > 0 && activeIndex < results.length) {
+                    handleSelect(results[activeIndex].slug);
+                  } else {
+                    handleSearchFull();
+                  }
+                }
               }}
               placeholder="Search knowledge base..."
               className="flex-1 bg-transparent border-none outline-none text-gray-900
@@ -129,12 +149,14 @@ export function CommandPalette() {
               </div>
             )}
 
-            {!isLoading && results.map((result) => (
+            {!isLoading && results.map((result, idx) => (
               <button
                 key={result.slug}
                 onClick={() => handleSelect(result.slug)}
-                className="w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700
-                  border-b dark:border-gray-700 last:border-b-0 transition-colors"
+                onMouseEnter={() => setActiveIndex(idx)}
+                className={`w-full px-4 py-3 text-left border-b dark:border-gray-700 last:border-b-0 transition-colors ${
+                  idx === activeIndex ? 'bg-blue-50 dark:bg-gray-700' : 'hover:bg-gray-50 dark:hover:bg-gray-700'
+                }`}
               >
                 <div className="flex items-center gap-2">
                   <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

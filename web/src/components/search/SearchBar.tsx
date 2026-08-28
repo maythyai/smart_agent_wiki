@@ -4,6 +4,7 @@ import { Input } from '../ui/Input';
 import { Spinner } from '../ui/Spinner';
 import { useDebouncedValue } from '../../hooks/useDebounce';
 import { api } from '../../lib/api';
+import { slugify } from '../../lib/slugify';
 
 interface Suggestion {
   title: string;
@@ -41,7 +42,7 @@ export function SearchBar({ onSearch, placeholder = 'Search knowledge base...', 
           limit: 5,
         });
         // Convert titles to suggestions (use first matching slug from search)
-        setSuggestions(titles.map(title => ({ title, slug: title.toLowerCase().replace(/\s+/g, '-') })));
+        setSuggestions(titles.map(title => ({ title, slug: slugify(title) })));
       } catch {
         setSuggestions([]);
       } finally {

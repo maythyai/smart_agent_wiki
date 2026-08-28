@@ -4,6 +4,7 @@ import cytoscape, { Core, NodeSingular } from 'cytoscape';
 import fcose from 'cytoscape-fcose';
 import { useGraph } from '../../hooks/useGraph';
 import { useStore } from '../../stores';
+import { slugify } from '../../lib/slugify';
 import { GRAPH_STYLE, getLayoutForViewMode, getViewMode } from '../../types/cytoscape';
 
 // Register fCoSE layout
@@ -106,7 +107,7 @@ export function KnowledgeGraph({
     cyRef.current.on('dbltap', 'node', (evt) => {
       const node = evt.target as NodeSingular;
       const nodeLabel = node.data('label');
-      navigate(`/page/${nodeLabel.toLowerCase().replace(/\s+/g, '-')}`);
+      navigate(`/page/${slugify(nodeLabel)}`);
     });
 
     // Per D-11: Drag support is built-in with Cytoscape

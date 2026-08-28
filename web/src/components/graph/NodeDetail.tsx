@@ -1,5 +1,6 @@
 import { Link } from 'react-router';
 import { Badge } from '../ui/Badge';
+import { slugify } from '../../lib/slugify';
 
 interface NodeDetailProps {
   nodeData?: {
@@ -61,7 +62,7 @@ export function NodeDetail({ nodeData }: NodeDetailProps) {
 
       <div className="pt-4 border-t">
         <Link
-          to={`/page/${nodeData.label.toLowerCase().replace(/\s+/g, '-')}`}
+          to={`/page/${slugify(nodeData.label)}`}
           className="text-blue-600 hover:text-blue-800 text-sm font-medium"
         >
           View Page {'>'}
