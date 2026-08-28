@@ -42,6 +42,41 @@ _ERROR_STATUS_MAP: dict[type[SAWError], int] = {
     ConfigError: 500,
 }
 
+# F-WEB-05: human-readable titles so responses don't expose raw exception
+# class names (e.g. 'StorageError') to clients.
+_ERROR_TITLE_MAP: dict[type[SAWError], str] = {
+    AuthenticationError: "Authentication required",
+    RateLimitError: "Too many requests",
+    PipelineError: "Request could not be processed",
+    StorageError: "Knowledge store unavailable",
+    VaultError: "Vault unavailable",
+    ClaimsDBError: "Claims database unavailable",
+    FTS5Error: "Search index unavailable",
+    WriteQueueError: "Write queue unavailable",
+    LLMError: "Language model unavailable",
+    ConnectorError: "Connector unavailable",
+    ConfigError: "Configuration error",
+}
+
+
+def _http_title(status_code: int) -> str:
+    """Human-readable title for an HTTP status (F-WEB-05)."""
+    titles = {
+        400: "Bad request",
+        401: "Authentication required",
+        403: "Forbidden",
+        404: "Not found",
+        405: "Method not allowed",
+        409: "Conflict",
+        422: "Validation failed",
+        429: "Too many requests",
+    }
+    if status_code in titles:
+        return titles[status_code]
+    if status_code >= 500:
+        return "Internal server error"
+    return "Request error"
+
 
 def register_exception_handlers(app: FastAPI) -> None:
     """Register global exception handlers for consistent error responses.
@@ -69,12 +104,18 @@ def register_exception_handlers(app: FastAPI) -> None:
             if cls in _ERROR_STATUS_MAP:
                 http_status = _ERROR_STATUS_MAP[cls]
                 break
+        # F-WEB-05: human-readable title instead of the raw class name.
+        title = "Request error"
+        for cls in type(exc).__mro__:
+            if cls in _ERROR_TITLE_MAP:
+                title = _ERROR_TITLE_MAP[cls]
+                break
 
         return JSONResponse(
             status_code=http_status,
             content={
                 "type": "https://smart-agent.wiki/errors/business",
-                "title": exc.__class__.__name__,
+                "title": title,
                 "status": http_status,
                 "detail": str(exc),
             },
@@ -125,7 +166,7 @@ def register_exception_handlers(app: FastAPI) -> None:
             status_code=exc.status_code,
             content={
                 "type": f"https://smart-agent.wiki/errors/http-{exc.status_code}",
-                "title": exc.__class__.__name__,
+                "title": _http_title(exc.status_code),
                 "status": exc.status_code,
                 "detail": detail,
             },

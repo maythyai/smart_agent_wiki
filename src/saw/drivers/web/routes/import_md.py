@@ -229,4 +229,14 @@ async def import_zip(
     except zipfile.BadZipFile:
         raise HTTPException(status_code=400, detail="Invalid ZIP file")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Import failed: {e}")
+        # F-WEB-06: do not expose str(e) in the 500 response detail (the
+        # global 5xx handler also masks it, but defense in depth — never put
+        # internals in a client-facing detail). Log server-side instead.
+        import logging as _logging
+        _logging.getLogger(__name__).warning(
+            "ZIP import failed: %s", e, exc_info=True
+        )
+        raise HTTPException(
+            status_code=500,
+            detail="Import failed: the archive could not be processed.",
+        )

@@ -15,7 +15,21 @@ export class ApiError extends Error {
   body: unknown;
 
   constructor(status: number, statusText: string, body: unknown) {
-    super(`API Error: ${status} ${statusText}`);
+    // F-WEB-09: surface RFC 7807 Problem Details 'title'/'detail' to callers
+    // so components can show a meaningful message instead of the raw HTTP
+    // status text. Validation 'detail' may be an array (kept on .body).
+    let message = `API Error: ${status} ${statusText}`;
+    if (body && typeof body === 'object') {
+      const b = body as Record<string, unknown>;
+      const detail = b.detail;
+      const title = b.title;
+      if (typeof detail === 'string' && detail.length) {
+        message = detail;
+      } else if (typeof title === 'string' && title.length) {
+        message = title;
+      }
+    }
+    super(message);
     this.name = 'ApiError';
     this.status = status;
     this.statusText = statusText;

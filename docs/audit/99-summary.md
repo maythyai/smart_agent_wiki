@@ -172,6 +172,9 @@ SAW 架构设计成熟，但在**功能接线完整性**与**用户可见性**�
 | Batch 9 | F-INGEST-03 | ✅ clarified | JSON/TABLE 无 extractor 已优雅返回错误（非崩溃）；消息已澄清"暂不支持"。加 extractor 属特性任务 |
 | Batch 10 | F-MCP-02 | ❌ refuted | 误报：所有 query 工具均 `if _engine is None: return {error}`（如 "Query engine not initialized"），且 server.py 已 `logger.warning` 记录初始化失败——非静默吞没 |
 | Batch 10 | F-COMP-02 | ❌ refuted | 误报：`_build_call_tree` 用 `visited` 集合在递归前检查，已防止死循环/挂死；循环已检测并标记 "(loop)"。报告完整环路路径是增强项，非正确性 bug |
+| Batch 11 | F-WEB-05 | ✅ fixed | RFC7807 `title` 改为人类可读（如 "Knowledge store unavailable"），不再暴露异常类名 |
+| Batch 11 | F-WEB-06 | ✅ fixed | import_md 500 不再暴露 str(e)（改通用消息 + 服务端 log） |
+| Batch 11 | F-WEB-09 | ✅ fixed | 前端 ApiError 解析 RFC7807 title/detail，组件显示有意义消息而非原始 HTTP 状态文本 |
 
 > 验证：Batch 1 改动通过 462 项测试（auth/reconcile/dispatcher/query/web/engines/integration），0 回归。
 > 验证：Batch 2 改动通过全套件 1569 项测试，0 回归。
