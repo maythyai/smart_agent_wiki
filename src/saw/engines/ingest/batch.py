@@ -218,7 +218,7 @@ class BatchMediaProcessor:
             batch_id=batch_id,
             total_files=len(files),
             successful=completed,
-            failed=failed + results.count(lambda r: not r.success),
+            failed=sum(1 for r in results if not r.success),
             file_results=results,
             elapsed_seconds=elapsed,
             started_at=datetime.fromtimestamp(start_time, timezone.utc).isoformat(),

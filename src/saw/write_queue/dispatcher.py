@@ -62,7 +62,17 @@ class Dispatcher:
 
             sink = self._sinks.get(op.sink_name)
             if sink is None:
-                logger.warning("No sink registered for: %s", op.sink_name)
+                # F-DB-02: an op with no registered sink would otherwise stay
+                # 'pending' forever (re-fetched every dispatch cycle). Claim
+                # it and mark_failed so it progresses toward the dead-letter
+                # queue and an operator can see it instead of looping silently.
+                logger.warning(
+                    "No sink registered for: %s (op %s)", op.sink_name, op.op_id
+                )
+                if self._queue.mark_processing(op.op_id):
+                    err = f"No sink registered for '{op.sink_name}'"
+                    self._queue.track_sink(op.op_id, op.sink_name, "failed", err)
+                    self._queue.mark_failed(op.op_id, err)
                 continue
 
             if not self._queue.mark_processing(op.op_id):

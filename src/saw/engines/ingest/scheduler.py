@@ -245,12 +245,11 @@ class FeedScheduler:
         try:
             result = await self._manager.poll_feed(feed_id)
 
-            # Reset failure count on success
-            if not result.errors or "HTTP" in result.errors[0] if result.errors else False:
-                # HTTP errors still count as failures
-                if result.status_code == 200 or result.status_code == 304:
-                    config.consecutive_failures = 0
-            else:
+            # F-INGEST-05: reset the failure count ONLY on a clean success
+            # (no errors AND a 2xx/304). The previous logic was inverted —
+            # an `else` branch reset consecutive_failures to 0 whenever
+            # non-HTTP errors were present, defeating exponential backoff.
+            if not result.errors and result.status_code in (200, 304):
                 config.consecutive_failures = 0
 
             logger.info(

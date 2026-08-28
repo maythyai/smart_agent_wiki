@@ -185,6 +185,10 @@ SAW 架构设计成熟，但在**功能接线完整性**与**用户可见性**�
 | Batch 13 | F-WEB-07 | ✅ fixed | useShortcuts 网页模式注册原生 keydown，Cmd+S/O/N/, 在浏览器生效（原仅 Tauri） |
 | Batch 13 | F-QS-09 | ⏳ deferred | 暗色模式为纯 CSS 美容项，留作 UI 统一刷 |
 | Batch 13 | F-WEB-08 | ⏳ deferred | 面包屑为新组件特性，留作后续 |
+| Batch 14 | F-INGEST-04 | ✅ fixed | 批量失败计数 `list.count(lambda)` 误用（恒 0）改为 `sum(1 for r if not r.success)` |
+| Batch 14 | F-INGEST-05 | ✅ fixed | scheduler 成功重置逻辑反转修正：仅无错且 200/304 才重置失败计数（原 else 在有错时反而重置，削弱退避） |
+| Batch 14 | F-DB-02 | ✅ fixed | dispatcher 未知 sink 由 `continue`（无限 pending）改为 mark_failed 推进至死信，不再循环 |
+| Batch 14 | F-CONF-01 | ❌ refuted | 误报：ConfigError 暴露的是用户自有配置路径 + yaml 解析错误，属可操作用户面信息，非内部泄露 |
 
 > 验证：Batch 1 改动通过 462 项测试（auth/reconcile/dispatcher/query/web/engines/integration），0 回归。
 > 验证：Batch 2 改动通过全套件 1569 项测试，0 回归。
