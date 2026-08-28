@@ -9,6 +9,7 @@ import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Callable
 
 from saw.adapters.llm.router import LLMRouter
 from saw.adapters.parsers.html_parser import HTMLParser
@@ -94,12 +95,20 @@ class IngestPipeline:
             self._media_extractor = MediaExtractor(config)
         return self._media_extractor
 
-    def ingest(self, source: str, options: dict | None = None) -> IngestResult:
+    def ingest(
+        self,
+        source: str,
+        options: dict | None = None,
+        progress_callback: Callable[[str, float], None] | None = None,
+    ) -> IngestResult:
         """Ingest a document source.
 
         Args:
             source: File path, URL, or directory to ingest.
             options: Optional ingestion options (format override, etc.).
+            progress_callback: Optional ``callback(stage, fraction)`` for
+                coarse progress reporting (F-INGEST-01), so callers can show
+                progress instead of a silent long-running call.
 
         Returns:
             IngestResult with session ID, counts, and any errors/warnings.
@@ -109,10 +118,20 @@ class IngestPipeline:
         errors: list[str] = []
         warnings: list[str] = []
 
+        def report(stage: str, frac: float) -> None:
+            # F-INGEST-01: coarse progress hooks (classify/extract/fuse/
+            # validate/enqueue) so callers can surface progress + cancel.
+            if progress_callback is not None:
+                try:
+                    progress_callback(stage, frac)
+                except Exception:
+                    pass
+
+        report("classify", 0.1)
         # 1. Classify source
         classified = classify(source)
         if classified.format == DocumentFormat.UNKNOWN:
-            errors.append(f"Unknown format for source: {source}")
+            errors.append(f"Unknown format for source: {source}. Supported: Markdown, PDF, URL, code, audio, video.")
             return IngestResult(
                 session_id=session_id,
                 claim_count=0,
@@ -162,7 +181,7 @@ class IngestPipeline:
                 parser_used = "whisper"
 
             else:
-                errors.append(f"No extractor for format: {classified.format}")
+                errors.append(f"Unsupported format '{classified.format.name}' for {source}: no extractor available. JSON/TABLE ingestion is not yet supported.")
                 return IngestResult(
                     session_id=session_id,
                     claim_count=0,
@@ -172,7 +191,7 @@ class IngestPipeline:
                 )
 
         except Exception as e:
-            errors.append(f"Extraction failed: {e}")
+            errors.append(f"Extraction failed for {source}: {e}. Verify the file is not corrupted and its extension matches the content.")
             return IngestResult(
                 session_id=session_id,
                 claim_count=0,
@@ -187,13 +206,15 @@ class IngestPipeline:
                 claim_count=0,
                 entity_count=0,
                 relation_count=0,
-                errors=["Extraction returned no results"],
+                errors=["Extraction returned no results. The source may be empty or in an unsupported structure."],
             )
 
+        report("extract", 0.5)
         # 4. Fuse with existing claims
         existing_claims = self._get_existing_claims(extraction_result.claims)
         fused = self._fuser.fuse(extraction_result.claims, existing_claims)
 
+        report("fuse", 0.7)
         # 5. Validate
         validated = self._validator.validate(
             fused.to_insert,
@@ -202,6 +223,7 @@ class IngestPipeline:
         )
         errors.extend(validated.errors)
 
+        report("validate", 0.8)
         # 6. Build WriteOp list for all sinks
         ops = self._build_write_ops(
             session_id=session_id,
@@ -213,11 +235,12 @@ class IngestPipeline:
             metadata=extraction_result.metadata,
         )
 
+        report("enqueue", 0.95)
         # 7. Enqueue all operations atomically
         try:
             self._write_queue.enqueue_atomic(ops)
         except Exception as e:
-            errors.append(f"Failed to enqueue operations: {e}")
+            errors.append(f"Failed to enqueue write operations: {e}. The database may be locked (saw.db); retry or check for a stuck process.")
             return IngestResult(
                 session_id=session_id,
                 claim_count=0,
@@ -226,6 +249,7 @@ class IngestPipeline:
                 errors=errors,
             )
 
+        report("done", 1.0)
         return IngestResult(
             session_id=session_id,
             claim_count=len(validated.valid_claims),

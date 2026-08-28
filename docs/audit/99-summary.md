@@ -167,6 +167,9 @@ SAW 架构设计成熟，但在**功能接线完整性**与**用户可见性**�
 | Batch 8 | F-PLUG-02 | ✅ fixed | event_bus 队列满/处理器异常现记录，不再静默丢/吞 |
 | Batch 8 | F-PLUG-05 | ❌ refuted | 误报：app.py create_app_from_config 已用闭包把 PluginContext.subscribe_event/publish_event 桥接到 InMemoryEventBus |
 | Batch 8 | F-ONB-01 | ❌ refuted | 误报：onboarding 路由提供 GET /status + POST /seed 流程（经 WriteQueue 创建页面 + 逐页错误处理）；starter_kits 是数据文件，本应静态 |
+| Batch 9 | F-INGEST-01 | ✅ fixed | ingest() 新增可选 progress_callback，classify/extract/fuse/validate/enqueue/done 各阶段回调，不再静默长跑 |
+| Batch 9 | F-INGEST-02 | ✅ fixed | 摄入错误消息改为可操作三段式提示（含修复建议），不再裸技术串 |
+| Batch 9 | F-INGEST-03 | ✅ clarified | JSON/TABLE 无 extractor 已优雅返回错误（非崩溃）；消息已澄清"暂不支持"。加 extractor 属特性任务 |
 
 > 验证：Batch 1 改动通过 462 项测试（auth/reconcile/dispatcher/query/web/engines/integration），0 回归。
 > 验证：Batch 2 改动通过全套件 1569 项测试，0 回归。
