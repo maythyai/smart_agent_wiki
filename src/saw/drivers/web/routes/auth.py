@@ -89,11 +89,22 @@ async def register(request: RegisterRequest):
             detail="Email already registered",
         )
 
+    # F-AUTH-01: never allow self-grant of the admin role via the public
+    # register endpoint. Silently downgrade admin -> viewer; admin must be
+    # promoted through a privileged flow, not self-registration.
+    requested_role = request.role
+    if requested_role == "admin":
+        requested_role = "viewer"
+        logger.warning(
+            "Register request asked for admin role; downgraded to viewer: %s",
+            request.email,
+        )
+
     # Create user
     user_data = auth_service.register_user(
         email=request.email,
         password=request.password,
-        role=request.role,
+        role=requested_role,
         display_name=request.display_name,
     )
 
@@ -109,7 +120,7 @@ async def register(request: RegisterRequest):
     # Store refresh token (hashed at rest in the DB-backed store)
     user_store.store_refresh_token(tokens.refresh_token, user_data["id"])
 
-    logger.info("User registered: %s (role=%s)", request.email, request.role)
+    logger.info("User registered: %s (role=%s)", request.email, requested_role)
 
     return TokenResponse(
         access_token=tokens.access_token,

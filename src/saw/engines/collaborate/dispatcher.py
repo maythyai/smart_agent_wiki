@@ -157,7 +157,12 @@ class AgentDispatcher:
                 # Use fallback_tier to dynamically switch models via LLMRouter.
                 # The agent's original model_tier is the primary; on rate-limit we
                 # escalate to the next tier in FALLBACK_ORDER.
-                result = await agent.execute(task, context, tools or [], model_tier_override=fallback_tier)
+                # F-COLLAB-01: Agent.execute signatures are (task, context,
+                # tools) with no **kwargs, so passing model_tier_override
+                # raised TypeError on EVERY non-rule dispatch. The override is
+                # currently decorative (agents hardcode their model), so drop
+                # the kwarg; the fallback loop still retries on RateLimitError.
+                result = await agent.execute(task, context, tools or [])
                 result.metadata["model_tier_used"] = fallback_tier.value
                 return result
             except RateLimitError as e:

@@ -50,8 +50,8 @@ def ingest(
     # Check wiki exists
     config_path = wiki_path / ".saw" / "config.yaml"
     if not config_path.exists():
-        console.print("[red]Error: Wiki not initialized at {path}[/red]")
-        console.print("Run [cyan]saw init {path}[/cyan] first")
+        console.print(f"[red]Error: Wiki not initialized at {path}[/red]")
+        console.print(f"Run [cyan]saw init {path}[/cyan] first")
         raise typer.Exit(1)
 
     # Load configuration

@@ -132,3 +132,18 @@ SAW 架构设计成熟，但在**功能接线完整性**与**用户可见性**�
 3. 补审覆盖缺口（§6）后更新本汇总。
 4. 本评估为 Mode B（启发式，发现率 60-75%，定位"早期信号"），上线前仍建议补充真实用户测试（Mode A）。
 5. 可回流至：异常态设计 Skill（统一错误三段式）、页面设计 Skill（列表四态/空状态）、设计提案 Skill（stub 治理机制）。
+
+---
+
+## 9. 修复进度
+
+| 批次 | finding | 状态 | 说明 |
+|------|---------|------|------|
+| Batch 1 | F-AUTH-01 | ✅ fixed | 注册端点不再自授 admin，降为 viewer |
+| Batch 1 | F-COLLAB-01 | ✅ fixed | dispatcher 移除 model_tier_override kwarg，消除 TypeError |
+| Batch 1 | F-COLLAB-02 | ✅ fixed | 无来源时抛错失败，不再写入 stub 页面 |
+| Batch 1 | F-CLI-02 | ✅ fixed | ingest_cmd 错误信息补 f 前缀 |
+| Batch 1 | F-QS-03 | ✅ fixed | NL 查询 LLM 失败时回退关键词搜索 |
+| Batch 1 | F-GOV-06 | ✅ fixed | reconcile 默认 auto_apply=False；MANUAL 不再自动 supersede |
+
+> 验证：Batch 1 改动通过 462 项测试（auth/reconcile/dispatcher/query/web/engines/integration），0 回归。

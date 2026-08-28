@@ -138,7 +138,13 @@ async def _run_workflow(
                         )
                         synthesis = _format_search_result(result, question) or synthesis
                     if not synthesis:
-                        synthesis = f"# {question}\n\n(No source material found; stub synthesis.)"
+                        # F-COLLAB-02: do NOT publish placeholder text as a real
+                        # wiki page. Fail the workflow cleanly so the user sees
+                        # the truth instead of fake content polluting the KB.
+                        raise ValueError(
+                            "No source material found for synthesis; "
+                            "workflow aborted before publishing."
+                        )
                 elif name == "review":
                     # Lightweight self-review: ensure the synthesis is non-empty.
                     if not synthesis.strip():

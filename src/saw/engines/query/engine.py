@@ -7,10 +7,13 @@ Per D-07 QUER-07: Comparison analysis.
 """
 from __future__ import annotations
 
+import logging
 import re
 import sqlite3
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from saw.adapters.llm.router import LLMRouter
@@ -146,7 +149,24 @@ class QueryEngine:
         system_prompt = self._get_query_prompt()
 
         # Step 3: Call LLM
-        raw_answer = self._llm.answer_query(compiled.content, question, system_prompt)
+        # F-QS-03: degrade gracefully — if the LLM call fails (rate limit,
+        # network, provider error) fall back to keyword search instead of
+        # surfacing a 500 to the user.
+        try:
+            raw_answer = self._llm.answer_query(compiled.content, question, system_prompt)
+        except Exception as llm_exc:
+            logger.warning(
+                "NL query LLM call failed, falling back to keyword search: %s",
+                llm_exc,
+            )
+            kw_result = self._keyword_search(question)
+            kw_result.mode = "nl_query_fallback"
+            kw_result.meta = {
+                **(kw_result.meta or {}),
+                "nl_fallback": True,
+                "nl_error": str(llm_exc),
+            }
+            return kw_result
 
         # Step 4: Parse into layered answer
         layered = self._parse_layered_answer(raw_answer, depth)

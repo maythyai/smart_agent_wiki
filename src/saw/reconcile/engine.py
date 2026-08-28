@@ -12,7 +12,7 @@ from typing import Optional
 from .detector import ContradictionDetector, DetectionResult
 from .strategies import ResolutionStrategist, ResolutionResult
 from .audit import AuditLogger, AuditEntry
-from .models import BiTemporalFact, Contradiction, FactStatus
+from .models import BiTemporalFact, Contradiction, FactStatus, ResolutionStrategyType
 
 
 @dataclass
@@ -53,7 +53,7 @@ class ReconcileEngine:
         self,
         facts: list[BiTemporalFact],
         scope: Optional[str] = None,
-        auto_apply: bool = True,
+        auto_apply: bool = False,
     ) -> ReconcileResult:
         """
         执行矛盾解决流程
@@ -61,7 +61,9 @@ class ReconcileEngine:
         Args:
             facts: 事实列表
             scope: 检测范围（topic 过滤）
-            auto_apply: 是否自动应用解决结果
+            auto_apply: 是否自动应用解决结果（F-GOV-06: 默认 False ——
+                自动 supersede 输家事实是不可逆的破坏性操作，调用方必须
+                显式 opt-in；预览请用 detect_only()）
 
         Returns:
             解决结果
@@ -193,7 +195,10 @@ class ReconcileEngine:
         audit = self.audit_logger.log(contradiction, result)
 
         # 应用解决
-        result.loser.supersede()
+        # F-GOV-06: MANUAL 策略表示"待人工决策"，不应自动 supersede 输家。
+        # 只有自动化策略（FRESHNESS/CONFIDENCE/SOURCE_DIVERSITY）才应用。
+        if result.strategy != ResolutionStrategyType.MANUAL:
+            result.loser.supersede()
 
         return result, audit
 
