@@ -189,6 +189,8 @@ SAW 架构设计成熟，但在**功能接线完整性**与**用户可见性**�
 | Batch 14 | F-INGEST-05 | ✅ fixed | scheduler 成功重置逻辑反转修正：仅无错且 200/304 才重置失败计数（原 else 在有错时反而重置，削弱退避） |
 | Batch 14 | F-DB-02 | ✅ fixed | dispatcher 未知 sink 由 `continue`（无限 pending）改为 mark_failed 推进至死信，不再循环 |
 | Batch 14 | F-CONF-01 | ❌ refuted | 误报：ConfigError 暴露的是用户自有配置路径 + yaml 解析错误，属可操作用户面信息，非内部泄露 |
+| Batch 15 | F-GOV-01 | ✅ fixed | linter confidence_map 键名改为枚举名（single_source/cross_validated/human_verified）+ .lower()，分布统计不再全塌缩到 1 级 |
+| Batch 15 | F-COMP-06 | ✅ fixed | code_wiki status() 改为从 .status 文件读取真实生成时间（原硬编码 utcnow） |
 
 > 验证：Batch 1 改动通过 462 项测试（auth/reconcile/dispatcher/query/web/engines/integration），0 回归。
 > 验证：Batch 2 改动通过全套件 1569 项测试，0 回归。

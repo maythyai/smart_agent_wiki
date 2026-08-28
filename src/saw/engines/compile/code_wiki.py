@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import subprocess
 import time
+from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
@@ -93,10 +94,13 @@ class CodeWikiEngine:
             if parts:
                 status.last_commit = parts[0]
                 if len(parts) > 1:
+                    # F-COMP-06: read the actual generation timestamp from
+                    # the status file (was hardcoded to utcnow(), hiding the
+                    # real last-generated time).
                     try:
-                        status.last_generated = utcnow()  # Simplified
-                    except ValueError:
-                        pass
+                        status.last_generated = datetime.fromisoformat(parts[1])
+                    except (ValueError, TypeError):
+                        status.last_generated = utcnow()
 
         status.is_stale = status.exists and status.last_commit != current_commit
         return status

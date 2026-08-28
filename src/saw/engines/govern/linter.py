@@ -287,13 +287,17 @@ class Linter:
         except sqlite3.Error:
             return distribution
 
+        # F-GOV-01: keys must match the ConfidenceLevel enum member names
+        # (stored lowercase in the claim table via confidence.name.lower()).
+        # The previous map ('verified'/'trusted'/'authoritative') only ever
+        # matched 'unverified', collapsing every other level to 1.
         confidence_map = {
             "unverified": 1,
-            "verified": 2,
-            "trusted": 3,
-            "authoritative": 4,
+            "single_source": 2,
+            "cross_validated": 3,
+            "human_verified": 4,
         }
         for confidence_str, count in rows:
-            level = confidence_map.get(confidence_str, 1)
+            level = confidence_map.get((confidence_str or "").lower(), 1)
             distribution[level] += count
         return distribution
