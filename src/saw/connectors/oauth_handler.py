@@ -155,9 +155,11 @@ class OAuthHandler:
             params["scope"] = " ".join(self._config.scopes)
         params.update(self._config.extra_params)
 
-        # Build URL
-        query_string = "&".join(f"{k}={v}" for k, v in params.items())
-        authorization_url = f"{self._config.authorize_url}?{query_string}"
+        # F-CONN-10: URL-encode params — values containing spaces/special
+        # chars (scope, redirect_uri) previously broke the authorize URL.
+        from urllib.parse import urlencode
+
+        authorization_url = f"{self._config.authorize_url}?{urlencode(params)}"
 
         return authorization_url, state
 

@@ -146,9 +146,11 @@ async def start_oauth_flow(
 @router.get("/{platform}/callback", response_model=CallbackResponse)
 async def oauth_callback(
     platform: str,
-    code: str,
-    state: str,
     request: Request,
+    code: Optional[str] = None,
+    state: Optional[str] = None,
+    error: Optional[str] = None,
+    error_description: Optional[str] = None,
 ):
     """Handle OAuth callback from platform.
 
@@ -157,9 +159,11 @@ async def oauth_callback(
 
     Args:
         platform: Platform identifier.
+        request: FastAPI request.
         code: Authorization code from OAuth provider.
         state: State string from OAuth provider.
-        request: FastAPI request.
+        error: OAuth error code (set when the user denies authorization).
+        error_description: Human-readable OAuth error description.
 
     Returns:
         Connection status with masked token.
@@ -167,6 +171,16 @@ async def oauth_callback(
     Raises:
         HTTPException: If OAuth flow fails.
     """
+    # F-CONN-07: handle user-denied authorization. Providers redirect back
+    # with error=access_denied (and no code) when the user cancels; the
+    # previous signature required 'code' -> 422 on a denial.
+    if error or not code:
+        raise HTTPException(
+            status_code=400,
+            detail=f"OAuth authorization failed: "
+            f"{error_description or error or 'cancelled by user'}",
+        )
+
     config = get_oauth_config(platform, request)
     encryption = TokenEncryption.from_env()
     redis = getattr(request.app.state, "redis", None)
