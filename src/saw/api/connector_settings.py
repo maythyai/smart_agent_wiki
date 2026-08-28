@@ -273,7 +273,12 @@ async def reauthorize_platform(
 
     # Generate authorization URL
     try:
-        auth_url, state = await connector.oauth_handler.get_authorization_url()
+        # F-CONN-03: OAuthHandler.get_authorization_url is a SYNC method that
+        # requires user_id. Awaiting it raised TypeError (500) and calling
+        # without user_id raised TypeError too. Call it synchronously with an
+        # explicit user_id. TODO(team-mode): resolve the authenticated
+        # user_id from the request rather than the local default.
+        auth_url, state = connector.oauth_handler.get_authorization_url(user_id="local")
 
         return ReauthResponse(
             platform=platform,

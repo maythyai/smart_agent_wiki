@@ -84,7 +84,7 @@ class NotionConnector(UnifiedConnectorInterface):
                     encrypted = self._config.credentials_encrypted
                     if encrypted:
                         from saw.connectors.token_encryption import TokenEncryption
-                        encryption = TokenEncryption()
+                        encryption = TokenEncryption.from_env()
                         token_data = encryption.decrypt_token_set(encrypted)
                         access_token = token_data.get("access_token", "")
 

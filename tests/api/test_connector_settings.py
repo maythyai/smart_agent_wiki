@@ -214,7 +214,9 @@ class TestReauthEndpoint:
 
         # Mock connector with OAuth handler
         mock_connector = MagicMock()
-        mock_oauth_handler = AsyncMock()
+        # F-CONN-03: get_authorization_url is a SYNC method in production;
+        # mock it with MagicMock (not AsyncMock) so the test reflects reality.
+        mock_oauth_handler = MagicMock()
         mock_oauth_handler.get_authorization_url.return_value = (
             "https://api.notion.com/v1/oauth/authorize?...",
             "random_state_string",

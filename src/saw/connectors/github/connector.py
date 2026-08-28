@@ -106,14 +106,19 @@ class GitHubConnector(UnifiedConnectorInterface):
                     auth = Auth.Token(access_token)
                     self._client = Github(auth=auth)
                 else:
-                    logger.warning("No GitHub access token; client unavailable")
-                    from unittest.mock import MagicMock
-                    self._client = MagicMock()
+                    # F-CONN-02: do not fall back to MagicMock — callers would
+                    # silently operate on fake data with no prompt. Fail loudly
+                    # so the user sees the real configuration error.
+                    raise RuntimeError(
+                        "GitHub connector has no access token; configure "
+                        "credentials before syncing."
+                    )
 
-            except ImportError:
-                logger.warning("PyGithub not installed, using MagicMock")
-                from unittest.mock import MagicMock
-                self._client = MagicMock()
+            except ImportError as ie:
+                logger.error("PyGithub not installed: %s", ie)
+                raise RuntimeError(
+                    "PyGithub is not installed. Run: pip install PyGithub"
+                ) from ie
 
         return self._client
 
@@ -131,7 +136,7 @@ class GitHubConnector(UnifiedConnectorInterface):
             encrypted = self._config.credentials_encrypted
             if encrypted:
                 from saw.connectors.token_encryption import TokenEncryption
-                encryption = TokenEncryption()
+                encryption = TokenEncryption.from_env()
                 data = encryption.decrypt_token_set(encrypted)
                 access_token = data.get("access_token", "")
 
