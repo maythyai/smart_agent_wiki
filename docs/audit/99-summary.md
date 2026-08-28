@@ -145,5 +145,9 @@ SAW 架构设计成熟，但在**功能接线完整性**与**用户可见性**�
 | Batch 1 | F-CLI-02 | ✅ fixed | ingest_cmd 错误信息补 f 前缀 |
 | Batch 1 | F-QS-03 | ✅ fixed | NL 查询 LLM 失败时回退关键词搜索 |
 | Batch 1 | F-GOV-06 | ✅ fixed | reconcile 默认 auto_apply=False；MANUAL 不再自动 supersede |
+| Batch 2 | F-QS-01 | ✅ fixed | engine 透传 limit/offset 至 FTS5；search 路由取 500 窗口后客户端分页 |
+| Batch 2 | F-QS-02 | ✅ fixed | 搜索源填充 type/tags 字段，过滤器可匹配 |
+| Batch 2 | F-WEB-01 | ✅ fixed | pages 列表先过滤后分页，窗口外匹配不再丢失 |
 
 > 验证：Batch 1 改动通过 462 项测试（auth/reconcile/dispatcher/query/web/engines/integration），0 回归。
+> 验证：Batch 2 改动通过全套件 1569 项测试，0 回归。

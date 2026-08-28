@@ -54,24 +54,23 @@ async def list_pages(
     Returns full page objects for listing and search results.
     """
     slug_list: list[str] = []
-    if hasattr(engine, "_wiki_repo") and engine._wiki_repo is not None:
-        slug_list = engine._wiki_repo.list_pages()
-    elif hasattr(engine, "wiki") and engine.wiki is not None:
-        slug_list = engine.wiki.list_pages()
+    wiki = getattr(engine, "_wiki_repo", None) or getattr(engine, "wiki", None)
+    if wiki is not None:
+        slug_list = wiki.list_pages()
 
-    # M-7: hard-capped pagination — slice before materialising full page
-    # objects to bound memory (was returning every page with full content).
-    page_window = slug_list[offset : offset + limit]
-
-    # Build full page responses with search filtering
+    # F-WEB-01: filter BEFORE paginating. The previous code sliced the slug
+    # list into a window first and then applied q/entity_type filters inside
+    # that window — so any match outside the current window was invisible and
+    # a filtered search could return empty results. We now stream all slugs,
+    # apply filters, and materialise PageResponse objects only for the
+    # requested [offset, offset+limit) window (memory stays bounded by the
+    # page size, not the whole wiki).
     pages: list[PageResponse] = []
-    for slug in page_window:
-        page = None
-        if hasattr(engine, "_wiki_repo") and engine._wiki_repo is not None:
-            page = engine._wiki_repo.read(slug)
-        elif hasattr(engine, "wiki") and engine.wiki is not None:
-            page = engine.wiki.read(slug)
-
+    window_slugs: list[str] = []
+    matched_total = 0
+    end = offset + limit
+    for slug in slug_list:
+        page = wiki.read(slug) if wiki is not None else None
         if page is None:
             continue
 
@@ -88,26 +87,29 @@ async def list_pages(
         if entity_type and page.entity_type != entity_type:
             continue
 
-        confidence_value = page.confidence.value if hasattr(page.confidence, "value") else 1
-        freshness_value = page.freshness.value if hasattr(page.freshness, "value") else 0
-
-        pages.append(
-            PageResponse(
-                slug=slug,
-                title=page.title,
-                content=page.content,
-                frontmatter=page.frontmatter,
-                confidence=confidence_value,
-                freshness=freshness_value,
-                entity_type=page.entity_type,
-                properties=page.properties,
+        # This slug matches the filters — only materialise the window.
+        if offset <= matched_total < end:
+            confidence_value = page.confidence.value if hasattr(page.confidence, "value") else 1
+            freshness_value = page.freshness.value if hasattr(page.freshness, "value") else 0
+            pages.append(
+                PageResponse(
+                    slug=slug,
+                    title=page.title,
+                    content=page.content,
+                    frontmatter=page.frontmatter,
+                    confidence=confidence_value,
+                    freshness=freshness_value,
+                    entity_type=page.entity_type,
+                    properties=page.properties,
+                )
             )
-        )
+            window_slugs.append(slug)
+        matched_total += 1
 
     return PageListResponse(
         pages=pages,
-        slugs=page_window,
-        total=len(slug_list),
+        slugs=window_slugs,
+        total=matched_total,
     )
 
 

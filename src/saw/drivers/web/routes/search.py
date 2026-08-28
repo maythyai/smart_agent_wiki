@@ -50,8 +50,11 @@ async def search(
     Returns:
         SearchResponse with paginated results.
     """
-    # Execute search via QueryEngine
-    result = engine.query(question=q, mode="search")
+    # Execute search via QueryEngine. F-QS-01: fetch a generous window so
+    # client-side type/tag/confidence filters and pagination operate over the
+    # full match set instead of only the first 20 hits (which made page >=3
+    # return empty). The engine threads limit/offset into FTS5.
+    result = engine.query(question=q, mode="search", limit=500)
 
     # Convert QueryResult to SearchResponse
     results: list[SearchResult] = []

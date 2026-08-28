@@ -85,6 +85,8 @@ class QueryEngine:
         depth: int = 3,
         mode: str = "auto",
         token_budget: int = 4000,
+        limit: int = 20,
+        offset: int = 0,
     ) -> QueryResult:
         """Execute query in specified mode.
 
@@ -109,7 +111,7 @@ class QueryEngine:
                 # LLM available -> NL query
                 return self._nl_query(question, depth, token_budget)
         elif mode == "search":
-            return self._keyword_search(question)
+            return self._keyword_search(question, limit=limit, offset=offset)
         elif mode == "graph":
             return self._graph_query(question)
         elif mode == "compare":
@@ -189,16 +191,18 @@ class QueryEngine:
             },
         )
 
-    def _keyword_search(self, question: str) -> QueryResult:
+    def _keyword_search(self, question: str, limit: int = 20, offset: int = 0) -> QueryResult:
         """Keyword search via FTS5.
 
         Args:
             question: Search query.
+            limit: Maximum number of results (FTS5 LIMIT).
+            offset: Offset for pagination (FTS5 OFFSET).
 
         Returns:
             QueryResult with search results.
         """
-        result = self._search.search(question, limit=20)
+        result = self._search.search(question, limit=limit, offset=offset)
 
         # Format results as answer
         answer_lines: list[str] = []
@@ -220,6 +224,10 @@ class QueryEngine:
                     "page_number": claim.page_number,
                     "line_number": claim.line_number,
                     "score": score,
+                    # F-QS-02: populate type/tags so the search route's
+                    # type/tag filters can actually match.
+                    "type": "claim",
+                    "tags": list(claim.tags or []),
                 })
                 continue
             # doc_id is a wiki slug (FTS rows written by WikiIndexer), not a
@@ -233,6 +241,9 @@ class QueryEngine:
                     "title": page.title,
                     "content": page.content,
                     "score": score,
+                    # F-QS-02: populate type/tags from the page so filters match.
+                    "type": page.entity_type,
+                    "tags": list(getattr(page, "tags", []) or []),
                 })
             else:
                 answer_lines.append(f"{i}. {(content or '')[:100]}...")
@@ -240,6 +251,8 @@ class QueryEngine:
                     "doc_id": doc_id,
                     "content": (content or "")[:200],
                     "score": score,
+                    "type": "unknown",
+                    "tags": [],
                 })
 
         return QueryResult(
@@ -247,6 +260,7 @@ class QueryEngine:
             sources=sources,
             coverage=100.0,  # All search results included
             mode="search",
+            meta={"total": result.total, "limit": limit, "offset": offset},
         )
 
     def _graph_query(self, question: str) -> QueryResult:
