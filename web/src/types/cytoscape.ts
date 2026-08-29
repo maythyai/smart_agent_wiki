@@ -157,3 +157,41 @@ export function getLayoutForViewMode(viewMode: 'full' | 'community' | 'clusters'
       return FCOSE_LAYOUT;
   }
 }
+
+// F-QS-05: a single user-facing layout selector. Previously Graph.tsx kept a
+// local layout state that was never passed to KnowledgeGraph, so the selector
+// had no effect; getLayout() unifies the layout source.
+export type LayoutName = 'fcose' | 'concentric' | 'breadthfirst' | 'circle' | 'grid';
+
+export const CIRCLE_LAYOUT: cytoscape.LayoutOptions = {
+  name: 'circle',
+  animate: true,
+  animationDuration: 500,
+  fit: true,
+  padding: 50,
+} as cytoscape.LayoutOptions;
+
+export const GRID_LAYOUT: cytoscape.LayoutOptions = {
+  name: 'grid',
+  animate: true,
+  animationDuration: 500,
+  fit: true,
+  padding: 50,
+} as cytoscape.LayoutOptions;
+
+export function getLayout(name: LayoutName): cytoscape.LayoutOptions {
+  switch (name) {
+    case 'fcose':
+      return FCOSE_LAYOUT;
+    case 'concentric':
+      return CONCENTRIC_LAYOUT;
+    case 'breadthfirst':
+      return BREADTHFIRST_LAYOUT;
+    case 'circle':
+      return CIRCLE_LAYOUT;
+    case 'grid':
+      return GRID_LAYOUT;
+    default:
+      return FCOSE_LAYOUT;
+  }
+}

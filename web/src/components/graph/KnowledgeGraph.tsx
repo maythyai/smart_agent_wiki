@@ -5,7 +5,7 @@ import fcose from 'cytoscape-fcose';
 import { useGraph } from '../../hooks/useGraph';
 import { useStore } from '../../stores';
 import { slugify } from '../../lib/slugify';
-import { GRAPH_STYLE, getLayoutForViewMode, getViewMode } from '../../types/cytoscape';
+import { GRAPH_STYLE, getViewMode, getLayout } from '../../types/cytoscape';
 
 // Register fCoSE layout
 cytoscape.use(fcose);
@@ -33,6 +33,8 @@ export function KnowledgeGraph({
   const selectNode = useStore((s) => s.selectNode);
   const viewMode = useStore((s) => s.viewMode);
   const setViewMode = useStore((s) => s.setViewMode);
+  // F-QS-05: the user-facing layout selector (single source of truth).
+  const layout = useStore((s) => s.layout);
   const entityTypeFilter = useStore((s) => s.entityTypeFilter);
   const minConfidence = useStore((s) => s.minConfidence);
 
@@ -87,7 +89,7 @@ export function KnowledgeGraph({
         })),
       },
       style: GRAPH_STYLE,
-      layout: getLayoutForViewMode(viewMode),
+      layout: getLayout(layout),
       // Per RESEARCH.md Pitfall 1: Performance options
       hideEdgesOnViewport: true,
       textureOnViewport: true,
@@ -130,12 +132,12 @@ export function KnowledgeGraph({
     }
   }, [selectedNode]);
 
-  // Run layout when view mode changes
+  // F-QS-05: re-run layout when the user picks a different layout.
   useEffect(() => {
     if (cyRef.current) {
-      cyRef.current.layout(getLayoutForViewMode(viewMode)).run();
+      cyRef.current.layout(getLayout(layout)).run();
     }
-  }, [viewMode]);
+  }, [layout]);
 
   if (isLoading) {
     return (

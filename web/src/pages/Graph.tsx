@@ -8,14 +8,16 @@ import { GraphFilters } from '../components/graph/GraphFilters';
 import { useStore } from '../stores';
 import { useGraph } from '../hooks/useGraph';
 import type { GraphNode } from '../types/api';
-
-type LayoutType = 'fcose' | 'breadthfirst' | 'circle' | 'grid';
+import type { LayoutName } from '../types/cytoscape';
 
 export default function Graph() {
   const [searchParams, setSearchParams] = useSearchParams();
   const entity = searchParams.get('entity') ?? undefined;
   const containerRef = useRef<HTMLDivElement>(null);
-  const [layout, setLayout] = useState<LayoutType>('fcose');
+  // F-QS-05: layout now lives in the graph store (single source of truth)
+  // instead of local state that KnowledgeGraph never read.
+  const layout = useStore((s) => s.layout);
+  const setLayout = useStore((s) => s.setLayout);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const selectedNode = useStore((s) => s.selectedNode);
@@ -126,10 +128,11 @@ export default function Graph() {
             </label>
             <select
               value={layout}
-              onChange={(e) => setLayout(e.target.value as LayoutType)}
+              onChange={(e) => setLayout(e.target.value as LayoutName)}
               className="w-full px-2 py-1.5 text-sm border dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
             >
               <option value="fcose">Force-directed (fCoSE)</option>
+              <option value="concentric">Concentric</option>
               <option value="breadthfirst">Hierarchical</option>
               <option value="circle">Circle</option>
               <option value="grid">Grid</option>

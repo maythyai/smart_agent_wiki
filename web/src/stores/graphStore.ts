@@ -5,7 +5,7 @@ interface GraphState {
   selectedNode: string | null;
   hoveredNode: string | null;
   zoom: number;
-  layout: 'fcose' | 'concentric' | 'breadthfirst';
+  layout: 'fcose' | 'concentric' | 'breadthfirst' | 'circle' | 'grid';
   viewMode: 'full' | 'community' | 'clusters';
   entityTypeFilter: string | null;
   relationTypeFilter: string | null;
