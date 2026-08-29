@@ -202,6 +202,7 @@ SAW 架构设计成熟，但在**功能接线完整性**与**用户可见性**�
 | Batch 19 | F-QS-08 | ✅ fixed | Tree Mode 实现真实标题层级树：解析 wiki 页 markdown ATX 标题构建嵌套 HeadingNode，按查询词定位章节并返回 root→section 路径（原扁平 stub）；claim 路径保留为回退 |
 | Batch 20 | F-CONN-06 | ✅ fixed | webhook_inbound 验签后尽力提取文本→经 WriteQueue 入 claim（原仅 ack），推送式接入闭环 |
 | Batch 21 | F-CONN-04 | ✅ partial | 迁移 v6 加 source_platform/source_id 列 + Claim 域字段 + claims_sink 写入 + repo get_by_source_id + sync_pull 接入 detect_conflict/record_conflict（SAW 胜则跳过，best-effort 全 try/except）。自动 UPDATE resolution 仍留后续 |
+| Batch 22 | F-INGEST-07 | ✅ fixed | fuser 实现真实否定矛盾检测（同源 + 否定前缀），contradictions 不再恒空 |
 
 > 验证：Batch 1 改动通过 462 项测试（auth/reconcile/dispatcher/query/web/engines/integration），0 回归。
 > 验证：Batch 2 改动通过全套件 1569 项测试，0 回归。

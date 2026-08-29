@@ -9,6 +9,25 @@ from dataclasses import dataclass
 
 from saw.domain.claims import Claim
 
+# F-INGEST-07: negation prefixes that indicate a claim contradicts another
+# from the same source (e.g. "X is blue" vs "X is not blue").
+_NEGATION_PREFIXES = (
+    "not ", "no ", "never ", "isn't ", "doesn't ", "don't ",
+    "is not ", "does not ", "do not ", "are not ", "aren't ",
+)
+
+
+def _is_contradiction(a: str, b: str) -> bool:
+    """Return True if one claim negates the other (same subject, opposite polarity)."""
+    a = a.strip().lower().rstrip(".")
+    b = b.strip().lower().rstrip(".")
+    if not a or not b or a == b:
+        return False
+    for prefix in _NEGATION_PREFIXES:
+        if a == prefix + b or b == prefix + a:
+            return True
+    return False
+
 
 @dataclass
 class FusedResult:
@@ -48,14 +67,17 @@ class Fuser:
                 to_skip.append(new_claim)
             else:
                 # Check for contradiction (same source_uuid, different content)
-                # This is a simplified check; Phase 2 governance will handle more complex cases
                 same_source_claims = [
                     c for c in existing_claims
                     if c.source_uuid == new_claim.source_uuid
                 ]
 
-                # For now, just mark new claims for insert
-                # Contradiction detection will be handled by Phase 2 governance engine
+                # F-INGEST-07: detect negation contradictions against
+                # same-source existing claims (was always empty).
+                for c in same_source_claims:
+                    if _is_contradiction(new_claim.content, c.content):
+                        contradictions.append((new_claim, c))
+
                 to_insert.append(new_claim)
 
         return FusedResult(
