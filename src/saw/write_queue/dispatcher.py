@@ -83,6 +83,15 @@ class Dispatcher:
                 self._queue.track_sink(op.op_id, op.sink_name, "done")
                 self._queue.mark_done(op.op_id)
                 processed += 1
+                # F-QS-07: invalidate the query cache on content writes so
+                # search results don't go stale (best-effort).
+                if op.sink_name in ("wiki", "claims", "fts5"):
+                    try:
+                        from saw.engines.query.cache import get_cache
+
+                        get_cache().clear()
+                    except Exception:
+                        pass
                 # HI-2: emit a write event so the WebSocket broadcaster and
                 # plugins are notified. publish_nowait is sync (the dispatcher
                 # is not async) and safe — it fans out via queue.put_nowait.

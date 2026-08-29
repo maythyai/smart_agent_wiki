@@ -202,6 +202,14 @@ class QueryEngine:
         Returns:
             QueryResult with search results.
         """
+        # F-QS-07: serve from the query cache before hitting FTS5.
+        from saw.engines.query.cache import get_cache
+
+        _cache = get_cache()
+        _cached = _cache.get(question, {"limit": limit, "offset": offset, "mode": "search"})
+        if _cached is not None:
+            return _cached
+
         result = self._search.search(question, limit=limit, offset=offset)
 
         # Format results as answer
@@ -255,13 +263,16 @@ class QueryEngine:
                     "tags": [],
                 })
 
-        return QueryResult(
+        _qr = QueryResult(
             answer="\n".join(answer_lines),
             sources=sources,
             coverage=100.0,  # All search results included
             mode="search",
             meta={"total": result.total, "limit": limit, "offset": offset},
         )
+        # F-QS-07: cache the result (TTL-bounded; cleared on content writes).
+        _cache.set(question, {"limit": limit, "offset": offset, "mode": "search"}, _qr)
+        return _qr
 
     def _graph_query(self, question: str) -> QueryResult:
         """Graph traversal query.
