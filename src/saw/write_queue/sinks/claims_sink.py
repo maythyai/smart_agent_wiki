@@ -39,6 +39,9 @@ class ClaimsSink:
             timestamp=payload.get("timestamp"),
             tags=payload.get("tags", []),
             entities=payload.get("entities", []),
+            # F-CONN-04: persist connector provenance for conflict detection.
+            source_platform=payload.get("source_platform"),
+            source_id=payload.get("source_id"),
         )
 
         # Parse confidence level

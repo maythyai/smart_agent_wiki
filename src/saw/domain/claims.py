@@ -29,6 +29,9 @@ class Claim:
     # Phase 4: Media Ingestion — timestamp for video/audio source
     media_timestamp: tuple[float, float] | None = None  # (start_seconds, end_seconds)
     media_vault_id: str | None = None  # Reference to media vault entry
+    # F-CONN-04: connector provenance for sync conflict detection.
+    source_platform: str | None = None
+    source_id: str | None = None
 
     @classmethod
     def compute_hash(cls, content: str) -> str:

@@ -234,6 +234,19 @@ CREATE INDEX IF NOT EXISTS idx_contradictions_claim_b
 
 _register(5, _add_graph_fk_indexes)
 
+# v6: source_platform / source_id on claim — lets SyncEngine look up an
+# existing claim for a connector item for conflict detection (F-CONN-04).
+# Idempotent via column-existence checks.
+def _add_connector_source_columns(conn: sqlite3.Connection) -> None:
+    cols = {r[1] for r in conn.execute("PRAGMA table_info(claim)")}
+    if "source_platform" not in cols:
+        conn.execute("ALTER TABLE claim ADD COLUMN source_platform TEXT")
+    if "source_id" not in cols:
+        conn.execute("ALTER TABLE claim ADD COLUMN source_id TEXT")
+
+
+_register(6, _add_connector_source_columns)
+
 # ── Public API ────────────────────────────────────────────────────────
 
 TARGET_VERSION = max(v for v, _ in _MIGRATIONS) if _MIGRATIONS else 1

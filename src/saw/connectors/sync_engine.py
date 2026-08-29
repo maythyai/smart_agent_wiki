@@ -303,11 +303,59 @@ class SyncEngine:
             items_pulled = 0
             items_skipped = 0
 
+            # F-CONN-04: open the claims DB best-effort for conflict lookup.
+            claims_repo = None
+            try:
+                import sqlite3 as _sqlite3
+                from pathlib import Path as _Path
+                from saw.adapters.storage.claims_repository import (
+                    SQLiteClaimsRepository as _ClaimsRepo,
+                )
+                _db_path = _Path(".saw/db/claims.db")
+                if _db_path.exists():
+                    claims_repo = _ClaimsRepo(
+                        _sqlite3.connect(str(_db_path), check_same_thread=False)
+                    )
+            except Exception:
+                claims_repo = None
+
             for item in items:
                 # Check for sync loop
                 if self._is_sync_loop(item, connector.platform_name):
                     items_skipped += 1
                     continue
+
+                # F-CONN-04: detect a conflict with an existing claim for this
+                # connector item. Best-effort — never block the pull.
+                if claims_repo is not None and since is not None:
+                    try:
+                        existing = claims_repo.get_by_source_id(
+                            connector.platform_name, item.id
+                        )
+                        if existing is not None:
+                            conflict = self._conflict_resolver.detect_conflict(
+                                item, existing, since
+                            )
+                            if (
+                                conflict.has_conflict
+                                and conflict.conflict_info is not None
+                            ):
+                                try:
+                                    await self._conflict_resolver.record_conflict(
+                                        conflict.conflict_info,
+                                        f"{conflict.winner}_wins",
+                                        connector.platform_name,
+                                    )
+                                except Exception:
+                                    pass
+                            if conflict.winner == "saw":
+                                # SAW's version wins — don't overwrite.
+                                items_skipped += 1
+                                continue
+                    except Exception as e:
+                        logger.warning(
+                            "Conflict check failed for %s: %s", item.id, e
+                        )
 
                 # Transform to claim
                 claim_data = self._create_claim_from_item(item, connector.platform_name)

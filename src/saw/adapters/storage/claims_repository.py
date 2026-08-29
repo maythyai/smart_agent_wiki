@@ -160,8 +160,8 @@ class SQLiteClaimsRepository:
                 """INSERT OR IGNORE INTO claim
                    (uuid, content, source_uuid, page_number, line_number,
                     timestamp, confidence, source_mark, tags, entities,
-                    content_hash, created_at)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                    content_hash, created_at, source_platform, source_id)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
                     claim.uuid,
                     claim.content,
@@ -175,6 +175,8 @@ class SQLiteClaimsRepository:
                     json.dumps(claim.entities),
                     claim.content_hash,
                     claim.created_at.isoformat(),
+                    claim.source_platform,
+                    claim.source_id,
                 ),
             )
             self._conn.commit()
@@ -209,6 +211,31 @@ class SQLiteClaimsRepository:
             (source_uuid,),
         ).fetchall()
         return [self._row_to_claim(row) for row in rows]
+
+    def get_by_source_id(
+        self, source_platform: str, source_id: str
+    ) -> dict | None:
+        """Look up an existing claim by connector provenance (F-CONN-04).
+
+        Returns a lightweight dict (uuid/content/updated_at) or None.
+        """
+        try:
+            row = self._conn.execute(
+                "SELECT uuid, content, created_at, updated_at FROM claim "
+                "WHERE source_platform = ? AND source_id = ? "
+                "AND deleted_at IS NULL LIMIT 1",
+                (source_platform, source_id),
+            ).fetchone()
+        except sqlite3.Error:
+            return None
+        if row is None:
+            return None
+        return {
+            "id": row[0],
+            "uuid": row[0],
+            "content": row[1],
+            "updated_at": row[3] or row[2],
+        }
 
     def count(self) -> int:
         """Count total non-deleted claims."""
