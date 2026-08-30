@@ -8,7 +8,7 @@ Extended with compile layer, concept graph, feedback, and code wiki tools.
 
 # Import all tool modules to register tools with FastMCP
 # Tools are registered via @mcp.tool decorators in each module
-from saw.drivers.mcp.tools import ingest, query, govern, learn, collaborate, pages, links, code_graph, compile
+from saw.drivers.mcp.tools import ingest, query, govern, learn, collaborate, pages, links, code_graph, compile, thinking
 
 __all__ = [
     "register_all_tools",
@@ -22,6 +22,7 @@ __all__ = [
     "links",
     "code_graph",
     "compile",
+    "thinking",
 ]
 
 
