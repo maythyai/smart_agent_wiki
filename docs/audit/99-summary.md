@@ -205,6 +205,7 @@ SAW 架构设计成熟，但在**功能接线完整性**与**用户可见性**�
 | Batch 22 | F-INGEST-07 | ✅ fixed | fuser 实现真实否定矛盾检测（同源 + 否定前缀），contradictions 不再恒空 |
 | Batch 23 | F-QS-07 | ✅ fixed | QueryCache 接入 _keyword_search 读路径（LRU+TTL）+ dispatcher 内容写入时 clear 失效（原 cache.py 死代码） |
 | Batch 24 | F-QS-05 | ✅ fixed | 图谱布局统一为单一源：Graph.tsx 用 store.layout（原 local state）；KnowledgeGraph 用 getLayout(layout)（原 getLayoutForViewMode）；新增 circle/grid 布局 |
+| Batch 25 | F-COMP-03 | ✅ fixed | LLM 合成失败时在页面加可见降级 banner（离线模式不加）；_cascade_update 替换 pass 桩，改为记录引用页 log entry |
 
 > 验证：Batch 1 改动通过 462 项测试（auth/reconcile/dispatcher/query/web/engines/integration），0 回归。
 > 验证：Batch 2 改动通过全套件 1569 项测试，0 回归。

@@ -433,11 +433,29 @@ class WikiCompileEngine:
                 logging.getLogger(__name__).warning(
                     "LLM synthesis failed, falling back to rule-based compile: %s", exc
                 )
+                # F-COMP-03: surface the failure in the page so users see it
+                # (was server-side warning only).
+                return self._rule_based_compile(raw, title, degraded=True)
 
-        # Rule-based fallback
+        # Rule-based (offline mode — intended, no degradation marker)
+        return self._rule_based_compile(raw, title, degraded=False)
+
+    def _rule_based_compile(
+        self, raw: str, title: str, *, degraded: bool = False
+    ) -> str:
+        """Rule-based compile. When ``degraded`` (LLM was configured but
+        failed), prepend a visible banner so the page isn't silently worse."""
         lines = raw.strip().split("\n")
         if not lines[0].startswith("# "):
             lines.insert(0, f"# {title}\n")
+        if degraded:
+            lines.insert(1, "")
+            lines.insert(
+                2,
+                "> ⚠️ Rule-based compile — LLM synthesis failed; content may "
+                "be less structured.",
+            )
+            lines.insert(3, "")
         return "\n".join(lines)
 
     def _llm_synthesize(self, raw: str, title: str) -> str:
@@ -550,15 +568,34 @@ class WikiCompileEngine:
         index_path.write_text(content, encoding="utf-8")
 
     def _cascade_update(self, changed_filename: str) -> None:
-        """Check and mark pages that reference the changed page."""
+        """Record pages that reference the changed page.
+
+        F-COMP-03: previously a ``pass`` stub, so cascading references were
+        invisible. Now appends a log entry listing the referencing pages so
+        they can be reviewed.
+        """
         slug = changed_filename.removesuffix(".md")
         link_pattern = f"[[{slug}]]"
+        referencing: list[str] = []
         for page_file in self.list_pages():
+            if page_file == changed_filename:
+                continue
             page_path = self._wiki_root / page_file
-            content = page_path.read_text(encoding="utf-8")
-            if link_pattern in content and page_file != changed_filename:
-                # Mark as needing review (update timestamp in metadata)
-                pass  # Cascade is informational; actual update on next compile
+            try:
+                content = page_path.read_text(encoding="utf-8")
+            except OSError:
+                continue
+            if link_pattern in content:
+                referencing.append(page_file)
+        if referencing:
+            self._append_log(
+                CompileLogEntry(
+                    timestamp=utcnow(),
+                    action="update",
+                    pages_affected=referencing,
+                    summary=f"Cascade: pages referencing '{slug}' may need review",
+                )
+            )
 
     def _append_log(self, entry: CompileLogEntry) -> None:
         """Append an entry to log.md (append-only)."""
