@@ -208,6 +208,7 @@ SAW 架构设计成熟，但在**功能接线完整性**与**用户可见性**�
 | Batch 25 | F-COMP-03 | ✅ fixed | LLM 合成失败时在页面加可见降级 banner（离线模式不加）；_cascade_update 替换 pass 桩，改为记录引用页 log entry |
 | Batch 26 | F-WEB-04 | ✅ fixed | 加 GET /api/auth/mode 端点 + 前端 RequireAuth 条件守卫（仅 team 模式强制登录，兼容 local-first） |
 | Batch 27 | F-INGEST-03 | ✅ fixed | 新增 JSON/Table extractor（离线规则式，每记录/行一 claim）+ 接入 pipeline JSON/TABLE 路由（原分类后无 extractor 必报错） |
+| Batch 28 | F-WEB-08 | ✅ fixed | 新增 Breadcrumbs 组件（按路径段生成可点击面包屑，含暗色 + 可访问性 aria-label）+ App.tsx main 内渲染 |
 
 > 验证：Batch 1 改动通过 462 项测试（auth/reconcile/dispatcher/query/web/engines/integration），0 回归。
 > 验证：Batch 2 改动通过全套件 1569 项测试，0 回归。

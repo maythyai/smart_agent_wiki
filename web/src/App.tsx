@@ -1,5 +1,6 @@
 import { Outlet, NavLink, useNavigate } from 'react-router';
 import { MobileNav } from './components/layout/MobileNav';
+import { Breadcrumbs } from './components/layout/Breadcrumbs';
 import { CommandPalette } from './components/search/CommandPalette';
 import { QuickCapture } from './components/capture/QuickCapture';
 import { useStore } from './stores';
@@ -164,6 +165,7 @@ export default function App() {
 
       {/* Main content with top padding for fixed header */}
       <main id="main-content" className="flex-1 pt-14 px-4 md:px-6 dark:bg-gray-900 dark:text-white">
+        <Breadcrumbs />
         <Outlet />
       </main>
     </div>
