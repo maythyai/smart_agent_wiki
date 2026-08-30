@@ -58,7 +58,9 @@ class ClaimsSink:
         except KeyError:
             claim.source_mark = SourceMark.EXTRACTED
 
-        self._repo.insert(claim)
+        # F-CONN-04 resolution: upsert so a platform-wins conflict overwrites
+        # the stale claim content (was INSERT OR IGNORE → no update).
+        self._repo.upsert(claim)
 
     def can_handle(self, sink_name: str) -> bool:
         return sink_name == "claims"

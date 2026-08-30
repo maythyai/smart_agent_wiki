@@ -212,6 +212,36 @@ class SQLiteClaimsRepository:
         ).fetchall()
         return [self._row_to_claim(row) for row in rows]
 
+    def upsert(self, claim: Claim) -> str:
+        """Insert or update a claim (F-CONN-04 resolution).
+
+        If a claim with this UUID exists (and isn't soft-deleted), UPDATE its
+        content so a platform-wins conflict overwrites the stale version
+        (INSERT OR IGNORE previously left the old content). Otherwise INSERT.
+        """
+        try:
+            cur = self._conn.execute(
+                """UPDATE claim
+                   SET content = ?, content_hash = ?, source_platform = ?,
+                       source_id = ?, updated_at = ?
+                   WHERE uuid = ? AND deleted_at IS NULL""",
+                (
+                    claim.content,
+                    claim.content_hash,
+                    claim.source_platform,
+                    claim.source_id,
+                    datetime.now(timezone.utc).isoformat(),
+                    claim.uuid,
+                ),
+            )
+            if cur.rowcount == 0:
+                self.insert(claim)
+            else:
+                self._conn.commit()
+            return claim.uuid
+        except sqlite3.Error as e:
+            raise ClaimsDBError(f"Failed to upsert claim: {e}") from e
+
     def get_by_source_id(
         self, source_platform: str, source_id: str
     ) -> dict | None:
