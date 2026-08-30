@@ -303,3 +303,15 @@ async def get_current_user(request: Request):
         "display_name": user.get("display_name"),
         "is_active": user.get("is_active", True),
     }
+
+
+@router.get("/mode")
+async def get_auth_mode(request: Request):
+    """Return the server's auth mode (F-WEB-04).
+
+    Lets the frontend decide whether to enforce a route guard: local mode
+    trusts tokenless requests (single-user, local-first), so a hard guard
+    would break that usage. Public — no auth required.
+    """
+    mode = getattr(request.app.state, "auth_mode", "local")
+    return {"auth_mode": mode, "authenticated": mode == "local"}
