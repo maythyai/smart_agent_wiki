@@ -27,20 +27,20 @@ const FRESHNESS_LABELS: Record<number, string> = {
 
 export function ResultCard({ result }: ResultCardProps) {
   return (
-    <article className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow">
+    <article className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition-shadow">
       <Link to={`/page/${result.slug}`} className="block">
         <div className="flex items-start justify-between gap-4">
-          <h3 className="text-lg font-semibold text-gray-900 hover:text-blue-600">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400">
             {result.title}
           </h3>
           {result.score > 0 && (
-            <span className="text-xs text-gray-500 whitespace-nowrap">
+            <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
               Score: {result.score.toFixed(2)}
             </span>
           )}
         </div>
 
-        <p className="mt-2 text-gray-600 text-sm line-clamp-3">
+        <p className="mt-2 text-gray-600 dark:text-gray-300 text-sm line-clamp-3">
           {result.snippet}
         </p>
 
@@ -61,7 +61,7 @@ export function ResultCard({ result }: ResultCardProps) {
 
           {/* Citation count per D-06 */}
           {result.citations.length > 0 && (
-            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-600">
+            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
               {result.citations.length} citation{result.citations.length !== 1 ? 's' : ''}
             </span>
           )}

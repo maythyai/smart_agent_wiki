@@ -22,8 +22,8 @@ export function SearchResults({ data, isLoading, isError, page, onPageChange }: 
 
   if (isError) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-        <p className="text-red-700">Failed to load search results. Please try again.</p>
+      <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-lg p-6 text-center">
+        <p className="text-red-700 dark:text-red-400">Failed to load search results. Please try again.</p>
       </div>
     );
   }
@@ -34,15 +34,15 @@ export function SearchResults({ data, isLoading, isError, page, onPageChange }: 
 
   if (data.results.length === 0) {
     return (
-      <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
-        <p className="text-gray-600">No results found. Try a different search term.</p>
+      <div className="bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg p-6 text-center">
+        <p className="text-gray-600 dark:text-gray-300">No results found. Try a different search term.</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-gray-600">
+      <p className="text-sm text-gray-600 dark:text-gray-300">
         Found {data.total} result{data.total !== 1 ? 's' : ''}
       </p>
 

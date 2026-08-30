@@ -35,18 +35,18 @@ export function SearchFilters({
   onMinConfidenceChange,
 }: SearchFiltersProps) {
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-4 space-y-4">
-      <h3 className="font-medium text-gray-900">Filters</h3>
+    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-4">
+      <h3 className="font-medium text-gray-900 dark:text-white">Filters</h3>
 
       {/* Type filter per D-08 */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Type
         </label>
         <select
           value={type ?? ''}
           onChange={(e) => onTypeChange(e.target.value || undefined)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           {TYPE_OPTIONS.map((opt) => (
             <option key={opt.label} value={opt.value ?? ''}>
@@ -58,7 +58,7 @@ export function SearchFilters({
 
       {/* Tag filter per D-08 */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Tag
         </label>
         <Input
@@ -71,7 +71,7 @@ export function SearchFilters({
 
       {/* Confidence filter per D-08 */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Minimum Confidence
         </label>
         <div className="flex flex-wrap gap-2">
@@ -83,8 +83,8 @@ export function SearchFilters({
               className={`
                 px-3 py-1.5 rounded-lg text-sm font-medium border
                 ${minConfidence === level.value
-                  ? 'bg-blue-100 border-blue-500 text-blue-700'
-                  : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
+                  ? 'bg-blue-100 dark:bg-blue-900/40 border-blue-500 dark:border-blue-600 text-blue-700 dark:text-blue-300'
+                  : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
                 }
               `}
             >
@@ -108,7 +108,7 @@ export function SearchFilters({
             onTagChange(undefined);
             onMinConfidenceChange(undefined);
           }}
-          className="text-sm text-blue-600 hover:text-blue-800"
+          className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
         >
           Clear all filters
         </button>
