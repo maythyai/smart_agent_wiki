@@ -23,6 +23,7 @@ from saw.engines.ingest.extractors.code_ast import CodeASTExtractor
 from saw.engines.ingest.extractors.markdown import ExtractionResult, MarkdownExtractor
 from saw.engines.ingest.extractors.media import MediaExtractor, MediaIngestConfig
 from saw.engines.ingest.extractors.pdf import PDFExtractor
+from saw.engines.ingest.extractors.structured import JSONExtractor, TableExtractor
 from saw.engines.ingest.extractors.url import URLExtractor
 from saw.engines.ingest.fuser import Fuser
 from saw.engines.ingest.validator import Validator
@@ -76,6 +77,9 @@ class IngestPipeline:
             llm=llm_router,
         )
         self._code_extractor = CodeASTExtractor()
+        # F-INGEST-03: structured-data extractors (JSON / CSV / TSV).
+        self._json_extractor = JSONExtractor()
+        self._table_extractor = TableExtractor()
         self._media_extractor: MediaExtractor | None = None  # Lazy init
 
         self._fuser = Fuser()
@@ -172,6 +176,18 @@ class IngestPipeline:
                 )
                 parser_used = "ast"
 
+            elif classified.format == DocumentFormat.JSON and classified.path:
+                extraction_result = self._json_extractor.extract(
+                    classified.path, source_uuid
+                )
+                parser_used = "json"
+
+            elif classified.format == DocumentFormat.TABLE and classified.path:
+                extraction_result = self._table_extractor.extract(
+                    classified.path, source_uuid
+                )
+                parser_used = "table"
+
             elif classified.format in (DocumentFormat.VIDEO, DocumentFormat.AUDIO) and classified.path:
                 # Phase 4: Media Ingestion
                 media_extractor = self._get_media_extractor(options)
@@ -181,7 +197,7 @@ class IngestPipeline:
                 parser_used = "whisper"
 
             else:
-                errors.append(f"Unsupported format '{classified.format.name}' for {source}: no extractor available. JSON/TABLE ingestion is not yet supported.")
+                errors.append(f"Unsupported format '{classified.format.name}' for {source}: no extractor available.")
                 return IngestResult(
                     session_id=session_id,
                     claim_count=0,
