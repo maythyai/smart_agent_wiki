@@ -41,18 +41,18 @@ export function GraphFilters({ onRefresh }: GraphFiltersProps) {
   const setMinConfidence = useStore((s) => s.setMinConfidence);
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-4 space-y-4">
-      <h3 className="font-medium text-gray-900">Filters</h3>
+    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-4">
+      <h3 className="font-medium text-gray-900 dark:text-white">Filters</h3>
 
       {/* Entity type filter per D-12 */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Entity Type
         </label>
         <select
           value={entityTypeFilter ?? ''}
           onChange={(e) => setEntityTypeFilter(e.target.value || null)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           {ENTITY_TYPES.map((type) => (
             <option key={type.label} value={type.value ?? ''}>
@@ -64,13 +64,13 @@ export function GraphFilters({ onRefresh }: GraphFiltersProps) {
 
       {/* Relation type filter per D-12 */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Relation Type
         </label>
         <select
           value={relationTypeFilter ?? ''}
           onChange={(e) => setRelationTypeFilter(e.target.value || null)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           {RELATION_TYPES.map((type) => (
             <option key={type.label} value={type.value ?? ''}>
@@ -82,7 +82,7 @@ export function GraphFilters({ onRefresh }: GraphFiltersProps) {
 
       {/* Confidence filter per D-12 */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Minimum Confidence
         </label>
         <div className="flex flex-wrap gap-2">
@@ -94,8 +94,8 @@ export function GraphFilters({ onRefresh }: GraphFiltersProps) {
               className={`
                 px-3 py-1.5 rounded-lg text-xs font-medium border
                 ${minConfidence === level.value
-                  ? 'bg-blue-100 border-blue-500 text-blue-700'
-                  : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
+                  ? 'bg-blue-100 dark:bg-blue-900/40 border-blue-500 dark:border-blue-600 text-blue-700 dark:text-blue-300'
+                  : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
                 }
               `}
             >
@@ -126,7 +126,7 @@ export function GraphFilters({ onRefresh }: GraphFiltersProps) {
             setRelationTypeFilter(null);
             setMinConfidence(null);
           }}
-          className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm"
+          className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 text-sm"
         >
           Clear
         </button>
