@@ -216,6 +216,7 @@ SAW 架构设计成熟，但在**功能接线完整性**与**用户可见性**�
 | Batch 33 | F-TUT-01 | ❌ refuted | 误报：`saw tutorial` 已注册 + 是完整交互式 5 分钟引导（TUTORIAL_STEPS/rich/prompts/动作/--skip-web/--reset）；demo_content.py 是其数据文件 |
 | Batch 34 | F-INGEST-09 | ✅ planned+P0 | 规划落文档 `docs/ingest-pipeline-unification-plan.md`：A(engines/ingest/pipeline)=唯一生产摄入；B(ingest/pipeline)重定位为通用 DAG runner 工具；P0 已执行——删死代码 pipeline_v2.py + __init__ 加定位 docstring；不做高风险重写合并 |
 | Batch 35 | 補審 Ingest phases/parsers | ✅ no new | 生产路径（adapters/parsers + engines/ingest/pipeline，Batch 9 已加可操作错误消息）健全；phases/store.py placeholder 属已推迟的 F-INGEST-09 v2 框架。无新可修问题 |
+| Batch 36 | 補審 DB sinks | ✅ no new | 7 个 sink（claims/connector/contradictions/fts5/graph/vault/wiki）错误传播健全——domain exceptions（FTS5Error/StorageError/VaultError/ClaimsDBError）→ dispatcher mark_failed；connector_sink 有完整 health/retry/error 处理。无新可修问题 |
 
 > 验证：Batch 1 改动通过 462 项测试（auth/reconcile/dispatcher/query/web/engines/integration），0 回归。
 > 验证：Batch 2 改动通过全套件 1569 项测试，0 回归。
