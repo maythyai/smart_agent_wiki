@@ -175,14 +175,14 @@ export default function Page() {
         <div className="flex items-center gap-2 mb-2">
           <button
             onClick={handleBack}
-            className="text-gray-500 hover:text-gray-700"
+            className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
             aria-label="Go back"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </button>
-          <h1 className="text-2xl font-bold text-gray-900">{page.title}</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{page.title}</h1>
         </div>
 
         {/* Badges row */}
@@ -225,7 +225,7 @@ export default function Page() {
               <>
                 <button
                   onClick={handleCancel}
-                  className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded font-medium"
+                  className="px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded font-medium"
                   disabled={isSaving}
                 >
                   Cancel
@@ -251,7 +251,7 @@ export default function Page() {
       </div>
 
       {/* Editor */}
-      <div className="bg-white rounded-lg border shadow-sm">
+      <div className="bg-white dark:bg-gray-800 rounded-lg border dark:border-gray-700 shadow-sm">
         <WikiEditorWrapper
           slug={slug || ''}
           initialContent={page.content}
