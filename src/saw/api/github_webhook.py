@@ -140,9 +140,10 @@ async def trigger_reconciliation(
     Returns:
         Dict with reconciliation results.
     """
-    # This would need a proper connector instance in production
-    # For now, return a placeholder
+    # F-CONN补审: reconciliation needs a configured connector instance.
+    # Return an honest status instead of pretending it was triggered.
     return {
-        "status": "triggered",
+        "status": "not_implemented",
         "repository": repository,
+        "message": "GitHub reconciliation requires a configured connector instance.",
     }
