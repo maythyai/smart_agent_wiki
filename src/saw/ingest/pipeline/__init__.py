@@ -1,4 +1,17 @@
-"""Pipeline phase types and interfaces."""
+"""Generic DAG pipeline runner framework (NOT the production ingest pipeline).
+
+This package provides reusable pipeline-execution primitives —
+``PipelineRunner``, ``validate_dag`` (Kahn topological sort + cycle
+detection), ``PipelinePhase``/``PipelineContext``/``PhaseResults`` — for
+features that need topologically-ordered, multi-stage execution.
+
+It is **not** the production ingestion path. Production ingestion lives in
+``saw.engines.ingest.pipeline.IngestPipeline`` (classify -> extract -> fuse
+-> validate -> enqueue via the Write Queue). The phase implementations in
+``phases/`` are framework examples and are not wired into real ingestion.
+
+See ``docs/ingest-pipeline-unification-plan.md`` for the design decision.
+"""
 from .types import (
     PhaseResult,
     PhaseResults,
