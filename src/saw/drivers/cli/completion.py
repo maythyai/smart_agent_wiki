@@ -26,7 +26,7 @@ _saw_completion() {
     _init_completion || return
 
     # Main commands
-    local commands="init ingest query search status web verify lint review audit conflicts freshness mcp tutorial config completion"
+    local commands="init ingest ingest-media query search status web verify lint review audit conflicts freshness mcp tutorial config completion feed docs preview"
 
     # Short aliases
     local aliases="i q s w v l r a c f"

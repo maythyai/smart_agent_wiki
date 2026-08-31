@@ -200,11 +200,12 @@ class BatchMediaProcessor:
         # Run concurrently
         file_results = await asyncio.gather(*tasks, return_exceptions=True)
 
-        # Process results
-        for fr in file_results:
+        # F-INGEST-14: map each result to its file path (was "unknown" on
+        # exception, losing the context of which file failed).
+        for fr, fpath in zip(file_results, valid_files):
             if isinstance(fr, Exception):
                 results.append(FileResult(
-                    file_path="unknown",
+                    file_path=fpath,
                     success=False,
                     error=str(fr),
                 ))

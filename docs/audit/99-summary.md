@@ -219,6 +219,7 @@ SAW 架构设计成熟，但在**功能接线完整性**与**用户可见性**�
 | Batch 36 | 補審 DB sinks | ✅ no new | 7 个 sink（claims/connector/contradictions/fts5/graph/vault/wiki）错误传播健全——domain exceptions（FTS5Error/StorageError/VaultError/ClaimsDBError）→ dispatcher mark_failed；connector_sink 有完整 health/retry/error 处理。无新可修问题 |
 | Batch 37 | 補審 CLI 12 命令 | ✅ no new | freshness/review/conflicts/audit/compile/feed/plugin/docs/mcp/web/ingest_media 错误处理合理（except→可操作消息+Exit(1)）。P2 note: broad except 对非 init 错误报"not in wiki"有误导 |
 | Batch 38 | 補審 MCP+Research+token_optimizer+context+Web pages+Connectors API | ✅ 1 fix | MCP 16 工具全有 None-guards（links/pages 用 not _repo）；synthesize/purpose/token_optimizer/context 无 stub/TODO，均为实现；Web pages placeholder=HTML input（非代码 stub）；**1 处修复**：github_webhook reconcile 由假装"triggered"改为诚实"not_implemented" |
+| Batch 39 | F-CLI-05 + F-INGEST-14 + F-GOV-07 | ✅ 2 fix+1 refute | completion 脚本补 ingest-media/preview/feed/docs；batch 异常 file_path="unknown"→zip 映射实际路径；F-GOV-07 误报（freshness_cmd 已是可读 Level/Color/Count/Description 表格） |
 
 > 验证：Batch 1 改动通过 462 项测试（auth/reconcile/dispatcher/query/web/engines/integration），0 回归。
 > 验证：Batch 2 改动通过全套件 1569 项测试，0 回归。
