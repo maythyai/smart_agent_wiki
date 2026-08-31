@@ -215,6 +215,7 @@ SAW 架构设计成熟，但在**功能接线完整性**与**用户可见性**�
 | Batch 33 | F-CONF-02 | ❌ refuted | 误报：`saw config` 已从 config_tui 接入 main.py（line 36/64）；interactive_config/load_config/DEFAULT_CONFIG 均已实现且被引用 |
 | Batch 33 | F-TUT-01 | ❌ refuted | 误报：`saw tutorial` 已注册 + 是完整交互式 5 分钟引导（TUTORIAL_STEPS/rich/prompts/动作/--skip-web/--reset）；demo_content.py 是其数据文件 |
 | Batch 34 | F-INGEST-09 | ⏳ deferred | 代码重复气味非用户面缺陷：生产摄入走 engines/ingest/pipeline.py（working+tested）；ingest/pipeline/（PipelineRunner）仅在隔离测试用、生产未用、phases 有 placeholder；pipeline_v2.py 死代码。强行统一是高风险重构无用户收益 |
+| Batch 35 | 補審 Ingest phases/parsers | ✅ no new | 生产路径（adapters/parsers + engines/ingest/pipeline，Batch 9 已加可操作错误消息）健全；phases/store.py placeholder 属已推迟的 F-INGEST-09 v2 框架。无新可修问题 |
 
 > 验证：Batch 1 改动通过 462 项测试（auth/reconcile/dispatcher/query/web/engines/integration），0 回归。
 > 验证：Batch 2 改动通过全套件 1569 项测试，0 回归。
