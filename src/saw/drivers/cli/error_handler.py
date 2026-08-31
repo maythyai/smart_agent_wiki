@@ -94,8 +94,11 @@ def handle_error(
 
     # Get error template
     template = ERROR_SUGGESTIONS.get(error_type, {
-        "message": str(error),
-        "suggestions": ["Run 'saw --help' for usage information"],
+        "message": f"{type(error).__name__}: {error}",
+        "suggestions": [
+            "Check the error message above for clues.",
+            "If this persists, re-run with --debug for a full traceback.",
+        ],
     })
 
     # Format message with context

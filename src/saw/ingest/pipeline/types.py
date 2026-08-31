@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Awaitable, Callable, Generic, Optional, TypeVar
 
 T = TypeVar("T")
@@ -16,8 +16,8 @@ class PhaseResult(Generic[T]):
     name: str
     output: T
     duration_ms: float
-    started_at: datetime = field(default_factory=datetime.utcnow)
-    completed_at: datetime = field(default_factory=datetime.utcnow)
+    started_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    completed_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 @dataclass

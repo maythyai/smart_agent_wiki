@@ -100,6 +100,14 @@ class MarkdownExtractor:
 
         # Create claims from paragraphs (text blocks between headings)
         paragraphs = [p.strip() for p in parse_result.content.split("\n\n") if p.strip()]
+        # F-INGEST-15: warn when paragraphs are silently truncated (was: no
+        # indication that content was dropped in offline mode).
+        if len(paragraphs) > 10:
+            import logging
+            logging.getLogger(__name__).warning(
+                "Offline extraction truncated %d paragraphs to 10 (source_uuid=%s)",
+                len(paragraphs), source_uuid,
+            )
         for para in paragraphs[:10]:  # Limit to first 10 paragraphs
             if len(para) > 50:  # Only significant paragraphs
                 claim = Claim(
