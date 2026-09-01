@@ -1,7 +1,7 @@
 {
   "pipeline_version": 2,
   "milestone": "v3.7",
-  "current_stage": "01-prd",
+  "current_stage": "02-decomposition",
   "stages": [
     {
       "stage": "00-hub",
@@ -13,9 +13,9 @@
     {
       "stage": "01-prd",
       "title": "PRD / PMS 生成",
-      "status": "pending",
+      "status": "done",
       "owner": "S1-prd",
-      "artifacts": [".csp/product-spec/modules/"]
+      "artifacts": ["docs/prd/PRD-product-hardening-v1.md", "docs/prd/PRD-INDEX.md", ".csp/product-spec/PMS-*.md", ".csp/product-spec/PMS-INDEX.md"]
     },
     {
       "stage": "02-decomposition",
@@ -53,5 +53,5 @@
       "artifacts": [".csp/ship/", ".csp/milestones/{m}/"]
     }
   ],
-  "note": "00-hub initialized 2026-09-01 (pipeline_version=2, 7 stages 00-06 per updated spec). 00=done incl. brownfield CMS distillation (Phase 1.7). Material sources pending; CMS items built. Downstream stages flip build_status via writeback. current_stage=01-prd. Git: local commit to trunk, no push."
+  "note": "01-prd done 2026-09-01: PRD-product-hardening-v1 (5 modules, MVP 3 P0) + 5 PMS (built) registered. 00=done, 01=done, current_stage=02-decomposition. Implementation-reality verified: deep_audit (2026-06-23) stale (agents implemented, notion connector full, 61 MCP, backend auth unified) — PRD grounded in current code, not stale audit. Git: local commit to trunk, no push."
 }

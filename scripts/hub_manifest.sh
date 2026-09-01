@@ -74,8 +74,8 @@ cmd_gen() {
         wiki:*) stype="wiki";; codewiki:*) stype="codewiki";;
         memory:*) stype="memory";; doc:*) stype="doc";; *) stype="doc";;
       esac
-      # CMS items are produced canonical artifacts (self-referential): default built + output=raw
-      if [ "$stype" = "cms" ]; then
+      # CMS/PMS items are produced canonical artifacts (self-referential): default built + output=raw
+      if [ "$stype" = "cms" ] || [ "$stype" = "pms" ]; then
         if [ "$build" = "pending" ]; then build="built"; fi
         if [ -z "$out_path" ]; then out_path="$raw_path"; fi
       fi

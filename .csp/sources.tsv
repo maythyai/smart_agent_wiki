@@ -71,3 +71,8 @@ doc:planning:research-complete	.planning/research/PROJECT_ANALYSIS_COMPLETE.md	R
 cms:saw:module-spec	.csp/code-spec/saw/CODE-MODULE-SPEC.md	CMS canonical module spec (saw)	cms	module-spec
 cms:saw:entry-points	.csp/code-spec/saw/entry-points.jsonl	CMS entry points (saw)	cms	reference
 cms:saw:knowledge-graph	.csp/code-spec/saw/knowledge-graph.json	CMS knowledge graph (saw)	cms	reference
+pms:e2e-usability	.csp/product-spec/PMS-e2e-usability.md	PMS e2e-usability	pms	module-spec
+pms:claim-alignment	.csp/product-spec/PMS-claim-alignment.md	PMS claim-alignment	pms	module-spec
+pms:security-hardening	.csp/product-spec/PMS-security-hardening.md	PMS security-hardening	pms	module-spec
+pms:observability	.csp/product-spec/PMS-observability.md	PMS observability	pms	module-spec
+pms:test-gate	.csp/product-spec/PMS-test-gate.md	PMS test-gate	pms	module-spec
