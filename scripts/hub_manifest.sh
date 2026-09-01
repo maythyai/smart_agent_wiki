@@ -79,6 +79,11 @@ cmd_gen() {
         if [ "$build" = "pending" ]; then build="built"; fi
         if [ -z "$out_path" ]; then out_path="$raw_path"; fi
       fi
+      # Decomposition feature items (kind=feature) are produced artifacts: built + self-ref
+      if [ "$kind" = "feature" ]; then
+        if [ "$build" = "pending" ]; then build="built"; fi
+        if [ -z "$out_path" ]; then out_path="$raw_path"; fi
+      fi
       [ "$first" = 1 ] || printf ',\n'
       first=0
       printf '    {\n'

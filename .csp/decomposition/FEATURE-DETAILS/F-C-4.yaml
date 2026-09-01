@@ -1,0 +1,28 @@
+feature:
+  id: "F-C-4"
+  name: "输入消毒/URL 守卫全覆盖"
+  domain: "security-hardening"
+  prd_ref: "docs/prd/PRD-product-hardening-v1.md#section-3.3"
+  pms_module: "security-hardening"
+  user_story: "作为 OPS，我想所有外部 URL 入口经 url_guard，以便阻断内网/协议混淆攻击。"
+  acceptance_criteria:
+    - "Given 外部 URL 入口, when 提交, then 经 url_guard 校验"
+    - "Given 内网/非常规协议 URL, when 提交, then 被阻断"
+  scope:
+    includes: ["url_guard 覆盖所有外部 URL 入口", "内网/协议混淆阻断", "覆盖检测"]
+    excludes: ["限流（F-C-3）", "权限（F-C-1）"]
+  frontend: {pages: [], components: [], interactions: []}
+  backend:
+    endpoints: []
+    business_logic: ["url_guard（`adapters/url_guard.py`）", "入口覆盖审计"]
+    integrations: []
+  data_entities: ["URL"]
+  data_operations: ["guard"]
+  tech_dimensions: {needs_database: false, needs_cache: false, needs_queue: false, needs_ai: false, needs_vector_store: false, needs_realtime: false, needs_file_storage: false, needs_search: false, needs_scheduler: false, needs_notification: false}
+  nfr: {performance: "", security: "防 SSRF/协议混淆", scalability: "", availability: ""}
+  priority: "P0"
+  complexity: "S"
+  depends_on: []
+  blocked_by: []
+  risks: []
+  assumptions: ["复用 `url_guard`；估时 [TBD]"]

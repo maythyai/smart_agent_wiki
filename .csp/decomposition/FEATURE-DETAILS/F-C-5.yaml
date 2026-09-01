@@ -1,0 +1,31 @@
+feature:
+  id: "F-C-5"
+  name: "前后端 token 同源核验与补齐"
+  domain: "security-hardening"
+  prd_ref: "docs/prd/PRD-product-hardening-v1.md#section-3.3"
+  pms_module: "security-hardening"
+  user_story: "作为 DEV，我想前端 token 与后端 AuthService 同源，以便前后端认证互通。"
+  acceptance_criteria:
+    - "Given 前端登录, when 取 token, then 与后端 `AuthService` 同源可互验"
+    - "Given 后端已统一（`auth.py:13` 复用 AuthService）, when 核验前端, then 互通或标 [TBD] 缺口"
+  scope:
+    includes: ["前端 token 流核验", "与后端 AuthService 同源确认/补齐", "缺口标注 [TBD]"]
+    excludes: ["后端 AuthService 重写（已存）", "权限矩阵（F-C-1）"]
+  frontend:
+    pages: ["登录页"]
+    components: ["token 存储"]
+    interactions: ["login→存 token→带 token 请求"]
+  backend:
+    endpoints: ["POST /api/auth/login（`drivers/web/routes/auth.py:152`）", "POST /api/auth/refresh（:205）"]
+    business_logic: ["AuthService/JWTHandler（`auth/jwt_auth.py`）"]
+    integrations: []
+  data_entities: ["TokenPair"]
+  data_operations: ["login", "refresh", "verify"]
+  tech_dimensions: {needs_database: false, needs_cache: false, needs_queue: false, needs_ai: false, needs_vector_store: false, needs_realtime: false, needs_file_storage: false, needs_search: false, needs_scheduler: false, needs_notification: false}
+  nfr: {performance: "", security: "前后端同源 token", scalability: "", availability: ""}
+  priority: "P0"
+  complexity: "M"
+  depends_on: []
+  blocked_by: []
+  risks: ["前端 token 互通现状 [TBD] — 须实机核验后定补齐范围"]
+  assumptions: ["后端已统一（已核验）；前端 [TBD]；估时 [TBD]"]

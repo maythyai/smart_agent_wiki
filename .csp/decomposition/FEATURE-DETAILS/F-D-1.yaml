@@ -1,0 +1,28 @@
+feature:
+  id: "F-D-1"
+  name: "统一 logger 收敛"
+  domain: "observability"
+  prd_ref: "docs/prd/PRD-product-hardening-v1.md#section-3.4"
+  pms_module: "observability"
+  user_story: "作为 OPS，我想所有模块经 init_observability 取 logger，以便日志一致可管。"
+  acceptance_criteria:
+    - "Given 模块取 logger, when 经 init_observability, then 统一配置"
+    - "Given 散落 logging.basicConfig, when lint, then FAIL 并指出模块（AC-OBS-1 辅）"
+  scope:
+    includes: ["init_observability 唯一初始化点", "散落 basicConfig lint", "模块 logger 收敛"]
+    excludes: ["trace_id 贯穿（F-D-2）", "健康端点（F-D-3）"]
+  frontend: {pages: [], components: [], interactions: []}
+  backend:
+    endpoints: []
+    business_logic: ["init_observability（`middleware/observability.py:75`）", "logger lint"]
+    integrations: []
+  data_entities: []
+  data_operations: ["lint(logging)"]
+  tech_dimensions: {needs_database: false, needs_cache: false, needs_queue: false, needs_ai: false, needs_vector_store: false, needs_realtime: false, needs_file_storage: false, needs_search: false, needs_scheduler: false, needs_notification: false}
+  nfr: {performance: "", security: "", scalability: "", availability: ""}
+  priority: "P1"
+  complexity: "M"
+  depends_on: []
+  blocked_by: []
+  risks: ["跨模块 logger 收敛量 [TBD]"]
+  assumptions: ["复用 `init_observability`；估时 [TBD]"]

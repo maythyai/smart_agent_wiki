@@ -1,0 +1,28 @@
+feature:
+  id: "F-E-3"
+  name: "CI 集成（冒烟+coverage+报告趋势）"
+  domain: "test-gate"
+  prd_ref: "docs/prd/PRD-product-hardening-v1.md#section-3.5"
+  pms_module: "test-gate"
+  user_story: "作为 DEV，我想 CI 统一跑单测+冒烟+coverage 并产出趋势报告，以便质量可追溯。"
+  acceptance_criteria:
+    - "Given push, when CI 跑, then 单测+冒烟+coverage 全跑且冒烟全过（AC-TEST-2）"
+    - "Given coverage 报告, when 产物, then 趋势可查"
+  scope:
+    includes: ["ci.yml 集成单测+冒烟+coverage", "覆盖率报告产物", "趋势可查"]
+    excludes: ["门禁阈值（F-E-2）", "冒烟命令本身（F-A-6）"]
+  frontend: {pages: [], components: [], interactions: []}
+  backend:
+    endpoints: []
+    business_logic: ["CI workflow 整合（`.github/workflows/ci.yml`）", "报告产物/趋势"]
+    integrations: []
+  data_entities: ["CoverageReport", "SmokeResult"]
+  data_operations: ["ci(integrated)"]
+  tech_dimensions: {needs_database: false, needs_cache: false, needs_queue: false, needs_ai: false, needs_vector_store: false, needs_realtime: false, needs_file_storage: true, needs_search: false, needs_scheduler: false, needs_notification: false}
+  nfr: {performance: "CI 总耗时 < [TBD]", security: "", scalability: "", availability: ""}
+  priority: "P0"
+  complexity: "M"
+  depends_on: ["F-A-6", "F-E-2"]
+  blocked_by: []
+  risks: []
+  assumptions: ["复用 ci.yml；估时 [TBD]"]

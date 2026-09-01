@@ -1,0 +1,28 @@
+feature:
+  id: "F-A-3"
+  name: "query 链路冒烟（关键词+NL）"
+  domain: "e2e-usability"
+  prd_ref: "docs/prd/PRD-product-hardening-v1.md#section-3.1"
+  pms_module: "e2e-usability"
+  user_story: "作为 DEV，我想冒烟覆盖 query（关键词+自然语言）并断言 citation，以便确认查询链路可用。"
+  acceptance_criteria:
+    - "Given 已 ingest 库, when 关键词 query, then 返回结果带 citation 且可溯源"
+    - "Given 已 ingest 库, when NL query, then 走 QueryEngine._nl_query 返回带引用答案"
+  scope:
+    includes: ["关键词 query 冒烟", "NL query 冒烟", "citation 溯源断言"]
+    excludes: ["ingest/compile（F-A-2）", "govern/learn（F-A-4）", "离线 fallback（F-A-5）"]
+  frontend: {pages: [], components: [], interactions: []}
+  backend:
+    endpoints: []
+    business_logic: ["QueryEngine.query（`engines/query/engine.py:82`）", "_keyword_search（:194）/ _nl_query（:124）", "FTS5Search（`search.py`）", "citation 解析"]
+    integrations: ["LLMRouter（NL 路径，在线时）"]
+  data_entities: ["QueryResult", "Claim(citation)"]
+  data_operations: ["query(keyword)", "query(nl)"]
+  tech_dimensions: {needs_database: true, needs_cache: true, needs_queue: false, needs_ai: true, needs_vector_store: false, needs_realtime: false, needs_file_storage: false, needs_search: true, needs_scheduler: false, needs_notification: false}
+  nfr: {performance: "query 关键词 P99<500ms", security: "", scalability: "", availability: ""}
+  priority: "P0"
+  complexity: "M"
+  depends_on: ["F-A-1"]
+  blocked_by: []
+  risks: ["NL 路径依赖 LLM → 离线场景由 F-A-5 覆盖 fallback"]
+  assumptions: ["复用 `QueryEngine`；NL 在线用 LLM，离线由 F-A-5 走规则；估时 [TBD]"]

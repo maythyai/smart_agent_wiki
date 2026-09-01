@@ -1,0 +1,28 @@
+feature:
+  id: "F-A-2"
+  name: "ingest+compile 链路冒烟"
+  domain: "e2e-usability"
+  prd_ref: "docs/prd/PRD-product-hardening-v1.md#section-3.1"
+  pms_module: "e2e-usability"
+  user_story: "作为 DEV，我想冒烟覆盖 ingest（md+url 提取）与 compile（wiki 增量）并断言溯源，以便确认入库→编译链路可用。"
+  acceptance_criteria:
+    - "Given fresh 库, when ingest markdown+url 样例, then 产出 claim 且可溯源到原文位置"
+    - "Given 已 ingest, when compile wiki 增量, then wiki 页生成且索引更新"
+  scope:
+    includes: ["ingest md 提取器冒烟", "ingest url 提取器冒烟", "compile wiki 增量冒烟", "四层存储溯源不变量断言"]
+    excludes: ["query/govern/learn（F-A-3/A-4）", "离线 fallback（F-A-5）"]
+  frontend: {pages: [], components: [], interactions: []}
+  backend:
+    endpoints: []
+    business_logic: ["IngestPipeline.ingest（`engines/ingest/pipeline.py:102`）", "extractors markdown/url", "compile compiler 增量", "溯源锚点断言"]
+    integrations: []
+  data_entities: ["Claim", "WikiPage", "Vault 文档"]
+  data_operations: ["ingest", "compile(incremental)"]
+  tech_dimensions: {needs_database: true, needs_cache: false, needs_queue: true, needs_ai: false, needs_vector_store: false, needs_realtime: false, needs_file_storage: true, needs_search: false, needs_scheduler: false, needs_notification: false}
+  nfr: {performance: "ingest <1MB md P99<3s", security: "", scalability: "", availability: "提取器失败跳过计数不中断"}
+  priority: "P0"
+  complexity: "M"
+  depends_on: ["F-A-1"]
+  blocked_by: []
+  risks: ["url 提取依赖外部站点稳定性 → 冒烟用本地 fixture"]
+  assumptions: ["url 冒烟用本地 fixture 避免网络依赖；复用 `IngestPipeline`；估时 [TBD]"]

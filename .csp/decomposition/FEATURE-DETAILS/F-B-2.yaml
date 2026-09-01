@@ -1,0 +1,28 @@
+feature:
+  id: "F-B-2"
+  name: "能力清单生成（CAPABILITIES.md）"
+  domain: "claim-alignment"
+  prd_ref: "docs/prd/PRD-product-hardening-v1.md#section-3.2"
+  pms_module: "claim-alignment"
+  user_story: "作为 KW，我想一份带 file:line 的能力清单，以便按清单试用不踩坑。"
+  acceptance_criteria:
+    - "Given entry-points+kg, when 生成能力清单, then 每条带 file:line 入口（AC-ALIGN-2 辅）"
+    - "Given 宣称无代码对应, when 生成, then 标 [unverified] 不写已支持（AC-ALIGN-2）"
+  scope:
+    includes: ["docs/CAPABILITIES.md 生成", "每条 file:line", "[unverified] 标记机制"]
+    excludes: ["diff 脚本（F-B-1）", "文档正文修正（F-B-3）"]
+  frontend: {pages: [], components: [], interactions: []}
+  backend:
+    endpoints: []
+    business_logic: ["清单生成器（消费 entry-points.jsonl/knowledge-graph.json）"]
+    integrations: []
+  data_entities: ["Capability(entry, file:line, verified)"]
+  data_operations: ["generate"]
+  tech_dimensions: {needs_database: false, needs_cache: false, needs_queue: false, needs_ai: false, needs_vector_store: false, needs_realtime: false, needs_file_storage: true, needs_search: false, needs_scheduler: false, needs_notification: false}
+  nfr: {performance: "", security: "", scalability: "", availability: ""}
+  priority: "P1"
+  complexity: "M"
+  depends_on: ["F-B-1"]
+  blocked_by: []
+  risks: []
+  assumptions: ["清单人或 agent 可读；估时 [TBD]"]

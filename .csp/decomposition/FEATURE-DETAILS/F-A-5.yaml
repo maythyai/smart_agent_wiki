@@ -1,0 +1,28 @@
+feature:
+  id: "F-A-5"
+  name: "离线 fallback 冒烟（无 LLM）"
+  domain: "e2e-usability"
+  prd_ref: "docs/prd/PRD-product-hardening-v1.md#section-3.1"
+  pms_module: "e2e-usability"
+  user_story: "作为 DEV，我想在 LLM 不可达时冒烟仍跑通核心路径（规则 fallback），以便确认离线降级可用。"
+  acceptance_criteria:
+    - "Given LLM 不可达, when 跑冒烟, then 走规则 fallback 路径且核心引擎 PASS（AC-E2E-2）"
+    - "Given LLM 不可达, when NL query, then 返回降级答案并标记 fallback"
+  scope:
+    includes: ["无 LLM 环境冒烟", "规则 fallback 路径覆盖（agent _classify_fallback / query 关键词）", "降级标记"]
+    excludes: ["在线 LLM 路径（F-A-3）", "CI 集成（F-A-6）"]
+  frontend: {pages: [], components: [], interactions: []}
+  backend:
+    endpoints: []
+    business_logic: ["agent fallback（`agents/librarian.py:78` _classify_fallback）", "query 关键词 fallback", "降级 metadata 标记"]
+    integrations: []
+  data_entities: ["AgentResult(fallback=true)", "QueryResult"]
+  data_operations: ["smoke(offline)"]
+  tech_dimensions: {needs_database: true, needs_cache: false, needs_queue: false, needs_ai: false, needs_vector_store: false, needs_realtime: false, needs_file_storage: false, needs_search: true, needs_scheduler: false, needs_notification: false}
+  nfr: {performance: "", security: "", scalability: "", availability: "离线核心路径不宕"}
+  priority: "P0"
+  complexity: "M"
+  depends_on: ["F-A-2", "F-A-3", "F-A-4"]
+  blocked_by: []
+  risks: ["fallback 路径完整性 [TBD] — 冒烟暴露缺口逐项补"]
+  assumptions: ["fallback 既有实现可信（已核验 agent 有 fallback）；估时 [TBD]"]

@@ -1,0 +1,28 @@
+feature:
+  id: "F-A-1"
+  name: "冒烟命令骨架与 fresh 库初始化"
+  domain: "e2e-usability"
+  prd_ref: "docs/prd/PRD-product-hardening-v1.md#section-3.1"
+  pms_module: "e2e-usability"
+  user_story: "作为 DEV，我想一条命令初始化临时 fresh 库并跑通冒烟骨架，以便每次变更后确认主链路未回归。"
+  acceptance_criteria:
+    - "Given fresh 工作区, when 跑冒烟命令, then 初始化临时 saw.db 并按节点打印 PASS/FAIL+耗时"
+    - "Given 冒烟骨架, when 任一节点失败, then 退出码非 0 并定位到具体链路节点"
+  scope:
+    includes: ["CLI 冒烟命令骨架", "fresh saw.db 初始化/清理", "节点级 PASS/FAIL 报告格式", "退出码语义"]
+    excludes: ["具体引擎链路断言（F-A-2..A-4）", "离线 fallback（F-A-5）", "CI 集成（F-A-6）"]
+  frontend: {pages: [], components: [], interactions: []}
+  backend:
+    endpoints: []
+    business_logic: ["冒烟命令入口（CLI，[TBD] 命令名，复用 `drivers/cli/main.py` Typer app）", "fresh 库初始化（复用 `init_cmd`）", "节点报告器"]
+    integrations: []
+  data_entities: ["saw.db（fresh）"]
+  data_operations: ["init（临时库）"]
+  tech_dimensions: {needs_database: true, needs_cache: false, needs_queue: false, needs_ai: false, needs_vector_store: false, needs_realtime: false, needs_file_storage: true, needs_search: false, needs_scheduler: false, needs_notification: false}
+  nfr: {performance: "骨架初始化 < 2s", security: "临时库隔离，不污染用户库", scalability: "", availability: ""}
+  priority: "P0"
+  complexity: "S"
+  depends_on: []
+  blocked_by: []
+  risks: ["冒烟命令名 [TBD]，可能与既有 `audit` 命令混淆"]
+  assumptions: ["复用 `init_cmd` 初始化；临时库在 .hub-run/ 下；估时 [TBD] 无团队速率"]

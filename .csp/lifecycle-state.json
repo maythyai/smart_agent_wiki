@@ -1,7 +1,7 @@
 {
   "pipeline_version": 2,
   "milestone": "v3.7",
-  "current_stage": "02-decomposition",
+  "current_stage": "03-tech",
   "stages": [
     {
       "stage": "00-hub",
@@ -20,9 +20,9 @@
     {
       "stage": "02-decomposition",
       "title": "需求拆解",
-      "status": "pending",
+      "status": "done",
       "owner": "S2-decomp",
-      "artifacts": [".csp/decomposition/FEATURE-DETAILS/"]
+      "artifacts": [".csp/decomposition/REQUIREMENT-INPUT.md", ".csp/decomposition/FEATURE-MAP.md", ".csp/decomposition/FEATURE-DETAILS/", ".csp/decomposition/DEPENDENCY-GRAPH.md", ".csp/decomposition/NFR.md", ".csp/decomposition/DECOMPOSITION-SUMMARY.md"]
     },
     {
       "stage": "03-tech",
@@ -53,5 +53,5 @@
       "artifacts": [".csp/ship/", ".csp/milestones/{m}/"]
     }
   ],
-  "note": "01-prd done 2026-09-01: PRD-product-hardening-v1 (5 modules, MVP 3 P0) + 5 PMS (built) registered. 00=done, 01=done, current_stage=02-decomposition. Implementation-reality verified: deep_audit (2026-06-23) stale (agents implemented, notion connector full, 61 MCP, backend auth unified) — PRD grounded in current code, not stale audit. Git: local commit to trunk, no push."
+  "note": "02-decomposition done 2026-09-01: 20 atomic Features / 5 domains (aligned to PMS) + NFR + DAG (no cycle) + 3 waves. PRD related_decomposition 回填. 00-02 done, current_stage=03-tech. Spec count expected = 20 (one per Feature). Git: local commit to trunk, no push."
 }

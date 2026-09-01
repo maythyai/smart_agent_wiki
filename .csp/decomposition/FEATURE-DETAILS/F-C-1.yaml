@@ -1,0 +1,28 @@
+feature:
+  id: "F-C-1"
+  name: "权限矩阵全覆盖（裸路由检测）"
+  domain: "security-hardening"
+  prd_ref: "docs/prd/PRD-product-hardening-v1.md#section-3.3"
+  pms_module: "security-hardening"
+  user_story: "作为 OPS，我想所有 write/敏感 read 路由都挂 auth_dep，以便无裸路由暴露。"
+  acceptance_criteria:
+    - "Given 任意 write/敏感 read 路由, when 安全自检, then 0 裸路由（AC-SEC-1）"
+    - "Given include_router 装配, when 校验, then protected 路由均挂 auth_dep（`app.py:267`）"
+  scope:
+    includes: ["裸路由检测（以 `app.py` include_router 为源）", "auth_dep 缺失告警", "权限矩阵（角色×功能×数据范围）文档化"]
+    excludes: ["receipt（F-C-2）", "限流（F-C-3）", "URL 守卫（F-C-4）", "token 同源（F-C-5）"]
+  frontend: {pages: [], components: [], interactions: []}
+  backend:
+    endpoints: []
+    business_logic: ["权限校验（`auth/permissions.py:59` PermissionService + Cedar）", "auth_dep（`app.py:267`）", "自检脚本"]
+    integrations: []
+  data_entities: ["Role", "Permission", "Route"]
+  data_operations: ["audit(routes)"]
+  tech_dimensions: {needs_database: false, needs_cache: false, needs_queue: false, needs_ai: false, needs_vector_store: false, needs_realtime: false, needs_file_storage: false, needs_search: false, needs_scheduler: false, needs_notification: false}
+  nfr: {performance: "", security: "0 裸 write 路由", scalability: "", availability: ""}
+  priority: "P0"
+  complexity: "M"
+  depends_on: []
+  blocked_by: []
+  risks: []
+  assumptions: ["复用 `PermissionService`/Cedar；估时 [TBD]"]

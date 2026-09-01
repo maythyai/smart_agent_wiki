@@ -1,0 +1,28 @@
+feature:
+  id: "F-D-2"
+  name: "trace_id 贯穿各层"
+  domain: "observability"
+  prd_ref: "docs/prd/PRD-product-hardening-v1.md#section-3.4"
+  pms_module: "observability"
+  user_story: "作为 OPS，我想一次请求的 trace_id 贯穿 engines→write_queue→sinks，以便快速定位问题。"
+  acceptance_criteria:
+    - "Given 一次请求, when 查各层日志, then 同 trace_id（AC-OBS-1）"
+    - "Given trace_id 丢失, when 记录, then 降级并标注节点"
+  scope:
+    includes: ["trace_id 从 drivers 注入 context", "贯穿 engines→write_queue→sinks", "日志带同一 id"]
+    excludes: ["logger 收敛（F-D-1）", "健康端点（F-D-3）"]
+  frontend: {pages: [], components: [], interactions: []}
+  backend:
+    endpoints: []
+    business_logic: ["RequestContextMiddleware（`observability.py:43`）", "_RequestIdFilter（:35）", "context 贯穿 write_queue"]
+    integrations: []
+  data_entities: ["trace_id"]
+  data_operations: ["propagate"]
+  tech_dimensions: {needs_database: true, needs_cache: true, needs_queue: true, needs_ai: false, needs_vector_store: false, needs_realtime: true, needs_file_storage: false, needs_search: false, needs_scheduler: false, needs_notification: false}
+  nfr: {performance: "", security: "", scalability: "", availability: ""}
+  priority: "P1"
+  complexity: "M"
+  depends_on: ["F-D-1"]
+  blocked_by: []
+  risks: ["CLI/MCP 入口的 trace 贯穿 [TBD] 归 V1.1"]
+  assumptions: ["HTTP 入口先覆盖；估时 [TBD]"]

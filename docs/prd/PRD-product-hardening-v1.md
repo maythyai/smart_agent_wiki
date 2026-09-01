@@ -16,6 +16,7 @@ related_pms:
   - .csp/product-spec/PMS-security-hardening.md
   - .csp/product-spec/PMS-observability.md
   - .csp/product-spec/PMS-test-gate.md
+related_decomposition: .csp/decomposition/DECOMPOSITION-SUMMARY.md
 related_specs: []
 ---
 

@@ -1,0 +1,28 @@
+feature:
+  id: "F-B-1"
+  name: "宣称 diff 脚本"
+  domain: "claim-alignment"
+  prd_ref: "docs/prd/PRD-product-hardening-v1.md#section-3.2"
+  pms_module: "claim-alignment"
+  user_story: "作为 KW，我想有脚本自动比对 README/docs 宣称与代码实际，以便文档不误导试用。"
+  acceptance_criteria:
+    - "Given 代码 61 MCP, when 跑 diff, then 输出 README 宣称与代码 added/changed/removed（AC-ALIGN-1）"
+    - "Given 重跑, when 0 diff, then 宣称一致"
+  scope:
+    includes: ["diff 脚本（README/docs 文本 vs entry-points.jsonl/knowledge-graph.json）", "added/changed/removed 报告"]
+    excludes: ["能力清单生成（F-B-2）", "文档修正（F-B-3）"]
+  frontend: {pages: [], components: [], interactions: []}
+  backend:
+    endpoints: []
+    business_logic: ["diff 脚本（纯 grep/sh，[TBD] 落 scripts/）", "消费 `entry-points.jsonl`（cms_extract.sh 产物）"]
+    integrations: []
+  data_entities: ["entry-points.jsonl", "knowledge-graph.json", "README/docs 文本"]
+  data_operations: ["diff"]
+  tech_dimensions: {needs_database: false, needs_cache: false, needs_queue: false, needs_ai: false, needs_vector_store: false, needs_realtime: false, needs_file_storage: true, needs_search: false, needs_scheduler: false, needs_notification: false}
+  nfr: {performance: "", security: "", scalability: "", availability: ""}
+  priority: "P1"
+  complexity: "M"
+  depends_on: []
+  blocked_by: []
+  risks: ["宣称文本提取规则需覆盖多文档格式"]
+  assumptions: ["复用 `cms_extract.sh` 产物；估时 [TBD]"]

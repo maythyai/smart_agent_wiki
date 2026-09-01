@@ -1,0 +1,28 @@
+feature:
+  id: "F-C-2"
+  name: "Ed25519 receipt 全链路闭环"
+  domain: "security-hardening"
+  prd_ref: "docs/prd/PRD-product-hardening-v1.md#section-3.3"
+  pms_module: "security-hardening"
+  user_story: "作为 OPS，我想每个 agent 操作 + write_queue 变更都产出签名 receipt 且链式不断裂，以便合规巡检。"
+  acceptance_criteria:
+    - "Given agent + write 变更, when 查 receipt 链, then 链式 prev_receipt_id 不断裂（AC-SEC-2）"
+    - "Given 高危操作, when 执行, then 100% 产出 Ed25519 签名 receipt"
+  scope:
+    includes: ["agent 操作产 receipt", "write_queue 变更产 receipt", "链式 prev_id 校验", "覆盖率统计"]
+    excludes: ["权限矩阵（F-C-1）", "限流（F-C-3）"]
+  frontend: {pages: [], components: [], interactions: []}
+  backend:
+    endpoints: []
+    business_logic: ["ReceiptSigner（`adapters/crypto/ed25519.py:63`）", "Dispatcher/sinks 变更挂 receipt", "链式校验器"]
+    integrations: []
+  data_entities: ["Receipt(op_id, prev_receipt_id, signature)"]
+  data_operations: ["sign", "verify-chain"]
+  tech_dimensions: {needs_database: true, needs_cache: false, needs_queue: true, needs_ai: false, needs_vector_store: false, needs_realtime: false, needs_file_storage: false, needs_search: false, needs_scheduler: false, needs_notification: false}
+  nfr: {performance: "签名开销可忽略", security: "Ed25519，链式不可篡改", scalability: "", availability: ""}
+  priority: "P0"
+  complexity: "M"
+  depends_on: []
+  blocked_by: []
+  risks: ["既有 receipt 覆盖率 [TBD] — 须核验哪些路径已挂"]
+  assumptions: ["复用 `ReceiptSigner`；估时 [TBD]"]

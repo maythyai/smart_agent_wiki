@@ -2,7 +2,7 @@
   "manifest_id": "smart-agent-wiki-hub",
   "schemaVersion": 1,
   "version": 1,
-  "generated_at": "2026-09-01T13:59:38+08:00",
+  "generated_at": "2026-09-01T15:46:08+08:00",
   "repo_url": "git@github.com:maythyai/smart_agent_wiki.git",
   "items": [
     {
@@ -1050,7 +1050,7 @@
       "output_path": ".csp/product-spec/PMS-e2e-usability.md",
       "original_ref": ".csp/product-spec/PMS-e2e-usability.md",
       "content_hash": "212d33064ab13f2b36c6a03d61f46d4f2ad04eaa",
-      "source_updated_at": "",
+      "source_updated_at": "2026-09-01T15:46:08+08:00",
       "build_status": "built",
       "wiki_pages": [],
       "status": "ready"
@@ -1065,7 +1065,7 @@
       "output_path": ".csp/product-spec/PMS-claim-alignment.md",
       "original_ref": ".csp/product-spec/PMS-claim-alignment.md",
       "content_hash": "71dcb7e7237aab2975e3b52dec6e6caf81044250",
-      "source_updated_at": "",
+      "source_updated_at": "2026-09-01T15:46:08+08:00",
       "build_status": "built",
       "wiki_pages": [],
       "status": "ready"
@@ -1080,7 +1080,7 @@
       "output_path": ".csp/product-spec/PMS-security-hardening.md",
       "original_ref": ".csp/product-spec/PMS-security-hardening.md",
       "content_hash": "5577eb85c24b701ac83990ae70c41aaa86ce7edd",
-      "source_updated_at": "",
+      "source_updated_at": "2026-09-01T15:46:08+08:00",
       "build_status": "built",
       "wiki_pages": [],
       "status": "ready"
@@ -1095,7 +1095,7 @@
       "output_path": ".csp/product-spec/PMS-observability.md",
       "original_ref": ".csp/product-spec/PMS-observability.md",
       "content_hash": "36b399f119d89c6dd0bd6050cfdd6268b9f92dda",
-      "source_updated_at": "",
+      "source_updated_at": "2026-09-01T15:46:08+08:00",
       "build_status": "built",
       "wiki_pages": [],
       "status": "ready"
@@ -1110,6 +1110,21 @@
       "output_path": ".csp/product-spec/PMS-test-gate.md",
       "original_ref": ".csp/product-spec/PMS-test-gate.md",
       "content_hash": "0a1ef98c97946156198a9b8f92bafa9e8727a2dd",
+      "source_updated_at": "2026-09-01T15:46:08+08:00",
+      "build_status": "built",
+      "wiki_pages": [],
+      "status": "ready"
+    },
+    {
+      "source_id": "doc:decomposition:summary",
+      "source_type": "doc",
+      "kind": "feature",
+      "domain": "decomposition",
+      "title": "Decomposition summary (product-hardening-v1)",
+      "raw_path": ".csp/decomposition/DECOMPOSITION-SUMMARY.md",
+      "output_path": ".csp/decomposition/DECOMPOSITION-SUMMARY.md",
+      "original_ref": ".csp/decomposition/DECOMPOSITION-SUMMARY.md",
+      "content_hash": "5a3b639faee740c320ca8f13b25064181e160fe9",
       "source_updated_at": "",
       "build_status": "built",
       "wiki_pages": [],

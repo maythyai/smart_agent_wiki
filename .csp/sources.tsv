@@ -76,3 +76,4 @@ pms:claim-alignment	.csp/product-spec/PMS-claim-alignment.md	PMS claim-alignment
 pms:security-hardening	.csp/product-spec/PMS-security-hardening.md	PMS security-hardening	pms	module-spec
 pms:observability	.csp/product-spec/PMS-observability.md	PMS observability	pms	module-spec
 pms:test-gate	.csp/product-spec/PMS-test-gate.md	PMS test-gate	pms	module-spec
+doc:decomposition:summary	.csp/decomposition/DECOMPOSITION-SUMMARY.md	Decomposition summary (product-hardening-v1)	decomposition	feature

@@ -1,0 +1,28 @@
+feature:
+  id: "F-E-1"
+  name: "覆盖率基线实测 + 阈值设定"
+  domain: "test-gate"
+  prd_ref: "docs/prd/PRD-product-hardening-v1.md#section-3.5"
+  pms_module: "test-gate"
+  user_story: "作为 DEV，我想先实测当前覆盖率再定阈值，以便门禁现实可达。"
+  acceptance_criteria:
+    - "Given 现有 128 测试, when 跑 coverage, then 产出基线数值（[TBD] 首次实测）"
+    - "Given 基线, when 定阈值, then 核心 ≥80% / 非核心 ≥60%（基线 [TBD] 后定）"
+  scope:
+    includes: ["coverage 基线实测", "核心/非核心阈值设定", "基线报告"]
+    excludes: ["门禁阻断（F-E-2）", "CI 集成（F-E-3）"]
+  frontend: {pages: [], components: [], interactions: []}
+  backend:
+    endpoints: []
+    business_logic: ["coverage 实测（pytest --cov）", "阈值配置"]
+    integrations: []
+  data_entities: ["CoverageBaseline"]
+  data_operations: ["measure"]
+  tech_dimensions: {needs_database: false, needs_cache: false, needs_queue: false, needs_ai: false, needs_vector_store: false, needs_realtime: false, needs_file_storage: true, needs_search: false, needs_scheduler: false, needs_notification: false}
+  nfr: {performance: "", security: "", scalability: "", availability: ""}
+  priority: "P0"
+  complexity: "M"
+  depends_on: []
+  blocked_by: []
+  risks: ["基线可能过低 → 阈值分阶段提"]
+  assumptions: ["基线 [TBD] 首次实测后定；估时 [TBD]"]

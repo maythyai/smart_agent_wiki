@@ -1,0 +1,28 @@
+feature:
+  id: "F-E-2"
+  name: "核心引擎覆盖率门禁（≥80%）"
+  domain: "test-gate"
+  prd_ref: "docs/prd/PRD-product-hardening-v1.md#section-3.5"
+  pms_module: "test-gate"
+  user_story: "作为 DEV，我想 CI 在核心引擎覆盖率 <80% 时拦住，以便不引入未测变更。"
+  acceptance_criteria:
+    - "Given 核心引擎链路, when CI 跑 coverage, then ≥80% 否则红（AC-TEST-1）"
+    - "Given 未达模块, when 失败, then CI 指出未达模块与实际值"
+  scope:
+    includes: ["engines/{ingest,query,govern,collaborate,compile}+write_queue 门禁", "未达模块报告", "CI 阻断"]
+    excludes: ["基线实测（F-E-1）", "CI 报告产物（F-E-3）"]
+  frontend: {pages: [], components: [], interactions: []}
+  backend:
+    endpoints: []
+    business_logic: ["coverage 阈值门禁（核心 ≥80% / 非核心 ≥60%）", "未达模块定位"]
+    integrations: []
+  data_entities: ["CoverageReport"]
+  data_operations: ["gate"]
+  tech_dimensions: {needs_database: false, needs_cache: false, needs_queue: false, needs_ai: false, needs_vector_store: false, needs_realtime: false, needs_file_storage: true, needs_search: false, needs_scheduler: false, needs_notification: false}
+  nfr: {performance: "", security: "", scalability: "", availability: ""}
+  priority: "P0"
+  complexity: "M"
+  depends_on: ["F-E-1"]
+  blocked_by: []
+  risks: ["基线低致门禁难达 → 分阶段提"]
+  assumptions: ["阈值依赖 F-E-1 基线；估时 [TBD]"]

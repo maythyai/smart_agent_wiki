@@ -1,0 +1,28 @@
+feature:
+  id: "F-B-3"
+  name: "过时文档修正 + unverified 标注"
+  domain: "claim-alignment"
+  prd_ref: "docs/prd/PRD-product-hardening-v1.md#section-3.2"
+  pms_module: "claim-alignment"
+  user_story: "作为 DEV，我想过时文档被修正或加历史快照标注，以便下游不据错误前提决策。"
+  acceptance_criteria:
+    - "Given diff 报告, when 修正文档, then 宣称与代码一致或加历史快照标注"
+    - "Given deep_audit 旧断言, when 处理, then 加'历史快照 2026-06-23，不作依据'标注，不删"
+  scope:
+    includes: ["README/docs 宣称修正", "deep_audit 加历史快照标注（不删）", "README_CN 已对齐 badge"]
+    excludes: ["diff 脚本（F-B-1）", "能力清单（F-B-2）"]
+  frontend: {pages: [], components: [], interactions: []}
+  backend:
+    endpoints: []
+    business_logic: ["文档编辑（人工/脚本辅助）"]
+    integrations: []
+  data_entities: []
+  data_operations: ["edit(docs)"]
+  tech_dimensions: {needs_database: false, needs_cache: false, needs_queue: false, needs_ai: false, needs_vector_store: false, needs_realtime: false, needs_file_storage: true, needs_search: false, needs_scheduler: false, needs_notification: false}
+  nfr: {performance: "", security: "", scalability: "", availability: ""}
+  priority: "P1"
+  complexity: "S"
+  depends_on: ["F-B-1"]
+  blocked_by: []
+  risks: ["修正范围需人工确认每条"]
+  assumptions: ["历史文档不删只标注；估时 [TBD]"]

@@ -1,0 +1,28 @@
+feature:
+  id: "F-C-3"
+  name: "限流双轨生效（429+Retry-After）"
+  domain: "security-hardening"
+  prd_ref: "docs/prd/PRD-product-hardening-v1.md#section-3.3"
+  pms_module: "security-hardening"
+  user_story: "作为 OPS，我想按 API key + 匿名双轨限流，以便防刷且超限有明确反馈。"
+  acceptance_criteria:
+    - "Given 超 100/h（默认）, when 再请求, then 返回 429 + Retry-After（AC-SEC-3）"
+    - "Given env 覆盖, when 调整阈值, then 限流边界跟随"
+  scope:
+    includes: ["API key 限流", "匿名限流", "429+Retry-After 响应", "边界值配置"]
+    excludes: ["权限矩阵（F-C-1）", "URL 守卫（F-C-4）"]
+  frontend: {pages: [], components: [], interactions: []}
+  backend:
+    endpoints: []
+    business_logic: ["RateLimitConfig（`api/rate_limit.py:24`，100/h、1000/d）", "限流中间件", "429 响应"]
+    integrations: []
+  data_entities: ["RateLimitConfig"]
+  data_operations: ["limit"]
+  tech_dimensions: {needs_database: true, needs_cache: true, needs_queue: false, needs_ai: false, needs_vector_store: false, needs_realtime: false, needs_file_storage: false, needs_search: false, needs_scheduler: false, needs_notification: false}
+  nfr: {performance: "", security: "防刷", scalability: "", availability: ""}
+  priority: "P0"
+  complexity: "S"
+  depends_on: []
+  blocked_by: []
+  risks: []
+  assumptions: ["复用 `rate_limit.py`；估时 [TBD]"]
