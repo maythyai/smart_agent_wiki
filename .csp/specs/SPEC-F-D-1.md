@@ -13,6 +13,7 @@ complexity: M
 tdd_ref: .csp/tech-design/TECH-DESIGN-SUMMARY.md
 related_modules: []
 ac_coverage: 2/2
+related_tasks: [.csp/tasks/WBS.md#T-F-D-1-1]
 ---
 
 # SPEC-F-D-1: 统一 logger 收敛

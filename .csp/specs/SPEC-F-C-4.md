@@ -13,6 +13,7 @@ complexity: S
 tdd_ref: .csp/tech-design/SECURITY-ARCHITECTURE.md
 related_modules: [API-OVERVIEW.md]
 ac_coverage: 2/2
+related_tasks: [.csp/tasks/WBS.md#T-F-C-4-1]
 ---
 
 # SPEC-F-C-4: URL 守卫全覆盖

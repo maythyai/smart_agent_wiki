@@ -13,6 +13,7 @@ complexity: M
 tdd_ref: .csp/tech-design/TECH-DESIGN-SUMMARY.md
 related_modules: [API-OVERVIEW.md]
 ac_coverage: 2/2
+related_tasks: [.csp/tasks/WBS.md#T-F-B-2-1]
 ---
 
 # SPEC-F-B-2: 能力清单生成

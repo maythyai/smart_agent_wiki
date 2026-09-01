@@ -13,6 +13,7 @@ complexity: S
 tdd_ref: .csp/tech-design/TECH-DESIGN-SUMMARY.md
 related_modules: []
 ac_coverage: 2/2
+related_tasks: [.csp/tasks/WBS.md#T-F-B-3-1]
 ---
 
 # SPEC-F-B-3: 过时文档修正

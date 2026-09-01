@@ -13,6 +13,7 @@ complexity: S
 tdd_ref: .csp/tech-design/TECH-DESIGN-SUMMARY.md
 related_modules: [SHARED-SCHEMAS.md, API-OVERVIEW.md]
 ac_coverage: 2/2
+related_tasks: [.csp/tasks/WBS.md#T-F-A-1-1]
 ---
 
 # SPEC-F-A-1: 冒烟命令骨架

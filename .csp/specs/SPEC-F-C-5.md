@@ -13,6 +13,7 @@ complexity: M
 tdd_ref: .csp/tech-design/SECURITY-ARCHITECTURE.md
 related_modules: [API-OVERVIEW.md]
 ac_coverage: 2/2
+related_tasks: [.csp/tasks/WBS.md#T-F-C-5-1]
 ---
 
 # SPEC-F-C-5: 前后端 token 同源

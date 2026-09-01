@@ -1,7 +1,7 @@
 {
   "pipeline_version": 2,
   "milestone": "v3.7",
-  "current_stage": "04-tasks",
+  "current_stage": "05-impl",
   "stages": [
     {
       "stage": "00-hub",
@@ -34,9 +34,9 @@
     {
       "stage": "04-tasks",
       "title": "任务拆解",
-      "status": "pending",
+      "status": "done",
       "owner": "S4-tasks",
-      "artifacts": [".csp/tasks/"]
+      "artifacts": [".csp/tasks/WBS.md", ".csp/tasks/DEPENDENCY-DAG.md", ".csp/tasks/WAVE-PLAN.md", ".csp/tasks/TASK-BREAKDOWN-SUMMARY.md"]
     },
     {
       "stage": "05-impl",
@@ -53,5 +53,5 @@
       "artifacts": [".csp/ship/", ".csp/milestones/{m}/"]
     }
   ],
-  "note": "03-tech done 2026-09-01: 选型(4 ADR, 复用为主) + TDD(6 文件, ground CMS) + 20 Spec(1:1 穷尽门控通过) + TMS(5 模块+INDEX, AC 11/11) + 追溯矩阵(双向+覆盖). 00-03 done, current_stage=04-tasks. 棕地 hardening 全复用既有栈. Git: local commit to trunk, no push."
+  "note": "04-tasks done 2026-09-01: 20 Task (1:1 Spec) + DAG 无环 + 3 Wave + 关键路径 A1→A2→A5→A6→E3. Spec related_tasks 回填 20/20, 追溯矩阵加 Task 列. 00-04 done, current_stage=05-impl. Git: local commit to trunk, no push."
 }

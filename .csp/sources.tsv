@@ -82,3 +82,4 @@ doc:test:index	.csp/test-spec/TEST-INDEX.md	TMS index (5 modules)	test-spec	test
 doc:tdd:summary	.csp/tech-design/TECH-DESIGN-SUMMARY.md	TDD summary	tech-design	tech-design
 doc:techdec:summary	.csp/tech-decisions/TECH-DECISIONS-SUMMARY.md	Tech decisions summary	tech-decisions	tech-decision
 doc:trace:summary	.csp/traceability/TRACEABILITY-SUMMARY.md	Traceability summary	traceability	traceability
+doc:tasks:summary	.csp/tasks/TASK-BREAKDOWN-SUMMARY.md	Task breakdown summary (20 tasks)	tasks	feature

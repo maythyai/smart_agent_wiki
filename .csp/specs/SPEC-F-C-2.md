@@ -13,6 +13,7 @@ complexity: M
 tdd_ref: .csp/tech-design/SECURITY-ARCHITECTURE.md
 related_modules: [SHARED-SCHEMAS.md]
 ac_coverage: 2/2
+related_tasks: [.csp/tasks/WBS.md#T-F-C-2-1]
 ---
 
 # SPEC-F-C-2: Ed25519 receipt 闭环

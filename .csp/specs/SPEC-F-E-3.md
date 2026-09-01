@@ -13,6 +13,7 @@ complexity: M
 tdd_ref: .csp/tech-design/TECH-DESIGN-SUMMARY.md
 related_modules: [API-OVERVIEW.md]
 ac_coverage: 2/2
+related_tasks: [.csp/tasks/WBS.md#T-F-E-3-1]
 ---
 
 # SPEC-F-E-3: CI 集成

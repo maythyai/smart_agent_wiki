@@ -13,6 +13,7 @@ complexity: M
 tdd_ref: .csp/tech-design/TECH-DESIGN-SUMMARY.md
 related_modules: [SHARED-SCHEMAS.md]
 ac_coverage: 2/2
+related_tasks: [.csp/tasks/WBS.md#T-F-A-3-1]
 ---
 
 # SPEC-F-A-3: query 冒烟

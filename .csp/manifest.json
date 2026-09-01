@@ -2,7 +2,7 @@
   "manifest_id": "smart-agent-wiki-hub",
   "schemaVersion": 1,
   "version": 1,
-  "generated_at": "2026-09-01T16:52:24+08:00",
+  "generated_at": "2026-09-01T17:20:39+08:00",
   "repo_url": "git@github.com:maythyai/smart_agent_wiki.git",
   "items": [
     {
@@ -1140,7 +1140,7 @@
       "output_path": ".csp/specs/SPEC-INDEX.md",
       "original_ref": ".csp/specs/SPEC-INDEX.md",
       "content_hash": "eccf174aeb93665a951a5a96ee624bd1a616034e",
-      "source_updated_at": "",
+      "source_updated_at": "2026-09-01T17:20:39+08:00",
       "build_status": "built",
       "wiki_pages": [],
       "status": "ready"
@@ -1155,7 +1155,7 @@
       "output_path": ".csp/test-spec/TEST-INDEX.md",
       "original_ref": ".csp/test-spec/TEST-INDEX.md",
       "content_hash": "e6749e59ba871d0a9f42ed465b02967843a7ac83",
-      "source_updated_at": "",
+      "source_updated_at": "2026-09-01T17:20:39+08:00",
       "build_status": "built",
       "wiki_pages": [],
       "status": "ready"
@@ -1170,7 +1170,7 @@
       "output_path": ".csp/tech-design/TECH-DESIGN-SUMMARY.md",
       "original_ref": ".csp/tech-design/TECH-DESIGN-SUMMARY.md",
       "content_hash": "09bb3f87dc6073f0aa5226df5765ff0b8bd1a001",
-      "source_updated_at": "",
+      "source_updated_at": "2026-09-01T17:20:39+08:00",
       "build_status": "built",
       "wiki_pages": [],
       "status": "ready"
@@ -1185,7 +1185,7 @@
       "output_path": ".csp/tech-decisions/TECH-DECISIONS-SUMMARY.md",
       "original_ref": ".csp/tech-decisions/TECH-DECISIONS-SUMMARY.md",
       "content_hash": "f71be127a898f926a56c040732f86aac7a689b6d",
-      "source_updated_at": "",
+      "source_updated_at": "2026-09-01T17:20:39+08:00",
       "build_status": "built",
       "wiki_pages": [],
       "status": "ready"
@@ -1200,6 +1200,21 @@
       "output_path": ".csp/traceability/TRACEABILITY-SUMMARY.md",
       "original_ref": ".csp/traceability/TRACEABILITY-SUMMARY.md",
       "content_hash": "4012c3e3d55eb3676474e601160e9772c67147af",
+      "source_updated_at": "2026-09-01T17:20:39+08:00",
+      "build_status": "built",
+      "wiki_pages": [],
+      "status": "ready"
+    },
+    {
+      "source_id": "doc:tasks:summary",
+      "source_type": "doc",
+      "kind": "feature",
+      "domain": "tasks",
+      "title": "Task breakdown summary (20 tasks)",
+      "raw_path": ".csp/tasks/TASK-BREAKDOWN-SUMMARY.md",
+      "output_path": ".csp/tasks/TASK-BREAKDOWN-SUMMARY.md",
+      "original_ref": ".csp/tasks/TASK-BREAKDOWN-SUMMARY.md",
+      "content_hash": "331e0a6d9f84dbd7e262f9445dde32160cce8192",
       "source_updated_at": "",
       "build_status": "built",
       "wiki_pages": [],

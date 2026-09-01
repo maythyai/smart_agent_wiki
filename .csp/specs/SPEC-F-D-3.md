@@ -13,6 +13,7 @@ complexity: S
 tdd_ref: .csp/tech-design/TECH-DESIGN-SUMMARY.md
 related_modules: [API-OVERVIEW.md]
 ac_coverage: 2/2
+related_tasks: [.csp/tasks/WBS.md#T-F-D-3-1]
 ---
 
 # SPEC-F-D-3: 健康真实 + JSON 日志

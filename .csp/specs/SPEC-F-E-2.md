@@ -13,6 +13,7 @@ complexity: M
 tdd_ref: .csp/tech-design/KEY-CHALLENGES.md
 related_modules: []
 ac_coverage: 2/2
+related_tasks: [.csp/tasks/WBS.md#T-F-E-2-1]
 ---
 
 # SPEC-F-E-2: 覆盖率门禁
