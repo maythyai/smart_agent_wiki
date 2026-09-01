@@ -77,3 +77,8 @@ pms:security-hardening	.csp/product-spec/PMS-security-hardening.md	PMS security-
 pms:observability	.csp/product-spec/PMS-observability.md	PMS observability	pms	module-spec
 pms:test-gate	.csp/product-spec/PMS-test-gate.md	PMS test-gate	pms	module-spec
 doc:decomposition:summary	.csp/decomposition/DECOMPOSITION-SUMMARY.md	Decomposition summary (product-hardening-v1)	decomposition	feature
+doc:spec:index	.csp/specs/SPEC-INDEX.md	Spec index (20 specs)	specs	spec
+doc:test:index	.csp/test-spec/TEST-INDEX.md	TMS index (5 modules)	test-spec	test-spec
+doc:tdd:summary	.csp/tech-design/TECH-DESIGN-SUMMARY.md	TDD summary	tech-design	tech-design
+doc:techdec:summary	.csp/tech-decisions/TECH-DECISIONS-SUMMARY.md	Tech decisions summary	tech-decisions	tech-decision
+doc:trace:summary	.csp/traceability/TRACEABILITY-SUMMARY.md	Traceability summary	traceability	traceability

@@ -1,7 +1,7 @@
 {
   "pipeline_version": 2,
   "milestone": "v3.7",
-  "current_stage": "03-tech",
+  "current_stage": "04-tasks",
   "stages": [
     {
       "stage": "00-hub",
@@ -26,10 +26,10 @@
     },
     {
       "stage": "03-tech",
-      "title": "技术方案 / Spec / TMS",
-      "status": "pending",
+      "title": "技术方案 / Spec / TMS / 选型",
+      "status": "done",
       "owner": "S3-tech",
-      "artifacts": [".csp/specs/", ".csp/tech-design/", ".csp/tech-decisions/ADR/", ".csp/test-spec/"]
+      "artifacts": [".csp/tech-decisions/", ".csp/tech-design/", ".csp/specs/", ".csp/test-spec/", ".csp/traceability/"]
     },
     {
       "stage": "04-tasks",
@@ -53,5 +53,5 @@
       "artifacts": [".csp/ship/", ".csp/milestones/{m}/"]
     }
   ],
-  "note": "02-decomposition done 2026-09-01: 20 atomic Features / 5 domains (aligned to PMS) + NFR + DAG (no cycle) + 3 waves. PRD related_decomposition 回填. 00-02 done, current_stage=03-tech. Spec count expected = 20 (one per Feature). Git: local commit to trunk, no push."
+  "note": "03-tech done 2026-09-01: 选型(4 ADR, 复用为主) + TDD(6 文件, ground CMS) + 20 Spec(1:1 穷尽门控通过) + TMS(5 模块+INDEX, AC 11/11) + 追溯矩阵(双向+覆盖). 00-03 done, current_stage=04-tasks. 棕地 hardening 全复用既有栈. Git: local commit to trunk, no push."
 }

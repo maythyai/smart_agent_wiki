@@ -80,10 +80,12 @@ cmd_gen() {
         if [ -z "$out_path" ]; then out_path="$raw_path"; fi
       fi
       # Decomposition feature items (kind=feature) are produced artifacts: built + self-ref
-      if [ "$kind" = "feature" ]; then
-        if [ "$build" = "pending" ]; then build="built"; fi
-        if [ -z "$out_path" ]; then out_path="$raw_path"; fi
-      fi
+      case "$kind" in
+        feature|spec|test-spec|tech-design|tech-decision|traceability)
+          if [ "$build" = "pending" ]; then build="built"; fi
+          if [ -z "$out_path" ]; then out_path="$raw_path"; fi
+          ;;
+      esac
       [ "$first" = 1 ] || printf ',\n'
       first=0
       printf '    {\n'

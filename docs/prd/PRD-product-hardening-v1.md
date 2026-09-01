@@ -17,7 +17,27 @@ related_pms:
   - .csp/product-spec/PMS-observability.md
   - .csp/product-spec/PMS-test-gate.md
 related_decomposition: .csp/decomposition/DECOMPOSITION-SUMMARY.md
-related_specs: []
+related_specs:
+  - .csp/specs/SPEC-F-A-1.md
+  - .csp/specs/SPEC-F-A-2.md
+  - .csp/specs/SPEC-F-A-3.md
+  - .csp/specs/SPEC-F-A-4.md
+  - .csp/specs/SPEC-F-A-5.md
+  - .csp/specs/SPEC-F-A-6.md
+  - .csp/specs/SPEC-F-B-1.md
+  - .csp/specs/SPEC-F-B-2.md
+  - .csp/specs/SPEC-F-B-3.md
+  - .csp/specs/SPEC-F-C-1.md
+  - .csp/specs/SPEC-F-C-2.md
+  - .csp/specs/SPEC-F-C-3.md
+  - .csp/specs/SPEC-F-C-4.md
+  - .csp/specs/SPEC-F-C-5.md
+  - .csp/specs/SPEC-F-D-1.md
+  - .csp/specs/SPEC-F-D-2.md
+  - .csp/specs/SPEC-F-D-3.md
+  - .csp/specs/SPEC-F-E-1.md
+  - .csp/specs/SPEC-F-E-2.md
+  - .csp/specs/SPEC-F-E-3.md
 ---
 
 # PRD: 产品形态补全与基础加固
