@@ -20,3 +20,8 @@
 
 ## 缺口
 - 无。
+
+## 05 增量用例（2026-09-01）
+| Task | 用例 | commit |
+|---|---|---|
+| T-F-B-1-1 | test_actual_counts / test_detects_stale_claim / test_historical_snapshot_annotation_suppresses / test_run_on_real_repo (4) | 622859c |

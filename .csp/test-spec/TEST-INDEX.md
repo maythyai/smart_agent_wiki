@@ -18,3 +18,9 @@
 ## TMS 红线
 - 继承 PMS 边界，不发明 PMS 未声明模块。
 - 变更只产 delta 增量用例，不推倒重来。
+
+## 05 增量（2026-09-01，feat/hardening-wave1-slice）
+- 新增 30 用例：e2e-usability +5（F-A-1）、claim-alignment +4（F-B-1）、security-hardening +21（F-C-3 ×6, F-C-4 ×15）。
+- 用例总数：39 → 69。
+- 新覆盖 AC：AC-SEC-1（URL guard track）/ AC-SEC-3（限流 429）/ AC-ALIGN-1（宣称 diff）/ AC-E2E-1（冒烟骨架 partial）。
+- ruff 未跑（未装，[TBD]）；coverage 基线 deferred（T-F-E-1-1）。

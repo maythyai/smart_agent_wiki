@@ -29,3 +29,14 @@
 - Task：20（1:1 Spec）；类型：backend-cli×1 / test×4 / infra-ci×4 / infra-script×2 / doc×1 / test-security×3 / backend-security×2 / backend×3
 - 估时：S×8 / M×12；人日 [TBD]（无团队速率）
 - deps 与 decomposition DEPENDENCY-GRAPH 一致（A1→A2/3/4→A5→A6→E3；B1→B2/3；D1→D2；E1→E2→E3）
+
+## 05 实施状态（2026-09-01，feat/hardening-wave1-slice）
+| task_id | status | commit | note |
+|---|---|---|---|
+| T-F-C-4-1 | done | fece73d | URL guard coverage, 15 tests |
+| T-F-C-3-1 | done | cf5b86b | rate-limit 429+Retry-After, 6 tests |
+| T-F-B-1-1 | done | 622859c | claim_diff.sh, 4 tests |
+| T-F-A-1-1 | done | d92ece0 | saw smoke skeleton, 5 tests |
+| T-F-E-1-1 | deferred | — | pytest-cov 未在 dev deps，待装依赖决策 |
+- 30 新测试全绿；回归 59 passed 无破坏；`saw smoke --self-check` PASS。
+- ruff 未跑（未装，[TBD]）。其余 Task 按后续 Wave 推进。

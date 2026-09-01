@@ -36,6 +36,7 @@ from saw.drivers.cli.commands.tutorial_cmd import tutorial  # noqa: E402
 from saw.drivers.cli.config_tui import config  # noqa: E402
 from saw.drivers.cli.completion import completion  # noqa: E402
 from saw.drivers.cli.commands.docs_cmd import docs  # noqa: E402
+from saw.drivers.cli.commands.smoke_cmd import smoke  # noqa: E402
 
 # Register main commands
 app.command(name="init")(init)
@@ -66,6 +67,9 @@ app.command(name="completion")(completion)
 
 # Phase 34: Documentation command
 app.command(name="docs")(docs)
+
+# Smoke baseline command (T-F-A-1-1)
+app.command(name="smoke")(smoke)
 
 # Code Graph lifecycle commands
 from saw.code_graph.cli import register_code_graph_commands  # noqa: E402

@@ -22,3 +22,9 @@
 
 ## 缺口
 - [TBD] receipt 覆盖率须核验后补用例；前端 token 互通实机核验后补。
+
+## 05 增量用例（2026-09-01，feat/hardening-wave1-slice）
+| Task | 用例 | commit |
+|---|---|---|
+| T-F-C-4-1 | test_internal_and_metadata_blocked / test_non_http_scheme_blocked / test_empty_and_hostless_blocked / test_public_ip_literal_passes / test_guard_referenced_at_all_external_url_entry_points (15) | fece73d |
+| T-F-C-3-1 | test_env_override / test_defaults / test_limiter_allows_under_limit / test_limiter_blocks_over_limit / test_middleware_returns_429_with_retry_after / test_middleware_skips_health_paths (6) | cf5b86b |

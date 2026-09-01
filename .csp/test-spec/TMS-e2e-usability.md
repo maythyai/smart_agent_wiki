@@ -23,3 +23,8 @@
 
 ## 缺口
 - 无（AC 全映射）。[TBD] 命令名定后补 fixture。
+
+## 05 增量用例（2026-09-01）
+| Task | 用例 | commit |
+|---|---|---|
+| T-F-A-1-1 | test_run_smoke_all_pass / test_run_smoke_fail_marks_and_counts / test_run_smoke_exception_is_failure / test_smoke_command_exit_code / test_smoke_command_reports_duration (5) | d92ece0 |

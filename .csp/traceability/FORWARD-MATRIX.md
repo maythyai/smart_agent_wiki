@@ -47,3 +47,14 @@ PRD feature_count=5（模块）→ decomposition 5 域 → 20 原子 Feature →
 | F-E-3 | SPEC-F-E-3 | T-F-E-3-1 | 3 |
 
 链：PRD AC → Feature → Spec → Task，全 20 闭环。
+
+## 05 实施进度（commit 续写）
+| Task | status | commit |
+|---|---|---|
+| T-F-C-4-1 | done | fece73d |
+| T-F-C-3-1 | done | cf5b86b |
+| T-F-B-1-1 | done | 622859c |
+| T-F-A-1-1 | done | d92ece0 |
+| T-F-E-1-1 | deferred | — |
+
+链 PRD AC → Feature → Spec → Task → commit 续写；本切片覆盖 AC-SEC-1(URL guard)/AC-SEC-3(限流)/AC-ALIGN-1(宣称diff)/AC-E2E-1(冒烟骨架 partial)。
