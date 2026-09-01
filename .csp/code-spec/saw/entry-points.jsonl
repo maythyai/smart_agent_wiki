@@ -1,0 +1,215 @@
+{"kind":"cli","id":"cli:init","file":"src/saw/drivers/cli/commands/init_cmd.py","line":22,"method":"init","scenario":"[inferred] init CLI command"}
+{"kind":"cli","id":"cli:status","file":"src/saw/drivers/cli/commands/status_cmd.py","line":18,"method":"status","scenario":"[inferred] status CLI command"}
+{"kind":"cli","id":"cli:ingest","file":"src/saw/drivers/cli/commands/ingest_cmd.py","line":35,"method":"ingest","scenario":"[inferred] ingest CLI command"}
+{"kind":"cli","id":"cli:ingest-media","file":"src/saw/drivers/cli/commands/ingest_media_cmd.py","line":31,"method":"ingest-media","scenario":"[inferred] ingest-media CLI command"}
+{"kind":"cli","id":"cli:query","file":"src/saw/drivers/cli/commands/query_cmd.py","line":31,"method":"query","scenario":"[inferred] query CLI command"}
+{"kind":"cli","id":"cli:search","file":"src/saw/drivers/cli/commands/search_cmd.py","line":24,"method":"search","scenario":"[inferred] search CLI command"}
+{"kind":"cli","id":"cli:lint","file":"src/saw/drivers/cli/commands/lint_cmd.py","line":12,"method":"lint","scenario":"[inferred] lint CLI command"}
+{"kind":"cli","id":"cli:verify","file":"src/saw/drivers/cli/commands/verify_cmd.py","line":12,"method":"verify","scenario":"[inferred] verify CLI command"}
+{"kind":"cli","id":"cli:freshness","file":"src/saw/drivers/cli/commands/freshness_cmd.py","line":12,"method":"freshness","scenario":"[inferred] freshness CLI command"}
+{"kind":"cli","id":"cli:review","file":"src/saw/drivers/cli/commands/review_cmd.py","line":13,"method":"review","scenario":"[inferred] review CLI command"}
+{"kind":"cli","id":"cli:conflicts","file":"src/saw/drivers/cli/commands/conflicts_cmd.py","line":18,"method":"conflicts","scenario":"[inferred] conflicts CLI command"}
+{"kind":"cli","id":"cli:audit","file":"src/saw/drivers/cli/commands/audit_cmd.py","line":17,"method":"audit","scenario":"[inferred] audit CLI command"}
+{"kind":"cli","id":"cli:mcp","file":"src/saw/drivers/cli/commands/mcp_cmd.py","line":16,"method":"mcp","scenario":"[inferred] mcp CLI command"}
+{"kind":"cli","id":"cli:web","file":"src/saw/drivers/cli/commands/web_cmd.py","line":14,"method":"web","scenario":"[inferred] web CLI command"}
+{"kind":"cli","id":"cli:tutorial","file":"src/saw/drivers/cli/commands/tutorial_cmd.py","line":230,"method":"tutorial","scenario":"[inferred] tutorial CLI command"}
+{"kind":"cli","id":"cli:i","file":"src/saw/drivers/cli/main.py","line":0,"method":"i","scenario":"[inferred] alias of ingest (line unresolved, [TBD])"}
+{"kind":"cli","id":"cli:q","file":"src/saw/drivers/cli/main.py","line":0,"method":"q","scenario":"[inferred] alias of query (line unresolved, [TBD])"}
+{"kind":"cli","id":"cli:s","file":"src/saw/drivers/cli/main.py","line":0,"method":"s","scenario":"[inferred] alias of status (line unresolved, [TBD])"}
+{"kind":"cli","id":"cli:w","file":"src/saw/drivers/cli/main.py","line":0,"method":"w","scenario":"[inferred] alias of web (line unresolved, [TBD])"}
+{"kind":"cli","id":"cli:v","file":"src/saw/drivers/cli/main.py","line":0,"method":"v","scenario":"[inferred] alias of verify (line unresolved, [TBD])"}
+{"kind":"cli","id":"cli:l","file":"src/saw/drivers/cli/main.py","line":0,"method":"l","scenario":"[inferred] alias of lint (line unresolved, [TBD])"}
+{"kind":"cli","id":"cli:feed:add","file":"src/saw/drivers/cli/commands/feed_cmd.py","line":43,"method":"feed add","scenario":"[inferred] RSS feed add"}
+{"kind":"cli","id":"cli:feed:list","file":"src/saw/drivers/cli/commands/feed_cmd.py","line":84,"method":"feed list","scenario":"[inferred] RSS feed list"}
+{"kind":"cli","id":"cli:feed:poll","file":"src/saw/drivers/cli/commands/feed_cmd.py","line":137,"method":"feed poll","scenario":"[inferred] RSS feed poll"}
+{"kind":"cli","id":"cli:feed:remove","file":"src/saw/drivers/cli/commands/feed_cmd.py","line":166,"method":"feed remove","scenario":"[inferred] RSS feed remove"}
+{"kind":"cli","id":"cli:feed:update","file":"src/saw/drivers/cli/commands/feed_cmd.py","line":187,"method":"feed update","scenario":"[inferred] RSS feed update"}
+{"kind":"cli","id":"cli:feed:entries","file":"src/saw/drivers/cli/commands/feed_cmd.py","line":217,"method":"feed entries","scenario":"[inferred] RSS feed entries"}
+{"kind":"cli","id":"cli:feed:info","file":"src/saw/drivers/cli/commands/feed_cmd.py","line":264,"method":"feed info","scenario":"[inferred] RSS feed info"}
+{"kind":"cli","id":"cli:feed:import","file":"src/saw/drivers/cli/commands/feed_cmd.py","line":306,"method":"feed import","scenario":"[inferred] RSS feed import"}
+{"kind":"cli","id":"cli:feed:export","file":"src/saw/drivers/cli/commands/feed_cmd.py","line":360,"method":"feed export","scenario":"[inferred] RSS feed export"}
+{"kind":"cli","id":"cli:plugin:list","file":"src/saw/drivers/cli/commands/plugin_cmd.py","line":19,"method":"plugin list","scenario":"[inferred] plugin list"}
+{"kind":"cli","id":"cli:plugin:install","file":"src/saw/drivers/cli/commands/plugin_cmd.py","line":43,"method":"plugin install","scenario":"[inferred] plugin install"}
+{"kind":"cli","id":"cli:plugin:enable","file":"src/saw/drivers/cli/commands/plugin_cmd.py","line":69,"method":"plugin enable","scenario":"[inferred] plugin enable"}
+{"kind":"cli","id":"cli:plugin:disable","file":"src/saw/drivers/cli/commands/plugin_cmd.py","line":97,"method":"plugin disable","scenario":"[inferred] plugin disable"}
+{"kind":"cli","id":"cli:plugin:uninstall","file":"src/saw/drivers/cli/commands/plugin_cmd.py","line":112,"method":"plugin uninstall","scenario":"[inferred] plugin uninstall"}
+{"kind":"cli","id":"cli:code-graph","file":"src/saw/code_graph/cli.py","line":0,"method":"code-graph <sub>","scenario":"[TBD] sub-commands registered via register_code_graph_commands; enumerate in 05"}
+{"kind":"cli","id":"cli:compile","file":"src/saw/drivers/cli/commands/compile_cmd.py","line":0,"method":"compile <sub>","scenario":"[TBD] wiki/archive/concept/issue/cr/code-wiki sub-apps via register_compile_commands; enumerate in 05"}
+{"kind":"mcp","id":"mcp:saw_code_query","file":"src/saw/drivers/mcp/tools/code_graph.py","line":30,"method":"saw_code_query","scenario":"[inferred] MCP tool saw_code_query"}
+{"kind":"mcp","id":"mcp:saw_code_search","file":"src/saw/drivers/mcp/tools/code_graph.py","line":56,"method":"saw_code_search","scenario":"[inferred] MCP tool saw_code_search"}
+{"kind":"mcp","id":"mcp:saw_architecture","file":"src/saw/drivers/mcp/tools/code_graph.py","line":81,"method":"saw_architecture","scenario":"[inferred] MCP tool saw_architecture"}
+{"kind":"mcp","id":"mcp:saw_flows","file":"src/saw/drivers/mcp/tools/code_graph.py","line":103,"method":"saw_flows","scenario":"[inferred] MCP tool saw_flows"}
+{"kind":"mcp","id":"mcp:saw_code_context","file":"src/saw/drivers/mcp/tools/code_graph.py","line":132,"method":"saw_code_context","scenario":"[inferred] MCP tool saw_code_context"}
+{"kind":"mcp","id":"mcp:saw_impact","file":"src/saw/drivers/mcp/tools/code_graph.py","line":161,"method":"saw_impact","scenario":"[inferred] MCP tool saw_impact"}
+{"kind":"mcp","id":"mcp:saw_workflow","file":"src/saw/drivers/mcp/tools/collaborate.py","line":27,"method":"saw_workflow","scenario":"[inferred] MCP tool saw_workflow"}
+{"kind":"mcp","id":"mcp:saw_feedback","file":"src/saw/drivers/mcp/tools/collaborate.py","line":89,"method":"saw_feedback","scenario":"[inferred] MCP tool saw_feedback"}
+{"kind":"mcp","id":"mcp:saw_wiki_compile","file":"src/saw/drivers/mcp/tools/compile.py","line":44,"method":"saw_wiki_compile","scenario":"[inferred] MCP tool saw_wiki_compile"}
+{"kind":"mcp","id":"mcp:saw_wiki_index","file":"src/saw/drivers/mcp/tools/compile.py","line":70,"method":"saw_wiki_index","scenario":"[inferred] MCP tool saw_wiki_index"}
+{"kind":"mcp","id":"mcp:saw_wiki_page","file":"src/saw/drivers/mcp/tools/compile.py","line":90,"method":"saw_wiki_page","scenario":"[inferred] MCP tool saw_wiki_page"}
+{"kind":"mcp","id":"mcp:saw_wiki_log","file":"src/saw/drivers/mcp/tools/compile.py","line":119,"method":"saw_wiki_log","scenario":"[inferred] MCP tool saw_wiki_log"}
+{"kind":"mcp","id":"mcp:saw_archive","file":"src/saw/drivers/mcp/tools/compile.py","line":147,"method":"saw_archive","scenario":"[inferred] MCP tool saw_archive"}
+{"kind":"mcp","id":"mcp:saw_archive_suggest","file":"src/saw/drivers/mcp/tools/compile.py","line":168,"method":"saw_archive_suggest","scenario":"[inferred] MCP tool saw_archive_suggest"}
+{"kind":"mcp","id":"mcp:saw_wiki_lint","file":"src/saw/drivers/mcp/tools/compile.py","line":187,"method":"saw_wiki_lint","scenario":"[inferred] MCP tool saw_wiki_lint"}
+{"kind":"mcp","id":"mcp:saw_concept_list","file":"src/saw/drivers/mcp/tools/compile.py","line":205,"method":"saw_concept_list","scenario":"[inferred] MCP tool saw_concept_list"}
+{"kind":"mcp","id":"mcp:saw_concept_view","file":"src/saw/drivers/mcp/tools/compile.py","line":227,"method":"saw_concept_view","scenario":"[inferred] MCP tool saw_concept_view"}
+{"kind":"mcp","id":"mcp:saw_concept_relate","file":"src/saw/drivers/mcp/tools/compile.py","line":259,"method":"saw_concept_relate","scenario":"[inferred] MCP tool saw_concept_relate"}
+{"kind":"mcp","id":"mcp:saw_graph_overview","file":"src/saw/drivers/mcp/tools/compile.py","line":289,"method":"saw_graph_overview","scenario":"[inferred] MCP tool saw_graph_overview"}
+{"kind":"mcp","id":"mcp:saw_navigate","file":"src/saw/drivers/mcp/tools/compile.py","line":307,"method":"saw_navigate","scenario":"[inferred] MCP tool saw_navigate"}
+{"kind":"mcp","id":"mcp:saw_issue_create","file":"src/saw/drivers/mcp/tools/compile.py","line":346,"method":"saw_issue_create","scenario":"[inferred] MCP tool saw_issue_create"}
+{"kind":"mcp","id":"mcp:saw_issue_list","file":"src/saw/drivers/mcp/tools/compile.py","line":372,"method":"saw_issue_list","scenario":"[inferred] MCP tool saw_issue_list"}
+{"kind":"mcp","id":"mcp:saw_cr_create","file":"src/saw/drivers/mcp/tools/compile.py","line":406,"method":"saw_cr_create","scenario":"[inferred] MCP tool saw_cr_create"}
+{"kind":"mcp","id":"mcp:saw_cr_review","file":"src/saw/drivers/mcp/tools/compile.py","line":431,"method":"saw_cr_review","scenario":"[inferred] MCP tool saw_cr_review"}
+{"kind":"mcp","id":"mcp:saw_code_wiki_generate","file":"src/saw/drivers/mcp/tools/compile.py","line":453,"method":"saw_code_wiki_generate","scenario":"[inferred] MCP tool saw_code_wiki_generate"}
+{"kind":"mcp","id":"mcp:saw_code_wiki_status","file":"src/saw/drivers/mcp/tools/compile.py","line":482,"method":"saw_code_wiki_status","scenario":"[inferred] MCP tool saw_code_wiki_status"}
+{"kind":"mcp","id":"mcp:saw_lint","file":"src/saw/drivers/mcp/tools/govern.py","line":41,"method":"saw_lint","scenario":"[inferred] MCP tool saw_lint"}
+{"kind":"mcp","id":"mcp:saw_conflicts","file":"src/saw/drivers/mcp/tools/govern.py","line":81,"method":"saw_conflicts","scenario":"[inferred] MCP tool saw_conflicts"}
+{"kind":"mcp","id":"mcp:saw_verify","file":"src/saw/drivers/mcp/tools/govern.py","line":116,"method":"saw_verify","scenario":"[inferred] MCP tool saw_verify"}
+{"kind":"mcp","id":"mcp:saw_freshness","file":"src/saw/drivers/mcp/tools/govern.py","line":155,"method":"saw_freshness","scenario":"[inferred] MCP tool saw_freshness"}
+{"kind":"mcp","id":"mcp:saw_review","file":"src/saw/drivers/mcp/tools/govern.py","line":182,"method":"saw_review","scenario":"[inferred] MCP tool saw_review"}
+{"kind":"mcp","id":"mcp:saw_audit","file":"src/saw/drivers/mcp/tools/govern.py","line":211,"method":"saw_audit","scenario":"[inferred] MCP tool saw_audit"}
+{"kind":"mcp","id":"mcp:saw_blast_radius","file":"src/saw/drivers/mcp/tools/govern.py","line":249,"method":"saw_blast_radius","scenario":"[inferred] MCP tool saw_blast_radius"}
+{"kind":"mcp","id":"mcp:saw_ingest","file":"src/saw/drivers/mcp/tools/ingest.py","line":27,"method":"saw_ingest","scenario":"[inferred] MCP tool saw_ingest"}
+{"kind":"mcp","id":"mcp:saw_reparse","file":"src/saw/drivers/mcp/tools/ingest.py","line":75,"method":"saw_reparse","scenario":"[inferred] MCP tool saw_reparse"}
+{"kind":"mcp","id":"mcp:saw_status","file":"src/saw/drivers/mcp/tools/learn.py","line":27,"method":"saw_status","scenario":"[inferred] MCP tool saw_status"}
+{"kind":"mcp","id":"mcp:saw_learn","file":"src/saw/drivers/mcp/tools/learn.py","line":59,"method":"saw_learn","scenario":"[inferred] MCP tool saw_learn"}
+{"kind":"mcp","id":"mcp:saw_distill","file":"src/saw/drivers/mcp/tools/learn.py","line":95,"method":"saw_distill","scenario":"[inferred] MCP tool saw_distill"}
+{"kind":"mcp","id":"mcp:saw_suggest","file":"src/saw/drivers/mcp/tools/learn.py","line":126,"method":"saw_suggest","scenario":"[inferred] MCP tool saw_suggest"}
+{"kind":"mcp","id":"mcp:saw_wip","file":"src/saw/drivers/mcp/tools/learn.py","line":167,"method":"saw_wip","scenario":"[inferred] MCP tool saw_wip"}
+{"kind":"mcp","id":"mcp:saw_wiki_link","file":"src/saw/drivers/mcp/tools/links.py","line":29,"method":"saw_wiki_link","scenario":"[inferred] MCP tool saw_wiki_link"}
+{"kind":"mcp","id":"mcp:saw_wiki_unlink","file":"src/saw/drivers/mcp/tools/links.py","line":89,"method":"saw_wiki_unlink","scenario":"[inferred] MCP tool saw_wiki_unlink"}
+{"kind":"mcp","id":"mcp:saw_backlinks","file":"src/saw/drivers/mcp/tools/links.py","line":147,"method":"saw_backlinks","scenario":"[inferred] MCP tool saw_backlinks"}
+{"kind":"mcp","id":"mcp:saw_outlinks","file":"src/saw/drivers/mcp/tools/links.py","line":197,"method":"saw_outlinks","scenario":"[inferred] MCP tool saw_outlinks"}
+{"kind":"mcp","id":"mcp:saw_page_create","file":"src/saw/drivers/mcp/tools/pages.py","line":29,"method":"saw_page_create","scenario":"[inferred] MCP tool saw_page_create"}
+{"kind":"mcp","id":"mcp:saw_page_update","file":"src/saw/drivers/mcp/tools/pages.py","line":87,"method":"saw_page_update","scenario":"[inferred] MCP tool saw_page_update"}
+{"kind":"mcp","id":"mcp:saw_page_delete","file":"src/saw/drivers/mcp/tools/pages.py","line":147,"method":"saw_page_delete","scenario":"[inferred] MCP tool saw_page_delete"}
+{"kind":"mcp","id":"mcp:saw_page_read","file":"src/saw/drivers/mcp/tools/pages.py","line":200,"method":"saw_page_read","scenario":"[inferred] MCP tool saw_page_read"}
+{"kind":"mcp","id":"mcp:saw_page_list","file":"src/saw/drivers/mcp/tools/pages.py","line":228,"method":"saw_page_list","scenario":"[inferred] MCP tool saw_page_list"}
+{"kind":"mcp","id":"mcp:saw_query","file":"src/saw/drivers/mcp/tools/query.py","line":45,"method":"saw_query","scenario":"[inferred] MCP tool saw_query"}
+{"kind":"mcp","id":"mcp:saw_search","file":"src/saw/drivers/mcp/tools/query.py","line":90,"method":"saw_search","scenario":"[inferred] MCP tool saw_search"}
+{"kind":"mcp","id":"mcp:saw_tree_search","file":"src/saw/drivers/mcp/tools/query.py","line":125,"method":"saw_tree_search","scenario":"[inferred] MCP tool saw_tree_search"}
+{"kind":"mcp","id":"mcp:saw_graph","file":"src/saw/drivers/mcp/tools/query.py","line":156,"method":"saw_graph","scenario":"[inferred] MCP tool saw_graph"}
+{"kind":"mcp","id":"mcp:saw_compare","file":"src/saw/drivers/mcp/tools/query.py","line":198,"method":"saw_compare","scenario":"[inferred] MCP tool saw_compare"}
+{"kind":"mcp","id":"mcp:saw_compile","file":"src/saw/drivers/mcp/tools/query.py","line":245,"method":"saw_compile","scenario":"[inferred] MCP tool saw_compile"}
+{"kind":"mcp","id":"mcp:saw_coverage","file":"src/saw/drivers/mcp/tools/query.py","line":281,"method":"saw_coverage","scenario":"[inferred] MCP tool saw_coverage"}
+{"kind":"mcp","id":"mcp:saw_challenge","file":"src/saw/drivers/mcp/tools/thinking.py","line":30,"method":"saw_challenge","scenario":"[inferred] MCP tool saw_challenge"}
+{"kind":"mcp","id":"mcp:saw_connect","file":"src/saw/drivers/mcp/tools/thinking.py","line":37,"method":"saw_connect","scenario":"[inferred] MCP tool saw_connect"}
+{"kind":"mcp","id":"mcp:saw_context","file":"src/saw/drivers/mcp/tools/thinking.py","line":44,"method":"saw_context","scenario":"[inferred] MCP tool saw_context"}
+{"kind":"mcp","id":"mcp:saw_emerge","file":"src/saw/drivers/mcp/tools/thinking.py","line":51,"method":"saw_emerge","scenario":"[inferred] MCP tool saw_emerge"}
+{"kind":"mcp","id":"mcp:saw_graduate","file":"src/saw/drivers/mcp/tools/thinking.py","line":58,"method":"saw_graduate","scenario":"[inferred] MCP tool saw_graduate"}
+{"kind":"web","id":"web:api/connector_settings.py:130","file":"src/saw/api/connector_settings.py","line":130,"method":"get","route":"/{platform}/settings","prefix":"/api/v1/connectors","scenario":"[inferred] get /{platform}/settings"}
+{"kind":"web","id":"web:api/connector_settings.py:178","file":"src/saw/api/connector_settings.py","line":178,"method":"put","route":"/{platform}/settings","prefix":"/api/v1/connectors","scenario":"[inferred] put /{platform}/settings"}
+{"kind":"web","id":"web:api/connector_settings.py:246","file":"src/saw/api/connector_settings.py","line":246,"method":"post","route":"/{platform}/reauth","prefix":"/api/v1/connectors","scenario":"[inferred] post /{platform}/reauth"}
+{"kind":"web","id":"web:api/dashboard_stats.py:17","file":"src/saw/api/dashboard_stats.py","line":17,"method":"get","route":"/api/dashboard/stats","prefix":"(mounted at include_router)","scenario":"[inferred] get /api/dashboard/stats"}
+{"kind":"web","id":"web:api/feeds.py:194","file":"src/saw/api/feeds.py","line":194,"method":"get","route":"(see source)","prefix":"/api/v1/feeds","scenario":"[inferred] get (see source)"}
+{"kind":"web","id":"web:api/feeds.py:241","file":"src/saw/api/feeds.py","line":241,"method":"post","route":"(see source)","prefix":"/api/v1/feeds","scenario":"[inferred] post (see source)"}
+{"kind":"web","id":"web:api/feeds.py:291","file":"src/saw/api/feeds.py","line":291,"method":"get","route":"/{feed_id}","prefix":"/api/v1/feeds","scenario":"[inferred] get /{feed_id}"}
+{"kind":"web","id":"web:api/feeds.py:325","file":"src/saw/api/feeds.py","line":325,"method":"put","route":"/{feed_id}","prefix":"/api/v1/feeds","scenario":"[inferred] put /{feed_id}"}
+{"kind":"web","id":"web:api/feeds.py:377","file":"src/saw/api/feeds.py","line":377,"method":"delete","route":"/{feed_id}","prefix":"/api/v1/feeds","scenario":"[inferred] delete /{feed_id}"}
+{"kind":"web","id":"web:api/feeds.py:401","file":"src/saw/api/feeds.py","line":401,"method":"get","route":"/{feed_id}/entries","prefix":"/api/v1/feeds","scenario":"[inferred] get /{feed_id}/entries"}
+{"kind":"web","id":"web:api/feeds.py:437","file":"src/saw/api/feeds.py","line":437,"method":"post","route":"/{feed_id}/poll","prefix":"/api/v1/feeds","scenario":"[inferred] post /{feed_id}/poll"}
+{"kind":"web","id":"web:api/feeds.py:469","file":"src/saw/api/feeds.py","line":469,"method":"post","route":"/import","prefix":"/api/v1/feeds","scenario":"[inferred] post /import"}
+{"kind":"web","id":"web:api/feeds.py:527","file":"src/saw/api/feeds.py","line":527,"method":"get","route":"/export","prefix":"/api/v1/feeds","scenario":"[inferred] get /export"}
+{"kind":"web","id":"web:api/github_webhook.py:58","file":"src/saw/api/github_webhook.py","line":58,"method":"post","route":"(see source)","prefix":"/webhooks/github","scenario":"[inferred] post (see source)"}
+{"kind":"web","id":"web:api/github_webhook.py:119","file":"src/saw/api/github_webhook.py","line":119,"method":"get","route":"/health","prefix":"/webhooks/github","scenario":"[inferred] get /health"}
+{"kind":"web","id":"web:api/github_webhook.py:129","file":"src/saw/api/github_webhook.py","line":129,"method":"post","route":"/reconcile","prefix":"/webhooks/github","scenario":"[inferred] post /reconcile"}
+{"kind":"web","id":"web:api/github.py:89","file":"src/saw/api/github.py","line":89,"method":"get","route":"/repositories","prefix":"/connectors/github","scenario":"[inferred] get /repositories"}
+{"kind":"web","id":"web:api/github.py:120","file":"src/saw/api/github.py","line":120,"method":"post","route":"/repositories/select","prefix":"/connectors/github","scenario":"[inferred] post /repositories/select"}
+{"kind":"web","id":"web:api/github.py:152","file":"src/saw/api/github.py","line":152,"method":"get","route":"/repositories/selected","prefix":"/connectors/github","scenario":"[inferred] get /repositories/selected"}
+{"kind":"web","id":"web:api/github.py:186","file":"src/saw/api/github.py","line":186,"method":"patch","route":"/repositories/{repository_id:path}","prefix":"/connectors/github","scenario":"[inferred] patch /repositories/{repository_id:path}"}
+{"kind":"web","id":"web:api/github.py:219","file":"src/saw/api/github.py","line":219,"method":"delete","route":"/repositories/{repository_id:path}","prefix":"/connectors/github","scenario":"[inferred] delete /repositories/{repository_id:path}"}
+{"kind":"web","id":"web:api/github.py:249","file":"src/saw/api/github.py","line":249,"method":"get","route":"/rate-limit","prefix":"/connectors/github","scenario":"[inferred] get /rate-limit"}
+{"kind":"web","id":"web:api/github.py:268","file":"src/saw/api/github.py","line":268,"method":"get","route":"/status","prefix":"/connectors/github","scenario":"[inferred] get /status"}
+{"kind":"web","id":"web:api/github.py:305","file":"src/saw/api/github.py","line":305,"method":"get","route":"/health","prefix":"/connectors/github","scenario":"[inferred] get /health"}
+{"kind":"web","id":"web:api/health.py:85","file":"src/saw/api/health.py","line":85,"method":"get","route":"(see source)","prefix":"/api/v1/health","scenario":"[inferred] get (see source)"}
+{"kind":"web","id":"web:api/health.py:96","file":"src/saw/api/health.py","line":96,"method":"get","route":"/status","prefix":"/api/v1/health","scenario":"[inferred] get /status"}
+{"kind":"web","id":"web:api/health.py:113","file":"src/saw/api/health.py","line":113,"method":"get","route":"/{connector_id}","prefix":"/api/v1/health","scenario":"[inferred] get /{connector_id}"}
+{"kind":"web","id":"web:api/integrations_ws.py:37","file":"src/saw/api/integrations_ws.py","line":37,"method":"websocket","route":"/integrations","prefix":"(mounted at include_router)","scenario":"[inferred] websocket /integrations"}
+{"kind":"web","id":"web:api/integrations.py:86","file":"src/saw/api/integrations.py","line":86,"method":"get","route":"/dashboard","prefix":"/api/v1/integrations","scenario":"[inferred] get /dashboard"}
+{"kind":"web","id":"web:api/integrations.py:189","file":"src/saw/api/integrations.py","line":189,"method":"delete","route":"/{platform}","prefix":"/api/v1/integrations","scenario":"[inferred] delete /{platform}"}
+{"kind":"web","id":"web:api/integrations.py:223","file":"src/saw/api/integrations.py","line":223,"method":"post","route":"/{platform}/sync","prefix":"/api/v1/integrations","scenario":"[inferred] post /{platform}/sync"}
+{"kind":"web","id":"web:api/integrations.py:295","file":"src/saw/api/integrations.py","line":295,"method":"get","route":"/{platform}/errors","prefix":"/api/v1/integrations","scenario":"[inferred] get /{platform}/errors"}
+{"kind":"web","id":"web:api/integrations.py:326","file":"src/saw/api/integrations.py","line":326,"method":"get","route":"/{platform}/reauth","prefix":"/api/v1/integrations","scenario":"[inferred] get /{platform}/reauth"}
+{"kind":"web","id":"web:api/logseq.py:55","file":"src/saw/api/logseq.py","line":55,"method":"post","route":"/connect","prefix":"/api/v1/logseq","scenario":"[inferred] post /connect"}
+{"kind":"web","id":"web:api/logseq.py:83","file":"src/saw/api/logseq.py","line":83,"method":"get","route":"/status","prefix":"/api/v1/logseq","scenario":"[inferred] get /status"}
+{"kind":"web","id":"web:api/logseq.py:109","file":"src/saw/api/logseq.py","line":109,"method":"post","route":"/sync","prefix":"/api/v1/logseq","scenario":"[inferred] post /sync"}
+{"kind":"web","id":"web:api/logseq.py:127","file":"src/saw/api/logseq.py","line":127,"method":"post","route":"/watch/start","prefix":"/api/v1/logseq","scenario":"[inferred] post /watch/start"}
+{"kind":"web","id":"web:api/logseq.py:156","file":"src/saw/api/logseq.py","line":156,"method":"post","route":"/watch/stop","prefix":"/api/v1/logseq","scenario":"[inferred] post /watch/stop"}
+{"kind":"web","id":"web:api/notion_sync.py:109","file":"src/saw/api/notion_sync.py","line":109,"method":"post","route":"/trigger","prefix":"/connectors/notion/sync","scenario":"[inferred] post /trigger"}
+{"kind":"web","id":"web:api/notion_sync.py:141","file":"src/saw/api/notion_sync.py","line":141,"method":"get","route":"/status","prefix":"/connectors/notion/sync","scenario":"[inferred] get /status"}
+{"kind":"web","id":"web:api/notion_sync.py:155","file":"src/saw/api/notion_sync.py","line":155,"method":"post","route":"/pull","prefix":"/connectors/notion/sync","scenario":"[inferred] post /pull"}
+{"kind":"web","id":"web:api/notion_sync.py:169","file":"src/saw/api/notion_sync.py","line":169,"method":"post","route":"/push","prefix":"/connectors/notion/sync","scenario":"[inferred] post /push"}
+{"kind":"web","id":"web:api/notion_sync.py:182","file":"src/saw/api/notion_sync.py","line":182,"method":"post","route":"/poll/start","prefix":"/connectors/notion/sync","scenario":"[inferred] post /poll/start"}
+{"kind":"web","id":"web:api/notion_sync.py:198","file":"src/saw/api/notion_sync.py","line":198,"method":"post","route":"/poll/stop","prefix":"/connectors/notion/sync","scenario":"[inferred] post /poll/stop"}
+{"kind":"web","id":"web:api/notion_sync.py:207","file":"src/saw/api/notion_sync.py","line":207,"method":"get","route":"/conflicts","prefix":"/connectors/notion/sync","scenario":"[inferred] get /conflicts"}
+{"kind":"web","id":"web:api/notion_sync.py:218","file":"src/saw/api/notion_sync.py","line":218,"method":"post","route":"/conflicts/{conflict_id}/resolve","prefix":"/connectors/notion/sync","scenario":"[inferred] post /conflicts/{conflict_id}/resolve"}
+{"kind":"web","id":"web:api/notion.py:83","file":"src/saw/api/notion.py","line":83,"method":"get","route":"/databases","prefix":"/connectors/notion","scenario":"[inferred] get /databases"}
+{"kind":"web","id":"web:api/notion.py:107","file":"src/saw/api/notion.py","line":107,"method":"post","route":"/databases/select","prefix":"/connectors/notion","scenario":"[inferred] post /databases/select"}
+{"kind":"web","id":"web:api/notion.py:129","file":"src/saw/api/notion.py","line":129,"method":"get","route":"/databases/selected","prefix":"/connectors/notion","scenario":"[inferred] get /databases/selected"}
+{"kind":"web","id":"web:api/notion.py:158","file":"src/saw/api/notion.py","line":158,"method":"patch","route":"/databases/{database_id}/mapping","prefix":"/connectors/notion","scenario":"[inferred] patch /databases/{database_id}/mapping"}
+{"kind":"web","id":"web:api/oauth_callback.py:87","file":"src/saw/api/oauth_callback.py","line":87,"method":"get","route":"/platforms","prefix":"/api/v1/oauth","scenario":"[inferred] get /platforms"}
+{"kind":"web","id":"web:api/oauth_callback.py:104","file":"src/saw/api/oauth_callback.py","line":104,"method":"get","route":"/{platform}/authorize","prefix":"/api/v1/oauth","scenario":"[inferred] get /{platform}/authorize"}
+{"kind":"web","id":"web:api/oauth_callback.py:146","file":"src/saw/api/oauth_callback.py","line":146,"method":"get","route":"/{platform}/callback","prefix":"/api/v1/oauth","scenario":"[inferred] get /{platform}/callback"}
+{"kind":"web","id":"web:api/routes/collaborate.py:230","file":"src/saw/api/routes/collaborate.py","line":230,"method":"post","route":"/workflows","prefix":"/api/v1","scenario":"[inferred] post /workflows"}
+{"kind":"web","id":"web:api/routes/collaborate.py:327","file":"src/saw/api/routes/collaborate.py","line":327,"method":"get","route":"/workflows","prefix":"/api/v1","scenario":"[inferred] get /workflows"}
+{"kind":"web","id":"web:api/routes/collaborate.py:338","file":"src/saw/api/routes/collaborate.py","line":338,"method":"get","route":"/workflows/{workflow_id}/status","prefix":"/api/v1","scenario":"[inferred] get /workflows/{workflow_id}/status"}
+{"kind":"web","id":"web:api/routes/govern.py:83","file":"src/saw/api/routes/govern.py","line":83,"method":"get","route":"/claims/{claim_id}","prefix":"/api/v1","scenario":"[inferred] get /claims/{claim_id}"}
+{"kind":"web","id":"web:api/routes/govern.py:136","file":"src/saw/api/routes/govern.py","line":136,"method":"patch","route":"/claims/{claim_id}/confidence","prefix":"/api/v1","scenario":"[inferred] patch /claims/{claim_id}/confidence"}
+{"kind":"web","id":"web:api/routes/govern.py:165","file":"src/saw/api/routes/govern.py","line":165,"method":"get","route":"/contradictions","prefix":"/api/v1","scenario":"[inferred] get /contradictions"}
+{"kind":"web","id":"web:api/routes/govern.py:186","file":"src/saw/api/routes/govern.py","line":186,"method":"post","route":"/contradictions/{contradiction_id}/resolve","prefix":"/api/v1","scenario":"[inferred] post /contradictions/{contradiction_id}/resolve"}
+{"kind":"web","id":"web:api/routes/govern.py:211","file":"src/saw/api/routes/govern.py","line":211,"method":"post","route":"/verify","prefix":"/api/v1","scenario":"[inferred] post /verify"}
+{"kind":"web","id":"web:api/routes/govern.py:236","file":"src/saw/api/routes/govern.py","line":236,"method":"post","route":"/lint","prefix":"/api/v1","scenario":"[inferred] post /lint"}
+{"kind":"web","id":"web:api/routes/govern.py:302","file":"src/saw/api/routes/govern.py","line":302,"method":"post","route":"/blast-radius","prefix":"/api/v1","scenario":"[inferred] post /blast-radius"}
+{"kind":"web","id":"web:api/routes/govern.py:364","file":"src/saw/api/routes/govern.py","line":364,"method":"get","route":"/status","prefix":"/api/v1","scenario":"[inferred] get /status"}
+{"kind":"web","id":"web:api/routes/impact.py:54","file":"src/saw/api/routes/impact.py","line":54,"method":"post","route":"/","prefix":"/api/impact","scenario":"[inferred] post /"}
+{"kind":"web","id":"web:api/routes/impact.py:82","file":"src/saw/api/routes/impact.py","line":82,"method":"get","route":"/{target}","prefix":"/api/impact","scenario":"[inferred] get /{target}"}
+{"kind":"web","id":"web:api/routes/impact.py:111","file":"src/saw/api/routes/impact.py","line":111,"method":"get","route":"/{target}/graph","prefix":"/api/impact","scenario":"[inferred] get /{target}/graph"}
+{"kind":"web","id":"web:api/routes/query_ingest_learn.py:66","file":"src/saw/api/routes/query_ingest_learn.py","line":66,"method":"post","route":"/query","prefix":"/api/v1","scenario":"[inferred] post /query"}
+{"kind":"web","id":"web:api/routes/query_ingest_learn.py:97","file":"src/saw/api/routes/query_ingest_learn.py","line":97,"method":"post","route":"/compare","prefix":"/api/v1","scenario":"[inferred] post /compare"}
+{"kind":"web","id":"web:api/routes/query_ingest_learn.py:126","file":"src/saw/api/routes/query_ingest_learn.py","line":126,"method":"post","route":"/compile","prefix":"/api/v1","scenario":"[inferred] post /compile"}
+{"kind":"web","id":"web:api/routes/query_ingest_learn.py:146","file":"src/saw/api/routes/query_ingest_learn.py","line":146,"method":"post","route":"/ingest","prefix":"/api/v1","scenario":"[inferred] post /ingest"}
+{"kind":"web","id":"web:api/routes/query_ingest_learn.py:186","file":"src/saw/api/routes/query_ingest_learn.py","line":186,"method":"get","route":"/ingest/{job_id}/status","prefix":"/api/v1","scenario":"[inferred] get /ingest/{job_id}/status"}
+{"kind":"web","id":"web:api/routes/query_ingest_learn.py:214","file":"src/saw/api/routes/query_ingest_learn.py","line":214,"method":"post","route":"/feedback","prefix":"/api/v1","scenario":"[inferred] post /feedback"}
+{"kind":"web","id":"web:api/routes/query_ingest_learn.py:251","file":"src/saw/api/routes/query_ingest_learn.py","line":251,"method":"post","route":"/distill","prefix":"/api/v1","scenario":"[inferred] post /distill"}
+{"kind":"web","id":"web:api/routes/query_ingest_learn.py:306","file":"src/saw/api/routes/query_ingest_learn.py","line":306,"method":"post","route":"/prune","prefix":"/api/v1","scenario":"[inferred] post /prune"}
+{"kind":"web","id":"web:api/routes/query_ingest_learn.py:388","file":"src/saw/api/routes/query_ingest_learn.py","line":388,"method":"get","route":"/trends","prefix":"/api/v1","scenario":"[inferred] get /trends"}
+{"kind":"web","id":"web:api/routes/query_ingest_learn.py:446","file":"src/saw/api/routes/query_ingest_learn.py","line":446,"method":"get","route":"/wip","prefix":"/api/v1","scenario":"[inferred] get /wip"}
+{"kind":"web","id":"web:api/routes/query_ingest_learn.py:462","file":"src/saw/api/routes/query_ingest_learn.py","line":462,"method":"put","route":"/wip","prefix":"/api/v1","scenario":"[inferred] put /wip"}
+{"kind":"web","id":"web:api/sync.py:79","file":"src/saw/api/sync.py","line":79,"method":"get","route":"/status","prefix":"/api/v1/sync","scenario":"[inferred] get /status"}
+{"kind":"web","id":"web:api/sync.py:99","file":"src/saw/api/sync.py","line":99,"method":"get","route":"/status/{connector_id}","prefix":"/api/v1/sync","scenario":"[inferred] get /status/{connector_id}"}
+{"kind":"web","id":"web:api/sync.py:131","file":"src/saw/api/sync.py","line":131,"method":"post","route":"/trigger/{connector_id}","prefix":"/api/v1/sync","scenario":"[inferred] post /trigger/{connector_id}"}
+{"kind":"web","id":"web:api/sync.py:201","file":"src/saw/api/sync.py","line":201,"method":"post","route":"/trigger-all","prefix":"/api/v1/sync","scenario":"[inferred] post /trigger-all"}
+{"kind":"web","id":"web:api/sync.py:223","file":"src/saw/api/sync.py","line":223,"method":"get","route":"/logs","prefix":"/api/v1/sync","scenario":"[inferred] get /logs"}
+{"kind":"web","id":"web:api/webhook_inbound.py:66","file":"src/saw/api/webhook_inbound.py","line":66,"method":"get","route":"/platforms","prefix":"/api/v1/webhooks","scenario":"[inferred] get /platforms"}
+{"kind":"web","id":"web:api/webhook_inbound.py:101","file":"src/saw/api/webhook_inbound.py","line":101,"method":"post","route":"/{platform}","prefix":"/api/v1/webhooks","scenario":"[inferred] post /{platform}"}
+{"kind":"web","id":"web:drivers/web/routes/auth.py:96","file":"src/saw/drivers/web/routes/auth.py","line":96,"method":"post","route":"/register","prefix":"/api/auth","scenario":"[inferred] post /register"}
+{"kind":"web","id":"web:drivers/web/routes/auth.py:152","file":"src/saw/drivers/web/routes/auth.py","line":152,"method":"post","route":"/login","prefix":"/api/auth","scenario":"[inferred] post /login"}
+{"kind":"web","id":"web:drivers/web/routes/auth.py:205","file":"src/saw/drivers/web/routes/auth.py","line":205,"method":"post","route":"/refresh","prefix":"/api/auth","scenario":"[inferred] post /refresh"}
+{"kind":"web","id":"web:drivers/web/routes/auth.py:251","file":"src/saw/drivers/web/routes/auth.py","line":251,"method":"post","route":"/logout","prefix":"/api/auth","scenario":"[inferred] post /logout"}
+{"kind":"web","id":"web:drivers/web/routes/auth.py:265","file":"src/saw/drivers/web/routes/auth.py","line":265,"method":"get","route":"/me","prefix":"/api/auth","scenario":"[inferred] get /me"}
+{"kind":"web","id":"web:drivers/web/routes/auth.py:308","file":"src/saw/drivers/web/routes/auth.py","line":308,"method":"get","route":"/mode","prefix":"/api/auth","scenario":"[inferred] get /mode"}
+{"kind":"web","id":"web:drivers/web/routes/capture.py:73","file":"src/saw/drivers/web/routes/capture.py","line":73,"method":"post","route":"/capture","prefix":"(mounted at include_router)","scenario":"[inferred] post /capture"}
+{"kind":"web","id":"web:drivers/web/routes/entity_types.py:15","file":"src/saw/drivers/web/routes/entity_types.py","line":15,"method":"get","route":"/entity-types","prefix":"(mounted at include_router)","scenario":"[inferred] get /entity-types"}
+{"kind":"web","id":"web:drivers/web/routes/entity_types.py:22","file":"src/saw/drivers/web/routes/entity_types.py","line":22,"method":"get","route":"/entity-types/{type_id}","prefix":"(mounted at include_router)","scenario":"[inferred] get /entity-types/{type_id}"}
+{"kind":"web","id":"web:drivers/web/routes/graph.py:31","file":"src/saw/drivers/web/routes/graph.py","line":31,"method":"get","route":"/graph","prefix":"(mounted at include_router)","scenario":"[inferred] get /graph"}
+{"kind":"web","id":"web:drivers/web/routes/graph.py:149","file":"src/saw/drivers/web/routes/graph.py","line":149,"method":"get","route":"/graph/{entity}","prefix":"(mounted at include_router)","scenario":"[inferred] get /graph/{entity}"}
+{"kind":"web","id":"web:drivers/web/routes/import_md.py:63","file":"src/saw/drivers/web/routes/import_md.py","line":63,"method":"post","route":"/import/markdown","prefix":"(mounted at include_router)","scenario":"[inferred] post /import/markdown"}
+{"kind":"web","id":"web:drivers/web/routes/import_md.py:144","file":"src/saw/drivers/web/routes/import_md.py","line":144,"method":"post","route":"/import/zip","prefix":"(mounted at include_router)","scenario":"[inferred] post /import/zip"}
+{"kind":"web","id":"web:drivers/web/routes/onboarding.py:30","file":"src/saw/drivers/web/routes/onboarding.py","line":30,"method":"get","route":"/status","prefix":"/api/onboarding","scenario":"[inferred] get /status"}
+{"kind":"web","id":"web:drivers/web/routes/onboarding.py:45","file":"src/saw/drivers/web/routes/onboarding.py","line":45,"method":"post","route":"/seed","prefix":"/api/onboarding","scenario":"[inferred] post /seed"}
+{"kind":"web","id":"web:drivers/web/routes/pages.py:44","file":"src/saw/drivers/web/routes/pages.py","line":44,"method":"get","route":"/pages","prefix":"(mounted at include_router)","scenario":"[inferred] get /pages"}
+{"kind":"web","id":"web:drivers/web/routes/pages.py:116","file":"src/saw/drivers/web/routes/pages.py","line":116,"method":"get","route":"/pages/{slug}","prefix":"(mounted at include_router)","scenario":"[inferred] get /pages/{slug}"}
+{"kind":"web","id":"web:drivers/web/routes/pages.py:151","file":"src/saw/drivers/web/routes/pages.py","line":151,"method":"put","route":"/pages/{slug}","prefix":"(mounted at include_router)","scenario":"[inferred] put /pages/{slug}"}
+{"kind":"web","id":"web:drivers/web/routes/pages.py:204","file":"src/saw/drivers/web/routes/pages.py","line":204,"method":"patch","route":"/pages/{slug}/properties","prefix":"(mounted at include_router)","scenario":"[inferred] patch /pages/{slug}/properties"}
+{"kind":"web","id":"web:drivers/web/routes/pages.py:259","file":"src/saw/drivers/web/routes/pages.py","line":259,"method":"delete","route":"/pages/{slug}","prefix":"(mounted at include_router)","scenario":"[inferred] delete /pages/{slug}"}
+{"kind":"web","id":"web:drivers/web/routes/pages.py:341","file":"src/saw/drivers/web/routes/pages.py","line":341,"method":"get","route":"/pages/{slug}/backlinks","prefix":"(mounted at include_router)","scenario":"[inferred] get /pages/{slug}/backlinks"}
+{"kind":"web","id":"web:drivers/web/routes/pages.py:383","file":"src/saw/drivers/web/routes/pages.py","line":383,"method":"get","route":"/pages/{slug}/outlinks","prefix":"(mounted at include_router)","scenario":"[inferred] get /pages/{slug}/outlinks"}
+{"kind":"web","id":"web:drivers/web/routes/pages.py:417","file":"src/saw/drivers/web/routes/pages.py","line":417,"method":"get","route":"/pages/{slug}/related","prefix":"(mounted at include_router)","scenario":"[inferred] get /pages/{slug}/related"}
+{"kind":"web","id":"web:drivers/web/routes/pages.py:465","file":"src/saw/drivers/web/routes/pages.py","line":465,"method":"post","route":"/pages","prefix":"(mounted at include_router)","scenario":"[inferred] post /pages"}
+{"kind":"web","id":"web:drivers/web/routes/search.py:26","file":"src/saw/drivers/web/routes/search.py","line":26,"method":"get","route":"/search","prefix":"(mounted at include_router)","scenario":"[inferred] get /search"}
+{"kind":"web","id":"web:drivers/web/routes/search.py:117","file":"src/saw/drivers/web/routes/search.py","line":117,"method":"get","route":"/search/suggestions","prefix":"(mounted at include_router)","scenario":"[inferred] get /search/suggestions"}
+{"kind":"web","id":"web:drivers/web/routes/templates.py:64","file":"src/saw/drivers/web/routes/templates.py","line":64,"method":"get","route":"/templates","prefix":"(mounted at include_router)","scenario":"[inferred] get /templates"}
+{"kind":"web","id":"web:drivers/web/routes/templates.py:80","file":"src/saw/drivers/web/routes/templates.py","line":80,"method":"get","route":"/templates/{template_id}","prefix":"(mounted at include_router)","scenario":"[inferred] get /templates/{template_id}"}
+{"kind":"web","id":"web:drivers/web/routes/templates.py:103","file":"src/saw/drivers/web/routes/templates.py","line":103,"method":"post","route":"/templates/{template_id}/apply","prefix":"(mounted at include_router)","scenario":"[inferred] post /templates/{template_id}/apply"}
+{"kind":"web","id":"web:drivers/web/routes/timeline.py:38","file":"src/saw/drivers/web/routes/timeline.py","line":38,"method":"get","route":"(see source)","prefix":"/api/timeline","scenario":"[inferred] get (see source)"}
+{"kind":"web","id":"web:drivers/web/routes/timeline.py:186","file":"src/saw/drivers/web/routes/timeline.py","line":186,"method":"post","route":"/daily-note","prefix":"/api/timeline","scenario":"[inferred] post /daily-note"}
+{"kind":"web","id":"web:drivers/web/routes/websocket.py:31","file":"src/saw/drivers/web/routes/websocket.py","line":31,"method":"websocket","route":"/ws/{session_id}","prefix":"(mounted at include_router)","scenario":"[inferred] websocket /ws/{session_id}"}

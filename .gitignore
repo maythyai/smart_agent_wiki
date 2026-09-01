@@ -252,3 +252,6 @@ desktop/src-tauri/gen/
 *.temp
 tmp/
 temp/
+
+# CSP knowledge-hub run workspace (not committed)
+.csp/.hub-run/

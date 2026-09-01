@@ -1,0 +1,57 @@
+{
+  "pipeline_version": 2,
+  "milestone": "v3.7",
+  "current_stage": "01-prd",
+  "stages": [
+    {
+      "stage": "00-hub",
+      "title": "知识中枢初始化 + 棕地 CMS 蒸馏",
+      "status": "done",
+      "owner": "S0-base",
+      "artifacts": [".csp/AGENTS.md", ".csp/manifest.json", ".csp/lifecycle-state.json", ".csp/sources.tsv", "scripts/hub_manifest.sh", ".csp/artifacts/reconcile-log.md", ".csp/code-spec/saw/CODE-MODULE-SPEC.md", ".csp/code-spec/saw/entry-points.jsonl", ".csp/code-spec/saw/knowledge-graph.json"]
+    },
+    {
+      "stage": "01-prd",
+      "title": "PRD / PMS 生成",
+      "status": "pending",
+      "owner": "S1-prd",
+      "artifacts": [".csp/product-spec/modules/"]
+    },
+    {
+      "stage": "02-decomposition",
+      "title": "需求拆解",
+      "status": "pending",
+      "owner": "S2-decomp",
+      "artifacts": [".csp/decomposition/FEATURE-DETAILS/"]
+    },
+    {
+      "stage": "03-tech",
+      "title": "技术方案 / Spec / TMS",
+      "status": "pending",
+      "owner": "S3-tech",
+      "artifacts": [".csp/specs/", ".csp/tech-design/", ".csp/tech-decisions/ADR/", ".csp/test-spec/"]
+    },
+    {
+      "stage": "04-tasks",
+      "title": "任务拆解",
+      "status": "pending",
+      "owner": "S4-tasks",
+      "artifacts": [".csp/tasks/"]
+    },
+    {
+      "stage": "05-impl",
+      "title": "实施 / codegen / CMS 增量对齐",
+      "status": "pending",
+      "owner": "S5-impl",
+      "artifacts": [".csp/code-spec/{app}/", "src/", "web/"]
+    },
+    {
+      "stage": "06-ship",
+      "title": "发布 / 里程碑归档",
+      "status": "pending",
+      "owner": "S6-ship",
+      "artifacts": [".csp/ship/", ".csp/milestones/{m}/"]
+    }
+  ],
+  "note": "00-hub initialized 2026-09-01 (pipeline_version=2, 7 stages 00-06 per updated spec). 00=done incl. brownfield CMS distillation (Phase 1.7). Material sources pending; CMS items built. Downstream stages flip build_status via writeback. current_stage=01-prd. Git: local commit to trunk, no push."
+}

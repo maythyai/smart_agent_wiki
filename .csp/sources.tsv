@@ -1,0 +1,73 @@
+# CSP source registry — human-edited input list. hub_manifest.sh gen compiles this into manifest.json.
+# Columns (TAB-separated): source_id<TAB>raw_path<TAB>title<TAB>domain<TAB>kind
+# raw_path is relative to repo root. content_hash is computed at gen time (git blob) — never hand-set.
+# build_status starts pending; downstream stages flip to built via manifest writeback.
+doc:overview:readme	README.md	Smart Agent Wiki README	overview	reference
+doc:overview:readme-cn	README_CN.md	Smart Agent Wiki README (中文)	overview	reference
+doc:overview:claude	CLAUDE.md	CLAUDE.md project guide	overview	reference
+doc:overview:architecture-review	ARCHITECTURE_REVIEW.md	Architecture review	overview	reference
+doc:overview:architecture	docs/ARCHITECTURE.md	Architecture overview	overview	reference
+doc:overview:commands	docs/COMMANDS.md	CLI commands reference	overview	reference
+doc:overview:quickstart	docs/QUICKSTART.md	Quickstart	overview	howto
+doc:overview:migration	docs/MIGRATION.md	Migration guide	overview	howto
+doc:overview:troubleshooting	docs/TROUBLESHOOTING.md	Troubleshooting	overview	howto
+doc:design:system	docs/smart_agent_wiki_design.md	System design	design	reference
+doc:design:optimization	docs/smart_agent_wiki_optimization.md	Optimization design	design	reference
+doc:design:media-ingestion	docs/media_ingestion_design.md	Media ingestion design	design	reference
+doc:design:api-contract	docs/api_contract.md	API contract	design	reference
+doc:design:api-platform	docs/api_platform_design.md	API platform design	design	reference
+doc:design:frontend	docs/frontend_tech_research.md	Frontend tech research	design	reference
+doc:design:team-deployment	docs/team_deployment_design.md	Team deployment design	design	reference
+doc:design:project-design-review	docs/PROJECT_DESIGN_REVIEW.md	Project design review	design	reference
+doc:design:deep-audit	docs/smart_agent_wiki_deep_audit.md	Deep audit	design	reference
+doc:design:remote-audit	docs/remote_project_audit_findings.md	Remote project audit findings	design	reference
+doc:design:code-graph-lifecycle	docs/code-graph-lifecycle-enhancement.md	Code-graph lifecycle enhancement	design	reference
+doc:design:ingest-pipeline-unification	docs/ingest-pipeline-unification-plan.md	Ingest pipeline unification plan	design	reference
+doc:design:token-optimization	docs/openwolf_token_optimization.md	Token optimization	design	reference
+doc:design:wiki-skills	docs/wiki_skills_enhancement.md	Wiki skills enhancement	design	reference
+doc:design:audit-report	docs/audit_report_2026-08.md	Audit report 2026-08	design	reference
+doc:adr:persistence-unification	docs/ADR-persistence-unification.md	ADR: persistence unification	adr	reference
+doc:research:karpathy-comments	docs/karpathy_llm_wiki_comments.md	Karpathy LLM wiki comments	research	reference
+doc:research:karpathy-projects	docs/karpathy_llm_wiki_projects.md	Karpathy LLM wiki projects	research	reference
+doc:research:llm-prompt	docs/llm_prompt_strategy.md	LLM prompt strategy	research	reference
+doc:research:llm-wiki-ecosystem	docs/llm_wiki_ecosystem_analysis.md	LLM wiki ecosystem analysis	research	reference
+doc:research:llm-wiki	docs/llm-wiki.md	LLM wiki concept	research	reference
+doc:plugin:development	docs/PLUGIN_DEVELOPMENT.md	Plugin development	plugin	howto
+doc:integration:overview	docs/integrations/overview.md	Integrations overview	integrations	reference
+doc:integration:discord	docs/integrations/discord.md	Discord integration	integrations	reference
+doc:integration:feishu	docs/integrations/feishu.md	Feishu integration	integrations	reference
+doc:integration:github	docs/integrations/github.md	GitHub integration	integrations	reference
+doc:integration:logseq	docs/integrations/logseq.md	Logseq integration	integrations	reference
+doc:integration:notion	docs/integrations/notion.md	Notion integration	integrations	reference
+doc:integration:slack	docs/integrations/slack.md	Slack integration	integrations	reference
+doc:integration:wecom	docs/integrations/wecom.md	WeCom integration	integrations	reference
+doc:audit:heuristic	docs/audit/_heuristic-reference.md	Audit heuristic reference	audit	reference
+doc:audit:00-modules	docs/audit/00-modules-overview.md	Audit: modules overview	audit	source-summary
+doc:audit:01-ingest	docs/audit/01-ingest-pipeline.md	Audit: ingest pipeline	audit	source-summary
+doc:audit:02-query	docs/audit/02-query-search.md	Audit: query & search	audit	source-summary
+doc:audit:03-govern	docs/audit/03-govern-audit.md	Audit: govern & audit	audit	source-summary
+doc:audit:04-collaborate	docs/audit/04-collaborate-workflow.md	Audit: collaborate workflow	audit	source-summary
+doc:audit:05-compile	docs/audit/05-compile-code-intelligence.md	Audit: compile & code intelligence	audit	source-summary
+doc:audit:06-connectors	docs/audit/06-connectors-integrations.md	Audit: connectors & integrations	audit	source-summary
+doc:audit:07-web	docs/audit/07-web-api-frontend.md	Audit: web API & frontend	audit	source-summary
+doc:audit:08-auth	docs/audit/08-auth-security.md	Audit: auth & security	audit	source-summary
+doc:audit:09-db	docs/audit/09-db-storage-writequeue.md	Audit: DB storage & write queue	audit	source-summary
+doc:audit:10-platform	docs/audit/10-platform-support.md	Audit: platform support	audit	source-summary
+doc:audit:11-cli	docs/audit/11-cli.md	Audit: CLI	audit	source-summary
+doc:audit:12-mcp	docs/audit/12-mcp.md	Audit: MCP	audit	source-summary
+doc:audit:13-research	docs/audit/13-research-synthesize.md	Audit: research & synthesize	audit	source-summary
+doc:audit:99-summary	docs/audit/99-summary.md	Audit: summary	audit	source-summary
+doc:planning:requirements	.planning/REQUIREMENTS.md	Requirements	planning	reference
+doc:planning:roadmap	.planning/ROADMAP.md	Roadmap	planning	reference
+doc:planning:project	.planning/PROJECT.md	Project summary	planning	reference
+doc:planning:state	.planning/STATE.md	Planning state	planning	reference
+doc:planning:research-summary	.planning/research/SUMMARY.md	Research summary	planning	reference
+doc:planning:research-architecture	.planning/research/ARCHITECTURE.md	Research: architecture	planning	reference
+doc:planning:research-features	.planning/research/FEATURES.md	Research: features	planning	reference
+doc:planning:research-features-v31	.planning/research/FEATURES-v3.1.md	Research: features v3.1	planning	reference
+doc:planning:research-pitfalls	.planning/research/PITFALLS.md	Research: pitfalls	planning	reference
+doc:planning:research-stack	.planning/research/STACK.md	Research: stack	planning	reference
+doc:planning:research-complete	.planning/research/PROJECT_ANALYSIS_COMPLETE.md	Research: project analysis complete	planning	reference
+cms:saw:module-spec	.csp/code-spec/saw/CODE-MODULE-SPEC.md	CMS canonical module spec (saw)	cms	module-spec
+cms:saw:entry-points	.csp/code-spec/saw/entry-points.jsonl	CMS entry points (saw)	cms	reference
+cms:saw:knowledge-graph	.csp/code-spec/saw/knowledge-graph.json	CMS knowledge graph (saw)	cms	reference
