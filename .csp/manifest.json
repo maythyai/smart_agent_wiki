@@ -2,7 +2,7 @@
   "manifest_id": "smart-agent-wiki-hub",
   "schemaVersion": 1,
   "version": 1,
-  "generated_at": "2026-09-01T17:20:39+08:00",
+  "generated_at": "2026-09-02T00:00:00+08:00",
   "repo_url": "git@github.com:maythyai/smart_agent_wiki.git",
   "items": [
     {
@@ -1216,6 +1216,36 @@
       "original_ref": ".csp/tasks/TASK-BREAKDOWN-SUMMARY.md",
       "content_hash": "331e0a6d9f84dbd7e262f9445dde32160cce8192",
       "source_updated_at": "",
+      "build_status": "built",
+      "wiki_pages": [],
+      "status": "ready"
+    },
+    {
+      "source_id": "doc:strategy:strategy",
+      "source_type": "doc",
+      "kind": "reference",
+      "domain": "strategy",
+      "title": "Strategy anchor (target problem/approach/who/metrics/tracks)",
+      "raw_path": "docs/strategy/STRATEGY.md",
+      "output_path": "",
+      "original_ref": "docs/strategy/STRATEGY.md",
+      "content_hash": "c840ed88dda70bcaafed0424b8b769060be7f261",
+      "source_updated_at": "2026-09-02T00:00:00+08:00",
+      "build_status": "built",
+      "wiki_pages": [],
+      "status": "ready"
+    },
+    {
+      "source_id": "doc:strategy:roadmap",
+      "source_type": "doc",
+      "kind": "reference",
+      "domain": "strategy",
+      "title": "Roadmap (version rule + 1y/3y/long-term path)",
+      "raw_path": "docs/strategy/ROADMAP.md",
+      "output_path": "",
+      "original_ref": "docs/strategy/ROADMAP.md",
+      "content_hash": "ded054abc26a35ac2c387490e47a31449447b90f",
+      "source_updated_at": "2026-09-02T00:00:00+08:00",
       "build_status": "built",
       "wiki_pages": [],
       "status": "ready"
