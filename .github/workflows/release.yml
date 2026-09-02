@@ -6,11 +6,17 @@ on:
       - 'v*'
 
 jobs:
-  build-and-publish:
+  release:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
-      id-token: write
+      contents: write      # create GitHub Release + upload assets
+      id-token: write      # PyPI trusted publishing (OIDC) fallback
+    env:
+      # Gate publish steps on secret presence so missing credentials skip
+      # cleanly (warning) instead of aborting the whole release. A tag push
+      # always produces a GitHub Release with built sdist+wheel regardless.
+      HAS_PYPI_TOKEN: ${{ secrets.PYPI_API_TOKEN != '' }}
+      HAS_DOCKER_CREDS: ${{ secrets.DOCKER_USERNAME != '' && secrets.DOCKER_PASSWORD != '' }}
 
     steps:
     - uses: actions/checkout@v4
@@ -21,36 +27,49 @@ jobs:
         python-version: '3.11'
 
     - name: Install build tools
-      run: |
-        pip install build twine
+      run: pip install build twine
 
     - name: Build package
       run: |
         python -m build
         ls -la dist/
 
+    - name: Extract version
+      id: version
+      run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+    # ---- PyPI (only when a token is configured) -------------------------
     - name: Publish to PyPI
+      if: ${{ env.HAS_PYPI_TOKEN == 'true' }}
+      continue-on-error: true
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
         password: ${{ secrets.PYPI_API_TOKEN }}
 
+    - name: PyPI publish skipped
+      if: ${{ env.HAS_PYPI_TOKEN != 'true' }}
+      run: |
+        echo "::warning file=.github/workflows/release.yml::PYPI_API_TOKEN secret is not set — skipping PyPI publish. For a first-time publish (project does not yet exist on PyPI) create an account-scoped API token at https://pypi.org/manage/account/token/ and add it as the PYPI_API_TOKEN repo secret."
+
+    # ---- Docker image (only when creds are configured) ------------------
     - name: Set up QEMU for Docker
+      if: ${{ env.HAS_DOCKER_CREDS == 'true' }}
       uses: docker/setup-qemu-action@v3
 
     - name: Set up Docker Buildx
+      if: ${{ env.HAS_DOCKER_CREDS == 'true' }}
       uses: docker/setup-buildx-action@v3
 
     - name: Login to Docker Hub
+      if: ${{ env.HAS_DOCKER_CREDS == 'true' }}
       uses: docker/login-action@v3
       with:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
 
-    - name: Extract version
-      id: version
-      run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
-
     - name: Build and push Docker image
+      if: ${{ env.HAS_DOCKER_CREDS == 'true' }}
+      continue-on-error: true
       uses: docker/build-push-action@v5
       with:
         context: .
@@ -62,7 +81,14 @@ jobs:
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
+    - name: Docker push skipped
+      if: ${{ env.HAS_DOCKER_CREDS != 'true' }}
+      run: |
+        echo "::warning file=.github/workflows/release.yml::DOCKER_USERNAME/DOCKER_PASSWORD secrets not set — skipping Docker image push to chensaics/saw. Add them to publish the image."
+
+    # ---- GitHub Release (always — the one step that must not be gated) --
     - name: Create GitHub Release
+      if: always()
       uses: softprops/action-gh-release@v1
       with:
         files: dist/*
@@ -96,19 +122,19 @@ jobs:
           saw --version
           ```
 
-          ## What's Changed
+          > PyPI / Docker images publish when the corresponding repo secrets
+          > (`PYPI_API_TOKEN`, `DOCKER_USERNAME`/`DOCKER_PASSWORD`) are
+          > configured. The sdist + wheel attached below are always available.
 
-          See [CHANGELOG.md](CHANGELOG.md) for details.
-
-          **Full Changelog**: https://github.com/chensaics/smart_agent_wiki/compare/v${{ steps.version.outputs.VERSION }}...HEAD
+          **Full Changelog**: https://github.com/maythyai/smart_agent_wiki/compare/v${{ steps.version.outputs.VERSION }}...HEAD
 
   update-homebrew:
-    needs: build-and-publish
+    needs: release
     runs-on: ubuntu-latest
+    if: always()
     steps:
     - name: Update Homebrew tap
       run: |
-        # This would typically update the chensaics/homebrew-tap repository
-        # For now, manual update is required
+        # Manual update of chensaics/homebrew-tap is still required.
         echo "Homebrew formula update required after PyPI publication"
         echo "Formula: https://github.com/chensaics/homebrew-tap"
