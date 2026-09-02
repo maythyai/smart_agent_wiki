@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import typer
 from rich.console import Console
+from importlib.metadata import version as _pkg_version, PackageNotFoundError
 
 app = typer.Typer(
     name="saw",
@@ -13,6 +14,27 @@ app = typer.Typer(
     no_args_is_help=True,
 )
 console = Console()
+
+try:
+    __version__ = _pkg_version("smart-agent-wiki")
+except PackageNotFoundError:  # editable/dev checkout without metadata
+    __version__ = "0.0.0"
+
+
+@app.callback(invoke_without_command=True)
+def _main(
+    version: bool = typer.Option(
+        False,
+        "--version",
+        "-V",
+        help="Show version and exit.",
+        is_eager=True,
+    ),
+) -> None:
+    """Smart Agent Wiki — local-first multi-agent knowledge platform."""
+    if version:
+        typer.echo(f"saw {__version__}")
+        raise typer.Exit()
 
 # Import and register commands
 from saw.drivers.cli.commands.init_cmd import init  # noqa: E402

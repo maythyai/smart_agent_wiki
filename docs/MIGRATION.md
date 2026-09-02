@@ -201,13 +201,13 @@ If you need to revert to a previous version:
 
 ```bash
 # pipx rollback
-pipx install smart-agent-wiki==3.4.0
+pipx install smart-agent-wiki==1.0.1
 
 # Homebrew rollback
-brew install saw@3.4
+brew install saw@1.0.1
 
 # Docker rollback
-docker pull chensaics/saw:v3.4.0
+docker pull chensaics/saw:v1.0.1
 
 # Restore backup
 tar -xzf saw-backup-YYYYMMDD.tar.gz
