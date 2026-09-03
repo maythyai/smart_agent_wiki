@@ -2,7 +2,7 @@
 id: ROADMAP
 project: smart-agent-wiki
 version: 1.0
-last_updated: 2026-09-02
+last_updated: 2026-09-03
 status: active
 tracks: [core-trust, platform-team, ecosystem-integration, intelligence-adaptation]
 north_star: trustworthy-claim coverage
@@ -39,11 +39,11 @@ see_also: docs/strategy/STRATEGY.md | docs/prd/PRD-INDEX.md | .csp/review/REVIEW
 | `desktop/` (tauri.conf.json + package.json) | `0.1.0` | 桌面端**未达 1.0**，独立 0.x 跟踪至稳定；达 v1.0 后与 canonical 对齐 |
 | `web/package.json` | `0.1.0` | web 为桌面 bundle，随 desktop 版本 |
 
-> **决策点（用户可 override）**：是否将历史 `v3.x` git tag 保留为内部里程碑标记。默认保留（不移动/删除已推送 tag，遵守不可变），仅今后新增对外 tag 走 SemVer。lifecycle-state 当前的 `milestone: v3.7` 重新定性为内部里程碑，对应到对外版本 `v1.1.0`（见 2.1）。
+> **决策点（用户可 override）**：是否将历史 `v3.x` git tag 保留为内部里程碑标记。默认保留（不移动/删除已推送 tag，遵守不可变），仅今后新增对外 tag 走 SemVer。lifecycle-state 当前的 `milestone: v3.8` 重新定性为内部里程碑，对应到对外版本 `v1.3.0`（见 2.1）。内部 milestone `v3.7` 对应对外版本 `v1.2.0`。
 
 ### 1.3 内部里程碑（lifecycle-state 专用）
 
-`.csp/lifecycle-state.json` 的 `milestone` 字段使用内部里程碑号（如 `v3.7`），跟踪 sprint 级迭代，**不等于**对外发布版本。映射：内部 milestone `v3.7` → 对外 release `v1.1.0`。内外分离，避免 sprint 节奏污染 SemVer 契约。
+`.csp/lifecycle-state.json` 的 `milestone` 字段使用内部里程碑号（如 `v3.7`），跟踪 sprint 级迭代，**不等于**对外发布版本。映射：内部 milestone `v3.7` → 对外 release `v1.2.0`；`v3.8` → 对外 release `v1.3.0`。内外分离，避免 sprint 节奏污染 SemVer 契约。
 
 ### 1.4 Tag 规则
 
@@ -72,36 +72,57 @@ canonical = `pyproject.toml`。发布时以下必须与之一致，用脚本校�
 
 > 每版本摘要级。详细 PRD/spec 留 01/03，此处只点明做什么 + 价值。
 
-### v1.1.0 — 产品加固与端到端可用（status: in-progress）
+### v1.1.0 — MCP 思考工具 + 前端可用性 + 提取器增强（status: released）
 
-> 对应当前 lifecycle milestone `v3.7`、PRD `PRD-product-hardening-v1`（05-impl Wave1 进行中）。
+> 对应 git tag `v1.1.0`（e806d61）。首个功能版本，承接 v1.0.1 基线。
 
-- **目标**：把"可运行代码"打磨为"端到端可用、宣称一致、安全可审计、测试有门禁"的可用产品。
+- **目标**：在 v1.0.1 可运行基线上交付首批用户可感知的功能增强——MCP 思考工具、前端导航可用性、内容提取器扩展，并批量清理 correctness/security/dark-mode 缺陷。
 - **关键功能（摘要级）**：
-  1. 五引擎主链路端到端冒烟基线（ingest→compile→query→govern→learn，干净库从 0 起跑）
-  2. 宣称-实现一致性校准（README/docs vs 代码自动 diff，产可信能力清单）
-  3. 安全深化闭环（RBAC/限流/Ed25519 receipt 高危操作全覆盖）
-  4. 可观测性闭环（RequestId/结构化日志/跨模块一致性）
-  5. 测试门禁（核心链路覆盖率 ≥80% 基线 `[TBD]`，纳入 CI）
-- **价值描述**：用户价值——按 README 试用不踩坑、端到端可复跑；业务价值——建立可信 ground，为后续扩张提供基线。
-- **成功指标**：冒烟通过率 100% / 宣称一致率 100% / receipt 覆盖 100% / 覆盖率 ≥80% `[TBD]`。
-- **前置依赖**：无外部依赖；承接 00-04 已完成产物。
+  1. MCP 思考工具（F-MCP-01）——agent 可调用的结构化思考/推理工具面
+  2. Breadcrumb 导航（F-WEB-08）——前端多层级页面定位与回溯
+  3. JSON/表格提取器（F-INGEST-03）——ingest 侧结构化内容提取增强
+  4. 41 批 correctness / security / dark-mode 修复（累计缺陷收敛）
+- **价值描述**：用户价值——agent 获得结构化思考能力、前端导航不再迷路、提取器覆盖更多格式；业务价值——从"能跑"到"好用"的首步。
+- **成功指标**：MCP 工具可调用；breadcrumb 全页面覆盖；提取器支持 JSON + 表格格式。
+- **前置依赖**：v1.0.1 基线。
+- **07 回流**：security 修复批次纳入后续 Wave 1 硬化输入。
+
+### v1.2.0 — 安全/可观测硬化（Wave 1）（status: released, 2026-09-03）
+
+> 对应 git tag `v1.2.0`（532710f，2026-09-03）。内部 milestone `v3.7`。真正的"产品加固"版本——安全与可观测基础闭环落地。
+
+- **目标**：在 v1.1.0 功能基线上建立安全审计与可观测性闭环（Wave 1），使产品达到"安全可审计、运行可观测"的基线。
+- **关键功能（摘要级）**：
+  1. Ed25519 receipt 链——高危操作签名验签，receipt 不可篡改
+  2. 裸路由检测——未鉴权路由自动发现与拦截
+  3. Token 同源校验——前后端 token 来源一致性校验
+  4. JSON 结构化日志默认——可观测性基线（结构化、可聚合）
+  5. /health/ready engine-aware——健康探针感知引擎状态
+  6. 覆盖率基线建立——核心链路 coverage 基线落 CI
+- **价值描述**：用户价值——操作可审计、运行可观测；业务价值——建立安全/可观测 ground，为后续扩张提供基线。
+- **成功指标**：receipt 链覆盖率 100%；裸路由检出率 100%；JSON 日志默认开启；/health/ready engine-aware。
+- **前置依赖**：v1.1.0 功能基线。
+- **07 回流**：Wave 1 findings 回流至 v1.3.0 硬化尾巴。
+
+### v1.3.0 — 硬化尾巴 + 技术债清理（status: in-progress）
+
+> 对应 PRD `PRD-hardening-tail-v1.3.0`（进行中）。内部 milestone `v3.8`。承接 v1.2.0 Wave 1 硬化，完成 Wave 2/3 冒烟链与技术债收口。
+
+- **目标**：完成 v1.2.0 未竟的硬化尾巴（Wave 2/3），并清理积累的技术债，使产品达到"宣称一致、trace 贯穿、CI 有门禁"的完整可用状态。
+- **关键功能（摘要级）**：
+  1. Wave 2/3 冒烟链——五引擎主链路端到端冒烟基线补全（ingest→compile→query→govern→learn）
+  2. 宣称-实现一致性校准——README/docs vs 代码自动 diff，产可信能力清单
+  3. Trace 贯穿——RequestId/结构化日志跨模块一致性
+  4. CI 门禁——核心链路覆盖率门禁纳入 CI
+  5. 技术债清理——ruff lint 规则收口、roadmap 重写（本文件）、迁移文档
+- **价值描述**：用户价值——按 README 试用不踩坑、端到端可复跑；业务价值——补全安全/可观测闭环，为 v1.4.0 平台化提供干净基座。
+- **成功指标**：冒烟通过率 100%；宣称一致率 100%；trace 贯穿率 100%；CI 覆盖率门禁生效。
+- **前置依赖**：v1.2.0 Wave 1 硬化基线。
 - **07 回流**：暂无 findings（`.csp/review/` 未建）。
 
-### v1.2.0 — 可信治理深化（status: planned）
+### v1.4.0 — 平台化与团队协作（status: planned）
 
-- **目标**：让"信任"从"有模块"升级为"规模化可用"——治理能力可在真实库量级上运行。
-- **关键功能（摘要级）**：
-  1. 矛盾检测规模化（跨源 claim 冲突批量发现与去重）
-  2. 置信度传播（claim 间置信度联动，源质量加权）
-  3. 新鲜度巡检与失效提醒闭环
-  4. 审计 receipt 全生命周期（签发→校验→过期）
-- **价值描述**：用户价值——库越大越敢信；业务价值——北极星（trustworthy-claim coverage）显著提升。
-- **成功指标**：trustworthy-claim coverage 目标值 `[TBD]`；矛盾检出准确率 `[TBD]`。
-- **前置依赖**：v1.1.0 端到端基线与测试门禁。
-- **07 回流**：待 v1.1.0 复盘。
-
-### v1.3.0 — 平台化与团队协作（status: planned）
+> platform-team track。从单机 local-first 走向可自托管的多用户平台。
 
 - **目标**：从单机 local-first 走向可自托管的多用户平台。
 - **关键功能（摘要级）**：
@@ -111,20 +132,7 @@ canonical = `pyproject.toml`。发布时以下必须与之一致，用脚本校�
   4. 多工作空间隔离
 - **价值描述**：用户价值——OPS 可自托管运维；业务价值——覆盖团队场景，打开 to-B 路径。
 - **成功指标**：部署一键化 `[TBD]`；高危操作审计覆盖率持续 100%。
-- **前置依赖**：v1.1.0 安全/可观测闭环。
-- **07 回流**：待前版本复盘。
-
-### v1.4.0 — 生态与集成扩展（status: planned）
-
-- **目标**：稳定插件 SDK + 连接器 + MCP surface，让 SAW 成为 agent 生态的可信知识后端。
-- **关键功能（摘要级）**：
-  1. 插件 SDK 稳定化（事件钩子、沙箱隔离落地）
-  2. 连接器框架加固（现有 7 平台一致性、新增候选 `[TBD]`）
-  3. MCP 工具面规范化（版本化、废弃策略）
-  4. 桌面端达 v1.0 与 canonical 对齐
-- **价值描述**：用户价值——DEV 可安心集成扩展；业务价值——生态粘性，护城河前置。
-- **成功指标**：插件 API 稳定承诺 `[TBD]`；连接器一致性通过率 `[TBD]`。
-- **前置依赖**：v1.3.0 平台化基座。
+- **前置依赖**：v1.3.0 硬化尾巴 + 技术债清理完成。
 - **07 回流**：待前版本复盘。
 
 ### v1.5.0 — 智能与自适应（status: planned）
@@ -137,17 +145,17 @@ canonical = `pyproject.toml`。发布时以下必须与之一致，用脚本校�
   4. agent 角色执行链路一致性校验
 - **价值描述**：用户价值——库自动保鲜、人工介入降低；业务价值——差异化"会进化的知识库"。
 - **成功指标**：workflow 执行成功率 `[TBD]`；Token 实测节省 `[TBD]`。
-- **前置依赖**：v1.1.0 基线 + v1.2.0 治理。
+- **前置依赖**：v1.3.0 硬化尾巴基线 + v1.4.0 平台化。
 - **07 回流**：待前版本复盘。
 
 ### 版本-主题表（1 年）
 
 | 版本 | 主题 | Track | status |
 |---|---|---|---|
-| v1.1.0 | 产品加固与端到端可用 | core-trust | released |
-| v1.2.0 | 安全/可观测硬化（Wave 1 实际落地） | core-trust | released (2026-09-03) |
-| v1.3.0 | 平台化与团队协作 | platform-team | planned |
-| v1.4.0 | 生态与集成扩展 | ecosystem-integration | planned |
+| v1.1.0 | MCP 思考工具 + 前端可用性 + 提取器增强 | core-trust | released |
+| v1.2.0 | 安全/可观测硬化（Wave 1） | core-trust | released (2026-09-03) |
+| v1.3.0 | 硬化尾巴 + 技术债清理 | core-trust | in-progress |
+| v1.4.0 | 平台化与团队协作 | platform-team | planned |
 | v1.5.0 | 智能与自适应 | intelligence-adaptation | planned |
 
 ## 3. 3 年路径（大版本里程碑）
