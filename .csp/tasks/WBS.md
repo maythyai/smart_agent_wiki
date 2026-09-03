@@ -50,3 +50,22 @@
 - 全量回归 1853 passed, 3 skipped, 0 失败（2026-09-03）。
 - ruff：新代码 clean；既有 baseline 有跨代码库 UP017/BLE001 tech debt（未在 Wave 1 scope，单独建 task）。
 - Wave 2（7 Task）、Wave 3（3 Task）留后续周期。
+
+## v1.3.0 实施状态（Wave 2/3 + debt，2026-09-03）
+| task_id | status | commit | note |
+|---|---|---|---|
+| T-F-A-2-1 | done | 328027d | smoke ingest+compile node (provenance anchor + wiki page) |
+| T-F-A-3-1 | done | 328027d | smoke query keyword node (citation) |
+| T-F-A-4-1 | done | 328027d | smoke govern+learn node (lint/verify/distiller) |
+| T-F-A-5-1 | done | 7adc651 | offline fallback smoke node (auto→search degraded) |
+| T-F-A-6-1 | done | (ci.yml) | CI smoke job (`saw smoke` gate) |
+| T-F-B-2-1 | done | (capabilities) | gen_capabilities.sh + CAPABILITIES.md (2 verified/213 unverified) |
+| T-F-B-3-1 | done | b75a449 | reconcile-log pointer + drift D1/D3 status |
+| T-F-D-2-1 | done | (trace) | trace_id propagates to write path (2 tests) |
+| T-F-E-2-1 | done | (coverage) | ratchet fail_under=60 in pyproject (2 tests) |
+| T-F-E-3-1 | done | (ci.yml) | CI coverage gate step (ignore heavy-SDK) |
+| T-F-Z-1-1 | done | b945655 | ruff config + 2 F823 bug fixes; src/+tests/ green |
+| T-F-Z-2-1 | done | 1a0894c | roadmap narrative rewrite (subagent) |
+| T-F-Z-3-1 | done | 2bea49a | v1.2.0 behavior-change migration docs (subagent) |
+- **v1.3.0: Wave 2/3 + debt 全 13 Task done → M2+M3 达成。**
+- 全量回归 1874 passed, 3 skipped；saw smoke 6/6 PASS；ruff src/+tests/ 0 errors。
