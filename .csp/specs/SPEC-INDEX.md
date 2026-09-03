@@ -38,7 +38,15 @@
 | SPEC-F-Z-8 | F-Z-8 | Cedar policy reload CLI | S | intelligence-adaptation | 1/1 | SPEC-F-Z-8.md |
 | SPEC-F-Z-9 | F-Z-9 | query 测试 + coverage 棘轮 65 | M | test-gate | 1/1 | SPEC-F-Z-9.md |
 
+## v1.6.0 delta（+4）
+| spec_id | feature_id | title | complexity | pms_module | ac_coverage | file |
+|---|---|---|---|---|---|---|
+| SPEC-F-J-1 | F-J-1 | tree_mode+compiler workspace 注入 | M | debt-closure | 1/1 | SPEC-F-J-1.md |
+| SPEC-F-J-2 | F-J-2 | insert workspace_id 持久化+ingest 透传 | M | debt-closure | 1/1 | SPEC-F-J-2.md |
+| SPEC-F-J-3 | F-J-3 | query 深覆盖→65 | M | test-gate | 1/1 | SPEC-F-J-3.md |
+| SPEC-F-J-4 | F-J-4 | policy reload Web admin 端点 | S | debt-closure | 1/1 | SPEC-F-J-4.md |
+
 ## 校验
-- Spec 数 == 20 + 8(v1.5.0) == decomposition 原子 Feature 数 ✓（1:1）
+- Spec 数 == 20 + 8(v1.5.0) + 4(v1.6.0) == decomposition 原子 Feature 数 ✓（1:1）
 - 每个 feature_id 在 decomposition FEATURE-DETAILS 存在 ✓
 - 每份 Spec ac_coverage 自检无未覆盖 AC ✓

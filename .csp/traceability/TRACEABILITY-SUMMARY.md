@@ -22,6 +22,16 @@
 | TMS | +10 用例（TMS-DELTA-v1.5.0） | AC 10/10 ✓ |
 | PRD AC（v1.5.0） | 10（AC-WF-1/2, AC-LR-1/2, AC-TK-1, AC-AG-1, AC-LINT-2续, AC-WS-3, AC-SEC-5续, AC-COV-1） | 10/10 ✓ |
 
+## v1.6.0 delta（2026-09-03）
+| 层 | v1.6.0 增量 | 校验 |
+|---|---|---|
+| PRD feature_count | 4 债务收口 | PRD-debt-closure-v1.6.0 §2 ✓ |
+| decomposition 原子 Feature | +4（F-J-1..4） | DECOMPOSITION-DELTA-v1.6.0 ✓ |
+| Spec | +4（SPEC-F-J-1..4） | 强校验 == Feature 数 ✓（1:1） |
+| ADR | +1（ADR-008 workspace 写入策略） | 驱动 F-J-2 ✓ |
+| TMS | +4 用例（TMS-DELTA-v1.6.0） | AC 4/4 ✓ |
+| PRD AC（v1.6.0） | 4（AC-WS-4, AC-WS-5, AC-COV-2, AC-SEC-6） | 4/4 ✓ |
+
 ## 追溯链
 - 正向：`FORWARD-MATRIX.md`（PRD→Feature→Spec）
 - 反向：`BACKWARD-MATRIX.md`（Spec→Feature→PRD）
