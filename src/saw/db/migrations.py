@@ -247,6 +247,38 @@ def _add_connector_source_columns(conn: sqlite3.Connection) -> None:
 
 _register(6, _add_connector_source_columns)
 
+# v7: receipts — Ed25519 signed receipt persistence for the write queue
+# dispatch chain (T-F-C-2-1, AC-SEC-2).  Each row stores a Receipt produced
+# by ``ReceiptSigner.sign_receipt`` after a successful sink dispatch, linked
+# to the previous receipt in the same session via ``prev_receipt_id``.
+# Idempotent via IF NOT EXISTS.
+def _create_receipts_table(conn: sqlite3.Connection) -> None:
+    conn.executescript(
+        """CREATE TABLE IF NOT EXISTS receipts (
+    receipt_id TEXT PRIMARY KEY,
+    operation_id TEXT NOT NULL,
+    operation_type TEXT NOT NULL,
+    agent TEXT NOT NULL,
+    timestamp TEXT NOT NULL,
+    claim_uuid TEXT,
+    page_path TEXT,
+    payload_hash TEXT,
+    signature TEXT NOT NULL,
+    prev_receipt_id TEXT,
+    public_key TEXT NOT NULL,
+    sink_name TEXT,
+    session_id TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_receipts_operation ON receipts(operation_id);
+CREATE INDEX IF NOT EXISTS idx_receipts_session ON receipts(session_id);
+CREATE INDEX IF NOT EXISTS idx_receipts_prev ON receipts(prev_receipt_id);
+"""
+    )
+
+
+_register(7, _create_receipts_table)
+
 # ── Public API ────────────────────────────────────────────────────────
 
 TARGET_VERSION = max(v for v, _ in _MIGRATIONS) if _MIGRATIONS else 1
