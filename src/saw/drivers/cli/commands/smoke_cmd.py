@@ -104,12 +104,20 @@ def smoke(
     if self_check:
         nodes.extend(_skeleton_nodes())
     else:
-        # Full chain wiring lands in F-A-2..4; until then fall back to skeleton
-        # so `saw smoke` never silently no-ops.
+        # F-A-2/3/4: real engine-chain nodes on a fresh temp DB (offline).
+        from saw.drivers.cli.commands.smoke_harness import (
+            node_govern_learn,
+            node_ingest_compile,
+            node_query_keyword,
+        )
+
         nodes.extend(_skeleton_nodes())
-        console.print(
-            "[yellow]note:[/yellow] engine-chain nodes (ingest/query/govern/learn) "
-            "land in F-A-2..4; running skeleton self-check only."
+        nodes.extend(
+            [
+                SmokeNode("ingest.compile", node_ingest_compile),
+                SmokeNode("query.keyword", node_query_keyword),
+                SmokeNode("govern.learn", node_govern_learn),
+            ]
         )
 
     failed = run_smoke(nodes)
