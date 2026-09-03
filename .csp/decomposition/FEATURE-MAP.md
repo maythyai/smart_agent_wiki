@@ -24,10 +24,13 @@
 | F-E-1 | 覆盖率基线实测 + 阈值设定 | test-gate | P0 | M | — | 1 | §3.5 |
 | F-E-2 | 核心引擎覆盖率门禁（≥80%） | test-gate | P0 | M | F-E-1 | 2 | §3.5 |
 | F-E-3 | CI 集成（冒烟+coverage+报告） | test-gate | P0 | M | F-A-6,F-E-2 | 3 | §3.5 |
+| F-Z-1 | ruff baseline 收口（配置+全库修） | tech-debt | P1 | S | — | 3 | §F-debt |
+| F-Z-2 | roadmap narrative 重写 | tech-debt | P2 | S | — | 2 | §F-debt |
+| F-Z-3 | v1.2.0 行为变更迁移文档 | tech-debt | P1 | S | — | 2 | §F-debt |
 
 ## 汇总
-- 域：5（A e2e-usability / B claim-alignment / C security-hardening / D observability / E test-gate）
-- Feature：20（P0=14，P1=6）
+- 域：6（A e2e-usability / B claim-alignment / C security-hardening / D observability / E test-gate / Z tech-debt）
+- Feature：23（P0=14，P1=7，P2=2）— v1.3.0 新增 F-Z-1/2/3（源自 retrospective F2/F3/F4）
 - 复杂度：S=8，M=12
 - Wave：1=10，2=7，3=3
 - 关键路径：F-A-1 → F-A-2 → F-A-5 → F-A-6 → F-E-3（5 步）

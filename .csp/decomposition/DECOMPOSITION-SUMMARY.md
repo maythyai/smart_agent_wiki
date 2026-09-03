@@ -2,8 +2,8 @@
 
 ## 项目概览
 - 上游 PRD：`docs/prd/PRD-product-hardening-v1.md`（v1.0, 5 模块）
-- 域数：5（A e2e-usability / B claim-alignment / C security-hardening / D observability / E test-gate），对齐 PMS
-- 原子 Feature 数：20（P0=14 / P1=6；S=8 / M=12）
+- 域数：6（A e2e-usability / B claim-alignment / C security-hardening / D observability / E test-gate / Z tech-debt），对齐 PMS + v1.3.0 debt delta
+- 原子 Feature 数：23（P0=14 / P1=7 / P2=2；S=11 / M=12）— v1.3.0 增 F-Z-1/2/3，见 DECOMPOSITION-DELTA-v1.3.0.md
 - 预估复杂度：以 S/M/L 表达；人日 `[TBD]`（团队规模/速率未提供，见 `assumptions`）
 - 关键路径：F-A-1 → F-A-2 → F-A-5 → F-A-6 → F-E-3
 

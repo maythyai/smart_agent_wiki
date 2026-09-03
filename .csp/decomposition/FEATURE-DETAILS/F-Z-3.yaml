@@ -1,0 +1,25 @@
+feature:
+  id: "F-Z-3"
+  name: "v1.2.0 行为变更迁移文档"
+  domain: "tech-debt"
+  prd_ref: "docs/prd/PRD-hardening-tail-v1.3.0.md#section-F-debt"
+  pms_module: "observability"
+  user_story: "作为运维者，我想 QUICKSTART/MIGRATION 记录 v1.2.0 行为变更，以便升级时不意外。"
+  acceptance_criteria:
+    - "Given 升级到 v1.2.0+, when 读 MIGRATION, then 知 JSON 日志默认 ON + SAW_PRETTY_LOGS=1 opt-out（AC-DOC-2）"
+    - "Given 升级, when 读, then 知 /health/ready engine-down → 503（非恒 200）"
+  scope:
+    includes: ["MIGRATION.md 补 v1.2.0 行为变更段", "QUICKSTART 补 JSON 日志/health 说明"]
+    excludes: ["v1.1.0 历史回填", "新行为引入"]
+  frontend: {pages: [], components: [], interactions: []}
+  backend: {endpoints: [], business_logic: [], integrations: []}
+  data_entities: []
+  data_operations: []
+  tech_dimensions: {needs_database: false, needs_cache: false, needs_queue: false, needs_ai: false, needs_vector_store: false, needs_realtime: false, needs_file_storage: false, needs_search: false, needs_scheduler: false, needs_notification: false}
+  nfr: {performance: "", security: "", scalability: "", availability: ""}
+  priority: "P1"
+  complexity: "S"
+  depends_on: []
+  blocked_by: []
+  risks: []
+  assumptions: ["仅文档；依赖 F-D-3（已 done）的实际行为"]

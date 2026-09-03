@@ -1,0 +1,28 @@
+feature:
+  id: "F-Z-1"
+  name: "ruff baseline 收口（配置 + 全库修）"
+  domain: "tech-debt"
+  prd_ref: "docs/prd/PRD-hardening-tail-v1.3.0.md#section-F-debt"
+  pms_module: "test-gate"
+  user_story: "作为维护者，我想 ruff check src/ 在默认配置下零错误，以便 lint 成为可执行的质量门。"
+  acceptance_criteria:
+    - "Given ruff check src/ tests/, when 跑默认配置, then 0 errors（AC-LINT-1）"
+    - "Given 新代码, when 提交, then ruff 不报 UP017/BLE001/S110 baseline"
+  scope:
+    includes: ["pyproject [tool.ruff] 配置（select/noqa 策略 或 统一 timezone.utc→UTC + 精确 except）", "全库 UP017/BLE001/S110 收口", "CI 可跑 ruff gate"]
+    excludes: ["逻辑重构（只改 lint 触发点，不动行为）", "新 lint 规则引入"]
+  frontend: {pages: [], components: [], interactions: []}
+  backend:
+    endpoints: []
+    business_logic: []
+    integrations: []
+  data_entities: []
+  data_operations: []
+  tech_dimensions: {needs_database: false, needs_cache: false, needs_queue: false, needs_ai: false, needs_vector_store: false, needs_realtime: false, needs_file_storage: false, needs_search: false, needs_scheduler: false, needs_notification: false}
+  nfr: {performance: "", security: "", scalability: "", availability: ""}
+  priority: "P1"
+  complexity: "S"
+  depends_on: []
+  blocked_by: ["F-A-2", "F-A-3", "F-A-4", "F-D-2"]
+  risks: ["共享资源（pyproject + 全 src）→ 必须串行，在所有 src 改动之后"]
+  assumptions: ["只修 lint 触发点不顺手重构；单 commit 收口"]

@@ -34,6 +34,11 @@ graph LR
     E2[F-E-2 覆盖率门禁]
     E3[F-E-3 CI集成]
   end
+  subgraph WZ[Domain Z tech-debt]
+    Z1[F-Z-1 ruff收口]
+    Z2[F-Z-2 roadmap重写]
+    Z3[F-Z-3 迁移文档]
+  end
 
   A1 --> A2
   A1 --> A3
@@ -48,10 +53,11 @@ graph LR
   D1 --> D2
   E1 --> E2
   E2 --> E3
+  Z1 -.->|serial-after| E3
 ```
 
 ## DAG 校验
-- 拓扑序无环（手动核验：A1→{A2,A3,A4}→A5→A6→E3；B1→{B2,B3}；D1→D2；E1→E2→E3）。
+- 拓扑序无环（手动核验：A1→{A2,A3,A4}→A5→A6→E3；B1→{B2,B3}；D1→D2；E1→E2→E3；Z1 串行末位 after E3；Z2/Z3 独立）。
 - 无回边、无环。✓ 若 03 重构依赖导致环 → 报错停步。
 
 ## 实施波次
