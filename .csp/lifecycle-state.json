@@ -1,7 +1,8 @@
 {
   "pipeline_version": 2,
-  "milestone": "v3.7",
-  "current_stage": "06-ship",
+  "milestone": "v3.8",
+  "current_stage": "01-prd",
+  "next_cycle": "v1.3.0",
   "stages": [
     {
       "stage": "00-hub",
@@ -49,10 +50,19 @@
     {
       "stage": "06-ship",
       "title": "发布 / 里程碑归档",
-      "status": "pending",
+      "status": "done",
       "owner": "S6-ship",
-      "artifacts": [".csp/ship/", ".csp/milestones/{m}/"]
+      "artifacts": [".csp/ship/", ".csp/milestones/{m}/"],
+      "progress": "v1.2.0 tagged (annotated @532710f). wheel smart_agent_wiki-1.2.0. 版本号+README/homebrew/install.sh/ROADMAP 刷新. 本地 trunk 无 push."
+    },
+    {
+      "stage": "07-retro",
+      "title": "复盘 / 闭环校验 + findings 回流",
+      "status": "done",
+      "owner": "S7-retro",
+      "artifacts": [".csp/artifacts/retrospective-v1.2.0.md"],
+      "progress": "闭环校验通过: PRD→Spec→Task→commit→tag 全链, 10/10 Task 有 commit, 5 AC 有测试. CMS drift D1 更正/D3 消解. Findings F1-F6 回流下一轮 01. 见 retrospective-v1.2.0.md"
     }
   ],
-  "note": "05-impl done 2026-09-03: Wave1 全 10 Task done (M1 基础硬化就绪), 1853 passed/3 skipped. 本轮 5 接线修复(E-1 coverage基线 + C-1裸路由 + C-2 receipt链 + C-5 token同源 + D-1/D-3 可观测性) 4 worktree 并行→线性 cherry-pick master. CMS drift D1 更正/D3 消解. 00-05 done, current_stage=06-ship. Wave2/3 留下一周期 (新一轮 01). Git: 本地 trunk, 无 push."
+  "note": "v1.2.0 周期闭环 2026-09-03: 00-07 全 done. Wave1 10/10 (M1), 1853 passed, v1.2.0 tagged. 复盘见 retrospective-v1.2.0.md (findings F1-F6). 新周期 v3.8→v1.3.0 启动, current_stage=01-prd. 待下一轮 01 决策范围: Wave2/3 续推 OR 插入 F2(ruff baseline)/F4(行为变更文档)/F3(roadmap narrative 重写). Git: 本地 trunk, 无 push."
 }
