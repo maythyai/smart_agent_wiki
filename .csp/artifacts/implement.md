@@ -100,3 +100,25 @@
 - **F-I-1 resume 全量 context 快照**：v2.0（需序列化 context dict）。
 - **F-Z-8 Web admin 端点 `POST /api/admin/policy/reload`**：本轮仅 CLI，Web 端点 thin。
 - **coverage 65%+**：query engine.py / compare / tree_mode 深覆盖——下一周期随测试增长 ratchet。
+
+## 2026-09-03 — v1.6.0 债务收口（4 Task，2 Wave，Lead 单线）
+
+**范围**：F-J-1（tree_mode+compiler workspace 读路由）/ F-J-2（insert 持久化+ingest 透传）/ F-J-3（query 深覆盖）/ F-J-4（policy Web admin 端点）。
+**Commits**：627957b(Wave1) / 895c948(Wave2)。
+**测试**：1959 passed / 3 skipped / 0 failed（+30 新测试）；ruff 0；coverage 63.7%；smoke 6/6。
+
+### 决策与偏离
+- **F-J-1 scope 透传方式**：tree_mode/compiler 加 workspace_id 参数；QueryEngine.__init__ 用 setattr 同步 `_workspace_id` 到子服务（而非改 search/compile 签名）——最小侵入，匹配既有耦合（getattr(_wiki_repo) 模式）。
+- **F-J-2 insert 列补全（ADR-008）**：v1.5.0 发现 insert SQL 丢 workspace_id（Claim.workspace_id 字段存但落库总 default）。补 INSERT 列；ingest(workspace_id=) stamp claims。upsert UPDATE 分支不动 workspace_id（防覆盖）。
+- **F-J-4 Web 端点保护位置**：admin router 的 require_role 守卫放 include_router 级（dependencies=admin_auth_dep）而非 route 装饰器——为过 test_security_matrix（源码扫 include_router 的 auth_dep）。
+- **F-J-3 AC-COV-2 未达 65（关键偏离）**：TMS-DELTA 原写"63→65"。query 深覆盖完成（engine 14→94% / compare 23→91% / tree_mode 21→66%），但**全量仅 63.7%**——gap 在非 query 模块（compile/compiler 17% / synthesize/scheduler 32%）。硬约定 #10：不设高于实测。Lead 决策 fail_under 持 63（63.7% 有余量，无回归），65 标 finding J1 defer v1.7.0。
+
+### CMS drift 核验
+- F-J-1：v1.5.0 repo.get_by_id(workspace_id) 已支持→不改 repo；tree_mode/compiler 调 get_by_id 未传 ws（grep 确证）→本轮补。
+- F-J-2：Claim.workspace_id 字段存（domain/claims.py:37）但 insert SQL 无 workspace_id 列（claims_repository.py:155 原 SQL）→确证 gap，补列。
+- F-J-4：app.state.cedar v1.4.0 P-1 已装配（app.py）；require_role 就绪。
+
+### Deferred / [TBD]
+- **J1（coverage 65）**：compile/compiler.py（17%）/ synthesize/scheduler.py（32%）深覆盖——v1.7.0。
+- **graph_traverse workspace 隔离**：entity 表无 workspace_id 列（需 migration）→defer v1.7.0+。
+- **resume 全量 context 快照**（I3）：v2.0。
