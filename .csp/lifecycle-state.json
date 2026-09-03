@@ -1,7 +1,7 @@
 {
   "pipeline_version": 2,
   "milestone": "v4.0",
-  "current_stage": "02-decomposition",
+  "current_stage": "03-tech",
   "next_cycle": "v1.5.0",
   "stages": [
     {
@@ -64,5 +64,5 @@
       "progress": "闭环校验通过: PRD→Spec→Task→commit→tag 全链, 10/10 Task 有 commit, 5 AC 有测试. CMS drift D1 更正/D3 消解. Findings F1-F6 回流下一轮 01. 见 retrospective-v1.2.0.md"
     }
   ],
-  "note": "v1.4.0 周期闭环 2026-09-03: 00-07 done. platform+debt 6 Task, 1898 passed, smoke 6/6, ruff 0 (F401 启用), v1.4.0 tagged. 复盘见 retrospective-v1.4.0.md (findings H1-H5). v1.5.0 智能自适应周期启动: 01-prd DONE (PRD-intelligence-adaptation-v1.5.0 Approved + PMS-intelligence-adaptation.md ready; 4 新能力 F-I-1..4 + 携带 H1/H2/H4/H5 债; PRD claims ground 自源码全 TRUE). current_stage=02-decomposition. 决策: 开新能力同时清债."
+  "note": "v1.4.0 周期闭环 2026-09-03: 00-07 done. platform+debt 6 Task, 1898 passed, smoke 6/6, ruff 0 (F401 启用), v1.4.0 tagged. 复盘见 retrospective-v1.4.0.md (findings H1-H5). v1.5.0 智能自适应周期启动: 01-prd DONE (PRD-intelligence-adaptation-v1.5.0 Approved + PMS-intelligence-adaptation.md ready; 4 新能力 F-I-1..4 + 携带 H1/H2/H4/H5 债; PRD claims ground 自源码全 TRUE). current_stage=02-decomposition. 决策: 开新能力同时清债. 02-decomposition DONE: DECOMPOSITION-DELTA-v1.5.0.md (8 原子 Feature F-I-1..4+F-Z-6..9, 3 Wave, Z-6/Z-7 串行). current_stage=03-tech."
 }
