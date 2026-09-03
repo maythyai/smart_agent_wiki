@@ -2,7 +2,7 @@
 
 Verifies the coverage ratchet config exists and that the gate mechanism
 (fail_under) actually blocks a sub-threshold run. The gate is a regression
-floor (60%, just below the 62% baseline); 80% is the documented raise-target.
+floor (63%, just below the 63.1% baseline); 80% is the documented raise-target.
 """
 
 from __future__ import annotations
@@ -29,7 +29,7 @@ def test_coverage_gate_configured() -> None:
     floor = report["fail_under"]
     # Floor must be at/below the measured baseline (62%) so it is a
     # regression ratchet, not a day-one-blocker. Target = 80% (raise over time).
-    assert 50 <= floor <= 62, f"fail_under {floor} outside the ratchet band [50,62]"
+    assert 50 <= floor <= 65, f"fail_under {floor} outside the ratchet band [50,65]"
     run_cfg = cfg["tool"]["coverage"]["run"]
     assert "src/saw" in run_cfg.get("source", []), "coverage source not src/saw"
 
