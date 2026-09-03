@@ -75,3 +75,29 @@ packages = ["src/saw"]
 # project; that .pth has been corrected and the workaround removed.
 asyncio_mode = "auto"
 testpaths = ["tests"]
+
+[tool.coverage.run]
+# T-F-E-2: coverage source. CI runs `pytest --cov` to enforce the gate.
+source = ["src/saw"]
+omit = [
+    "*/tests/*",
+    "*/venv*/*",
+    # Heavy-SDK extras require sentence-transformers; not installed in CI.
+    "src/saw/engines/learn/distiller.py",
+    "src/saw/engines/learn/fsrs_scheduler.py",
+    "src/saw/engines/learn/trends.py",
+]
+
+[tool.coverage.report]
+# T-F-E-2 (AC-TEST-1): regression ratchet. Coverage must not fall below the
+# established baseline (62% total, measured T-F-E-1-1). The gate is a floor,
+# not the target: raise `fail_under` toward 80% (the core-engine target) as
+# coverage improves. A gate that fails on day one (80% < current 62%) would
+# block all merges — so we ratchet from the measured baseline.
+fail_under = 60
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+]
