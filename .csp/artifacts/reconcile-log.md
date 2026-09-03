@@ -49,3 +49,9 @@
 - [ ] 无待确认项。README_CN 版本对齐已执行；审计稿去重已复核为非重复。
 
 > **幂等**：下次重跑本阶段，仅处理新 delta（README_CN raw hash 已变 → `diff` 会标 degraded re-align）。
+
+## 2026-09-03 — B3 文档修正 + unverified 标注（T-F-B-3-1）
+
+- `docs/CAPABILITIES.md`（F-B-2 产出）现为准绳清单：每条 capability 带 file:line，`[inferred]` 场景标 `[unverified]`，不臆造"已支持"。
+- deep_audit.md 行 4「v3.7.0」保持历史快照不动（历史正文，v3.7=roadmap 里程碑轴，非 release 轴——见 ROADMAP 内外映射）。
+- CMS drift D1（6 agent execute() 疑空）→ 不成立，已更正（见 implement.md 2026-09-03）；drift D3（前后端 token 独立）→ 消解（前端已同源）。两条 drift 状态在 retrospective-v1.2.0.md 归档。
