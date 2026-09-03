@@ -110,7 +110,7 @@ Check everything is working:
 
 ```bash
 saw --version
-# Output: saw 1.1.0
+# Output: saw 1.2.0
 
 saw status
 # Output:

@@ -1,7 +1,7 @@
 class Saw < Formula
   desc "Smart Agent Wiki - Intelligent Multi-Agent Knowledge Platform"
   homepage "https://github.com/chensaics/smart_agent_wiki"
-  version "1.1.0"
+  version "1.2.0"
   license "MIT"
   head "https://github.com/chensaics/smart_agent_wiki.git", branch: "master"
 

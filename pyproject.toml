@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "smart-agent-wiki"
-version = "1.1.0"
+version = "1.2.0"
 description = "Smart Agent Wiki - 智能多代理知识平台"
 requires-python = ">=3.11"
 dependencies = [

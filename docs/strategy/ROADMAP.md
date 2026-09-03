@@ -33,7 +33,7 @@ see_also: docs/strategy/STRATEGY.md | docs/prd/PRD-INDEX.md | .csp/review/REVIEW
 
 | 载体 | 现状 | 收口规则 |
 |---|---|---|
-| `pyproject.toml`（Python 包） | `1.1.0` | **canonical 真源**。下一个发布 = `1.2.0` |
+| `pyproject.toml`（Python 包） | `1.2.0` | **canonical 真源**。下一个发布 = `1.3.0` |
 | git tags `v3.4.0` / `v3.7.0` | 内部 sprint 里程碑号 | 重新定性为**内部 milestone label**（见 1.3），不作为对外发布版本。今后对外 tag 一律 SemVer |
 | git tag `v1.0.1` | 与 pyproject 一致 | 保留，首个对外正式发布基线 |
 | `desktop/` (tauri.conf.json + package.json) | `0.1.0` | 桌面端**未达 1.0**，独立 0.x 跟踪至稳定；达 v1.0 后与 canonical 对齐 |
@@ -144,8 +144,8 @@ canonical = `pyproject.toml`。发布时以下必须与之一致，用脚本校�
 
 | 版本 | 主题 | Track | status |
 |---|---|---|---|
-| v1.1.0 | 产品加固与端到端可用 | core-trust | in-progress |
-| v1.2.0 | 可信治理深化 | core-trust | planned |
+| v1.1.0 | 产品加固与端到端可用 | core-trust | released |
+| v1.2.0 | 安全/可观测硬化（Wave 1 实际落地） | core-trust | released (2026-09-03) |
 | v1.3.0 | 平台化与团队协作 | platform-team | planned |
 | v1.4.0 | 生态与集成扩展 | ecosystem-integration | planned |
 | v1.5.0 | 智能与自适应 | intelligence-adaptation | planned |
