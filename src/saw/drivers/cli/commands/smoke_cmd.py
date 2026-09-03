@@ -108,6 +108,7 @@ def smoke(
         from saw.drivers.cli.commands.smoke_harness import (
             node_govern_learn,
             node_ingest_compile,
+            node_offline_fallback,
             node_query_keyword,
         )
 
@@ -117,6 +118,7 @@ def smoke(
                 SmokeNode("ingest.compile", node_ingest_compile),
                 SmokeNode("query.keyword", node_query_keyword),
                 SmokeNode("govern.learn", node_govern_learn),
+                SmokeNode("offline.fallback", node_offline_fallback),
             ]
         )
 

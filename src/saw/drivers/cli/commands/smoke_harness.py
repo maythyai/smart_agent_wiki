@@ -215,3 +215,18 @@ def node_govern_learn() -> bool:
         return isinstance(sops, list)
     finally:
         ctx.close()
+
+
+def node_offline_fallback() -> bool:
+    """F-A-5: with no LLM (offline), an ``auto`` query degrades to keyword
+    search and still returns an answer (AC-E2E-2). No crash, no hang."""
+    ctx = build_smoke_context()
+    try:
+        _ingest_fixture(ctx)
+        # ``auto`` mode would use NL (LLM) when a router is present; offline
+        # (llm=None) it must fall back to keyword search — the degradation
+        # signal is result.mode == "search", not "nl".
+        result = ctx.query_engine.query(question="Ed25519 signature", mode="auto")
+        return bool(result.answer) and result.mode == "search"
+    finally:
+        ctx.close()

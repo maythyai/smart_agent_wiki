@@ -109,3 +109,41 @@ def test_node_query_keyword() -> None:
 
 def test_node_govern_learn() -> None:
     assert node_govern_learn() is True
+
+
+# ── F-A-5: offline fallback ──────────────────────────────────────────
+
+
+def test_smoke_offline_fallback() -> None:
+    """AC-E2E-2: with no LLM, ingest/govern/learn (no-LLM paths) + auto query
+    still PASS via rule fallback."""
+    ctx = build_smoke_context()
+    try:
+        _ingest(ctx)
+        # no-LLM paths succeed (ingest already done; govern + learn).
+        report = ctx.governor.lint()
+        assert report is not None
+        # auto query degrades to keyword search instead of crashing.
+        result = ctx.query_engine.query(question="Ed25519", mode="auto")
+        assert result.answer
+    finally:
+        ctx.close()
+
+
+def test_smoke_offline_nl_degraded() -> None:
+    """AC-E2E-2: an auto (would-be NL) query is degraded to search offline."""
+    ctx = build_smoke_context()
+    try:
+        _ingest(ctx)
+        result = ctx.query_engine.query(question="Ed25519 signature", mode="auto")
+        assert result.mode == "search", (
+            f"offline auto query should degrade to search, got {result.mode}"
+        )
+    finally:
+        ctx.close()
+
+
+def test_node_offline_fallback() -> None:
+    from saw.drivers.cli.commands.smoke_harness import node_offline_fallback
+
+    assert node_offline_fallback() is True
