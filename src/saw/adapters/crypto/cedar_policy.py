@@ -283,12 +283,34 @@ class CedarPolicyEngine:
             policy_path: Path to Cedar policy file
             schema_path: Optional path to Cedar schema file
         """
+        self._policy_path = policy_path
+        self._schema_path = schema_path
         self._python_adapter = CedarPythonAdapter(policy_path, schema_path)
         self._cli_adapter = CedarCLIAdapter(policy_path, schema_path)
         self._use_cli = not self._python_adapter.available
 
         if self._use_cli:
             logger.info("Using Cedar CLI adapter (cedar-python unavailable)")
+
+    def reload(self) -> bool:
+        """Re-read the policy file without a restart (AC-SEC-5 hot-reload).
+
+        The CLI backend reads the file fresh on every ``evaluate`` (inherently
+        hot); the cedar-python backend caches a ``PolicySet`` at init, so it
+        must be re-created to pick up an edited policy. Returns True if the
+        python backend is (re)loaded; False when falling back to CLI (which is
+        still hot — it re-reads the file per call).
+        """
+        self._python_adapter = CedarPythonAdapter(self._policy_path, self._schema_path)
+        self._use_cli = not self._python_adapter.available
+        if self._python_adapter.available:
+            logger.info("Cedar policy hot-reloaded from %s", self._policy_path)
+        else:
+            logger.info(
+                "Cedar reload fell back to CLI (hot per-call) for %s",
+                self._policy_path,
+            )
+        return self._python_adapter.available
 
     def is_authorized(
         self,
