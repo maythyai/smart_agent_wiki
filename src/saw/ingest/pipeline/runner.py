@@ -1,7 +1,6 @@
 """Pipeline execution with DAG validation."""
 from __future__ import annotations
 import time
-from dataclasses import dataclass
 
 from .types import PipelinePhase, PipelineContext, PhaseResults, PhaseResult
 from .validator import validate_dag

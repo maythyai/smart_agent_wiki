@@ -5,7 +5,6 @@ Defines events that plugins can subscribe to for reacting to SAW operations.
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional
 
 
 @dataclass

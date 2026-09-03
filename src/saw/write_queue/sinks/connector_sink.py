@@ -10,13 +10,11 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Optional
 
-from saw.connectors.sync_engine import SyncEngine, SyncOptions, SyncMode
-from saw.connectors.backpressure import BackpressureManager
+from saw.connectors.sync_engine import SyncEngine
 from saw.connectors.retry_handler import RetryHandler, RetryConfig, TransientError
 from saw.connectors.health_monitor import HealthMonitor
 from saw.connectors.sync_logger import SyncLogger
 from saw.connectors.registry import ConnectorRegistry
-from saw.connectors.protocol import SyncDirection
 from saw.write_queue.queue import WriteOp
 
 

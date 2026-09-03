@@ -1,6 +1,5 @@
 """Phase output types and phase definitions."""
 from typing import TypedDict, Optional
-from datetime import datetime
 
 
 class ClassifyOutput(TypedDict):

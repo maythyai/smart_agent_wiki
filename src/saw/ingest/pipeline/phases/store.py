@@ -1,6 +1,5 @@
 """Store phase: Store validated claims to vault and claims DB."""
 from __future__ import annotations
-import os
 from pathlib import Path
 from typing import Any
 

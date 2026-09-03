@@ -23,7 +23,6 @@ import logging
 from datetime import datetime, timedelta, timezone
 from typing import Any, Optional, Protocol, runtime_checkable
 
-from saw.auth.jwt_auth import AuthConfig
 
 logger = logging.getLogger(__name__)
 

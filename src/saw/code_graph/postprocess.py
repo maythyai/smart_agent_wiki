@@ -15,14 +15,6 @@ import time
 from collections import defaultdict
 from typing import Optional
 
-from saw.code_graph.models import (
-    CodeEdge,
-    CodeNode,
-    EdgeType,
-    ConfidenceTier,
-    NodeKind,
-    make_uid,
-)
 from saw.code_graph.store import CodeGraphStore
 
 logger = logging.getLogger(__name__)

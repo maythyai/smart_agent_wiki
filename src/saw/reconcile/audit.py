@@ -12,9 +12,7 @@ from typing import Optional
 
 
 from .models import (
-    BiTemporalFact,
     Contradiction,
-    ResolutionStrategyType,
 )
 from .strategies import ResolutionResult
 

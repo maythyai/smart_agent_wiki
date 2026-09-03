@@ -13,10 +13,6 @@ Usage:
 
 from __future__ import annotations
 
-import os
-import sys
-import time
-import subprocess
 from pathlib import Path
 from typing import Optional
 
@@ -25,7 +21,6 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.prompt import Prompt, Confirm
-from rich.text import Text
 
 app = typer.Typer(
     name="tutorial",

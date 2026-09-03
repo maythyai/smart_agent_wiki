@@ -17,7 +17,7 @@ from pydantic import BaseModel, Field, field_validator
 from sqlalchemy.orm import Session
 
 from saw.db.feed_models import Feed, FeedEntry
-from saw.engines.ingest.feed_manager import FeedManager, FeedManagerError, PollResult
+from saw.engines.ingest.feed_manager import FeedManager, FeedManagerError
 
 logger = logging.getLogger(__name__)
 

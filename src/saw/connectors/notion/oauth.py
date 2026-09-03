@@ -5,8 +5,6 @@ Per NOTI-01: OAuth workspace connection.
 """
 from __future__ import annotations
 
-import json
-from datetime import datetime, timezone
 from typing import Optional
 
 from saw.connectors.oauth_handler import OAuthHandler, OAuthConfig, OAuthError

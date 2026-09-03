@@ -5,10 +5,9 @@ Per NOTI-01: Notion API models for pages, databases, properties.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import field
 from datetime import datetime
 from typing import Annotated, Any, Literal, Optional, Union
-import enum
 
 from pydantic import BaseModel, ConfigDict, Field
 

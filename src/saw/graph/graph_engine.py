@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Optional
 import json
 
-from .relevance import RelevanceModel, Node, Edge, RelevanceSignal
+from .relevance import RelevanceModel, Node
 from .community import CommunityDetector, CommunityResult
 from .insights import InsightGenerator, InsightsResult
 

@@ -14,7 +14,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
 from io import StringIO
-from typing import Any, List, Optional
+from typing import List, Optional
 
 
 class ImportFormat(str, Enum):

@@ -6,12 +6,11 @@ Per WECO-01~04: Full WeCom connector implementation.
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
-from typing import Any, Optional
+from datetime import datetime
+from typing import Optional
 import xmltodict
 
 from saw.connectors.protocol import (
-    UnifiedConnectorInterface,
     AuthResult,
     ConnectorItem,
 )

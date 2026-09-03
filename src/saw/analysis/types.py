@@ -1,5 +1,5 @@
 """Impact analysis types."""
-from typing import TypedDict, Literal, Optional
+from typing import TypedDict, Literal
 
 RiskLevel = Literal['WILL_BREAK', 'LIKELY_AFFECTED', 'MAY_NEED_TESTING']
 Direction = Literal['upstream', 'downstream']

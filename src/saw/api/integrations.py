@@ -16,7 +16,7 @@ from sqlalchemy import select, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from saw.connectors.registry import ConnectorRegistry
-from saw.connectors.health_monitor import HealthMonitor, HealthStatus
+from saw.connectors.health_monitor import HealthMonitor
 from saw.connectors.sync_status import SyncStatusTracker, SyncState
 from saw.connectors.sync_engine import SyncEngine, SyncOptions, SyncMode
 from saw.connectors.protocol import SyncDirection

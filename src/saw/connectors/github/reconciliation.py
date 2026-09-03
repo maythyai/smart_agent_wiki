@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Optional
+from typing import Optional
 import logging
 
 from sqlalchemy import select
@@ -15,7 +15,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from saw.connectors.github.connector import GitHubConnector
 from saw.connectors.github.issue_fetcher import IssueFetcher
-from saw.connectors.github.graphql_client import DiscussionFetcher
 from saw.db.github_models import (
     GitHubSyncCursorModel,
     GitHubRepositoryConfigModel,

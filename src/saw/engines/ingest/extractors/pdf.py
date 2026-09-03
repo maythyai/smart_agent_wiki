@@ -12,7 +12,6 @@ from pathlib import Path
 from saw.adapters.llm.router import LLMRouter
 from saw.adapters.parsers.pdf_parser import PDFParser, PDFParseResult
 from saw.domain.claims import Claim
-from saw.domain.entities import Entity, EntityRelation
 from saw.engines.ingest.extractors.llm_extract import LLMExtractor
 from saw.engines.ingest.extractors.markdown import ExtractionResult
 

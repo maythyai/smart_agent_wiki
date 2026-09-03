@@ -14,7 +14,6 @@ import uuid
 from pathlib import Path
 
 from saw.domain.claims import Claim
-from saw.domain.entities import Entity, EntityRelation
 from saw.engines.ingest.extractors.markdown import ExtractionResult
 
 

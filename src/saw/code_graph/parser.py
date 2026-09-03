@@ -418,7 +418,6 @@ class CodeParser:
 
     def _extract_python_params(self, node) -> list[str]:
         """提取函数参数列表"""
-        import ast
 
         params = []
         for arg in node.args.args:
@@ -434,7 +433,6 @@ class CodeParser:
 
     def _has_decorator(self, node, names: tuple[str, ...]) -> bool:
         """检查函数是否有指定装饰器 (精确匹配末尾组件)"""
-        import ast
 
         for dec in node.decorator_list:
             dec_name = self._get_name_from_node(dec)

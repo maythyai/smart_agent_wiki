@@ -6,12 +6,10 @@ Per D-22: Three-tier degradation (offline mode without LLM).
 from __future__ import annotations
 
 import uuid
-from pathlib import Path
 
 from saw.adapters.llm.router import LLMRouter
 from saw.adapters.parsers.html_parser import HTMLParser, HTMLParseResult
 from saw.domain.claims import Claim
-from saw.domain.entities import Entity, EntityRelation
 from saw.engines.ingest.extractors.llm_extract import LLMExtractor
 from saw.engines.ingest.extractors.markdown import ExtractionResult
 

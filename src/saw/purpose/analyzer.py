@@ -5,7 +5,6 @@ Purpose Analyzer - Purpose 分析器
 """
 
 from dataclasses import dataclass
-from datetime import datetime
 from typing import Optional
 import re
 

@@ -7,7 +7,7 @@ Per GITH-06: Webhook signature verification.
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Any, Optional
+from typing import Optional
 import logging
 
 from sqlalchemy import select

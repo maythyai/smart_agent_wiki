@@ -4,11 +4,9 @@ Purpose Manager - Purpose 管理器
 管理 Wiki 的意图和目标定义
 """
 
-from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
-import json
 
 from .models import Purpose, Goal, GoalPriority, GoalStatus, ResearchScope
 

@@ -5,12 +5,12 @@ Per GITH-01: GitHub API models for Issues, Discussions, Repositories.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import field
 from datetime import datetime
-from typing import Annotated, Any, Literal, Optional, Union
+from typing import Any, Literal, Optional
 import enum
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict
 
 
 class GitHubUser(BaseModel):

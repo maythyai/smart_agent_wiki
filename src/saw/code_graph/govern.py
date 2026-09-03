@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from saw.code_graph.engine import CodeGraphEngine
-from saw.code_graph.bridge import BridgeLayer, StaleDoc, CrossImpactResult
+from saw.code_graph.bridge import BridgeLayer, CrossImpactResult
 
 logger = logging.getLogger(__name__)
 

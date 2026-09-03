@@ -6,11 +6,10 @@ Per SYNC-05: Backpressure handling via Write Queue with pause/resume thresholds.
 from __future__ import annotations
 
 import enum
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from dataclasses import dataclass
+from datetime import datetime
 from typing import Any, Optional
 
-from saw.connectors.sync_logger import SyncLogger
 from saw.domain.utils import utcnow  # noqa: F401
 
 

@@ -5,9 +5,6 @@ Community Detection - Louvain 社区检测
 """
 
 from dataclasses import dataclass, field
-from typing import Optional
-from collections import defaultdict
-import math
 
 
 @dataclass

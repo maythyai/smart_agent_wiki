@@ -9,11 +9,10 @@ import json
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 from cryptography.fernet import Fernet, InvalidToken
 
-from saw.adapters.crypto._keyfiles import load_or_create, read_key_file, write_key_file
+from saw.adapters.crypto._keyfiles import load_or_create
 
 
 class EncryptionError(Exception):

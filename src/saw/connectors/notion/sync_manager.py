@@ -7,8 +7,7 @@ Per NOTI-08: System polls Notion for changes at configurable intervals.
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from dataclasses import dataclass
 from typing import Any, Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession

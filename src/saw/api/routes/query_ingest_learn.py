@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 
 router = APIRouter(prefix="/api/v1", tags=["query-ingest-learn"])
 
@@ -263,7 +263,6 @@ def trigger_distill(
     SOPs — ready for a human (or a later LLM pass) to finalize.
     """
     import json
-    from collections import Counter
     from pathlib import Path
 
     sops: list[dict] = []

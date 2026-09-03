@@ -5,10 +5,9 @@ Per Pitfall 27: Implements adaptive intervals and exponential backoff.
 """
 from __future__ import annotations
 
-import asyncio
 import logging
 import random
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Any, Callable, Optional
 

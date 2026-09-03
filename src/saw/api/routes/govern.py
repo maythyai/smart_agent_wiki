@@ -9,7 +9,6 @@ the router level in ``create_app()``.
 from __future__ import annotations
 
 import sqlite3
-from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request
 
@@ -112,7 +111,6 @@ def get_claim_detail(
 
     # Optionally include related claims
     if include_relations:
-        from ast import Dict
         relations: list[dict] = []
         try:
             if hasattr(repo, "_conn"):

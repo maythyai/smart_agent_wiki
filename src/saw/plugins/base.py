@@ -4,8 +4,8 @@ Defines the PluginBase abstract class and PluginContext for safe plugin executio
 """
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
-from typing import Any, Optional
+from dataclasses import dataclass
+from typing import Any
 from pathlib import Path
 
 

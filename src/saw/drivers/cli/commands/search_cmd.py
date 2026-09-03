@@ -13,7 +13,7 @@ from rich.table import Table
 
 from saw.adapters.storage.claims_repository import SQLiteClaimsRepository
 from saw.adapters.storage.wiki_repository import WikiRepository
-from saw.config.settings import WikiSettings, load_config
+from saw.config.settings import load_config
 from saw.engines.query.search import FTS5Search
 from saw.engines.query.tree_mode import TreeModeSearch
 

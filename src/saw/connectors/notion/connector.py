@@ -8,7 +8,7 @@ Per NOTI-10: Sync cursor persistence.
 """
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Any, Optional
 import logging
 
@@ -25,7 +25,7 @@ from saw.connectors.protocol import (
 from saw.domain.exceptions import ConnectorError
 from saw.connectors.models import ConnectorConfig
 from saw.connectors.rate_limiter import RateLimitManager
-from saw.connectors.notion.models import NotionPage, NotionDatabase, NotionRichText
+from saw.connectors.notion.models import NotionDatabase, NotionRichText
 from saw.connectors.notion.oauth import NotionOAuthHandler
 from saw.db.notion_models import NotionSyncCursorModel, NotionDatabaseConfigModel
 

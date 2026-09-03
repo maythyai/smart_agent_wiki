@@ -8,7 +8,7 @@ Per D-10 to D-13:
 """
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 
 from saw.domain.value_objects import FreshnessLevel
 from saw.domain.protocols import ClaimsRepository

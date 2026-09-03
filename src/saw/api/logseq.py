@@ -6,14 +6,13 @@ Per LOGS-01: Configure graph path via API.
 from __future__ import annotations
 
 from pathlib import Path
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from saw.connectors.logseq.connector import LogseqConnector
-from saw.connectors.logseq.models import LogseqConfig
 
 router = APIRouter(prefix="/api/v1/logseq", tags=["logseq"])
 

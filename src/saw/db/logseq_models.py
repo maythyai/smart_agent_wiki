@@ -5,10 +5,10 @@ Per LOGS-06: System detects concurrent edits (file hash comparison).
 """
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime
 
-from sqlalchemy import String, Text, DateTime, Index, Integer
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy import String, DateTime, Index, Integer
+from sqlalchemy.orm import Mapped, mapped_column
 
 # Use the same Base as other models
 from saw.db.models import Base

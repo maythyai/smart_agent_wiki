@@ -18,7 +18,7 @@ from saw.adapters.llm.router import LLMRouter
 from saw.adapters.storage.claims_repository import SQLiteClaimsRepository
 from saw.adapters.storage.vault_repository import VaultRepository
 from saw.adapters.storage.wiki_repository import WikiRepository
-from saw.config.settings import LLMSettings, WikiSettings, detect_tier, load_config
+from saw.config.settings import detect_tier, load_config
 from saw.domain.value_objects import CapabilityTier
 from saw.engines.ingest.pipeline import IngestPipeline
 from saw.write_queue.dispatcher import Dispatcher

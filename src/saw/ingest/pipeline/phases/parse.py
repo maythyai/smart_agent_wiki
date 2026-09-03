@@ -1,6 +1,5 @@
 """Parse phase: Parse source content into structured format."""
 from __future__ import annotations
-import time
 from pathlib import Path
 
 from ..types import PipelinePhase, PipelineContext, PhaseResults

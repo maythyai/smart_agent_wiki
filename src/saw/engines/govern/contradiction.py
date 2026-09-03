@@ -8,12 +8,10 @@ Per D-09: All types auto-resolve with correct strategy.
 from __future__ import annotations
 
 import asyncio
-import hashlib
 import json
 import sqlite3
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 from saw.domain.claims import Claim

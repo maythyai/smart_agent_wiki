@@ -6,7 +6,7 @@ Per ERRO-04: Error details preserved for data integrity tracking.
 """
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Optional
 
 from sqlalchemy import String, Boolean, Integer, Text, DateTime, ForeignKey, Index, JSON

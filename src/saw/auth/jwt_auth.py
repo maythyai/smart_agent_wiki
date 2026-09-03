@@ -271,7 +271,7 @@ class AuthService:
         display_name: str | None = None,
     ) -> dict:
         """Register a new user."""
-        from saw.db.models import User, generate_uuid, utcnow
+        from saw.db.models import generate_uuid, utcnow
 
         # Hash password
         hashed_password = self.hasher.hash_password(password)

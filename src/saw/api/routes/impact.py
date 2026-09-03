@@ -1,5 +1,5 @@
 """API routes for impact analysis."""
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 from typing import Optional, List
 from enum import Enum

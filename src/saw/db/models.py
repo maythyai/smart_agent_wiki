@@ -6,12 +6,11 @@ Per TEAM-02~08: Users, Vaults, Permissions, Audit Logs.
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import List, Optional
 
 from sqlalchemy import (
     Boolean,
-    Column,
     DateTime,
     ForeignKey,
     Index,
@@ -20,7 +19,6 @@ from sqlalchemy import (
     Float,
     Integer,
 )
-from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 from saw.domain.utils import utcnow  # noqa: F401

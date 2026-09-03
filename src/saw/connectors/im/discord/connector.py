@@ -5,21 +5,19 @@ Per DISC-01~05: Full Discord connector implementation.
 """
 from __future__ import annotations
 
-import asyncio
 import logging
-from datetime import datetime, timezone
-from typing import Any, Optional, Callable
+from datetime import datetime
+from typing import Optional, Callable
 
 import discord
 from discord.ext import commands
 
 from saw.connectors.protocol import (
-    UnifiedConnectorInterface,
     AuthResult,
     ConnectorItem,
 )
 from saw.connectors.base_connector import BaseConnector
-from saw.connectors.im.discord.models import DiscordMessage, DiscordUser
+from saw.connectors.im.discord.models import DiscordMessage
 
 logger = logging.getLogger(__name__)
 

@@ -18,9 +18,7 @@ from saw.engines.ingest.extractors.media import (
     MediaExtractor,
     MediaIngestConfig,
     TranscriptionResult,
-    MediaInfo,
 )
-from saw.engines.ingest.extractors.markdown import ExtractionResult
 from saw.engines.ingest.preview import PreviewManager
 
 

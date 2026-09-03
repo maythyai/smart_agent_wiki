@@ -22,7 +22,6 @@ from saw.domain.feedback import (
     KnowledgeIssue,
 )
 from saw.domain.concept import KnowledgeStability
-from saw.domain.utils import utcnow
 
 
 class FeedbackEngine:

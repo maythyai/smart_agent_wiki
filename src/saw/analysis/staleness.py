@@ -2,10 +2,9 @@
 from __future__ import annotations
 import time
 import subprocess
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Optional, Literal, TYPE_CHECKING
-from dataclasses import dataclass, field
-from pathlib import Path
+from dataclasses import dataclass
 
 if TYPE_CHECKING:
     from saw.graph import KnowledgeGraph

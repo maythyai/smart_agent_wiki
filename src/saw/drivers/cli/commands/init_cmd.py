@@ -65,7 +65,6 @@ def init(
         with engine.connect() as conn:
             # Claims DB schema is initialized via the connection PRAGMA
             # We need to create the tables here
-            from saw.adapters.storage.claims_repository import CLAIMS_DB_SCHEMA
             conn.execute(text("SELECT 1"))
         engine.dispose()
 

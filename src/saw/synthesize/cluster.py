@@ -6,7 +6,6 @@ Cluster Builder - 聚合构建器
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional
 import hashlib
 
 

@@ -8,11 +8,11 @@ from __future__ import annotations
 import secrets
 import json
 import logging
-from dataclasses import dataclass, field
-from datetime import datetime, timezone, timedelta
+from dataclasses import dataclass
+from datetime import datetime, timezone
 from typing import Optional
 
-from saw.connectors.oauth_handler import OAuthConfig, OAuthState
+from saw.connectors.oauth_handler import OAuthState
 from saw.connectors.token_encryption import TokenEncryption
 
 logger = logging.getLogger(__name__)

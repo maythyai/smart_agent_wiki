@@ -1,6 +1,5 @@
 """Validate phase: Validate claims and compute confidence scores."""
 from __future__ import annotations
-from typing import Any
 
 from ..types import PipelinePhase, PipelineContext, PhaseResults
 from . import ValidateOutput, MergeOutput

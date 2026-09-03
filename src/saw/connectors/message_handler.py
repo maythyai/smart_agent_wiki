@@ -7,7 +7,7 @@ Per IM-04: Capture thread context with thread_parent_id.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Any, Optional
 
 from saw.connectors.protocol import ConnectorItem

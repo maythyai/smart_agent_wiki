@@ -6,17 +6,16 @@ Per GITH-09: Rate limit status endpoint.
 """
 from __future__ import annotations
 
-from typing import Annotated, Optional
+from typing import Optional
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from saw.db.session import get_db_session as get_session
 from saw.connectors.github.connector import GitHubConnector
 from saw.connectors.github.repository_selector import RepositorySelector
-from saw.connectors.github.models import GitHubRateLimit
 from saw.connectors.registry import ConnectorRegistry
 
 logger = logging.getLogger(__name__)

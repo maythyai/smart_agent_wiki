@@ -5,7 +5,7 @@ Per NOTI-03: Notion blocks (paragraphs, lists, code) convert to markdown content
 """
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 import logging
 
 logger = logging.getLogger(__name__)

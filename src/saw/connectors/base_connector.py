@@ -6,13 +6,10 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Any
 
 from saw.connectors.protocol import (
     UnifiedConnectorInterface,
-    AuthResult,
     ConnectorItem,
-    SyncDirection,
 )
 from saw.connectors.rate_limiter import RateLimitManager
 

@@ -9,13 +9,12 @@ Supports:
 from __future__ import annotations
 
 import io
-import uuid
 import zipfile
 from typing import TYPE_CHECKING
 
 from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
 
-from saw.engines.query.wiki_links import parse_wiki_links, slugify
+from saw.engines.query.wiki_links import slugify
 
 if TYPE_CHECKING:
     from saw.adapters.storage.wiki_repository import WikiRepository

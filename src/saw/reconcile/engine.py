@@ -12,7 +12,7 @@ from typing import Optional
 from .detector import ContradictionDetector, DetectionResult
 from .strategies import ResolutionStrategist, ResolutionResult
 from .audit import AuditLogger, AuditEntry
-from .models import BiTemporalFact, Contradiction, FactStatus, ResolutionStrategyType
+from .models import BiTemporalFact, Contradiction
 
 
 @dataclass

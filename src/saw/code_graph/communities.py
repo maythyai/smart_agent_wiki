@@ -7,13 +7,12 @@
 from __future__ import annotations
 
 import logging
-import math
 import time
 from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import Optional
 
-from saw.code_graph.models import CodeNode, CodeEdge, EdgeType, NodeKind, EDGE_WEIGHTS
+from saw.code_graph.models import NodeKind
 from saw.code_graph.store import CodeGraphStore
 
 logger = logging.getLogger(__name__)

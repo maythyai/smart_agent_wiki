@@ -12,14 +12,12 @@ from pathlib import Path
 from typing import Any, Optional
 
 from saw.connectors.protocol import (
-    UnifiedConnectorInterface,
     AuthResult,
     ConnectorItem,
-    SyncDirection,
 )
 from saw.connectors.base_connector import BaseConnector
 from saw.connectors.logseq.models import LogseqConfig, BlockNode, ParsedPage
-from saw.connectors.logseq.parser import LogseqParser, compute_file_hash
+from saw.connectors.logseq.parser import LogseqParser
 from saw.connectors.logseq.file_watcher import LogseqFileWatcher
 
 logger = logging.getLogger(__name__)

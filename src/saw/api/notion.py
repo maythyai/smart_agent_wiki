@@ -5,15 +5,12 @@ Per NOTI-02: Database selection API endpoints.
 """
 from __future__ import annotations
 
-from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from saw.db.config import get_session_factory
 from saw.connectors.notion.database_selector import DatabaseSelector
-from saw.connectors.notion.models import NotionDatabase, NotionRichText
 from saw.connectors.registry import ConnectorRegistry
 
 

@@ -7,11 +7,10 @@ Per IM-07: Graceful degradation when platforms unavailable.
 """
 from __future__ import annotations
 
-import asyncio
 import enum
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Any, Optional
 
 from sqlalchemy import select

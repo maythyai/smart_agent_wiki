@@ -7,13 +7,13 @@ Per SYNC-04: Manual sync trigger per connector from CLI or Web UI.
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, Optional
+from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
+from fastapi import APIRouter, HTTPException, BackgroundTasks
 from pydantic import BaseModel
 
 from saw.connectors.sync_engine import SyncEngine, SyncOptions, SyncMode
-from saw.connectors.sync_status import SyncStatusTracker, SyncStatus, SyncState
+from saw.connectors.sync_status import SyncStatusTracker
 from saw.connectors.health_monitor import HealthMonitor
 from saw.connectors.sync_logger import SyncLogger
 from saw.connectors.registry import ConnectorRegistry

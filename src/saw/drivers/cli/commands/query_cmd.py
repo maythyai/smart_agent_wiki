@@ -15,7 +15,7 @@ from rich.table import Table
 from saw.adapters.llm.router import LLMRouter
 from saw.adapters.storage.claims_repository import SQLiteClaimsRepository
 from saw.adapters.storage.wiki_repository import WikiRepository
-from saw.config.settings import LLMSettings, WikiSettings, load_config, detect_tier
+from saw.config.settings import load_config, detect_tier
 from saw.domain.value_objects import CapabilityTier
 from saw.engines.query.compare import CompareEngine
 from saw.engines.query.compiler import ContextCompiler

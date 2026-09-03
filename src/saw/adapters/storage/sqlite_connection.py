@@ -7,7 +7,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from sqlalchemy import event
-from sqlmodel import Session, create_engine
+from sqlmodel import create_engine
 
 
 def _set_pragma(dbapi_connection, connection_record) -> None:

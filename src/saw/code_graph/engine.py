@@ -6,7 +6,6 @@ Parse → Build → PostProcess → Query → Review → Update
 from __future__ import annotations
 
 import logging
-import time
 from collections import deque
 from pathlib import Path
 from typing import Optional
@@ -18,7 +17,6 @@ from saw.code_graph.models import (
     EdgeType,
     ImpactScore,
     NodeKind,
-    EDGE_WEIGHTS,
     DEPTH_DECAY,
     SCORE_FLOOR,
 )

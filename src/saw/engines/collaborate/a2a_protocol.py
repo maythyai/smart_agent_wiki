@@ -18,7 +18,6 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from saw.adapters.crypto.ed25519 import ReceiptSigner
-    from saw.domain.agent import AgentContext, AgentResult, AgentTask
     from saw.domain.protocols import AgentProtocol
     from saw.engines.collaborate.dispatcher import AgentDispatcher
 

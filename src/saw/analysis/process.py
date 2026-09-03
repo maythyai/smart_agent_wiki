@@ -2,7 +2,7 @@
 from __future__ import annotations
 import time
 from datetime import datetime
-from typing import Optional, Literal, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 from dataclasses import dataclass, field
 
 if TYPE_CHECKING:

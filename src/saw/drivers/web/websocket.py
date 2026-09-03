@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING, Any
 from fastapi import WebSocket
 
 if TYPE_CHECKING:
-    from saw.domain.events import ClaimsReady, ContradictionFound, IngestCompleted
+    pass
 
 
 @dataclass

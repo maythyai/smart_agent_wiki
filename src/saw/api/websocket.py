@@ -8,7 +8,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from datetime import datetime, timezone
-from typing import Dict, Set, Any
+from typing import Dict, Set
 
 from fastapi import WebSocket
 

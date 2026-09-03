@@ -7,12 +7,12 @@ Per GITH-10: Sync cursor persistence for resume capability.
 """
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Optional
 import enum
 
 from sqlalchemy import String, Boolean, Integer, Text, DateTime, ForeignKey, Index, JSON, Enum as SQLEnum
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column
 
 from saw.db.models import Base, generate_uuid
 from saw.domain.utils import utcnow  # noqa: F401

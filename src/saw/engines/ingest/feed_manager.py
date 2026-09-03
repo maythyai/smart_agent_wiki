@@ -21,7 +21,6 @@ import trafilatura
 from saw.db.feed_models import Feed, FeedEntry
 from saw.domain.feed import (
     DeduplicationKey,
-    DeduplicationResult,
     DeduplicationService,
     EntryHash,
     EntryStatus,

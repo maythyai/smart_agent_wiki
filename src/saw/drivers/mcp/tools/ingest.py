@@ -4,7 +4,6 @@ Per 02-03 Task 2: Ingest tools (saw_ingest, saw_reparse).
 """
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Any
 
 from saw.drivers.mcp.server import mcp

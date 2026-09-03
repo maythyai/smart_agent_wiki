@@ -1,8 +1,6 @@
 """Extract phase: Extract claims, entities, and relations."""
 from __future__ import annotations
-import time
 import re
-from typing import Any
 
 from ..types import PipelinePhase, PipelineContext, PhaseResults
 from . import ExtractOutput, ParseOutput

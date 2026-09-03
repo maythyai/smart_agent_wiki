@@ -6,10 +6,9 @@ This module classifies knowledge and identifies expiry candidates for user revie
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
-from saw.domain.value_objects import FreshnessLevel
 
 if TYPE_CHECKING:
     from saw.domain.claims import Claim

@@ -5,7 +5,6 @@ Provides real-time statistics for the Dashboard UI.
 
 from fastapi import APIRouter, Request
 from pathlib import Path
-import psutil
 from datetime import datetime
 
 router = APIRouter()

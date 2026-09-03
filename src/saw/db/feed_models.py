@@ -5,13 +5,11 @@ Per RSSS-01~07: Feed and FeedEntry models.
 """
 from __future__ import annotations
 
-import uuid
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import List, Optional
 
 from sqlalchemy import (
     Boolean,
-    Column,
     DateTime,
     ForeignKey,
     Index,
@@ -19,7 +17,7 @@ from sqlalchemy import (
     String,
     Text,
 )
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from saw.db.models import Base, generate_uuid, utcnow
 
@@ -100,4 +98,3 @@ class FeedEntry(Base):
 
 
 # Re-export EntryStatus for convenience
-from saw.domain.feed import EntryStatus

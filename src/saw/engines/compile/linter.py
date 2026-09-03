@@ -15,13 +15,11 @@ from pathlib import Path
 from typing import Optional
 
 from saw.domain.lint import (
-    AUTO_FIX_CATEGORIES,
     LintCategory,
     LintFinding,
     LintReport,
     LintSeverity,
 )
-from saw.domain.utils import utcnow
 
 WIKILINK_PATTERN = re.compile(r"\[\[([^\]|]+)(?:\|[^\]]+)?\]\]")
 

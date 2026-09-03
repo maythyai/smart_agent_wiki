@@ -6,7 +6,6 @@ Per GITH-02: Repository selection persistence.
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Optional
 import logging
 
 from sqlalchemy import select, delete
@@ -14,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from saw.connectors.github.models import GitHubRepository
 from saw.connectors.github.connector import GitHubConnector
-from saw.db.github_models import GitHubRepositoryConfigModel, GitHubSyncType
+from saw.db.github_models import GitHubRepositoryConfigModel
 
 logger = logging.getLogger(__name__)
 

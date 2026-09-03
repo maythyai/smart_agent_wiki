@@ -10,14 +10,12 @@ import logging
 import os
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Request, HTTPException, Response
+from fastapi import APIRouter, Request, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from typing import Any, Optional
 
 from saw.connectors.webhook_verifier import WebhookVerifier, SignatureVerificationError
 from saw.connectors.rate_limiter import WebhookRateLimiter
-from saw.connectors.models import TokenMasker
 
 logger = logging.getLogger(__name__)
 

@@ -12,7 +12,7 @@ from __future__ import annotations
 import logging
 import re
 import time
-from typing import Any, Callable
+from typing import Callable
 
 from fastapi import Request, Response, HTTPException, Depends, status
 from fastapi.responses import JSONResponse

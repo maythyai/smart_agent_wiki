@@ -18,9 +18,7 @@ from saw.domain.concept import (
     GraphOverview,
     KnowledgeStability,
     NavigationResult,
-    STABILITY_RULES,
 )
-from saw.domain.utils import utcnow
 
 WIKILINK_PATTERN = re.compile(r"\[\[([^\]|]+)(?:\|[^\]]+)?\]\]")
 

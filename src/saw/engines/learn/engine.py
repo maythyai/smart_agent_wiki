@@ -6,12 +6,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 import yaml
 
-from saw.engines.learn.adaptive import TrainingPeriod, UserPreference
+from saw.engines.learn.adaptive import TrainingPeriod
 from saw.engines.learn.fsrs_scheduler import FSRSScheduler, ReviewItem
 
 if TYPE_CHECKING:

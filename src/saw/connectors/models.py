@@ -7,8 +7,7 @@ from __future__ import annotations
 
 import enum
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from typing import Any
+from datetime import datetime
 
 from saw.connectors.protocol import SyncDirection
 from saw.domain.utils import utcnow  # noqa: F401

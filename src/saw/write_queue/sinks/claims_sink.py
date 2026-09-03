@@ -4,12 +4,9 @@ Per Pitfall 7: idempotent via INSERT OR IGNORE with UUID PK.
 """
 from __future__ import annotations
 
-import json
-from datetime import datetime, timezone
 
 from saw.adapters.storage.claims_repository import SQLiteClaimsRepository
 from saw.domain.claims import Claim
-from saw.domain.exceptions import ClaimsDBError
 from saw.domain.value_objects import ConfidenceLevel, SourceMark
 
 

@@ -9,7 +9,7 @@ Per GITH-10: Sync cursor persistence.
 """
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Any, Optional
 import logging
 
@@ -27,10 +27,6 @@ from saw.connectors.models import ConnectorConfig
 from saw.connectors.rate_limiter import RateLimitManager
 from saw.domain.exceptions import ConnectorError
 from saw.connectors.github.models import (
-    GitHubUser,
-    GitHubIssue,
-    GitHubComment,
-    GitHubDiscussion,
     GitHubRepository,
     GitHubRateLimit,
     GitHubAuthType,
@@ -40,7 +36,6 @@ from saw.connectors.github.app_installation import GitHubAppInstallationHandler
 from saw.db.github_models import (
     GitHubSyncCursorModel,
     GitHubRepositoryConfigModel,
-    GitHubRateLimitStateModel,
 )
 
 logger = logging.getLogger(__name__)

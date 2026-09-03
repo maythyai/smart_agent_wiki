@@ -11,9 +11,9 @@ import logging
 import os
 import time
 from dataclasses import dataclass
-from typing import Callable, Optional
+from typing import Callable
 
-from fastapi import Request, Response, HTTPException
+from fastapi import Request
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 

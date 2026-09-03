@@ -7,7 +7,6 @@ Per CLI-02: saw ingest-media <file> for media transcription.
 from __future__ import annotations
 
 import asyncio
-import sqlite3
 from pathlib import Path
 from typing import Annotated
 
@@ -17,13 +16,10 @@ from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskPr
 from rich.panel import Panel
 from rich.table import Table
 
-from saw.adapters.storage.claims_repository import SQLiteClaimsRepository
-from saw.adapters.storage.vault_repository import VaultRepository
-from saw.adapters.storage.wiki_repository import WikiRepository
 from saw.config.settings import load_config
 from saw.engines.ingest.extractors.media import MediaExtractor, MediaIngestConfig
 from saw.engines.ingest.batch import BatchMediaProcessor, BatchOptions, BatchProgress
-from saw.engines.ingest.preview import PreviewManager, PreviewSummary
+from saw.engines.ingest.preview import PreviewManager
 
 console = Console()
 

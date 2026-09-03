@@ -7,18 +7,15 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime, timezone
-from typing import Any, Optional
+from typing import Optional
 
 from slack_sdk.web.async_client import AsyncWebClient
 
 from saw.connectors.protocol import (
-    UnifiedConnectorInterface,
     AuthResult,
     ConnectorItem,
-    SyncDirection,
 )
 from saw.connectors.base_connector import BaseConnector
-from saw.connectors.rate_limiter import RateLimitManager
 
 logger = logging.getLogger(__name__)
 

@@ -10,7 +10,6 @@ import time
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone, timedelta
-from typing import Optional
 
 from saw.connectors.token_encryption import TokenEncryption
 

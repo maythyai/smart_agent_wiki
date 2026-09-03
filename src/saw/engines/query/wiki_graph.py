@@ -5,7 +5,6 @@ This replaces the entity-only graph with real wiki page connections.
 """
 from __future__ import annotations
 
-import sqlite3
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 

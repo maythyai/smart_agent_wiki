@@ -26,7 +26,7 @@ from saw.drivers.web.schemas.pages import (
     PageStatus,
     PageUpdate,
 )
-from saw.engines.query.wiki_links import extract_unique_targets, parse_wiki_links
+from saw.engines.query.wiki_links import parse_wiki_links
 
 router = APIRouter()
 

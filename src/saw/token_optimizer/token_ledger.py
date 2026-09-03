@@ -8,8 +8,7 @@ Token Ledger - Token 消耗账本
 """
 
 import json
-from collections import defaultdict
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Optional

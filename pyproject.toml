@@ -83,12 +83,11 @@ ignore = [
   "E741",  # ambiguous variable names — style
   "E712",  # == True/False — numpy/pandas bool semantics differ from `is`
   "E702",  # multiple statements via semicolon — style
-  "F401",  # unused import — 626 occurrences; needs a re-export/side-effect audit
-           #   (tracked as T-F-Z-1b follow-up; blind removal risks breaking __init__ APIs)
+  "F401",  # unused import — CLOSED in Z-4 (313 auto-fixed); now enforced
   "F811",  # redefined-while-unused — needs audit
-  "F821",  # undefined-name — false positives on dynamic/guarded dispatch (1853 tests green)
-  "F841",  # unused-variable — 27 pre-existing dead assignments w/ side-effect RHS;
-           #   blind fix risks across 27 files; tracked as T-F-Z-1c follow-up audit
+  "F821",  # undefined-name — false positives on dynamic/guarded dispatch (1898 tests green)
+  "F841",  # unused-variable — 27 pre-existing dead assigns w/ side-effect RHS;
+           #   need per-case manual review (drop-assign vs delete no-op) — Z-4b follow-up
 ]
 
 [tool.ruff.lint.per-file-ignores]

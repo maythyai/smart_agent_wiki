@@ -11,7 +11,6 @@ from pydantic import BaseModel
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from saw.db.config import get_session_factory
 from saw.connectors.protocol import SyncDirection
 from saw.connectors.notion.sync_manager import NotionSyncManager, NotionSyncConfig
 from saw.connectors.registry import ConnectorRegistry

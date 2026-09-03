@@ -16,10 +16,7 @@ from fastmcp import FastMCP
 from saw.drivers.mcp.config import MCPConfig
 
 if TYPE_CHECKING:
-    from saw.engines.govern.governor import Governor
-    from saw.engines.learn.engine import LearnEngine
-    from saw.engines.query.engine import QueryEngine
-    from saw.engines.ingest.pipeline import IngestPipeline
+    pass
 
 logger = logging.getLogger(__name__)
 

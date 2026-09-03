@@ -1,6 +1,5 @@
 """Classify phase: Detect file type and extract metadata."""
 from __future__ import annotations
-import os
 import mimetypes
 from pathlib import Path
 

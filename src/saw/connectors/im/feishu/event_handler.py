@@ -8,9 +8,9 @@ Per FEIS-05: Handle Chinese content encoding.
 from __future__ import annotations
 
 import logging
-from typing import Any, Callable, Optional
+from typing import Callable, Optional
 
-from saw.connectors.im.feishu.models import FeishuMessage, FeishuUser
+from saw.connectors.im.feishu.models import FeishuMessage
 from saw.connectors.protocol import ConnectorItem
 
 logger = logging.getLogger(__name__)

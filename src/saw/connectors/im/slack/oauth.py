@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import httpx
 from urllib.parse import urlencode
-from typing import Optional
 
 from saw.connectors.protocol import AuthResult
 

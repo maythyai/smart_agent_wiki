@@ -7,12 +7,11 @@ Per SLAK-04: Capture thread replies.
 """
 from __future__ import annotations
 
-import asyncio
 import logging
-from typing import Any, Callable, Optional
+from typing import Callable, Optional
 
-from saw.connectors.im.slack.models import SlackMessage, SlackUser
-from saw.connectors.message_handler import MessageHandler, ExtractedMessage
+from saw.connectors.im.slack.models import SlackMessage
+from saw.connectors.message_handler import MessageHandler
 from saw.connectors.reaction_processor import ReactionProcessor
 from saw.connectors.protocol import ConnectorItem
 

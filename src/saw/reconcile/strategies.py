@@ -5,14 +5,12 @@ Resolution Strategies - 解决策略
 """
 
 from dataclasses import dataclass
-from datetime import datetime
-from typing import Optional, Tuple
+from typing import Tuple
 
 from .models import (
     BiTemporalFact,
     Contradiction,
     ResolutionStrategyType,
-    FactStatus,
 )
 
 

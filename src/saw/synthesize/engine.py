@@ -12,7 +12,7 @@ from typing import Optional
 from .miner import PatternMiner, MiningResult
 from .cluster import ClusterBuilder, ClusterResult
 from .generator import PageGenerator, GenerationResult, SynthesisPage
-from .scheduler import SynthesizeScheduler, ScheduleType
+from .scheduler import SynthesizeScheduler
 
 
 @dataclass

@@ -4,7 +4,6 @@ import logging
 from typing import Optional
 
 from saw.analysis.impact import analyze_impact, NodeNotFoundError
-from saw.analysis.types import Direction
 
 logger = logging.getLogger(__name__)
 

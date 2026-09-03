@@ -5,7 +5,6 @@ Relevance Model - 4-Signal 相关性模型
 """
 
 from dataclasses import dataclass, field
-from typing import Optional
 from enum import Enum
 import math
 

@@ -11,9 +11,8 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional
 
-from saw.code_graph.models import CodeNode, NodeKind
+from saw.code_graph.models import CodeNode
 
 logger = logging.getLogger(__name__)
 

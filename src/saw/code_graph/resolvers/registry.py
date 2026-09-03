@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Optional
 
 from saw.code_graph.resolvers.base import BaseResolver
 

@@ -6,18 +6,16 @@ Per FEIS-01~05: Full Feishu connector implementation.
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
-from typing import Any, Optional
+from datetime import datetime
+from typing import Optional
 
 import lark_oapi as lark
 
 from saw.connectors.protocol import (
-    UnifiedConnectorInterface,
     AuthResult,
     ConnectorItem,
 )
 from saw.connectors.base_connector import BaseConnector
-from saw.connectors.im.feishu.models import FeishuMessage
 from saw.connectors.im.feishu.token_manager import FeishuTokenManager
 
 logger = logging.getLogger(__name__)

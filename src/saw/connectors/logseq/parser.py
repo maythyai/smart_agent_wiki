@@ -10,7 +10,6 @@ Per LOGS-10: Preserve Logseq wikilink syntax during sync.
 from __future__ import annotations
 
 import hashlib
-import json
 import re
 from datetime import datetime
 from pathlib import Path

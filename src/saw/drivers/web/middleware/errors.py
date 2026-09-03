@@ -4,7 +4,6 @@ Per RESEARCH.md Pattern 5: Unified error response format.
 Per T-03-02-04: No stack traces in production error responses.
 """
 import logging
-from typing import Any
 
 from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse

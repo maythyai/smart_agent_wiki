@@ -12,7 +12,7 @@ from collections import deque
 from dataclasses import dataclass, field
 from typing import Optional
 
-from saw.code_graph.models import CodeNode, EdgeType, NodeKind
+from saw.code_graph.models import EdgeType, NodeKind
 from saw.code_graph.store import CodeGraphStore
 
 logger = logging.getLogger(__name__)

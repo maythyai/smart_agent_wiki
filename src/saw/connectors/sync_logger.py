@@ -6,7 +6,7 @@ Per SYNC-03: All sync operations logged with timestamp, direction, item count.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Any, Optional
 
 from sqlalchemy import select

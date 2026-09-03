@@ -8,14 +8,12 @@ API Keys are stored as SHA256 hashes for security.
 from __future__ import annotations
 
 import hashlib
-import os
 import secrets
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timezone, timedelta
 from typing import Optional
 
 from sqlalchemy import Column, String, DateTime, Boolean, Integer
-from sqlalchemy.orm import relationship
 
 from saw.db.models import Base, generate_uuid
 

@@ -5,7 +5,7 @@ Per AUTH-02: OAuth tokens encrypted at rest.
 """
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Optional
 
 from sqlalchemy import String, Boolean, Integer, Text, DateTime, ForeignKey, Index

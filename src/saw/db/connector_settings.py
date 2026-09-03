@@ -7,7 +7,7 @@ Per CONF-05: Rate limit override with safety bounds (1-100).
 """
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Optional
 
 from sqlalchemy import String, Integer, Text, DateTime, Index

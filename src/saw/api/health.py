@@ -10,10 +10,8 @@ from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from saw.db.config import get_session_factory
-from saw.connectors.health_monitor import HealthMonitor, HealthStatus
+from saw.connectors.health_monitor import HealthMonitor
 
 
 router = APIRouter(prefix="/api/v1/health", tags=["health"])

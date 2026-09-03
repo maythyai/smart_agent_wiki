@@ -15,9 +15,8 @@ import logging
 import sqlite3
 import threading
 from datetime import datetime, timezone
-from pathlib import Path
 
-from saw.adapters.storage.fts_tokenize import build_match_query, tokenize_for_fts
+from saw.adapters.storage.fts_tokenize import build_match_query
 from saw.domain.claims import Claim
 from saw.domain.exceptions import ClaimsDBError
 from saw.domain.value_objects import ConfidenceLevel, SourceMark

@@ -10,10 +10,8 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional
 
 from saw.code_graph.models import (
-    CodeEdge,
     CodeNode,
     EdgeType,
     ConfidenceTier,

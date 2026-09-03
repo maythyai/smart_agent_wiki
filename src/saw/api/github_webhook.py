@@ -7,15 +7,14 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import Annotated, Optional
+from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from saw.db.session import get_db_session as get_session
 from saw.connectors.github.webhook_handler import GitHubWebhookHandler
-from saw.connectors.github.reconciliation import GitHubReconciler
 
 logger = logging.getLogger(__name__)
 
