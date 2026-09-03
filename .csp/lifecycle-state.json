@@ -1,8 +1,8 @@
 {
   "pipeline_version": 2,
-  "milestone": "v3.9",
-  "current_stage": "01-prd",
-  "next_cycle": "v1.4.0",
+  "milestone": "v4.0",
+  "current_stage": "06-ship",
+  "next_cycle": "v1.5.0",
   "stages": [
     {
       "stage": "00-hub",
@@ -64,5 +64,5 @@
       "progress": "闭环校验通过: PRD→Spec→Task→commit→tag 全链, 10/10 Task 有 commit, 5 AC 有测试. CMS drift D1 更正/D3 消解. Findings F1-F6 回流下一轮 01. 见 retrospective-v1.2.0.md"
     }
   ],
-  "note": "v1.3.0 周期闭环 2026-09-03: 00-07 done. Wave2/3+debt 13 Task, 1874 passed, saw smoke 6/6, ruff 0 errors, v1.3.0 tagged. 复盘见 retrospective-v1.3.0.md (findings G1-G5). 新周期 v3.9→v1.4.0 平台化/团队协作, current_stage=01-prd. 待下一轮 01 决策: G1 ruff F401/F841 审计 / G3 heavy-SDK importorskip / platform-team 新能力. Git: 本地 trunk, 无 push."
+  "note": "v1.4.0 周期 05 完成 2026-09-03: platform+debt 6 Task (M4+M5+M6). 1898 passed/3 skipped, smoke 6/6, ruff 0 errors (F401 启用). 6 Task: P-1 RBAC热加载+矩阵e2e, P-2 docker-prod, P-3 saw health/audit, P-4 workspace隔离(migration v8/ADR-005), Z-4 F401收口(313修), Z-5 heavy-SDK importorskip. current_stage=06-ship. 新周期 v4.0→v1.5.0 智能自适应. F841 27 defer Z-4b. Git: 本地 trunk, 无 push."
 }

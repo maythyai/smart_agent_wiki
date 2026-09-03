@@ -74,4 +74,18 @@
 | T-F-Z-2-1 | done | 1a0894c | roadmap narrative rewrite (subagent) |
 | T-F-Z-3-1 | done | 2bea49a | v1.2.0 behavior-change migration docs (subagent) |
 - **v1.3.0: Wave 2/3 + debt 全 13 Task done → M2+M3 达成。**
-- 全量回归 1874 passed, 3 skipped；saw smoke 6/6 PASS；ruff src/+tests/ 0 errors。
+- 全量回归 1874 passed, 3 skipped, 0 失败（2026-09-03）。
+- ruff：新代码 clean；既有 baseline 有跨代码库 UP017/BLE001 tech debt（未在 Wave 1 scope，单独建 task）。
+- Wave 2（7 Task）、Wave 3（3 Task）留后续周期。
+
+## v1.4.0 实施状态（platform-team + debt 续，2026-09-03）
+| task_id | status | commit | note |
+|---|---|---|---|
+| T-F-P-1-1 | done | (rbac) | Cedar hot-reload + 9 role×perm matrix e2e (AC-SEC-4/5) |
+| T-F-P-2-1 | done | (compose) | self-contained docker-compose.prod + healthcheck + secrets env (AC-DEPLOY-1/2) |
+| T-F-P-3-1 | done | (health/audit) | saw health 巡检 + saw audit --session (AC-OBS-3/4) |
+| T-F-P-4-1 | done | (workspace) | migration v8 workspace_id + user_workspace_auth + isolation (AC-WS-1/2, ADR-005) |
+| T-F-Z-4-1 | done | 5f3f4db | ruff F401 closure: 313 auto-fix, F401 enforced (F841 27 defer Z-4b) |
+| T-F-Z-5-1 | done | 9d93e7d | heavy-SDK learn tests importorskip + CI --ignore removed (AC-LINT-3) |
+- **v1.4.0: platform + debt 全 6 Task done → M4+M5+M6 达成。**
+- 全量回归 1898 passed, 3 skipped；saw smoke 6/6 PASS；ruff src/+tests/ 0 errors（F401 启用）。
