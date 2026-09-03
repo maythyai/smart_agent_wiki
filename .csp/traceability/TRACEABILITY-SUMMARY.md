@@ -12,6 +12,16 @@
 | TMS 模块 | 5 | = PMS 模块 ✓ |
 | PRD AC | 11 | 已覆盖 11/11 ✓ |
 
+## v1.5.0 delta（2026-09-03）
+| 层 | v1.5.0 增量 | 校验 |
+|---|---|---|
+| PRD feature_count | 4 新能力 + 4 债 | PRD-intelligence-adaptation-v1.5.0 §2 ✓ |
+| decomposition 原子 Feature | +8（F-I-1..4 + F-Z-6..9） | DECOMPOSITION-DELTA-v1.5.0 ✓ |
+| Spec | +8（SPEC-F-I-1..4 + SPEC-F-Z-6..9） | 强校验 == Feature 数 ✓（1:1） |
+| ADR | +2（ADR-006 resume / ADR-007 workspace scope） | 驱动 F-I-1 / F-Z-7 ✓ |
+| TMS | +10 用例（TMS-DELTA-v1.5.0） | AC 10/10 ✓ |
+| PRD AC（v1.5.0） | 10（AC-WF-1/2, AC-LR-1/2, AC-TK-1, AC-AG-1, AC-LINT-2续, AC-WS-3, AC-SEC-5续, AC-COV-1） | 10/10 ✓ |
+
 ## 追溯链
 - 正向：`FORWARD-MATRIX.md`（PRD→Feature→Spec）
 - 反向：`BACKWARD-MATRIX.md`（Spec→Feature→PRD）

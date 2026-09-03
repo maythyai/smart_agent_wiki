@@ -26,7 +26,19 @@
 | SPEC-F-E-2 | F-E-2 | 覆盖率门禁 | M | test-gate | 2/2 | SPEC-F-E-2.md |
 | SPEC-F-E-3 | F-E-3 | CI 集成 | M | test-gate | 2/2 | SPEC-F-E-3.md |
 
+## v1.5.0 delta（+8）
+| spec_id | feature_id | title | complexity | pms_module | ac_coverage | file |
+|---|---|---|---|---|---|---|
+| SPEC-F-I-1 | F-I-1 | workflow CLI + resume | M | intelligence-adaptation | 2/2 | SPEC-F-I-1.md |
+| SPEC-F-I-2 | F-I-2 | Learn CLI（distill+gaps） | S | intelligence-adaptation | 2/2 | SPEC-F-I-2.md |
+| SPEC-F-I-3 | F-I-3 | Token bench CLI | S | intelligence-adaptation | 1/1 | SPEC-F-I-3.md |
+| SPEC-F-I-4 | F-I-4 | agent 角色一致性 lint | S | intelligence-adaptation | 1/1 | SPEC-F-I-4.md |
+| SPEC-F-Z-6 | F-Z-6 | ruff F841 收口 | M | intelligence-adaptation | 1/1 | SPEC-F-Z-6.md |
+| SPEC-F-Z-7 | F-Z-7 | workspace 全路径路由 | L | intelligence-adaptation | 1/1 | SPEC-F-Z-7.md |
+| SPEC-F-Z-8 | F-Z-8 | Cedar policy reload CLI | S | intelligence-adaptation | 1/1 | SPEC-F-Z-8.md |
+| SPEC-F-Z-9 | F-Z-9 | query 测试 + coverage 棘轮 65 | M | test-gate | 1/1 | SPEC-F-Z-9.md |
+
 ## 校验
-- Spec 数 == 20 == decomposition 原子 Feature 数 ✓（1:1）
+- Spec 数 == 20 + 8(v1.5.0) == decomposition 原子 Feature 数 ✓（1:1）
 - 每个 feature_id 在 decomposition FEATURE-DETAILS 存在 ✓
 - 每份 Spec ac_coverage 自检无未覆盖 AC ✓
