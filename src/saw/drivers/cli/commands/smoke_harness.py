@@ -65,12 +65,14 @@ The write queue dispatches operations to registered sinks.
 """
 
 
-def build_smoke_context() -> SmokeContext:
+def build_smoke_context(*, with_receipts: bool = False) -> SmokeContext:
     """Build a fresh temp wiki + every engine in offline (no-LLM) mode.
 
     ``SQLiteClaimsRepository.__init__`` applies migrations, so the claims DB
     (outbox + receipts + FTS5 + graph tables) is ready before any engine
-    touches it.
+    touches it.  When ``with_receipts`` is True, the dispatcher is wired with
+    an Ed25519 signer + ReceiptStore so dispatch produces a verifiable chain
+    (used by the health/audit CLI tests).
     """
     tmp_dir = Path(tempfile.mkdtemp(prefix="saw-smoke-"))
     vault_path = tmp_dir / "vault"
@@ -89,7 +91,20 @@ def build_smoke_context() -> SmokeContext:
 
     # Write queue + dispatcher with every high-risk sink.
     write_queue = SQLiteWriteQueue(conn)
-    dispatcher = Dispatcher(write_queue)
+    receipt_signer = None
+    receipt_store = None
+    if with_receipts:
+        from saw.adapters.crypto.ed25519 import ReceiptSigner
+        from saw.write_queue.receipt_store import ReceiptStore
+
+        receipt_signer = ReceiptSigner(key_path=tmp_dir / ".saw" / "keys" / "ed25519.key")
+        receipt_signer.generate_keypair()
+        receipt_store = ReceiptStore(conn)
+    dispatcher = Dispatcher(
+        write_queue,
+        receipt_signer=receipt_signer,
+        receipt_store=receipt_store,
+    )
     dispatcher.register_sink(VaultSink(vault_repo))
     dispatcher.register_sink(ClaimsSink(claims_repo))
     dispatcher.register_sink(WikiSink(wiki_repo))

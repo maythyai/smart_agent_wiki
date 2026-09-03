@@ -33,6 +33,12 @@ def audit(
         "-c",
         help="Show audit trail for specific claim UUID",
     ),
+    session: str | None = typer.Option(
+        None,
+        "--session",
+        "-s",
+        help="Verify the DB-backed receipt chain for a session id (T-F-P-3, AC-OBS-4)",
+    ),
 ) -> None:
     """Verify audit trail and receipt chain integrity.
 
@@ -54,6 +60,31 @@ def audit(
     except Exception:
         console.print("[red]Error:[/] Not in a saw wiki directory. Run 'saw init' first.")
         raise typer.Exit(1)
+
+    # T-F-P-3 (AC-OBS-4): DB-backed receipt chain per session (v1.2.0
+    # ReceiptStore), distinct from the file-based AuditTrail below.
+    if session:
+        import sqlite3
+
+        db_path = config.path / ".saw" / "db" / "claims.db"
+        if not db_path.is_file():
+            console.print("[red]No claims DB.[/] Run `saw ingest` first.")
+            raise typer.Exit(1)
+        conn = sqlite3.connect(str(db_path))
+        try:
+            from saw.write_queue.receipt_store import ReceiptStore
+
+            result = ReceiptStore(conn).verify_chain(session)
+        except sqlite3.OperationalError:
+            console.print("[yellow]receipts table absent[/] (pre-v1.2.0 DB)")
+            raise typer.Exit(1)
+        finally:
+            conn.close()
+        label = "[green]VALID[/green]" if result.valid else "[red]INVALID[/red]"
+        console.print(f"Session {session[:8]}..: {label}")
+        if result.error:
+            console.print(f"  reason: {result.error}")
+        raise typer.Exit(0 if result.valid else 1)
 
     # Display header
     console.print()

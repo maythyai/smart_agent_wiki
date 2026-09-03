@@ -59,6 +59,7 @@ from saw.drivers.cli.config_tui import config  # noqa: E402
 from saw.drivers.cli.completion import completion  # noqa: E402
 from saw.drivers.cli.commands.docs_cmd import docs  # noqa: E402
 from saw.drivers.cli.commands.smoke_cmd import smoke  # noqa: E402
+from saw.drivers.cli.commands.health_cmd import health  # noqa: E402
 
 # Register main commands
 app.command(name="init")(init)
@@ -74,6 +75,7 @@ app.command(name="freshness")(freshness)
 app.command(name="review")(review)
 app.command(name="conflicts")(conflicts)
 app.command(name="audit")(audit)
+app.command(name="health")(health)
 app.command(name="mcp")(mcp)
 app.command(name="web")(web)
 
