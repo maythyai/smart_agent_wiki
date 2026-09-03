@@ -4,8 +4,8 @@
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Release](https://img.shields.io/badge/release-v1.2.0-blue.svg)](https://github.com/maythyai/smart_agent_wiki/releases/tag/v1.2.0)
-[![Tests](https://img.shields.io/badge/tests-1853+%20passing-brightgreen.svg)](tests/)
+[![Release](https://img.shields.io/badge/release-v1.3.0-blue.svg)](https://github.com/maythyai/smart_agent_wiki/releases/tag/v1.3.0)
+[![Tests](https://img.shields.io/badge/tests-1874+%20passing-brightgreen.svg)](tests/)
 [![MCP](https://img.shields.io/badge/MCP-64+%20tools-purple.svg)](src/saw/drivers/mcp/)
 [![GitHub Stars](https://img.shields.io/github/stars/chensaics/smart_agent_wiki?style=social)](https://github.com/chensaics/smart_agent_wiki)
 [![GitHub Issues](https://img.shields.io/github/issues/chensaics/smart_agent_wiki)](https://github.com/chensaics/smart_agent_wiki/issues)
