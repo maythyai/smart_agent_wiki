@@ -27,6 +27,12 @@
 | T-F-Z-1-1 | —（无 spec） | ruff baseline 收口([tool.ruff]+全库 UP017/BLE001/S110 修) | tech-debt | S | — | pyproject.toml, src/saw/** | AC-LINT-1 | test-gate |
 | T-F-Z-2-1 | —（无 spec） | roadmap narrative 重写(v1.1/1.2 对齐+v1.3/1.4 重定义) | tech-debt | S | — | docs/strategy/ROADMAP.md | AC-DOC-1 | e2e-usability |
 | T-F-Z-3-1 | —（无 spec） | v1.2.0 行为变更迁移文档(JSON日志/health 503) | tech-debt | S | — | docs/QUICKSTART.md, docs/MIGRATION.md | AC-DOC-2 | observability |
+| T-F-P-1-1 | —（无 spec） | RBAC深化(Cedar热加载+权限矩阵e2e) | platform-team | M | — | src/saw/auth/cedar_policy.py, .csp/artifacts/security-matrix.md | AC-SEC-4, AC-SEC-5 | security-hardening |
+| T-F-P-2-1 | —（无 spec） | 团队部署(docker-compose.prod+healthcheck+secrets env) | platform-team | S | — | docker/docker-compose.prod.yml | AC-DEPLOY-1, AC-DEPLOY-2 | security-hardening |
+| T-F-P-3-1 | —（无 spec） | 可观测闭环(saw health 巡检+saw audit receipts) | platform-team | M | — | src/saw/drivers/cli/commands/health_cmd.py, audit_cmd.py | AC-OBS-3, AC-OBS-4 | observability |
+| T-F-P-4-1 | —（无 spec，ADR-005） | 多workspace隔离(schema前缀+migration v8+授权绑定) | platform-team | M | T-F-P-1-1 | src/saw/db/migrations.py, auth/permissions.py | AC-WS-1, AC-WS-2 | security-hardening |
+| T-F-Z-4-1 | —（无 spec） | ruff F401/F841 收口(import审计+27死赋值修+移除ignore) | tech-debt | M | — | pyproject.toml, src/saw/** | AC-LINT-2 | test-gate |
+| T-F-Z-5-1 | —（无 spec） | heavy-SDK learn 3测试 importorskip+ci移除ignore | tech-debt | S | — | tests/unit/engines/learn/, .github/workflows/ci.yml | AC-LINT-3 | test-gate |
 
 ## 汇总
 - Task：20（1:1 Spec）；类型：backend-cli×1 / test×4 / infra-ci×4 / infra-script×2 / doc×1 / test-security×3 / backend-security×2 / backend×3

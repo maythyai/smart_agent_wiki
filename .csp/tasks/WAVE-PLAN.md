@@ -78,3 +78,36 @@
 ## v1.3.0 里程碑
 - M2（Wave 2）：核心链路冒烟全绿 + 宣称一致 + trace 贯穿 + coverage 门禁 + debt docs。
 - M3（Wave 3）：CI 全闭环 + 离线可用 + ruff lint 门禁 → v1.3.0 可交付。
+
+---
+
+# v1.4.0 波次（平台化与团队协作，2026-09-03）
+
+> 源自 PRD-platform-team-v1.4.0 + 02 delta + ADR-005。platform-team 新域。
+
+## v1.4.0 Wave 1 — platform + debt（并行）
+| task_id | 描述 | 类型 | 并行性 |
+|---|---|---|---|
+| T-F-P-1-1 | RBAC 深化（Cedar 热加载 + e2e） | backend | 独立（auth/）|
+| T-F-P-2-1 | 团队部署（docker-compose.prod） | infra | 独立（docker/）|
+| T-F-P-3-1 | 可观测闭环（saw health + audit） | backend-cli | 独立（cli/commands/）|
+| T-F-Z-5-1 | heavy-SDK importorskip | test | 独立（tests/）|
+
+## v1.4.0 Wave 2 — workspace 隔离（migration v8 串行）
+| task_id | 描述 | 依赖 | 里程碑 |
+|---|---|---|---|
+| T-F-P-4-1 | 多 workspace 隔离（schema 前缀 + v8 + 授权绑定） | P-1 | 多团队共存 |
+
+## v1.4.0 Wave 3 — ruff 收口续（串行末位）
+| task_id | 描述 | 依赖 | 里程碑 |
+|---|---|---|---|
+| T-F-Z-4-1 | ruff F401/F841 收口 | P-1/P-3/P-4 后串行 | lint 门禁加严 |
+
+## v1.4.0 共享资源串行
+- migration v8（F-P-4 workspace_id 列）：Wave 2 串行。
+- ruff F401/F841 全库修（F-Z-4）：Wave 3 串行末位，所有 src 改动后。
+
+## v1.4.0 里程碑
+- M4（Wave 1）：platform 基座（RBAC/deploy/observability CLI）+ heavy-SDK 优雅跳过。
+- M5（Wave 2）：多 workspace 隔离可用 → 多团队共存。
+- M6（Wave 3）：ruff F401/F841 启用 → lint 门禁加严 → v1.4.0 可交付。
