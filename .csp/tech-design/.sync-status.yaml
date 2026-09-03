@@ -26,3 +26,19 @@ debt_features:
 drift_notes:
   - "auth_dep 行漂移：SPEC/CMS 标 app.py:267，实际 :275（+8）— 实施时修正"
   - "observability 实际在 drivers/web/middleware/（非 middleware/）— 已在 v1.2.0 校正"
+
+# v1.4.0 (platform-team)
+v1_4_0:
+  date: "2026-09-03"
+  features:
+    F-P-1: {spec: none, note: "RBAC 深化；CedarPolicyEngine（app.py:206）热加载 + PermissionService e2e"}
+    F-P-2: {spec: none, note: "docker-compose.prod 变体；复用 Dockerfile + healthcheck"}
+    F-P-3: {spec: none, note: "saw health + saw audit receipts；复用 ReceiptStore.verify_chain + check_engines"}
+    F-P-4: {spec: none, note: "多 workspace 隔离；ADR-005 schema 前缀；migration v8"}
+    F-Z-4: {spec: none, note: "ruff F401/F841 收口；从 pyproject ignore 移除"}
+    F-Z-5: {spec: none, note: "learn 3 测试 importorskip"}
+  adrs:
+    - ADR-005-workspace-isolation-schema-prefix
+  notes:
+    - "platform-team 新域，无既有 spec（direct task）"
+    - "F-P-4 migration v8 串行共享；既有数据 default workspace_id 向后兼容"
