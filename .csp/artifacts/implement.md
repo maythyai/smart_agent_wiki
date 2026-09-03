@@ -74,3 +74,29 @@
 - **实测**：TOTAL 62%（28386 stmt / 10649 missing）；核心引擎+write_queue+code_graph 64%；非核心 51%。
 - **阈值决策（Spec 偏离）**：SPEC-F-E-1 原设核心≥80%/非核心≥60%。实测均低于此。Lead 决策：E-2 门禁阈值设为**实测基线 floor**（核心 64%/非核心 51%/全量 62%，no-regression ratchet），80%/60% 为 north-star 目标，gap 透明记录。理由：棕地硬化应 ratchet 不应致 CI 恒红；低洼地（compile 14-31%、collaborate agents 23-30% 印证 CMS drift D1 空实现）属后续 Wave/03 范畴。
 - **产物**：`.csp/artifacts/coverage-baseline.md`。
+
+## 2026-09-03 — v1.5.0 智能与自适应（8 Task，3 Wave，Lead 单线推进）
+
+**范围**：F-I-1..4（workflow/learn/token/policy CLI surface + agent lint）+ F-Z-6..9（F841 / workspace 路由 / policy reload / query 覆盖）。
+**模式**：Lead 单线实施（未 spawn 并行 worktree——8 Task 文件重叠度低且 Lead 直做更快；沿用既有 patterns）。3 Wave 串行：Wave1 CLI surface → Wave2 workspace 路由 → Wave3 F841 串行末位。
+**Commits**：404c787(Wave1) / c6d6b10(Wave2) / 616d929(Z-9) / 4b45a61(Z-6)，每 Wave 一原子 commit。
+**测试**：1929 passed / 3 skipped / 0 failed（+31 新测试）；ruff src/+tests/ 0 errors（F841 启用）；coverage 63%（ratchet 60→63）。
+
+### 决策与偏离
+- **F-I-1 resume 索引制（ADR-006）**：`WorkflowExecutor.resume()` 复用既有 M-16 状态机 + HI-9 持久化；从 `steps_completed` index 续跑。context 不持久化（thin，v2.0 演进全量快照）。CLI `saw workflow resume <id> --def <yaml>` 重解析 def（表只存 definition_name）。
+- **F-I-4 与 F-I-1 bundle**：lint 与 run/validate/resume/status 同 `workflow_cmd.py` 文件 → bundle 为一 commit（不并行 split）。lint 复用 `WorkflowParser.validate(available_agents)` + `build_default_agents()`，不引新 lint 引擎。
+- **F-Z-7 scope 收窄（关键偏离）**：PRD H2"全查询路径路由"本轮**只做 claims search/get_by_id + QueryEngine 搜索路径**注入 workspace scope + 修 query-cache 跨 ws 泄漏（cache key 加 workspace_id）。AC-WS-3 在搜索数据路径满足（A ws claim 在 B ws 搜索返回空）。**graph_traverse / tree_mode / compiler / ingest-write 的 workspace 注入 defer** [TBD] 下一周期——面广，本轮增量推进不贪全。诚实标注非"全覆盖"。
+- **F-Z-9 coverage ratchet 60→63（非 65，偏离 TMS）**：TMS-DELTA 原写"60→65"。实测 63.1%。硬约定 #10：不设高于实测致 CI 恒红。Lead 决策设 fail_under=63（实测 floor，no-regression）。65 留待 query engine.py（14%）+ compare/tree_mode（21-23%）深覆盖后。north-star 80% 不变。
+- **F841 27 处手审（Z-6）**：分类——纯赋值删行（datetime.now/Path/.get/None literal 等 19 处）；side-effect RHS 保裸调用（auto_ingest._save_source / load_config 验证 / FeedConfig 验证 / _get_strawberry guard / WebhookEvent ctor / transform_to_claim / selector.get_sync_cursors 等 8 处）。FeishuUser.from_event 的 `sender` 是**已用**变量（脚本误删首现，git 核验后恢复）——教训：批量 replace 首现对同名变量危险，逐文件核。
+- **F401 级联（4 处）**：Z-6 删赋值后 4 import 变 orphan（FreshnessTracker / Optional / datetime,timezone），即清。
+
+### CMS drift 核验（ground 自源码）
+- F-I-1：WorkflowExecutor state machine M-16（`workflow_executor.py:_WORKFLOW_TRANSITIONS` + `validate_workflow_transition`）+ HI-9 `_persist_workflow`（upsert workflow_executions v4 表）+ startup recovery（`app.py:_recover_stranded_workflows`）均**已落地**——PRD 原 [TBD] 风险消解，已回更 PRD。
+- F-Z-7：migration v8 `claim.workspace_id`（default 'default'）+ `user_workspace_auth` 存在；但 QueryEngine/IngestPipeline/claims repo search 0 workspace 引用（grep 确认）→ 确证 H2 gap 真实。
+- F-Z-8：`CedarPolicyEngine.reload()`（`cedar_policy.py`）已实现（AC-SEC-5），gap 仅 CLI surface。
+
+### Deferred / [TBD]
+- **F-Z-7 全路径**：graph_traverse / tree_mode / compiler / ingest-write 的 workspace scope 注入——下一周期专项。
+- **F-I-1 resume 全量 context 快照**：v2.0（需序列化 context dict）。
+- **F-Z-8 Web admin 端点 `POST /api/admin/policy/reload`**：本轮仅 CLI，Web 端点 thin。
+- **coverage 65%+**：query engine.py / compare / tree_mode 深覆盖——下一周期随测试增长 ratchet。
