@@ -2,7 +2,7 @@
 id: PRD-intelligence-adaptation-v1.5.0
 title: 智能与自适应
 version: 1.0
-status: Approved
+status: Released
 author: "lifecycle-orchestrator"
 date: "2026-09-03"
 product_type: platform
