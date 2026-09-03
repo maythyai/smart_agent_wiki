@@ -184,14 +184,11 @@ class CommunityDetector:
         简化实现：基于边数计算
         """
         # 获取社区边数
-        from_edges = self._count_community_edges(from_community, edges)
-        to_edges = self._count_community_edges(to_community, edges)
 
         # 节点与目标社区的连接数
         ki_in = self._count_node_community_edges(node_id, to_community, edges)
 
         # 节点总连接数
-        ki = self._count_node_edges(node_id, edges)
 
         # 总边数
         m = len(edges)

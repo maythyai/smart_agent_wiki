@@ -160,7 +160,6 @@ class TrendSenser:
         claims = self._claims.search(topic, limit=100)
 
         # Get pages related to topic
-        pages = self._wiki.list_pages()
 
         # Simple coverage heuristic: number of matching claims / expected
         if len(claims) >= 10:

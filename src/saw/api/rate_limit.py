@@ -99,7 +99,6 @@ class RedisRateLimiter:
         Suitable for local/single-node deployments where Redis is unavailable.
         Counters reset when the hour/day window rolls over.
         """
-        now = int(time.time())
         hour_ts = self._get_hour_timestamp()
         day_ts = self._get_day_timestamp()
 

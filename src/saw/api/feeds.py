@@ -486,7 +486,6 @@ async def import_opml(
 
         for outline in outlines:
             url = outline.get("xmlUrl")
-            title = outline.get("title", "")
             category = outline.get("category", None)
 
             if not url:

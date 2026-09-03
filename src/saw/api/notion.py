@@ -129,7 +129,7 @@ async def get_selected_databases(
 ) -> SelectedDatabaseResponse:
     """Get currently selected databases with sync status."""
     databases = await selector.get_selected_databases()
-    cursors = await selector.get_sync_cursors()
+    await selector.get_sync_cursors()
     last_sync_times = await selector.get_last_sync_times()
 
     return SelectedDatabaseResponse(

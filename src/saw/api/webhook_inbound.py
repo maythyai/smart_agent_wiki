@@ -178,7 +178,7 @@ async def receive_webhook(
         f"Webhook received: platform={platform}, type={event_type}, event_id={event_id}"
     )
 
-    webhook_event = WebhookEvent(
+    WebhookEvent(
         platform=platform,
         event_type=event_type,
         payload=payload,

@@ -44,7 +44,7 @@ def search(
         raise typer.Exit(1)
 
     try:
-        settings = load_config(config_path)
+        load_config(config_path)
     except Exception as e:
         console.print(f"[red]Error loading config: {e}[/red]")
         raise typer.Exit(1)

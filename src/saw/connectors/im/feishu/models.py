@@ -83,7 +83,6 @@ class FeishuMessage:
         Per FEIS-05: Handle Chinese content encoding correctly.
         """
         message = event.get("message", {})
-        sender = event.get("sender", {})
 
         author = FeishuUser.from_event(event)
 

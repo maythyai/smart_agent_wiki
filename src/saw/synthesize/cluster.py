@@ -130,7 +130,6 @@ class ClusterBuilder:
             摘要文本
         """
         # 合并所有主张的内容片段
-        contents = [c.get("content", "")[:100] for c in claims[:5]]
         return f"Cluster of {len(claims)} related claims about similar topics"
 
     def _calculate_confidence(self, claims: list[dict]) -> float:

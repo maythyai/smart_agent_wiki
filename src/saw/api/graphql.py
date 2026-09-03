@@ -71,7 +71,7 @@ class GraphQLSearchResult:
 
 def create_schema():
     """Create GraphQL schema."""
-    strawberry = _get_strawberry()
+    _get_strawberry()
 
     @strawberry.type
     class Vault:
@@ -224,7 +224,7 @@ def get_schema():
 
 def get_graphql_router():
     """Get FastAPI router for GraphQL."""
-    strawberry = _get_strawberry()
+    _get_strawberry()
     from strawberry.fastapi import GraphQLRouter
 
     schema = get_schema()

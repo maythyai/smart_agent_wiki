@@ -12,8 +12,6 @@ import asyncio
 import json
 import sqlite3
 from pathlib import Path
-from typing import Optional
-
 import typer
 
 app = typer.Typer(no_args_is_help=True, help="Multi-agent workflow orchestration (F-I-1/4).")

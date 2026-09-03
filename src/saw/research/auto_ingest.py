@@ -91,7 +91,7 @@ class AutoIngestProcessor:
                 item = self._create_ingest_item(search_result, research_topic)
 
                 # 保存来源
-                source_path = self._save_source(item)
+                self._save_source(item)
 
                 # 触发摄入（简化：直接创建 wiki 页面）
                 wiki_page = self._create_wiki_page(item)

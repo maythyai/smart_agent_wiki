@@ -31,7 +31,7 @@ def status(
 
     # Load configuration
     try:
-        settings = load_config(config_path)
+        load_config(config_path)
     except ConfigError as e:
         console.print(f"[red]Config error:[/red] {e}")
         raise typer.Exit(code=1)

@@ -27,7 +27,6 @@ def freshness() -> None:
     from saw.adapters.storage.claims_repository import SQLiteClaimsRepository
     from saw.adapters.storage.wiki_repository import WikiRepository
     from saw.engines.govern.governor import Governor
-    from saw.engines.govern.freshness import FreshnessTracker
 
     try:
         config = load_config(Path(".saw/config.yaml"))
@@ -43,7 +42,6 @@ def freshness() -> None:
 
     # Initialize governor and tracker
     governor = Governor(claims_repo, wiki_repo)
-    tracker = FreshnessTracker()
 
     # Get freshness report
     report = governor.get_freshness_report()

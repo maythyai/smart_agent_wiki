@@ -86,8 +86,6 @@ ignore = [
   "F401",  # unused import — CLOSED in Z-4 (313 auto-fixed); now enforced
   "F811",  # redefined-while-unused — needs audit
   "F821",  # undefined-name — false positives on dynamic/guarded dispatch (1898 tests green)
-  "F841",  # unused-variable — 27 pre-existing dead assigns w/ side-effect RHS;
-           #   need per-case manual review (drop-assign vs delete no-op) — Z-4b follow-up
 ]
 
 [tool.ruff.lint.per-file-ignores]

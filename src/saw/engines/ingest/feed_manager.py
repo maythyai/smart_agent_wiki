@@ -101,7 +101,7 @@ class FeedManager:
             FeedManagerError: If URL is not a valid feed.
         """
         # Validate configuration
-        config = FeedConfig(
+        FeedConfig(
             url=url,
             category=category,
             tags=tags or [],

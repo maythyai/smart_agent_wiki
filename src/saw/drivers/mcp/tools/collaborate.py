@@ -69,8 +69,6 @@ async def saw_workflow(yaml_path: str, inputs: dict[str, Any] | None = None) -> 
         inputs = inputs or {}
 
         for i, step in enumerate(steps):
-            step_name = step.get("name", f"step_{i}")
-            step_type = step.get("type", "unknown")
 
             # Placeholder for step execution
             # In production, would route to appropriate engine based on step_type

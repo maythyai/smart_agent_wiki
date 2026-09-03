@@ -61,7 +61,6 @@ class FeishuEventHandler:
         Per FEIS-05: Handle Chinese content encoding.
         """
         event = event_data.get("event", {})
-        message = event.get("message", {})
 
         feishu_message = FeishuMessage.from_event(event)
 

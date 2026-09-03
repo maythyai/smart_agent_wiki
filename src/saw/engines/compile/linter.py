@@ -114,7 +114,6 @@ class WikiLinter:
     ) -> list[LintFinding]:
         """Check index.md matches actual files. Auto-fix: add missing entries."""
         findings = []
-        index_path = self._wiki_root / "index.md"
 
         # Find pages not in index
         for page in pages:

@@ -195,7 +195,7 @@ class GitHubWebhookHandler:
         repository = event.repository
 
         issue = self._parse_issue_from_webhook(issue_data, repository)
-        claim_dict = self._issue_transformer.transform_to_claim(issue)
+        self._issue_transformer.transform_to_claim(issue)
 
         item = ConnectorItem(
             id=f"github-issue-{repository}#{issue.number}",

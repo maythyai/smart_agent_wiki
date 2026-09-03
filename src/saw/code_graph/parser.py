@@ -468,7 +468,6 @@ class CodeParser:
         )
         result.nodes.append(file_node)
 
-        lines = source.split("\n")
 
         # 提取 import 语句
         import_pattern = re.compile(

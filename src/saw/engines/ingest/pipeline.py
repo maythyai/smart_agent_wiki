@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
 from typing import Callable
 
 from saw.adapters.llm.router import LLMRouter
@@ -318,7 +317,6 @@ class IngestPipeline:
     ) -> list[WriteOp]:
         """Build WriteOp list for all sinks."""
         ops: list[WriteOp] = []
-        now = datetime.now(timezone.utc)
 
         # Vault operation
         ops.append(WriteOp(

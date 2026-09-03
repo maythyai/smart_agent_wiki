@@ -223,9 +223,9 @@ async def metrics(request: Request):
     try:
         from importlib.metadata import version as _pkg_version
 
-        saw_version = _pkg_version("smart-agent-wiki")
+        _pkg_version("smart-agent-wiki")
     except Exception:  # pragma: no cover
-        saw_version = "0.0.0"
+        pass
 
     m = await asyncio.to_thread(_compute_metrics, request.app.state)
 

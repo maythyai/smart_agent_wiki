@@ -335,7 +335,6 @@ class GitHubConnector(UnifiedConnectorInterface):
             repo = client.get_repo(f"{owner}/{repo_name}")
 
             # Get cursor for conditional requests
-            cursor = self._sync_cursors.get(repository_id)
 
             # Build query parameters
             kwargs = {"state": "all"}

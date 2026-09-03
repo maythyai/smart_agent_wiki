@@ -170,7 +170,6 @@ def _parse_config(content: str, file_type: str) -> dict:
     if file_type == 'yaml':
         # Simple YAML section detection
         lines = content.split('\n')
-        current_section = None
 
         for line in lines:
             if line and not line.startswith(' ') and not line.startswith('#'):

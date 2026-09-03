@@ -143,7 +143,6 @@ def create_demo_wiki(path: Path) -> bool:
 
         # Initialize wiki (would call saw init internally)
         # For now, just create the structure
-        db_path = wiki_path / "wiki.db"
         vault_path = wiki_path / "vault"
         vault_path.mkdir(exist_ok=True)
 
