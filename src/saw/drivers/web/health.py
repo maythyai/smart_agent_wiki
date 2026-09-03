@@ -97,16 +97,39 @@ async def liveness_check():
     return {"status": "alive"}
 
 
+def check_engines(state: Any) -> dict[str, Any]:
+    """Check that core engines are initialized (SPEC-F-D-3: AC-OBS-2).
+
+    ``/health/ready`` must reflect engine readiness, not just DB/Redis — a
+    deployed process whose engines failed to construct would otherwise still
+    answer 200.  We probe the query, collaborate, and write_queue engines on
+    ``app.state``; any missing → unhealthy → 503.  Deep engine health probes
+    (most engines expose no ``health()`` method) are deferred to a later wave.
+    """
+    details: dict[str, str] = {}
+    all_ready = True
+    for name in ("query", "collaborate", "write_queue"):
+        engine = getattr(state, name, None)
+        details[name] = "ready" if engine is not None else "missing"
+        if engine is None:
+            all_ready = False
+    return {
+        "status": "healthy" if all_ready else "unhealthy",
+        "details": details,
+    }
+
+
 @router.get("/health/ready")
-async def readiness_check(response: Response):
+async def readiness_check(request: Request, response: Response):
     """Kubernetes readiness probe.
 
     Checks if the application is ready to serve traffic.
-    Verifies database and Redis connectivity.
+    Verifies database, Redis, and core engine readiness (SPEC-F-D-3: AC-OBS-2).
     """
     checks = {
         "database": await asyncio.to_thread(check_database),
         "redis": await asyncio.to_thread(check_redis),
+        "engines": check_engines(request.app.state),
     }
 
     # Determine overall status

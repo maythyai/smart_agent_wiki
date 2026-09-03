@@ -94,10 +94,24 @@ def init_observability(auth_mode: str = "local") -> None:
             if not any(isinstance(f, _RequestIdFilter) for f in h.filters):
                 h.addFilter(_RequestIdFilter())
 
-    # 2) Optional structured (JSON) logging: team mode or explicit opt-in.
-    want_json = (
-        os.environ.get("SAW_JSON_LOGS", "").lower() == "1" or auth_mode == "team"
-    )
+    # 2) Structured (JSON) logging — production default (SPEC-F-D-3).
+    #    Previously opt-in (SAW_JSON_LOGS=1 or team mode only); now ON by
+    #    default so team/prod deployments get structured logs without extra
+    #    config.  Local dev opts back into readable text via SAW_PRETTY_LOGS=1
+    #    or SAW_JSON_LOGS=0.  Backward compat: SAW_JSON_LOGS=1 still forces ON.
+    saw_json = os.environ.get("SAW_JSON_LOGS", "").lower()
+    saw_pretty = os.environ.get("SAW_PRETTY_LOGS", "").lower()
+    if saw_pretty == "1":
+        want_json = False
+    elif saw_json == "0":
+        want_json = False
+    elif saw_json == "1":
+        want_json = True
+    else:
+        want_json = True  # production default
+    # Team mode always forces JSON regardless of the local-dev overrides.
+    if auth_mode == "team":
+        want_json = True
     if want_json and not any(
         isinstance(h, logging.StreamHandler) and isinstance(h.formatter, JsonFormatter)
         for h in root.handlers
