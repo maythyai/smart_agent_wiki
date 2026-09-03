@@ -1,0 +1,28 @@
+# .sync-status.yaml — v1.3.0 Spec 同步状态
+# 追踪 Wave 2/3 spec 是否需在实施前/后同步。源自 02 delta。
+
+version: "v1.3.0"
+date: "2026-09-03"
+
+wave2_specs:
+  SPEC-F-A-2: {status: ready, note: "ingest+compile 冒烟；spec v1 草就绪，实施时核验 fixtures"}
+  SPEC-F-A-3: {status: ready, note: "query 冒烟（关键词+NL）；FTS5 既有"}
+  SPEC-F-A-4: {status: ready, note: "govern+learn 冒烟"}
+  SPEC-F-B-2: {status: ready, note: "能力清单 CAPABILITIES.md；依赖 B1 claim_diff（已 done）"}
+  SPEC-F-B-3: {status: ready, note: "文档修正+历史标注"}
+  SPEC-F-D-2: {status: ready, note: "trace_id 贯穿；RequestContextMiddleware 已存（v1.2.0 收敛 logger）"}
+  SPEC-F-E-2: {status: ready, note: "coverage 门禁≥80%；基线 62%（E1 done）"}
+
+wave3_specs:
+  SPEC-F-A-5: {status: ready, note: "离线 fallback；依赖 A2/A3/A4"}
+  SPEC-F-A-6: {status: ready, note: "CI smoke job；依赖 A5"}
+  SPEC-F-E-3: {status: ready, note: "CI 集成；依赖 A6+E2"}
+
+debt_features:
+  F-Z-1: {spec: none, note: "无新 spec；直接 task（ruff 配置+全库修）"}
+  F-Z-2: {spec: none, note: "无新 spec；直接 task（roadmap 重写）"}
+  F-Z-3: {spec: none, note: "无新 spec；直接 task（迁移文档）"}
+
+drift_notes:
+  - "auth_dep 行漂移：SPEC/CMS 标 app.py:267，实际 :275（+8）— 实施时修正"
+  - "observability 实际在 drivers/web/middleware/（非 middleware/）— 已在 v1.2.0 校正"
