@@ -33,7 +33,7 @@ see_also: docs/strategy/STRATEGY.md | docs/prd/PRD-INDEX.md | .csp/review/REVIEW
 
 | 载体 | 现状 | 收口规则 |
 |---|---|---|
-| `pyproject.toml`（Python 包） | `1.3.0` | **canonical 真源**。下一个发布 = `1.4.0` |
+| `pyproject.toml`（Python 包） | `1.4.0` | **canonical 真源**。下一个发布 = `1.5.0` |
 | git tags `v3.4.0` / `v3.7.0` | 内部 sprint 里程碑号 | 重新定性为**内部 milestone label**（见 1.3），不作为对外发布版本。今后对外 tag 一律 SemVer |
 | git tag `v1.0.1` | 与 pyproject 一致 | 保留，首个对外正式发布基线 |
 | `desktop/` (tauri.conf.json + package.json) | `0.1.0` | 桌面端**未达 1.0**，独立 0.x 跟踪至稳定；达 v1.0 后与 canonical 对齐 |
