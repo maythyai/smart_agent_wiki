@@ -1,0 +1,25 @@
+feature:
+  id: "F-P-4"
+  name: "多工作空间隔离（DB schema 前缀 + 授权绑定）"
+  domain: "platform-team"
+  prd_ref: "docs/prd/PRD-platform-team-v1.4.0.md#F-P-4"
+  pms_module: "security-hardening"
+  user_story: "作为团队管理员，我想单实例多 wiki workspace 物理隔离 + 用户授权绑定 workspace，以便多团队共存。"
+  acceptance_criteria:
+    - "Given workspace A/B, when 查, then 数据隔离（AC-WS-1）"
+    - "Given 用户仅授权 A, when 访问 B, then 拒（AC-WS-2）"
+  scope:
+    includes: ["workspace_id 路由", "DB schema 前缀（migration v8）", "用户授权绑定 workspace"]
+    excludes: ["多租户 SaaS 计费/配额", "workspace 管理 UI（仅 API+CLI）"]
+  frontend: {pages: [], components: [], interactions: []}
+  backend: {endpoints: [], business_logic: ["workspace_id 路由层", "授权 scope 绑定"], integrations: []}
+  data_entities: ["workspace_id", "user_workspace_auth"]
+  data_operations: ["migrate", "scope"]
+  tech_dimensions: {needs_database: true, needs_cache: false, needs_queue: false, needs_ai: false, needs_vector_store: false, needs_realtime: false, needs_file_storage: true, needs_search: false, needs_scheduler: false, needs_notification: false}
+  nfr: {performance: "", security: "跨 workspace 拒", scalability: "", availability: ""}
+  priority: "P0"
+  complexity: "M"
+  depends_on: ["F-P-1"]
+  blocked_by: []
+  risks: ["DB 分库 vs schema 前缀需 ADR（migration v8 串行共享）"]
+  assumptions: ["选 schema 前缀（单 DB，workspace_id 列）——迁移成本低于分库"]

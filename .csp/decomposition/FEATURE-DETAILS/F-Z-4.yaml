@@ -1,0 +1,25 @@
+feature:
+  id: "F-Z-4"
+  name: "ruff 收口续：F401 import 审计 + F841 死赋值修（G1）"
+  domain: "tech-debt"
+  prd_ref: "docs/prd/PRD-platform-team-v1.4.0.md#F-debt-carried"
+  pms_module: "test-gate"
+  user_story: "作为维护者，我想 F401/F841 规则启用且 0 errors，以便 lint 门禁更严。"
+  acceptance_criteria:
+    - "Given ruff check src/ tests/ --select F401, when 跑, then 0 errors（AC-LINT-2）"
+    - "Given --select F841, when 跑, then 0 errors"
+  scope:
+    includes: ["F401 import 审计（__init__ re-export 核验，非盲删）", "F841 27 死赋值手修", "从 pyproject ignore 移除 F401/F841"]
+    excludes: ["F811（redefined-while-unused，仍 defer）", "新 lint 规则"]
+  frontend: {pages: [], components: [], interactions: []}
+  backend: {endpoints: [], business_logic: [], integrations: []}
+  data_entities: []
+  data_operations: []
+  tech_dimensions: {needs_database: false, needs_cache: false, needs_queue: false, needs_ai: false, needs_vector_store: false, needs_realtime: false, needs_file_storage: false, needs_search: false, needs_scheduler: false, needs_notification: false}
+  nfr: {performance: "", security: "", scalability: "", availability: ""}
+  priority: "P1"
+  complexity: "M"
+  depends_on: []
+  blocked_by: ["F-P-1", "F-P-3", "F-P-4"]
+  risks: ["共享资源（全 src）→ 串行末位；F401 盲删风险高，须逐文件核 re-export"]
+  assumptions: ["__init__.py 的 re-export 用 __all__ 标注后可安全启用 F401"]

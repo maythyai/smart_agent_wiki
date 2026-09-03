@@ -1,0 +1,25 @@
+feature:
+  id: "F-P-1"
+  name: "RBAC 深化（Cedar 策略生产级 + 权限矩阵 e2e）"
+  domain: "platform-team"
+  prd_ref: "docs/prd/PRD-platform-team-v1.4.0.md#F-P-1"
+  pms_module: "security-hardening"
+  user_story: "作为平台管理员，我想 RBAC 策略可配置热加载且每个 role×capability 有 e2e 守卫，以便多租户场景零越权。"
+  acceptance_criteria:
+    - "Given Cedar 策略文件变更, when 不重启, then 热加载生效（AC-SEC-5）"
+    - "Given 每个 role×capability, when e2e 跑, then 0 越权（AC-SEC-4）"
+  scope:
+    includes: ["Cedar 策略文件可配置（多租户）+ 热加载", "权限矩阵 e2e（viewer/editor/admin × CRUD）"]
+    excludes: ["新建角色类型（沿用 viewer/editor/admin）", "JWT 体系改动（v1.2.0 已同源）"]
+  frontend: {pages: [], components: [], interactions: []}
+  backend: {endpoints: [], business_logic: ["CedarPolicyEngine 热加载", "PermissionService 权限矩阵"], integrations: []}
+  data_entities: ["cedar_policy"]
+  data_operations: ["hot_reload"]
+  tech_dimensions: {needs_database: false, needs_cache: false, needs_queue: false, needs_ai: false, needs_vector_store: false, needs_realtime: false, needs_file_storage: true, needs_search: false, needs_scheduler: false, needs_notification: false}
+  nfr: {performance: "热加载 <1s", security: "0 越权", scalability: "", availability: ""}
+  priority: "P0"
+  complexity: "M"
+  depends_on: []
+  blocked_by: []
+  risks: ["Cedar 热加载并发安全 [TBD]"]
+  assumptions: ["CedarPolicyEngine 已存（app.py:206）；热加载 = 重载 API"]

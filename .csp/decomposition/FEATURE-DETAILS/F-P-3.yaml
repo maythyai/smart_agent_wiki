@@ -1,0 +1,25 @@
+feature:
+  id: "F-P-3"
+  name: "可观测性生产闭环（health 巡检 + receipt audit 查询）"
+  domain: "platform-team"
+  prd_ref: "docs/prd/PRD-platform-team-v1.4.0.md#F-P-3"
+  pms_module: "observability"
+  user_story: "作为 OPS，我想 `saw health` 巡检聚合状态 + `saw audit receipts` 查收据链，以便运维与审计。"
+  acceptance_criteria:
+    - "Given saw health, when 跑, then 聚合 engines/db/redis/receipt chain 状态（AC-OBS-3）"
+    - "Given saw audit receipts --session, when 跑, then 返回链+签名校验（AC-OBS-4）"
+  scope:
+    includes: ["saw health 巡检命令", "saw audit receipts --session 查询", "receipt chain CLI 可视化"]
+    excludes: ["告警 webhook（Sentry 已接，本轮不扩）", "Grafana 面板"]
+  frontend: {pages: [], components: [], interactions: []}
+  backend: {endpoints: [], business_logic: ["ReceiptStore.verify_chain 复用", "check_engines/check_database/check_redis 聚合"], integrations: []}
+  data_entities: ["receipts"]
+  data_operations: ["query", "verify"]
+  tech_dimensions: {needs_database: true, needs_cache: false, needs_queue: false, needs_ai: false, needs_vector_store: false, needs_realtime: false, needs_file_storage: false, needs_search: false, needs_scheduler: false, needs_notification: false}
+  nfr: {performance: "", security: "", scalability: "", availability: ""}
+  priority: "P1"
+  complexity: "M"
+  depends_on: []
+  blocked_by: []
+  risks: []
+  assumptions: ["ReceiptStore（v1.2.0）+ check_engines（v1.2.0）已存；本轮做 CLI 包装"]

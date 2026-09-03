@@ -1,0 +1,25 @@
+feature:
+  id: "F-P-2"
+  name: "团队部署形态收敛（docker-compose.prod）"
+  domain: "platform-team"
+  prd_ref: "docs/prd/PRD-platform-team-v1.4.0.md#F-P-2"
+  pms_module: "security-hardening"
+  user_story: "作为 OPS，我想 `docker compose -f docker-compose.prod.yml up` 一键起生产栈，secrets 经 env 注入，以便自托管运维。"
+  acceptance_criteria:
+    - "Given docker-compose.prod.yml, when up, then healthcheck PASS（AC-DEPLOY-1）"
+    - "Given secrets, when 扫, then 不入 image/git（AC-DEPLOY-2）"
+  scope:
+    includes: ["docker-compose.prod.yml（app+db+redis）", "healthcheck 接 v1.2.0 /health/ready", "secrets env 注入文档"]
+    excludes: ["K8s helm chart（留 v2.0）", "自动扩缩容"]
+  frontend: {pages: [], components: [], interactions: []}
+  backend: {endpoints: [], business_logic: [], integrations: []}
+  data_entities: []
+  data_operations: []
+  tech_dimensions: {needs_database: true, needs_cache: true, needs_queue: false, needs_ai: false, needs_vector_store: false, needs_realtime: false, needs_file_storage: true, needs_search: false, needs_scheduler: false, needs_notification: false}
+  nfr: {performance: "", security: "secrets 不入库", scalability: "", availability: "healthcheck"}
+  priority: "P1"
+  complexity: "S"
+  depends_on: []
+  blocked_by: []
+  risks: []
+  assumptions: ["复用既有 Dockerfile + docker-compose.yml；prod 变体加 env/secrets/healthcheck"]

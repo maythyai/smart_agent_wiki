@@ -27,10 +27,16 @@
 | F-Z-1 | ruff baseline 收口（配置+全库修） | tech-debt | P1 | S | — | 3 | §F-debt |
 | F-Z-2 | roadmap narrative 重写 | tech-debt | P2 | S | — | 2 | §F-debt |
 | F-Z-3 | v1.2.0 行为变更迁移文档 | tech-debt | P1 | S | — | 2 | §F-debt |
+| F-P-1 | RBAC 深化（Cedar 热加载 + 权限矩阵 e2e） | platform-team | P0 | M | — | 1 | §F-P-1 |
+| F-P-2 | 团队部署（docker-compose.prod） | platform-team | P1 | S | — | 1 | §F-P-2 |
+| F-P-3 | 可观测生产闭环（saw health + receipt audit） | platform-team | P1 | M | — | 1 | §F-P-3 |
+| F-P-4 | 多工作空间隔离（schema 前缀 + 授权绑定） | platform-team | P0 | M | F-P-1 | 2 | §F-P-4 |
+| F-Z-4 | ruff 收口续（F401 import 审计 + F841 修） | tech-debt | P1 | M | — | 3 | §F-debt |
+| F-Z-5 | heavy-SDK learn 测试 importorskip | tech-debt | P2 | S | — | 1 | §F-debt |
 
 ## 汇总
-- 域：6（A e2e-usability / B claim-alignment / C security-hardening / D observability / E test-gate / Z tech-debt）
-- Feature：23（P0=14，P1=7，P2=2）— v1.3.0 新增 F-Z-1/2/3（源自 retrospective F2/F3/F4）
+- 域：7（A e2e-usability / B claim-alignment / C security-hardening / D observability / E test-gate / Z tech-debt / P platform-team）
+- Feature：29（P0=16，P1=10，P2=3）— v1.4.0 新增 F-P-1..4 + F-Z-4/5（源自 PRD-platform-team-v1.4.0 + retro G1/G3）
 - 复杂度：S=8，M=12
 - Wave：1=10，2=7，3=3
 - 关键路径：F-A-1 → F-A-2 → F-A-5 → F-A-6 → F-E-3（5 步）

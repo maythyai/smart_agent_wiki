@@ -54,6 +54,20 @@ graph LR
   E1 --> E2
   E2 --> E3
   Z1 -.->|serial-after| E3
+
+  subgraph WP[Domain P platform-team]
+    P1[F-P-1 RBAC深化]
+    P2[F-P-2 团队部署]
+    P3[F-P-3 可观测闭环]
+    P4[F-P-4 多workspace隔离]
+  end
+  subgraph WZ2[Domain Z tech-debt v1.4]
+    Z4[F-Z-4 ruff F401/F841]
+    Z5[F-Z-5 heavy-SDK importorskip]
+  end
+
+  P1 --> P4
+  Z4 -.->|serial-after| P4
 ```
 
 ## DAG 校验

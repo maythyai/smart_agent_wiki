@@ -1,0 +1,25 @@
+feature:
+  id: "F-Z-5"
+  name: "heavy-SDK learn 测试 importorskip（G3）"
+  domain: "tech-debt"
+  prd_ref: "docs/prd/PRD-platform-team-v1.4.0.md#F-debt-carried"
+  pms_module: "test-gate"
+  user_story: "作为 CI，我想 heavy-SDK 测试在 SDK 缺失时优雅跳过，以便 CI 全量 test 步不再需 ignore。"
+  acceptance_criteria:
+    - "Given sentence-transformers 缺失, when pytest tests/, then 3 learn 测试 skip（不 fail）（AC-LINT-3）"
+    - "Given CI coverage 步, when 跑, then 不需 --ignore learn 3 文件"
+  scope:
+    includes: ["test_distiller/test_fsrs/test_trends 加 pytest.importorskip('sentence_transformers')", "ci.yml coverage 步移除 --ignore"]
+    excludes: ["把 sentence-transformers 入 dev deps（重，不做）", "测试逻辑改"]
+  frontend: {pages: [], components: [], interactions: []}
+  backend: {endpoints: [], business_logic: [], integrations: []}
+  data_entities: []
+  data_operations: []
+  tech_dimensions: {needs_database: false, needs_cache: false, needs_queue: false, needs_ai: false, needs_vector_store: false, needs_realtime: false, needs_file_storage: false, needs_search: false, needs_scheduler: false, needs_notification: false}
+  nfr: {performance: "", security: "", scalability: "", availability: ""}
+  priority: "P2"
+  complexity: "S"
+  depends_on: []
+  blocked_by: []
+  risks: []
+  assumptions: ["3 测试当前直接 import sentence_transformers；加 importorskip 即可优雅跳过"]
