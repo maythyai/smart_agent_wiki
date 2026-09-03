@@ -1,8 +1,8 @@
 {
   "pipeline_version": 2,
   "milestone": "v4.0",
-  "current_stage": "05-impl",
-  "next_cycle": "v1.5.0",
+  "current_stage": "01-prd",
+  "next_cycle": "v1.6.0",
   "stages": [
     {
       "stage": "00-hub",
@@ -64,5 +64,5 @@
       "progress": "闭环校验通过: PRD→Spec→Task→commit→tag 全链, 10/10 Task 有 commit, 5 AC 有测试. CMS drift D1 更正/D3 消解. Findings F1-F6 回流下一轮 01. 见 retrospective-v1.2.0.md"
     }
   ],
-  "note": "v1.4.0 周期闭环 2026-09-03: 00-07 done. platform+debt 6 Task, 1898 passed, smoke 6/6, ruff 0 (F401 启用), v1.4.0 tagged. 复盘见 retrospective-v1.4.0.md (findings H1-H5). v1.5.0 智能自适应周期启动: 01-prd DONE (PRD-intelligence-adaptation-v1.5.0 Approved + PMS-intelligence-adaptation.md ready; 4 新能力 F-I-1..4 + 携带 H1/H2/H4/H5 债; PRD claims ground 自源码全 TRUE). current_stage=02-decomposition. 决策: 开新能力同时清债. 02-decomposition DONE: DECOMPOSITION-DELTA-v1.5.0.md (8 原子 Feature F-I-1..4+F-Z-6..9, 3 Wave, Z-6/Z-7 串行). current_stage=03-tech. 03-tech DONE: ADR-006(resume)+ADR-007(workspace scope), 8 SPEC 1:1, TMS-DELTA-v1.5.0(10 用例), traceability +8. current_stage=04-tasks. 04-tasks DONE: TASKS-DELTA-v1.5.0 (8 Task 1:1 Spec, 3 Wave, DAG I-4→I-1, Z-6 serial末位, Z-7 serial Wave2) + WBS 追加 8 行. current_stage=05-impl."
+  "note": "v1.4.0 周期闭环 2026-09-03: 00-07 done. platform+debt 6 Task, 1898 passed, smoke 6/6, ruff 0 (F401 启用), v1.4.0 tagged. 复盘见 retrospective-v1.4.0.md (findings H1-H5). v1.5.0 智能自适应周期启动: 01-prd DONE (PRD-intelligence-adaptation-v1.5.0 Approved + PMS-intelligence-adaptation.md ready; 4 新能力 F-I-1..4 + 携带 H1/H2/H4/H5 债; PRD claims ground 自源码全 TRUE). current_stage=02-decomposition. 决策: 开新能力同时清债. 02-decomposition DONE: DECOMPOSITION-DELTA-v1.5.0.md (8 原子 Feature F-I-1..4+F-Z-6..9, 3 Wave, Z-6/Z-7 串行). current_stage=03-tech. 03-tech DONE: ADR-006(resume)+ADR-007(workspace scope), 8 SPEC 1:1, TMS-DELTA-v1.5.0(10 用例), traceability +8. current_stage=04-tasks. 04-tasks DONE: TASKS-DELTA-v1.5.0 (8 Task 1:1 Spec, 3 Wave, DAG I-4→I-1, Z-6 serial末位, Z-7 serial Wave2) + WBS 追加 8 行. current_stage=05-impl. 05-impl DONE: 8 Task (4 新能力 + 4 债), 1929 passed, ruff 0 (F841 启用), coverage 63%, smoke 6/6, wheel 1.5.0. 06-ship DONE: v1.5.0 tagged @89b284e. 07-retro DONE: retrospective-v1.5.0.md (findings I1-I5). **v1.5.0 周期闭环**. 新周期 v1.6.0, current_stage=01-prd. 待下一轮 01 决策: 开新能力 OR 先清 I1(workspace全路径II)/I2(coverage65)债."
 }
