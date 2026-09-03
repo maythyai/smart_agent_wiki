@@ -127,6 +127,16 @@ saw status
 - 🔧 Configure [integrations](https://github.com/chensaics/smart_agent_wiki/wiki/Integrations)
 - 💬 Join [discussions](https://github.com/chensaics/smart_agent_wiki/discussions)
 
+## Logging
+
+> **v1.2.0+**: 生产环境默认输出 JSON 结构化日志。本地开发如需可读文本日志，设置环境变量：
+> ```bash
+> export SAW_PRETTY_LOGS=1   # 切回纯文本可读日志
+> # 或显式关闭 JSON 日志：
+> export SAW_JSON_LOGS=0
+> ```
+> team 模式下 JSON 日志强制开启，以上变量不生效。详见 [Migration Guide — v1.2.0 行为变更](MIGRATION.md#v120-行为变更)。
+
 ## Troubleshooting
 
 **Python not found:**
