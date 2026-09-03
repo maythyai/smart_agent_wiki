@@ -55,6 +55,7 @@ class QueryEngine:
         claims_repo: SQLiteClaimsRepository,
         wiki_repo: WikiRepository,
         conn: sqlite3.Connection,
+        workspace_id: str = "default",
     ) -> None:
         """Initialize query engine.
 
@@ -68,6 +69,10 @@ class QueryEngine:
             claims_repo: Claims repository.
             wiki_repo: Wiki repository.
             conn: SQLite connection.
+            workspace_id: Workspace scope for all claim reads (T-F-Z-7,
+                ADR-007). Defaults to 'default' for single-wiki backward
+                compatibility; cross-workspace claims are filtered out of
+                search results and citation resolution.
         """
         self._search = search
         self._compiler = compiler
@@ -78,6 +83,7 @@ class QueryEngine:
         self._claims_repo = claims_repo
         self._wiki_repo = wiki_repo
         self._conn = conn
+        self._workspace_id = workspace_id
 
     def query(
         self,
@@ -206,7 +212,15 @@ class QueryEngine:
         from saw.engines.query.cache import get_cache
 
         _cache = get_cache()
-        _cached = _cache.get(question, {"limit": limit, "offset": offset, "mode": "search"})
+        # T-F-Z-7: include workspace_id in the cache key so a result cached
+        # for one workspace is never served to another (cross-ws leak).
+        _cache_params = {
+            "limit": limit,
+            "offset": offset,
+            "mode": "search",
+            "workspace_id": self._workspace_id,
+        }
+        _cached = _cache.get(question, _cache_params)
         if _cached is not None:
             return _cached
 
@@ -221,7 +235,7 @@ class QueryEngine:
         for i, (doc_id, content, score) in enumerate(
             zip(result.claim_uuids, result.contents, result.scores), 1
         ):
-            claim = self._claims_repo.get_by_id(doc_id)
+            claim = self._claims_repo.get_by_id(doc_id, workspace_id=self._workspace_id)
             if claim:
                 answer_lines.append(f"{i}. {claim.content[:100]}...")
                 sources.append({
@@ -271,7 +285,7 @@ class QueryEngine:
             meta={"total": result.total, "limit": limit, "offset": offset},
         )
         # F-QS-07: cache the result (TTL-bounded; cleared on content writes).
-        _cache.set(question, {"limit": limit, "offset": offset, "mode": "search"}, _qr)
+        _cache.set(question, _cache_params, _qr)
         return _qr
 
     def _graph_query(self, question: str) -> QueryResult:
@@ -563,7 +577,7 @@ Rules:
 
             # If not found, look up directly
             if not any(s.get("claim_uuid") == uuid for s in sources):
-                claim = self._claims_repo.get_by_id(uuid)
+                claim = self._claims_repo.get_by_id(uuid, workspace_id=self._workspace_id)
                 if claim:
                     sources.append({
                         "claim_uuid": uuid,

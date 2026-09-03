@@ -142,12 +142,26 @@ class SQLiteClaimsRepository:
         except sqlite3.Error as e:
             raise ClaimsDBError(f"Failed to apply DB migrations: {e}") from e
 
-    def get_by_id(self, uuid: str) -> Claim | None:
-        """Retrieve a claim by its UUID."""
-        row = self._conn.execute(
-            "SELECT * FROM claim WHERE uuid = ? AND deleted_at IS NULL",
-            (uuid,),
-        ).fetchone()
+    def get_by_id(self, uuid: str, workspace_id: str | None = None) -> Claim | None:
+        """Retrieve a claim by its UUID.
+
+        Args:
+            uuid: Claim UUID.
+            workspace_id: When set, restrict to claims in this workspace
+                (T-F-Z-7, ADR-007). None = no workspace filter (admin/cross-ws
+                lookups); the default keeps existing callers unchanged.
+        """
+        if workspace_id is None:
+            row = self._conn.execute(
+                "SELECT * FROM claim WHERE uuid = ? AND deleted_at IS NULL",
+                (uuid,),
+            ).fetchone()
+        else:
+            row = self._conn.execute(
+                "SELECT * FROM claim WHERE uuid = ? AND deleted_at IS NULL "
+                "AND workspace_id = ?",
+                (uuid, workspace_id),
+            ).fetchone()
         if row is None:
             return None
         return self._row_to_claim(row)
@@ -183,22 +197,44 @@ class SQLiteClaimsRepository:
         except sqlite3.Error as e:
             raise ClaimsDBError(f"Failed to insert claim: {e}") from e
 
-    def search(self, query: str, limit: int = 10) -> list[Claim]:
-        """Full-text search via FTS5 MATCH with bm25 ranking."""
+    def search(
+        self, query: str, limit: int = 10, workspace_id: str | None = None
+    ) -> list[Claim]:
+        """Full-text search via FTS5 MATCH with bm25 ranking.
+
+        Args:
+            query: Search query (tokenized via ``build_match_query``).
+            limit: Max results.
+            workspace_id: When set, restrict matches to claims in this
+                workspace (T-F-Z-7, ADR-007). None = no filter.
+        """
         try:
             match_expr = build_match_query(query)
             if not match_expr:
                 return []
-            rows = self._conn.execute(
-                """SELECT c.*
-                   FROM claim c
-                   JOIN fts_index f ON f.title = c.uuid
-                   WHERE f.fts_index MATCH ?
-                     AND c.deleted_at IS NULL
-                   ORDER BY bm25(fts_index)
-                   LIMIT ?""",
-                (match_expr, limit),
-            ).fetchall()
+            if workspace_id is None:
+                rows = self._conn.execute(
+                    """SELECT c.*
+                       FROM claim c
+                       JOIN fts_index f ON f.title = c.uuid
+                       WHERE f.fts_index MATCH ?
+                         AND c.deleted_at IS NULL
+                       ORDER BY bm25(fts_index)
+                       LIMIT ?""",
+                    (match_expr, limit),
+                ).fetchall()
+            else:
+                rows = self._conn.execute(
+                    """SELECT c.*
+                       FROM claim c
+                       JOIN fts_index f ON f.title = c.uuid
+                       WHERE f.fts_index MATCH ?
+                         AND c.deleted_at IS NULL
+                         AND c.workspace_id = ?
+                       ORDER BY bm25(fts_index)
+                       LIMIT ?""",
+                    (match_expr, workspace_id, limit),
+                ).fetchall()
             return [self._row_to_claim(row) for row in rows]
         except sqlite3.Error as e:
             raise ClaimsDBError(f"FTS5 search failed: {e}") from e

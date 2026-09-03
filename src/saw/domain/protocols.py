@@ -15,8 +15,11 @@ from saw.domain.wiki import WikiPage
 class ClaimsRepository(Protocol):
     """Port for Claims DB operations."""
 
-    def get_by_id(self, uuid: str) -> Claim | None:
-        """Retrieve a claim by its UUID."""
+    def get_by_id(self, uuid: str, workspace_id: str | None = None) -> Claim | None:
+        """Retrieve a claim by its UUID.
+
+        workspace_id (T-F-Z-7): when set, restrict to that workspace.
+        """
         ...
 
     def insert(self, claim: Claim) -> str:
@@ -26,8 +29,13 @@ class ClaimsRepository(Protocol):
         """
         ...
 
-    def search(self, query: str, limit: int = 10) -> list[Claim]:
-        """Full-text search via FTS5 MATCH with bm25 ranking."""
+    def search(
+        self, query: str, limit: int = 10, workspace_id: str | None = None
+    ) -> list[Claim]:
+        """Full-text search via FTS5 MATCH with bm25 ranking.
+
+        workspace_id (T-F-Z-7): when set, restrict matches to that workspace.
+        """
         ...
 
     def get_by_source(self, source_uuid: str) -> list[Claim]:
