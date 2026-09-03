@@ -1,7 +1,7 @@
 {
   "pipeline_version": 2,
   "milestone": "v3.9",
-  "current_stage": "06-ship",
+  "current_stage": "01-prd",
   "next_cycle": "v1.4.0",
   "stages": [
     {
@@ -64,5 +64,5 @@
       "progress": "闭环校验通过: PRD→Spec→Task→commit→tag 全链, 10/10 Task 有 commit, 5 AC 有测试. CMS drift D1 更正/D3 消解. Findings F1-F6 回流下一轮 01. 见 retrospective-v1.2.0.md"
     }
   ],
-  "note": "v1.3.0 周期 05 完成 2026-09-03: Wave2/3+debt 全 13 Task done (M2+M3). 1874 passed/3 skipped, saw smoke 6/6, ruff src/+tests 0 errors. 13 Task: A2/3/4/5/6 冒烟链+CI, B2/3 宣称一致, D2 trace 贯穿, E2/3 coverage 门禁+CI, Z1 ruff 收口(2 F823 bug 修), Z2 roadmap, Z3 迁移文档. current_stage=06-ship (v1.3.0 发布). 新周期 v3.9→v1.4.0 平台化/团队协作. Git: 本地 trunk, 无 push."
+  "note": "v1.3.0 周期闭环 2026-09-03: 00-07 done. Wave2/3+debt 13 Task, 1874 passed, saw smoke 6/6, ruff 0 errors, v1.3.0 tagged. 复盘见 retrospective-v1.3.0.md (findings G1-G5). 新周期 v3.9→v1.4.0 平台化/团队协作, current_stage=01-prd. 待下一轮 01 决策: G1 ruff F401/F841 审计 / G3 heavy-SDK importorskip / platform-team 新能力. Git: 本地 trunk, 无 push."
 }
