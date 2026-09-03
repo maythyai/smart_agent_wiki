@@ -2,6 +2,8 @@
 
 > 3 Wave，镜像 decomposition 波次。共享资源（ci.yml）跨 Wave 串行追加，不并行写。
 
+> **进度（2026-09-03）**：Wave 1 ✅ done（10/10 Task，M1 基础硬化就绪，1853 tests green）。Wave 2/3 留下一周期。
+
 ## Wave 1 — 基础层（10 Task，全并行）
 | task_id | 描述 | 类型 | 里程碑 |
 |---|---|---|---|

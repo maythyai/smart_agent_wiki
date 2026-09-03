@@ -1,7 +1,7 @@
 {
   "pipeline_version": 2,
   "milestone": "v3.7",
-  "current_stage": "05-impl",
+  "current_stage": "06-ship",
   "stages": [
     {
       "stage": "00-hub",
@@ -41,10 +41,10 @@
     {
       "stage": "05-impl",
       "title": "实施 / codegen / CMS 增量对齐",
-      "status": "in_progress",
+      "status": "done",
       "owner": "S5-impl",
       "artifacts": [".csp/code-spec/{app}/", "src/", "web/", ".csp/artifacts/implement.md"],
-      "progress": "Wave1 low-risk slice: 4/20 Task done (C-4-1/C-3-1/B-1-1/A-1-1, 30 tests green), E-1 deferred (pytest-cov dep). feat/hardening-wave1-slice. See .csp/artifacts/implement.md"
+      "progress": "Wave1 全完成 10/10 Task (M1 基础硬化就绪). 1853 passed/3 skipped. E-1+5 接线修复(C-1/C-2/C-5/D-1/D-3) 本轮集成. CMS drift D1 更正(agents 有真实 execute)/D3 消解(token 同源). Wave2/3 留下一周期. 线性 cherry-pick 到 master."
     },
     {
       "stage": "06-ship",
@@ -54,5 +54,5 @@
       "artifacts": [".csp/ship/", ".csp/milestones/{m}/"]
     }
   ],
-  "note": "04-tasks done 2026-09-01: 20 Task (1:1 Spec) + DAG 无环 + 3 Wave + 关键路径 A1→A2→A5→A6→E3. Spec related_tasks 回填 20/20, 追溯矩阵加 Task 列. 00-04 done, current_stage=05-impl. Git: local commit to trunk, no push."
+  "note": "05-impl done 2026-09-03: Wave1 全 10 Task done (M1 基础硬化就绪), 1853 passed/3 skipped. 本轮 5 接线修复(E-1 coverage基线 + C-1裸路由 + C-2 receipt链 + C-5 token同源 + D-1/D-3 可观测性) 4 worktree 并行→线性 cherry-pick master. CMS drift D1 更正/D3 消解. 00-05 done, current_stage=06-ship. Wave2/3 留下一周期 (新一轮 01). Git: 本地 trunk, 无 push."
 }

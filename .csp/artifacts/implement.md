@@ -26,6 +26,31 @@
 - 原子提交：4 commit，conventional commits，无 WIP 破码。
 - 无计划外变更：未顺手重构；E-1 缺依赖 defer 而非擅自装包。
 
+## 2026-09-03 — Wave 1 收官：5 接线修复 + 集成（M1 达成）
+
+**范围**：E-1（coverage 基线）+ C-1（裸路由）+ C-2（receipt 链）+ C-5（token 同源）+ D-1/D-3（可观测性）。4 worktree 并行（token/auth/receipt/obs），每 worktree 独立 feat 分支。
+**集成**：线性 cherry-pick 4 commit 到 master（3850d4f←0c0cf33←a4d8c9d←7ad1a1a←62d95ce）。
+**测试**：本轮新增 59 测试（16 token + 23 auth + 11 receipt + 9 obs）；全量回归 **1853 passed, 3 skipped, 0 失败**。
+
+### 决策与偏离
+- **Agent 静默写入失败**：4 个 subagent 报告"completed with no output"的 write_file/edit_file 实际未持久化——核验 ground truth 发现 C-2 的 dispatcher.py 3 处编辑 + receipt_store.py + receipt_check.sh 全丢，D-3 的 observability.py + health.py 编辑全丢。仅 migrations.py(v7) + 各 test 文件幸存。**Lead 接手以幸存 test 为 TDD 契约重建**：receipt_store.py 从 11 测试契约反推实现；dispatcher 接线重做；D-3 两处编辑重做 + 补 6 测试。教训：subagent 的"completed"无输出 ≠ 落盘，须 git status 核验。
+- **ruff baseline 未绿（pre-existing）**：项目无 ruff 配置文件，用默认值；未修改的 master queue.py 默认下报 7 个 UP017。`timezone.utc`/`except Exception` 是全代码库既有 pattern（queue/dispatcher/ed25519/health/observability 均如此）。决策：**新代码匹配既有 pattern**（receipt_store.py clean；dispatcher 新增用 `timezone.utc` + `# noqa: BLE001` 抑制唯一盲捕获），**不顺手重构既有 UP017/BLE001**（反模式：无计划外变更）。既有 lint debt 单独建 task。
+- **C-5 无代码改动**：实机核验前端 token 已同源（authStore.ts:56 / api.ts:134-138 / refresh :65-90 / logout App.tsx:23-27 / ws useWebSocket.ts:146-150），CMS drift D3 不成立→消解。仅产 16 互操作测试钉契约。
+- **D-1+D-3 合并提交**：WBS 已将两者串行合并为一 worktree 任务；test 文件共享，按 WBS 边界做单 commit（避免人为拆分共享文件）。
+- **release 范围**：Wave 1（10/10）= 本周期 05 交付，M1 可发布里程碑。Wave 2/3 留下一周期（新一轮 01），不推迟发布等全 Wave。
+
+### CMS drift 核验结论（带 file:line）
+- **drift D1（6 agent execute() 疑空实现）→ 不成立，更正**：6 个 agent 均有真实 execute()——WriterAgent(writer.py:56 LLM+模板)、LibrarianAgent(librarian.py:53)、CriticAgent(critic.py:56)、LinkerAgent(linker.py:51)、ScholarAgent(scholar.py:56)、GuardianAgent(guardian.py:80 纯规则)。仅 BaseAgent.execute(base.py:56) 是 stub。
+- **drift D3（前后端认证各自独立）→ 消解**：见上 C-5，前端 token 拦截链完整同源。
+- **行漂移**：SPEC/CMS 标 auth_dep@app.py:267，实际 app.py:275（+8）；observability.py 实际在 drivers/web/middleware/（非 middleware/）。
+- **新增调用链**：dispatcher.dispatch_pending→mark_done→_produce_receipt→ReceiptSigner.sign_receipt→ReceiptStore.store（链式 prev_receipt_id via get_last_receipt_id）；ReceiptStore.verify_chain 用 ReceiptSigner() 无 key 实例做签名核验（verify_receipt 不依赖私钥）。health.readiness_check→check_engines(app.state) 探 query/collaborate/write_queue。
+
+### Deferred / [TBD]
+- **既有 ruff lint debt**：跨代码库 UP017(timezone.utc)/BLE001(blind except)/S110(try-pass)——超出 Wave 1 scope，单独建 task。
+- **Agent execute() 收据钩子**：agent 不经 Dispatcher 路由变更，agent 层收据需架构接入，留后续。
+- **`saw security-check routes` CLI 子命令**：以 scripts/security_check.sh 落地，原生 Typer 命令留后续。
+- **engine 深探**：check_engines 仅探 None，深 health() 留 Wave 2。
+
 ## 2026-09-03 — Wave 1 续推（剩余 6 Task，多 Agent 并行）
 
 **Lead 先决（用户确认）**：
