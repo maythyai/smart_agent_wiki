@@ -41,6 +41,10 @@
 | T-F-Z-7 | SPEC-F-Z-7 | workspace 全查询路径路由(repo 层注入 scope) | backend | L | — | engines/query/engine.py, engines/ingest/pipeline.py, adapters/storage/*, domain/protocols.py | AC-WS-3 | intelligence-adaptation |
 | T-F-Z-8 | SPEC-F-Z-8 | Cedar policy reload CLI(saw policy reload) | backend-cli | S | — | commands/policy_cmd.py, main.py | AC-SEC-5(续) | security-hardening |
 | T-F-Z-9 | SPEC-F-Z-9 | query 子模块测试+fail_under 60→65 | test | M | — | tests/unit/engines/query/*, pyproject.toml | AC-COV-1 | test-gate |
+| T-F-J-1 | SPEC-F-J-1 | tree_mode+compiler 注入 workspace scope（QueryEngine 透传） | backend | M | — | engines/query/tree_mode.py, engines/query/compiler.py, engines/query/engine.py, drivers/web/app.py, drivers/cli/commands/query_cmd.py | AC-WS-4 | debt-closure |
+| T-F-J-2 | SPEC-F-J-2 | insert 持久化 workspace_id + ingest 透传 | backend | M | — | adapters/storage/claims_repository.py, engines/ingest/pipeline.py | AC-WS-5 | debt-closure |
+| T-F-J-3 | SPEC-F-J-3 | query 深覆盖（engine/compare/tree_mode）+ fail_under 63→65 | test | M | T-F-J-1 | tests/unit/engines/query/*, pyproject.toml | AC-COV-2 | test-gate |
+| T-F-J-4 | SPEC-F-J-4 | policy reload Web admin 端点（admin-only） | backend | S | — | drivers/web/routes/admin.py, drivers/web/app.py | AC-SEC-6 | security-hardening |
 
 ## 汇总
 - Task：20（1:1 Spec）；类型：backend-cli×1 / test×4 / infra-ci×4 / infra-script×2 / doc×1 / test-security×3 / backend-security×2 / backend×3
