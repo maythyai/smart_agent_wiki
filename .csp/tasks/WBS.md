@@ -33,6 +33,14 @@
 | T-F-P-4-1 | —（无 spec，ADR-005） | 多workspace隔离(schema前缀+migration v8+授权绑定) | platform-team | M | T-F-P-1-1 | src/saw/db/migrations.py, auth/permissions.py | AC-WS-1, AC-WS-2 | security-hardening |
 | T-F-Z-4-1 | —（无 spec） | ruff F401/F841 收口(import审计+27死赋值修+移除ignore) | tech-debt | M | — | pyproject.toml, src/saw/** | AC-LINT-2 | test-gate |
 | T-F-Z-5-1 | —（无 spec） | heavy-SDK learn 3测试 importorskip+ci移除ignore | tech-debt | S | — | tests/unit/engines/learn/, .github/workflows/ci.yml | AC-LINT-3 | test-gate |
+| T-F-I-1 | SPEC-F-I-1 | workflow CLI(run/validate/resume/status/lint)+resume()续跑 | backend-cli | M | T-F-I-4 | commands/workflow_cmd.py, engines/collaborate/workflow_executor.py, main.py | AC-WF-1, AC-WF-2 | intelligence-adaptation |
+| T-F-I-2 | SPEC-F-I-2 | Learn CLI(distill 在线+gaps) | backend-cli | S | — | commands/learn_cmd.py, main.py | AC-LR-1, AC-LR-2 | intelligence-adaptation |
+| T-F-I-3 | SPEC-F-I-3 | Token bench CLI(实测节省%) | backend-cli | S | — | commands/token_cmd.py, main.py | AC-TK-1 | intelligence-adaptation |
+| T-F-I-4 | SPEC-F-I-4 | agent 角色一致性 lint(saw workflow lint) | backend-cli | S | — | commands/workflow_cmd.py | AC-AG-1 | intelligence-adaptation |
+| T-F-Z-6 | SPEC-F-Z-6 | ruff F841 27 死赋值手修+移除 ignore 启用 | tech-debt | M | T-F-I-1,T-F-Z-7 | pyproject.toml, src/saw/** | AC-LINT-2(续) | test-gate |
+| T-F-Z-7 | SPEC-F-Z-7 | workspace 全查询路径路由(repo 层注入 scope) | backend | L | — | engines/query/engine.py, engines/ingest/pipeline.py, adapters/storage/*, domain/protocols.py | AC-WS-3 | intelligence-adaptation |
+| T-F-Z-8 | SPEC-F-Z-8 | Cedar policy reload CLI(saw policy reload) | backend-cli | S | — | commands/policy_cmd.py, main.py | AC-SEC-5(续) | security-hardening |
+| T-F-Z-9 | SPEC-F-Z-9 | query 子模块测试+fail_under 60→65 | test | M | — | tests/unit/engines/query/*, pyproject.toml | AC-COV-1 | test-gate |
 
 ## 汇总
 - Task：20（1:1 Spec）；类型：backend-cli×1 / test×4 / infra-ci×4 / infra-script×2 / doc×1 / test-security×3 / backend-security×2 / backend×3
