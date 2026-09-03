@@ -2,8 +2,8 @@
 id: PRD-intelligence-adaptation-v1.5.0
 title: 智能与自适应
 version: 1.0
-status: Draft
-author: "[TBD]"
+status: Approved
+author: "lifecycle-orchestrator"
 date: "2026-09-03"
 product_type: platform
 feature_count: 4
@@ -65,7 +65,7 @@ v1.3.0 Z-5 让 heavy-SDK 测试优雅 skip；本轮让 Distiller（LLM SOP 提�
 
 ## 4. 风险
 - **F-I-2 Learn 在线**：需 LLM（在线路径），离线仍 fallback；CI 无 LLM，测试须 mock。
-- **F-I-1 workflow crash recovery**：workflow_executions 表已存（v4），但执行器状态机 [TBD]。
+- **F-I-1 workflow crash recovery**：workflow_executions 表已存（v4），执行器状态机**已落地**（M-16 WorkflowStatus + _WORKFLOW_TRANSITIONS guard + validate_workflow_transition）；startup recovery 已接（app.py `_recover_stranded_workflows` 标 interrupted）。本轮 gap = CLI surface（`saw workflow run/validate/resume/status`）+ INTERRUPTED→resume 续跑。
 - **H2 workspace 全路由**：跨所有 repo 查询注入 workspace_id，面广，须防漏过滤（e2e 守）。
 
 ## 5. 下游衔接

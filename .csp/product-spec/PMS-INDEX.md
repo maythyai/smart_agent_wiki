@@ -10,6 +10,7 @@
 | security-hardening | RBAC/限流/receipt 全链路闭环 | P0 | PRD-product-hardening-v1 §3.3 | [待回填] | ready | PMS-security-hardening.md |
 | observability | 统一 logger+trace_id 贯穿+健康真实 | P1 | PRD-product-hardening-v1 §3.4 | [待回填] | ready | PMS-observability.md |
 | test-gate | 核心引擎覆盖率门禁+CI 阻断 | P0 | PRD-product-hardening-v1 §3.5 | [待回填] | ready | PMS-test-gate.md |
+| intelligence-adaptation | workflow 编排/Learn 在线/Token 实测/agent 一致性 + v1.4.0 债 H1/H2/H4/H5 | P0 | PRD-intelligence-adaptation-v1.5.0 §2 | [待回填] | ready | PMS-intelligence-adaptation.md |
 
 ## 状态约定
 - ready（边界已定）/ built（spec 已产出）/ degraded（source 变更待 re-align）/ blocked

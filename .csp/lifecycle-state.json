@@ -1,7 +1,7 @@
 {
   "pipeline_version": 2,
   "milestone": "v4.0",
-  "current_stage": "01-prd",
+  "current_stage": "02-decomposition",
   "next_cycle": "v1.5.0",
   "stages": [
     {
@@ -64,5 +64,5 @@
       "progress": "闭环校验通过: PRD→Spec→Task→commit→tag 全链, 10/10 Task 有 commit, 5 AC 有测试. CMS drift D1 更正/D3 消解. Findings F1-F6 回流下一轮 01. 见 retrospective-v1.2.0.md"
     }
   ],
-  "note": "v1.4.0 周期闭环 2026-09-03: 00-07 done. platform+debt 6 Task, 1898 passed, smoke 6/6, ruff 0 (F401 启用), v1.4.0 tagged. 复盘见 retrospective-v1.4.0.md (findings H1-H5). 新周期 v4.0→v1.5.0 智能自适应, current_stage=01-prd. 待下一轮 01 决策: 智能自适应新能力 OR 先清 H1(F841)/H2(workspace全路由)/H4(Cedar端点)债. Git: 本地 trunk, 无 push."
+  "note": "v1.4.0 周期闭环 2026-09-03: 00-07 done. platform+debt 6 Task, 1898 passed, smoke 6/6, ruff 0 (F401 启用), v1.4.0 tagged. 复盘见 retrospective-v1.4.0.md (findings H1-H5). v1.5.0 智能自适应周期启动: 01-prd DONE (PRD-intelligence-adaptation-v1.5.0 Approved + PMS-intelligence-adaptation.md ready; 4 新能力 F-I-1..4 + 携带 H1/H2/H4/H5 债; PRD claims ground 自源码全 TRUE). current_stage=02-decomposition. 决策: 开新能力同时清债."
 }
