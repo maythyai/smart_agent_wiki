@@ -24,6 +24,9 @@
 | T-F-E-1-1 | SPEC-F-E-1 | coverage 基线实测+阈值设定 [TBD] | infra-ci | M | — | .github/workflows/ci.yml, .csp/artifacts/coverage-baseline.md | (基线) | test-gate |
 | T-F-E-2-1 | SPEC-F-E-2 | 核心引擎 coverage 门禁(≥80% 阻断) | infra-ci | M | T-F-E-1-1 | ci.yml | AC-TEST-1 | test-gate |
 | T-F-E-3-1 | SPEC-F-E-3 | CI 集成(单测+冒烟+coverage+报告) | infra-ci | M | T-F-A-6-1,T-F-E-2-1 | ci.yml | AC-TEST-2 | test-gate |
+| T-F-Z-1-1 | —（无 spec） | ruff baseline 收口([tool.ruff]+全库 UP017/BLE001/S110 修) | tech-debt | S | — | pyproject.toml, src/saw/** | AC-LINT-1 | test-gate |
+| T-F-Z-2-1 | —（无 spec） | roadmap narrative 重写(v1.1/1.2 对齐+v1.3/1.4 重定义) | tech-debt | S | — | docs/strategy/ROADMAP.md | AC-DOC-1 | e2e-usability |
+| T-F-Z-3-1 | —（无 spec） | v1.2.0 行为变更迁移文档(JSON日志/health 503) | tech-debt | S | — | docs/QUICKSTART.md, docs/MIGRATION.md | AC-DOC-2 | observability |
 
 ## 汇总
 - Task：20（1:1 Spec）；类型：backend-cli×1 / test×4 / infra-ci×4 / infra-script×2 / doc×1 / test-security×3 / backend-security×2 / backend×3
