@@ -44,6 +44,7 @@ class ContextCompiler:
         wiki_repo: WikiRepository,
         search_service: FTS5Search,
         conn: sqlite3.Connection,
+        workspace_id: str = "default",
     ) -> None:
         """Initialize context compiler.
 
@@ -57,6 +58,7 @@ class ContextCompiler:
         self._wiki_repo = wiki_repo
         self._search = search_service
         self._conn = conn
+        self._workspace_id = workspace_id
 
     def compile(
         self,
@@ -85,7 +87,7 @@ class ContextCompiler:
         # Step 3: Load candidate claims
         candidate_claims = []
         for uuid in search_result.claim_uuids:
-            claim = self._claims_repo.get_by_id(uuid)
+            claim = self._claims_repo.get_by_id(uuid, workspace_id=self._workspace_id)
             if claim:
                 candidate_claims.append(claim)
 

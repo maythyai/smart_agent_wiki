@@ -89,7 +89,7 @@ class TestContextCompiler:
         class MockClaimsRepo:
             def __init__(self, conn):
                 self._conn = conn
-            def get_by_id(self, uuid):
+            def get_by_id(self, uuid, workspace_id=None):
                 row = self._conn.execute(
                     "SELECT * FROM claim WHERE uuid = ?", (uuid,)
                 ).fetchone()
@@ -136,7 +136,7 @@ class TestContextCompiler:
         class MockClaimsRepo:
             def __init__(self, conn):
                 self._conn = conn
-            def get_by_id(self, uuid):
+            def get_by_id(self, uuid, workspace_id=None):
                 row = self._conn.execute(
                     "SELECT * FROM claim WHERE uuid = ?", (uuid,)
                 ).fetchone()
@@ -183,7 +183,7 @@ class TestContextCompiler:
         class MockClaimsRepo:
             def __init__(self, conn):
                 self._conn = conn
-            def get_by_id(self, uuid):
+            def get_by_id(self, uuid, workspace_id=None):
                 row = self._conn.execute(
                     "SELECT * FROM claim WHERE uuid = ?", (uuid,)
                 ).fetchone()
@@ -228,7 +228,7 @@ class TestContextCompiler:
     def test_compile_empty_question(self, in_memory_db: sqlite3.Connection) -> None:
         """Test that empty question returns empty context."""
         class MockClaimsRepo:
-            def get_by_id(self, uuid):
+            def get_by_id(self, uuid, workspace_id=None):
                 return None
             def get_by_source(self, source_uuid):
                 return []

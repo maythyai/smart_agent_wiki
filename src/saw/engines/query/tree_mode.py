@@ -60,10 +60,12 @@ class TreeModeSearch:
         wiki_repo: WikiRepository,
         claims_repo: SQLiteClaimsRepository,
         conn: sqlite3.Connection,
+        workspace_id: str = "default",
     ) -> None:
         self._wiki_repo = wiki_repo
         self._claims_repo = claims_repo
         self._conn = conn
+        self._workspace_id = workspace_id
         self._heading_cache: dict[str, HeadingNode] = {}
 
     def search(self, query: str, limit: int = 10) -> list[SectionPath]:
@@ -105,7 +107,7 @@ class TreeModeSearch:
                     continue  # wiki page handled
 
             # Fallback: claim anchor (no wiki page / no heading structure).
-            claim = self._claims_repo.get_by_id(doc_id)
+            claim = self._claims_repo.get_by_id(doc_id, workspace_id=self._workspace_id)
             if claim is None:
                 continue
             heading_tree = self._get_heading_tree(claim.source_uuid)
@@ -240,14 +242,14 @@ class TreeModeSearch:
     ) -> list[Claim]:
         claims: list[Claim] = []
         for uuid in anchor.claim_uuids:
-            claim = self._claims_repo.get_by_id(uuid)
+            claim = self._claims_repo.get_by_id(uuid, workspace_id=self._workspace_id)
             if claim:
                 claims.append(claim)
 
         def collect_children(node: HeadingNode) -> None:
             for child in node.children:
                 for uuid in child.claim_uuids:
-                    claim = self._claims_repo.get_by_id(uuid)
+                    claim = self._claims_repo.get_by_id(uuid, workspace_id=self._workspace_id)
                     if claim and claim not in claims:
                         claims.append(claim)
                 collect_children(child)

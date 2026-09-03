@@ -167,14 +167,20 @@ class SQLiteClaimsRepository:
         return self._row_to_claim(row)
 
     def insert(self, claim: Claim) -> str:
-        """Insert a new claim. Idempotent via INSERT OR IGNORE."""
+        """Insert a new claim. Idempotent via INSERT OR IGNORE.
+
+        T-F-J-2 (ADR-008): persists ``claim.workspace_id`` so multi-workspace
+        writes land in the correct workspace. Previously the column was
+        omitted and every claim defaulted to 'default'.
+        """
         try:
             self._conn.execute(
                 """INSERT OR IGNORE INTO claim
                    (uuid, content, source_uuid, page_number, line_number,
                     timestamp, confidence, source_mark, tags, entities,
-                    content_hash, created_at, source_platform, source_id)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                    content_hash, created_at, source_platform, source_id,
+                    workspace_id)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
                     claim.uuid,
                     claim.content,
@@ -190,6 +196,7 @@ class SQLiteClaimsRepository:
                     claim.created_at.isoformat(),
                     claim.source_platform,
                     claim.source_id,
+                    claim.workspace_id,
                 ),
             )
             self._conn.commit()

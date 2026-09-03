@@ -273,6 +273,8 @@ def create_app(
 
     # Common "authenticated" dependency for all protected routes.
     auth_dep = [Depends(get_current_user)]
+    # T-F-J-4 (AC-SEC-6): admin-only dependency for admin routes.
+    admin_auth_dep = [Depends(get_current_user), Depends(require_role("admin"))]
     # Connector settings also require an editor/admin role (writes infra).
     connector_auth_dep = [Depends(get_current_user), Depends(require_role("admin", "editor"))]
 
@@ -405,6 +407,10 @@ def create_app(
     from saw.drivers.web.routes.auth import router as auth_router
 
     app.include_router(auth_router)
+
+    # T-F-J-4 (AC-SEC-6): admin policy reload endpoint (admin-only).
+    from saw.drivers.web.routes.admin import router as admin_router
+    app.include_router(admin_router, dependencies=admin_auth_dep)
 
     return app
 

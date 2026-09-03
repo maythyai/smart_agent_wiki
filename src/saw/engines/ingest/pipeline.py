@@ -102,6 +102,7 @@ class IngestPipeline:
         source: str,
         options: dict | None = None,
         progress_callback: Callable[[str, float], None] | None = None,
+        workspace_id: str = "default",
     ) -> IngestResult:
         """Ingest a document source.
 
@@ -111,6 +112,8 @@ class IngestPipeline:
             progress_callback: Optional ``callback(stage, fraction)`` for
                 coarse progress reporting (F-INGEST-01), so callers can show
                 progress instead of a silent long-running call.
+            workspace_id: Workspace scope for the ingested claims (T-F-J-2,
+                ADR-008). Defaults to 'default' for single-wiki compat.
 
         Returns:
             IngestResult with session ID, counts, and any errors/warnings.
@@ -238,6 +241,10 @@ class IngestPipeline:
         errors.extend(validated.errors)
 
         report("validate", 0.8)
+        # T-F-J-2 (ADR-008): stamp the workspace scope onto every claim so
+        # the ClaimsSink persists workspace_id (insert now writes the column).
+        for _c in validated.valid_claims:
+            _c.workspace_id = workspace_id
         # 6. Build WriteOp list for all sinks
         ops = self._build_write_ops(
             session_id=session_id,

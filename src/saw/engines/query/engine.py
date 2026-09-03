@@ -84,6 +84,14 @@ class QueryEngine:
         self._wiki_repo = wiki_repo
         self._conn = conn
         self._workspace_id = workspace_id
+        # T-F-J-1: propagate the workspace scope into the sub-services so
+        # their claim lookups (get_by_id) filter by the same workspace.
+        # Best-effort: tests may pass Mocks without the attribute.
+        for _sub in (self._tree_mode, self._compiler):
+            try:
+                setattr(_sub, "_workspace_id", workspace_id)
+            except Exception:  # pragma: no cover — Mocks/foreign impls
+                pass
 
     def query(
         self,

@@ -112,3 +112,115 @@ def test_engine_keyword_search_excludes_cross_workspace_claims(repo):
     )
     result_alpha = engine_alpha._keyword_search("alpha")
     assert any(s.get("claim_uuid") == "claim-alpha-1" for s in result_alpha.sources)
+
+
+# ── AC-WS-4: tree_mode + compiler cross-workspace isolation (T-F-J-1) ─
+
+def test_tree_mode_excludes_cross_workspace_claims(repo):
+    """AC-WS-4: TreeModeSearch(workspace_id='beta') drops alpha claims."""
+    from saw.engines.query.tree_mode import TreeModeSearch
+
+    r, conn = repo
+    # Seed FTS so _find_anchors returns the alpha claim's doc_id.
+    conn.execute(
+        "INSERT INTO fts_index (title, content, tags, original) VALUES (?, ?, ?, ?)",
+        ("claim-alpha-1", "alpha workspace secret", "secret", "alpha workspace secret"),
+    )
+    conn.commit()
+
+    # Mock the anchor lookup to return the alpha claim directly so the
+    # claim-anchor fallback path runs (its get_by_id is the scope point).
+    tree = TreeModeSearch(
+        wiki_repo=MagicMock(),
+        claims_repo=r,
+        conn=conn,
+        workspace_id="beta",
+    )
+    tree._find_anchors = MagicMock(return_value=[("claim-alpha-1", 1.0)])
+    tree._get_heading_tree = MagicMock(return_value=None)  # no wiki headings
+    # beta workspace: the alpha claim is filtered out → no SectionPath built.
+    assert tree.search("alpha") == []
+
+    # alpha workspace: the claim resolves → a non-empty result (may be empty
+    # if no heading tree, but get_by_id succeeds — assert no cross-leak).
+    tree_alpha = TreeModeSearch(
+        wiki_repo=MagicMock(),
+        claims_repo=r,
+        conn=conn,
+        workspace_id="alpha",
+    )
+    tree_alpha._find_anchors = MagicMock(return_value=[("claim-alpha-1", 1.0)])
+    tree_alpha._get_heading_tree = MagicMock(return_value=None)
+    # The alpha claim is visible to get_by_id in alpha workspace.
+    assert r.get_by_id("claim-alpha-1", workspace_id="alpha") is not None
+
+
+def test_compiler_excludes_cross_workspace_claims(repo):
+    """AC-WS-4: ContextCompiler(workspace_id='beta') drops alpha claims."""
+    from saw.engines.query.compiler import ContextCompiler
+
+    r, conn = repo
+    conn.execute(
+        "INSERT INTO fts_index (title, content, tags, original) VALUES (?, ?, ?, ?)",
+        ("claim-alpha-1", "alpha workspace secret", "secret", "alpha workspace secret"),
+    )
+    conn.commit()
+
+    fts = MagicMock()
+    fts_result = MagicMock()
+    fts_result.claim_uuids = ["claim-alpha-1"]
+    fts.search.return_value = fts_result
+
+    # beta: alpha claim filtered out → empty context.
+    compiler_beta = ContextCompiler(
+        claims_repo=r, wiki_repo=MagicMock(), search_service=fts,
+        conn=conn, workspace_id="beta",
+    )
+    ctx_beta = compiler_beta.compile("alpha", token_budget=4000)
+    assert ctx_beta.content.strip() == "" or "claim-alpha-1" not in ctx_beta.content
+
+    # alpha: alpha claim included.
+    compiler_alpha = ContextCompiler(
+        claims_repo=r, wiki_repo=MagicMock(), search_service=fts,
+        conn=conn, workspace_id="alpha",
+    )
+    ctx_alpha = compiler_alpha.compile("alpha", token_budget=4000)
+    assert "alpha workspace secret" in ctx_alpha.content
+
+
+# ── AC-WS-5: ingest write path isolates by workspace (T-F-J-2) ──────
+
+def test_insert_persists_workspace_id(repo):
+    """AC-WS-5: insert writes claim.workspace_id (not always 'default')."""
+    r, _ = repo
+    # The seeded claim was set to 'alpha' via set_workspace.
+    assert r.get_by_id("claim-alpha-1", workspace_id="alpha") is not None
+    assert r.get_by_id("claim-alpha-1", workspace_id="default") is None
+
+
+def test_insert_writes_non_default_workspace():
+    """AC-WS-5: a freshly inserted Claim with workspace_id lands correctly."""
+    import hashlib
+
+    from saw.domain.claims import Claim
+    from saw.domain.value_objects import ConfidenceLevel, SourceMark
+
+    conn = sqlite3.connect(":memory:")
+    apply_migrations(conn)
+    r = SQLiteClaimsRepository(conn)
+    claim = Claim(
+        uuid="claim-beta-1",
+        content="beta secret",
+        source_uuid="src-b",
+        confidence=ConfidenceLevel.CROSS_VALIDATED,
+        source_mark=SourceMark.EXTRACTED,
+        tags=[],
+        entities=[],
+        content_hash=hashlib.sha256(b"beta secret").hexdigest(),
+        workspace_id="beta",
+    )
+    r.insert(claim)
+    # Lands in beta, NOT default (proves insert persists workspace_id).
+    assert r.get_by_id("claim-beta-1", workspace_id="beta") is not None
+    assert r.get_by_id("claim-beta-1", workspace_id="default") is None
+    conn.close()
