@@ -95,6 +95,16 @@ app.command(name="docs")(docs)
 # Smoke baseline command (T-F-A-1-1)
 app.command(name="smoke")(smoke)
 
+# v1.5.0 intelligence-adaptation CLI surface (F-I-1..4, F-Z-8)
+from saw.drivers.cli.commands.workflow_cmd import app as workflow_app  # noqa: E402
+from saw.drivers.cli.commands.learn_cmd import app as learn_app  # noqa: E402
+from saw.drivers.cli.commands.token_cmd import app as token_app  # noqa: E402
+from saw.drivers.cli.commands.policy_cmd import app as policy_app  # noqa: E402
+app.add_typer(workflow_app, name="workflow")
+app.add_typer(learn_app, name="learn")
+app.add_typer(token_app, name="token")
+app.add_typer(policy_app, name="policy")
+
 # Code Graph lifecycle commands
 from saw.code_graph.cli import register_code_graph_commands  # noqa: E402
 register_code_graph_commands(app)
