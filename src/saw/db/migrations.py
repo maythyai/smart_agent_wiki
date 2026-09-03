@@ -279,6 +279,35 @@ CREATE INDEX IF NOT EXISTS idx_receipts_prev ON receipts(prev_receipt_id);
 
 _register(7, _create_receipts_table)
 
+# v8: workspace isolation (T-F-P-4, ADR-005). Multi-workspace support via a
+# `workspace_id` column on claim (schema-prefix isolation in a single DB) +
+# a `user_workspace_auth` table binding users to the workspaces they may
+# access. Existing claims default to the 'default' workspace (backward
+# compatible with single-wiki local-first). Idempotent via column-existence
+# check + IF NOT EXISTS.
+def _add_workspace_isolation(conn: sqlite3.Connection) -> None:
+    cols = {r[1] for r in conn.execute("PRAGMA table_info(claim)")}
+    if "workspace_id" not in cols:
+        conn.execute(
+            "ALTER TABLE claim ADD COLUMN workspace_id TEXT NOT NULL DEFAULT 'default'"
+        )
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_claim_workspace "
+        "ON claim(workspace_id) WHERE deleted_at IS NULL"
+    )
+    conn.executescript(
+        """CREATE TABLE IF NOT EXISTS user_workspace_auth (
+    user_id TEXT NOT NULL,
+    workspace_id TEXT NOT NULL,
+    role TEXT NOT NULL DEFAULT 'editor',
+    granted_at TEXT NOT NULL DEFAULT (datetime('now')),
+    PRIMARY KEY (user_id, workspace_id)
+)"""
+    )
+
+
+_register(8, _add_workspace_isolation)
+
 # ── Public API ────────────────────────────────────────────────────────
 
 TARGET_VERSION = max(v for v, _ in _MIGRATIONS) if _MIGRATIONS else 1

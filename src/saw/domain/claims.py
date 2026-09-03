@@ -32,6 +32,9 @@ class Claim:
     # F-CONN-04: connector provenance for sync conflict detection.
     source_platform: str | None = None
     source_id: str | None = None
+    # T-F-P-4: workspace isolation (ADR-005). 'default' for single-wiki
+    # local-first backward compat.
+    workspace_id: str = "default"
 
     @classmethod
     def compute_hash(cls, content: str) -> str:

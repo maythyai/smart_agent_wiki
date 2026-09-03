@@ -212,6 +212,47 @@ class SQLiteClaimsRepository:
         ).fetchall()
         return [self._row_to_claim(row) for row in rows]
 
+    # T-F-P-4: workspace isolation (ADR-005). Schema-prefix scoping within a
+    # single DB — list_by_workspace returns only claims owned by that
+    # workspace; set_workspace assigns a claim. Existing claims default to
+    # 'default' (migration v8) so single-wiki use is unchanged.
+    def list_by_workspace(self, workspace_id: str) -> list[Claim]:
+        """Return all non-deleted claims in a workspace (AC-WS-1 isolation)."""
+        rows = self._conn.execute(
+            "SELECT * FROM claim WHERE workspace_id = ? AND deleted_at IS NULL",
+            (workspace_id,),
+        ).fetchall()
+        return [self._row_to_claim(row) for row in rows]
+
+    def set_workspace(self, claim_uuid: str, workspace_id: str) -> None:
+        """Assign a claim to a workspace."""
+        self._conn.execute(
+            "UPDATE claim SET workspace_id = ? WHERE uuid = ?",
+            (workspace_id, claim_uuid),
+        )
+        self._conn.commit()
+
+    def grant_workspace_access(
+        self, user_id: str, workspace_id: str, role: str = "editor"
+    ) -> None:
+        """Grant a user access to a workspace (user_workspace_auth)."""
+        self._conn.execute(
+            """INSERT INTO user_workspace_auth (user_id, workspace_id, role)
+               VALUES (?, ?, ?)
+               ON CONFLICT(user_id, workspace_id)
+               DO UPDATE SET role=excluded.role""",
+            (user_id, workspace_id, role),
+        )
+        self._conn.commit()
+
+    def user_workspaces(self, user_id: str) -> list[str]:
+        """Return the workspace ids a user is authorized for (AC-WS-2)."""
+        rows = self._conn.execute(
+            "SELECT workspace_id FROM user_workspace_auth WHERE user_id = ?",
+            (user_id,),
+        ).fetchall()
+        return [r[0] for r in rows]
+
     def upsert(self, claim: Claim) -> str:
         """Insert or update a claim (F-CONN-04 resolution).
 
