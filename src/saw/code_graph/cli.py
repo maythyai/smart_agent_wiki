@@ -161,7 +161,7 @@ def register_code_graph_commands(app) -> None:
 
         engine = CodeGraphEngine(root)
         s = engine.stats()
-        typer.echo(f"Code Graph Stats:")
+        typer.echo("Code Graph Stats:")
         typer.echo(f"  Nodes: {s['nodes']}")
         typer.echo(f"  Edges: {s['edges']}")
         typer.echo(f"  Files: {s['files']}")

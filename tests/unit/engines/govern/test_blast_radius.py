@@ -76,7 +76,7 @@ class TestAnalyze:
             path=p,
             title=p.replace(".md", ""),
             page_type=PageType.SUMMARY,
-            content=f"Some content with [^claim:claim-1] citation",
+            content="Some content with [^claim:claim-1] citation",
             confidence=ConfidenceLevel.SINGLE_SOURCE,
             freshness=FreshnessLevel.LEVEL_0,
         ) if p == "page-1.md" else None

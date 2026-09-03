@@ -237,6 +237,6 @@ class SessionTracker:
             return f"File read {read_count} times. Consider refactoring to reduce dependency on this file."
 
         if read_count >= 2:
-            return f"File already read this session. Use cached content if available."
+            return "File already read this session. Use cached content if available."
 
         return None

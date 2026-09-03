@@ -84,7 +84,7 @@ def review(
 
         console.print()
         console.print(Panel.fit(
-            f"[bold blue]Claim Review[/bold blue]",
+            "[bold blue]Claim Review[/bold blue]",
             subtitle=claim_uuid[:8] + "...",
         ))
 
@@ -118,7 +118,7 @@ def review(
     if show_all:
         console.print()
         console.print(Panel.fit(
-            f"[bold blue]Review Queue[/bold blue]",
+            "[bold blue]Review Queue[/bold blue]",
             subtitle=f"{len(queue)} items pending",
         ))
 
@@ -149,7 +149,7 @@ def review(
     # Interactive mode
     console.print()
     console.print(Panel.fit(
-        f"[bold blue]Interactive Review[/bold blue]",
+        "[bold blue]Interactive Review[/bold blue]",
         subtitle=f"{len(queue)} items in queue",
     ))
 

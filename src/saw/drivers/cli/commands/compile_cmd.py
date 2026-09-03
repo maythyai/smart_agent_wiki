@@ -324,14 +324,14 @@ def concept_relate_cmd(
         if ok:
             console.print(f"[green]Removed:[/green] {source} —[{relation}]→ {target}")
         else:
-            console.print(f"[yellow]Relation not found.[/yellow]")
+            console.print("[yellow]Relation not found.[/yellow]")
     else:
         rel = ConceptRelation(source=source, target=target, relation_type=rel_type)
         ok = graph.add_relation(rel)
         if ok:
             console.print(f"[green]Added:[/green] {source} —[{relation}]→ {target}")
         else:
-            console.print(f"[yellow]Relation already exists.[/yellow]")
+            console.print("[yellow]Relation already exists.[/yellow]")
 
 
 def graph_overview_cmd() -> None:
@@ -405,7 +405,7 @@ def issue_create_cmd(
     try:
         issue_type = IssueType(type)
     except ValueError:
-        console.print(f"[red]Invalid type.[/red] Valid: challenge, request, suggestion")
+        console.print("[red]Invalid type.[/red] Valid: challenge, request, suggestion")
         raise typer.Exit(1)
 
     affected = [p.strip() for p in pages.split(",")] if pages else []

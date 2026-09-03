@@ -181,7 +181,7 @@ class ResearchOnMissHandler:
                         ingest_result = self._ingest.ingest(source.get("url", ""))
                         if hasattr(ingest_result, "pages_created"):
                             pages_added.extend(ingest_result.pages_created or [])
-                    except Exception as e:
+                    except Exception:
                         # Log error but continue
                         pass
 

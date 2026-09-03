@@ -58,7 +58,7 @@ def verify(
     # Display provenance chain
     console.print()
     console.print(Panel.fit(
-        f"[bold blue]Provenance Verification[/bold blue]",
+        "[bold blue]Provenance Verification[/bold blue]",
         subtitle=f"Claim: {claim_uuid[:8]}...",
     ))
 
@@ -85,7 +85,7 @@ def verify(
     if vault_path.exists():
         console.print(f"[green]✓[/green] Vault source found: {vault_path}")
     else:
-        console.print(f"[yellow]?[/yellow] Vault source not found (may have been pruned)")
+        console.print("[yellow]?[/yellow] Vault source not found (may have been pruned)")
 
     conn.close()
 

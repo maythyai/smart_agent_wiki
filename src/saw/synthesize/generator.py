@@ -208,7 +208,7 @@ class PageGenerator:
     ) -> str:
         """生成页面内容"""
         lines = [
-            f"## Pattern Analysis",
+            "## Pattern Analysis",
             "",
             f"This synthesis page captures a recurring pattern identified "
             f"across {pattern.get('occurrences', 0)} occurrences.",

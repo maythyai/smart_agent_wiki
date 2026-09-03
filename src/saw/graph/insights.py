@@ -173,7 +173,7 @@ class InsightGenerator:
                 insight_id=f"surprise-{len(self.insights)}",
                 insight_type=InsightType.SURPRISING_CONNECTION,
                 title=f"Unexpected: {nodes.get(a, {}).get('title', a)} ↔ {nodes.get(b, {}).get('title', b)}",
-                description=f"Cross-community or cross-type connection with high surprise score.",
+                description="Cross-community or cross-type connection with high surprise score.",
                 nodes_involved=[a, b],
                 score=surprise_score,
                 actionable=True,

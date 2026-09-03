@@ -26,7 +26,7 @@ class JSONExtractor:
         stripped = text.strip()
 
         records: list = []
-        if stripped and not stripped[0] in "[{":
+        if stripped and stripped[0] not in "[{":
             # JSONL: one value per line.
             for line in stripped.splitlines():
                 line = line.strip()

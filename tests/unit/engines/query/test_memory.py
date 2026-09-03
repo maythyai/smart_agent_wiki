@@ -24,7 +24,7 @@ class TestProgressiveMemoryL0:
         mock_wiki.list_pages.return_value = [f"page_{i}.md" for i in range(50)]
         mock_wiki.get_page_count.return_value = 50
         mock_wiki.read.return_value = MagicMock(
-            title=f"Test Page",
+            title="Test Page",
             page_type=MagicMock(name="SUMMARY"),
         )
 

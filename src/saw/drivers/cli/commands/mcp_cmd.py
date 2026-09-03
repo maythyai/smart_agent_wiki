@@ -55,7 +55,7 @@ def mcp(
         transport=transport,
     )
 
-    console.print(f"[blue]Starting MCP server...[/blue]")
+    console.print("[blue]Starting MCP server...[/blue]")
     console.print(f"[green]Server: {config.server_name} v{config.server_version}[/green]")
     console.print(f"[green]Transport: {config.transport}[/green]")
 

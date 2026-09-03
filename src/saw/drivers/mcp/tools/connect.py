@@ -90,7 +90,7 @@ def connect_tool(
         action_ideas.extend([
             f"Explore how '{topic_a}' principles apply to '{topic_b}'",
             f"Document the connection at '{topic_a} ↔ {topic_b}'",
-            f"Create a synthesis page combining both perspectives",
+            "Create a synthesis page combining both perspectives",
         ])
 
     # 6. 创建双向链接

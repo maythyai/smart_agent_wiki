@@ -294,7 +294,7 @@ def feed_info(
         console.print(f"  Active: {'Yes' if feed.active else 'No'}")
         console.print(f"  Last Poll: {feed.last_poll_at or '-'}")
         console.print(f"  Created: {feed.created_at}")
-        console.print(f"\n[bold]Entry Stats:[/bold]")
+        console.print("\n[bold]Entry Stats:[/bold]")
         console.print(f"  Total: {total_entries}")
         console.print(f"  New: {new_entries}")
         console.print(f"  Updated: {updated_entries}")

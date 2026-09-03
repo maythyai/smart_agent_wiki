@@ -515,11 +515,11 @@ class WikiCompileEngine:
 
         # Render with metadata comment
         output = page.content.rstrip() + "\n\n"
-        output += f"<!-- metadata:\n"
+        output += "<!-- metadata:\n"
         output += f"type: {page.metadata.type.value}\n"
         output += f"confidence: {page.metadata.confidence.value}\n"
         output += f"topic: {page.metadata.topic}\n"
-        output += f"sources:\n"
+        output += "sources:\n"
         for src in page.metadata.sources:
             output += f"  - pageId: \"{src.page_id}\"\n"
             output += f"    title: \"{src.title}\"\n"
@@ -527,7 +527,7 @@ class WikiCompileEngine:
             output += f"seeAlso: {page.metadata.see_also}\n"
         output += f"created: {page.metadata.created.isoformat()}\n"
         output += f"updated: {page.metadata.updated.isoformat()}\n"
-        output += f"-->\n"
+        output += "-->\n"
 
         page_path.write_text(output, encoding="utf-8")
 

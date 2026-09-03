@@ -224,7 +224,7 @@ Source: {item.source_url}
             f"# Synthesis: {research_topic}",
             "",
             "---",
-            f"type: research-synthesis",
+            "type: research-synthesis",
             f"created: {datetime.now().strftime('%Y-%m-%d')}",
             "---",
             "",

@@ -16,6 +16,7 @@ _strawberry = None
 
 
 def _get_strawberry():
+    global _strawberry
     if _strawberry is None:
         try:
             import strawberry
@@ -215,6 +216,7 @@ _schema = None
 
 def get_schema():
     """Get the GraphQL schema instance."""
+    global _schema
     if _schema is None:
         _schema = create_schema()
     return _schema
