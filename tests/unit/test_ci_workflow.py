@@ -47,3 +47,25 @@ def test_ci_lint_gate_present() -> None:
     assert any(
         "run" in s and "ruff check" in s["run"] for s in python_steps
     ), "no ruff lint step"
+
+
+def test_ci_coverage_no_heavy_ignore() -> None:
+    """AC-LINT-3: the coverage gate no longer --ignores heavy-SDK learn tests;
+    they skip via importorskip instead."""
+    cov_steps = [
+        s for s in _ci()["jobs"]["python"]["steps"]
+        if "run" in s and "--cov" in s["run"]
+    ]
+    assert cov_steps
+    run = cov_steps[0]["run"]
+    assert "--ignore=tests/unit/engines/learn" not in run, (
+        "coverage step still --ignores learn tests (should rely on importorskip)"
+    )
+
+
+def test_fsrs_skips_without_sdk() -> None:
+    """AC-LINT-3: test_fsrs guards its `fsrs` import with importorskip."""
+    src = (Path(__file__).resolve().parents[2] / "tests/unit/engines/learn/test_fsrs.py").read_text()
+    assert "importorskip" in src and "fsrs" in src, (
+        "test_fsrs does not importorskip the optional fsrs extra"
+    )

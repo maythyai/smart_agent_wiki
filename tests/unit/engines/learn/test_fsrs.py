@@ -7,6 +7,13 @@ Per D-17:
 """
 from __future__ import annotations
 
+# T-F-Z-5 (AC-LINT-3): the `fsrs` package is in the optional `learn` extra,
+# not the dev install. Skip the whole module in CI when it is absent so
+# `pytest tests/` needs no --ignore for heavy-SDK tests.
+import pytest
+
+pytest.importorskip("fsrs")
+
 from datetime import datetime, timedelta, timezone
 import tempfile
 from pathlib import Path

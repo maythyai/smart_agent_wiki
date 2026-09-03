@@ -31,10 +31,7 @@ jobs:
         run: |
           pytest tests/ -q \
             --cov=src/saw \
-            --cov-report=term-missing \
-            --ignore=tests/unit/engines/learn/test_distiller.py \
-            --ignore=tests/unit/engines/learn/test_fsrs.py \
-            --ignore=tests/unit/engines/learn/test_trends.py
+            --cov-report=term-missing
 
   # T-F-A-6: end-to-end smoke as a CI gate (AC-E2E-1). `saw smoke` runs the
   # engine chain on a fresh temp DB offline; a non-zero exit fails the job.
