@@ -1,90 +1,83 @@
-# Smart Agent Wiki - Production Docker Compose
-# Phase 5: Team Deployment
+# Smart Agent Wiki — Production Docker Compose (T-F-P-2)
 #
-# Extends base docker-compose.yml for production deployment
-# Usage: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+# Self-contained team-deployment stack: SAW app (SQLite, persistent volume)
+# + optional Redis (session/cache for team mode) + healthcheck on the real
+# /health/ready probe (v1.2.0 engine-aware). Secrets are env-injected —
+# NEVER baked into the image or committed (AC-DEPLOY-2, detect-private-key).
+#
+# Usage:
+#   SAW_AUTH_SECRET_KEY=$(openssl rand -hex 32) \
+#   docker compose -f docker/docker-compose.prod.yml up -d
+#   docker compose -f docker/docker-compose.prod.yml logs -f saw
+#   docker compose -f docker/docker-compose.prod.yml down
+#
+# Operator MUST set before `up`:
+#   SAW_AUTH_SECRET_KEY   JWT signing secret (required in team mode)
+#   SAW_ADMIN_USER / SAW_ADMIN_PASSWORD  initial admin (optional, bootstrap)
+#   SENTRY_DSN           optional telemetry
 
-version: '3.8'
+version: "3.8"
 
 services:
-  app:
+  saw:
+    image: chensaics/saw:latest
+    container_name: saw-prod
+    restart: always
+    working_dir: /wiki
+    volumes:
+      # Persistent wiki content + SQLite DB (.saw/db/claims.db) + receipts.
+      - ./wiki:/wiki
+      - saw-prod-data:/home/saw/.local/share/saw
     environment:
-      - LOG_LEVEL=WARNING
-      - DB_POOL_SIZE=10
-      - DB_MAX_OVERFLOW=20
+      - SAW_AUTH_MODE=team
+      # AC-DEPLOY-2: secret read from env, no value committed.
+      - SAW_AUTH_SECRET_KEY=${SAW_AUTH_SECRET_KEY:?SAW_AUTH_SECRET_KEY must be set}
+      - SAW_ADMIN_USER=${SAW_ADMIN_USER:-}
+      - SAW_ADMIN_PASSWORD=${SAW_ADMIN_PASSWORD:-}
+      - SAW_ENV=production
+      - SAW_LOG_LEVEL=INFO
+      - REDIS_URL=redis://redis:6379/0
+      - SENTRY_DSN=${SENTRY_DSN:-}
+    ports:
+      - "8000:8000"
+    command: web --host 0.0.0.0 --port 8000
+    depends_on:
+      redis:
+        condition: service_healthy
     healthcheck:
+      # AC-DEPLOY-1: probe the real readiness endpoint (engines + db).
       test: ["CMD", "curl", "-f", "http://localhost:8000/health/ready"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 15s
     deploy:
       resources:
         limits:
-          memory: 2G
+          memory: 2g
+          cpus: "2.0"
         reservations:
-          memory: 512M
-    restart: always
-
-  db:
-    environment:
-      # Use secrets in production
-      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
-    volumes:
-      - postgres_prod_data:/var/lib/postgresql/data
-    deploy:
-      resources:
-        limits:
-          memory: 1G
-    restart: always
-    secrets:
-      - db_password
+          memory: 512m
 
   redis:
+    image: redis:7-alpine
+    container_name: saw-prod-redis
+    restart: always
     command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-    restart: always
-
-  nginx:
-    image: nginx:alpine
-    ports:
-      - "80:80"
-      - "443:443"
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./ssl:/etc/nginx/ssl:ro
-    depends_on:
-      - app
-    restart: always
-
-  backup:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_USER: saw
-      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
-      POSTGRES_HOST: db
-      POSTGRES_DB: saw
-      BACKUP_SCHEDULE: "0 2 * * *"
-    volumes:
-      - ../data/backups:/backups
-    secrets:
-      - db_password
-    entrypoint: |
-      sh -c 'while true; do
-        sleep 86400
-        current=$(date +%Y%m%d_%H%M%S)
-        pg_dump -h db -U saw saw > /backups/saw_backup_$$current.sql
-        find /backups -name "saw_backup_*" -mtime +7 -delete
-      done'
-    depends_on:
-      - db
-    restart: always
+      - saw-prod-redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
 
 volumes:
-  postgres_prod_data:
+  saw-prod-data:
+    driver: local
+  saw-prod-redis:
+    driver: local
 
-secrets:
-  db_password:
-    file: ./secrets/db_password.txt
+networks:
+  default:
+    name: saw-prod-network
