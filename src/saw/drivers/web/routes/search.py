@@ -31,12 +31,16 @@ async def search(
     type: str | None = Query(None, description="Filter by page type"),
     tag: str | None = Query(None, description="Filter by tag"),
     min_confidence: int | None = Query(None, ge=1, le=4, description="Min confidence level"),
+    mode: str = Query("default", description="Search mode: default|tree|semantic"),
     engine: QueryEngine = Depends(get_query_engine),
 ) -> SearchResponse:
     """Search knowledge base using BM25 + FTS5 (per D-07).
 
     Per D-08: Results include snippet, citation, confidence.
     Per D-09: Support pagination and filtering.
+    Per F-N-2: ``mode=semantic`` switches to embedding cosine search
+    (degrades to BM25 with ``semantic_fallback`` meta when embeddings
+    are unavailable or index is empty).
 
     Args:
         q: Search query string (required, min 1 char).
@@ -45,6 +49,7 @@ async def search(
         type: Optional filter by page type.
         tag: Optional filter by tag.
         min_confidence: Optional minimum confidence level (1-4).
+        mode: Search mode — ``default`` (BM25), ``tree``, or ``semantic``.
         engine: QueryEngine dependency.
 
     Returns:
@@ -54,7 +59,8 @@ async def search(
     # client-side type/tag/confidence filters and pagination operate over the
     # full match set instead of only the first 20 hits (which made page >=3
     # return empty). The engine threads limit/offset into FTS5.
-    result = engine.query(question=q, mode="search", limit=500)
+    query_mode = "search" if mode in ("default", "tree") else mode
+    result = engine.query(question=q, mode=query_mode, limit=500)
 
     # Convert QueryResult to SearchResponse
     results: list[SearchResult] = []

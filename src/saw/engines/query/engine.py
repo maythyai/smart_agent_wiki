@@ -134,6 +134,8 @@ class QueryEngine:
             return self._compare_query(question)
         elif mode == "tree":
             return self._tree_query(question)
+        elif mode == "semantic":
+            return self._semantic_search(question, limit=limit, offset=offset)
         else:
             return QueryResult(answer=f"Unknown mode: {mode}", mode=mode)
 
@@ -451,6 +453,115 @@ class QueryEngine:
             answer="\n".join(answer_lines),
             sources=sources,
             mode="tree",
+        )
+
+    def _semantic_search(
+        self, question: str, limit: int = 20, offset: int = 0
+    ) -> QueryResult:
+        """Semantic search via embedding cosine similarity.
+
+        Returns top-K results ranked by cosine similarity to the query
+        embedding. Falls back to BM25 when embeddings unavailable or
+        index empty, with ``semantic_fallback`` / ``index_empty`` meta flags.
+
+        Per SPEC-F-N-2 + ADR-010: parallel mode (not fused with BM25).
+        """
+        import struct
+
+        from saw.adapters.embeddings import (
+            cosine_similarity,
+            embed_texts,
+            embeddings_available,
+        )
+
+        # 1. Tier check: degrade to BM25 if embeddings unavailable
+        if not embeddings_available():
+            result = self._keyword_search(question, limit=limit, offset=offset)
+            result.mode = "semantic_fallback"
+            result.meta = {**(result.meta or {}), "semantic_fallback": True}
+            return result
+
+        # 2. Embed query text
+        vecs = embed_texts([question])
+        if vecs is None:
+            # Embedding failed (model error) → degrade to BM25
+            result = self._keyword_search(question, limit=limit, offset=offset)
+            result.mode = "semantic_fallback"
+            result.meta = {
+                **(result.meta or {}),
+                "semantic_fallback": True,
+                "embedding_error": True,
+            }
+            return result
+        query_vec = vecs[0]
+
+        # 3. Load all vectors for this workspace from embedding_store
+        rows = self._conn.execute(
+            "SELECT doc_id, vector, dim FROM embedding_store WHERE workspace_id = ?",
+            (self._workspace_id,),
+        ).fetchall()
+
+        if not rows:
+            # Empty index → return empty result with hint
+            return QueryResult(
+                answer="Embedding index is empty. Run `saw rebuild-embeddings` to build it.",
+                mode="semantic",
+                meta={"semantic_fallback": False, "index_empty": True},
+            )
+
+        # 4. Compute cosine similarity for each, sort descending, take top-K
+        scored: list[tuple[str, float]] = []
+        for doc_id, blob, dim in rows:
+            vec = list(struct.unpack(f"<{dim}f", blob))
+            sim = cosine_similarity(query_vec, vec)
+            scored.append((doc_id, sim))
+        scored.sort(key=lambda x: -x[1])
+        top_k = scored[offset : offset + limit]
+
+        # 5. Resolve doc_id → claim/wiki content
+        sources: list[dict] = []
+        for doc_id, sim in top_k:
+            claim = self._claims_repo.get_by_id(
+                doc_id, workspace_id=self._workspace_id
+            )
+            if claim:
+                sources.append({
+                    "claim_uuid": doc_id,
+                    "content": claim.content,
+                    "score": round(sim, 4),
+                    "type": "claim",
+                    "tags": list(claim.tags or []),
+                })
+            else:
+                page = self._wiki_repo.read(doc_id) if self._wiki_repo else None
+                if page:
+                    sources.append({
+                        "page_slug": doc_id,
+                        "title": page.title,
+                        "content": page.content,
+                        "score": round(sim, 4),
+                        "type": getattr(page, "entity_type", "wiki"),
+                        "tags": list(getattr(page, "tags", []) or []),
+                    })
+
+        return QueryResult(
+            answer=(
+                f"Found {len(sources)} semantic results for '{question}':\n"
+                + "\n".join(
+                    f"{i + 1}. {s.get('content', '')[:80]}... "
+                    f"(score: {s['score']:.3f})"
+                    for i, s in enumerate(sources)
+                )
+            ),
+            sources=sources,
+            coverage=100.0,
+            mode="semantic",
+            meta={
+                "total": len(sources),
+                "limit": limit,
+                "offset": offset,
+                "semantic_fallback": False,
+            },
         )
 
     def _get_query_prompt(self) -> str:
