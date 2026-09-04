@@ -2,7 +2,7 @@
 id: PRD-graph-workspace-v1.7.0
 title: graph workspace 隔离 + scope 清理 + coverage 收口
 version: 1.0
-status: Approved
+status: Released
 author: lifecycle-orchestrator
 date: "2026-09-04"
 product_type: platform
