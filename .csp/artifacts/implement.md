@@ -142,3 +142,25 @@
 - **K1（coverage 65）**：compile/compiler.py 17% 深覆盖——v1.8.0（复杂编译器，高成本）。
 - **per-request workspace 注入（web 路径）**：QueryEngine 仍 startup 单例 default ws；graph/tree/compiler 的 scope 是引擎级，非请求级。请求级 ws 注入（request context → engine）留后续架构演进。
 - **entity_relation workspace_id 冗余列**：本轮用两端 JOIN 过滤，未加列（避免冗余）。
+
+## 2026-09-04 — v1.8.0 Smart Linking + AI Summarization（3 Feature，1 Wave，Lead 单线）
+
+**范围**：F-L-1（links suggest）/ F-L-2（links audit）/ F-L-3（summarize）。转新能力，复用 query/LLM 引擎。
+**Commits**：见下（links_cmd + summarize_cmd + tests 一 commit）。
+**测试**：1983 passed / 3 skipped / 0 failed（+6 新测试）；ruff 0；smoke 6/6。
+
+### 决策与偏离
+- **K1/K2/K3 全 defer（review 决策）**：K1（coverage 65 / compile/compiler 17%）低 ROI + 3 轮债够 + retro 建议转新能力；K2（per-request ws）local-first 不需请求级 ws；K3（entity_relation 冗余列）纯性能无问题。本轮开新能力。
+- **F-L-1/L-2 bundle**：suggest + audit 同 links_cmd.py 文件 → bundle 一 Task/commit（不 split）。
+- **slug/path 调和**：list_pages 返回相对路径（concepts/foo.md），wiki-link target 是 slugified（foo）。用 `slugify(Path(p).stem)` 建 identity 映射；镜像 web get_backlinks 既有模式。_resolve_page 容错（path 或 bare stem）。
+- **F-L-3 在线**：LLMRouter.answer_query；无 LLM 报错退出 1（不 fallback，同 v1.5.0 distill 纪律）。CI mock。
+
+### CMS drift 核验
+- F-L-1：compute_related_pages（related_pages.py:26）+ extract_unique_targets（wiki_links.py:78）就绪→复用；不改引擎。
+- F-L-2：list_pages + parse_wiki_links + slugify 就绪；backlinks 逻辑镜像 web routes/pages.py:341。
+- F-L-3：LLMRouter.answer_query（router.py:257）就绪。
+
+### Deferred / [TBD]
+- **embedding 语义搜索**：需 sentence-transformers heavy SDK（v1.3.0 Z-5 defer 纪律），本轮仍 defer → v2.0。
+- **链接自动应用**：suggest 只输出，不自动改文件（用户审阅手改）。
+- **K1/K2/K3**：见上，续留 finding。
