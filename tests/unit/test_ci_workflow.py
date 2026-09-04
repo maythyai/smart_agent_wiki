@@ -69,3 +69,32 @@ def test_fsrs_skips_without_sdk() -> None:
     assert "importorskip" in src and "fsrs" in src, (
         "test_fsrs does not importorskip the optional fsrs extra"
     )
+
+
+def test_embedding_tests_importorskip() -> None:
+    """AC-TEST-3 (F-N-4): embedding test files guard their sentence_transformers
+    import with importorskip so CI (without [learn]) skips, not fails."""
+    _root = Path(__file__).resolve().parents[2]
+    embedding_test_files = [
+        "tests/unit/test_embedding_index.py",
+        "tests/unit/test_semantic_search.py",
+        "tests/unit/test_related_pages_embedding.py",
+    ]
+    for f in embedding_test_files:
+        src = (_root / f).read_text()
+        assert "importorskip" in src and "sentence_transformers" in src, (
+            f"{f} does not importorskip sentence_transformers"
+        )
+
+
+def test_embedding_degradation_uses_mock_not_importorskip() -> None:
+    """AC-TEST-3 (F-N-4): degradation test file uses mock (not importorskip)
+    so it runs in CI without the SDK."""
+    _root = Path(__file__).resolve().parents[2]
+    deg = (_root / "tests/unit/test_embedding_degradation.py").read_text()
+    assert "pytest.importorskip" not in deg, (
+        "degradation test file should NOT use importorskip (uses mock instead)"
+    )
+    assert "embeddings_available" in deg, (
+        "degradation test file should mock embeddings_available"
+    )
