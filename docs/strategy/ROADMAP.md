@@ -1,8 +1,8 @@
 ---
 id: ROADMAP
 project: smart-agent-wiki
-version: 1.0
-last_updated: 2026-09-03
+version: 1.1
+last_updated: 2026-09-04
 status: active
 tracks: [core-trust, platform-team, ecosystem-integration, intelligence-adaptation]
 north_star: trustworthy-claim coverage
@@ -20,40 +20,50 @@ see_also: docs/strategy/STRATEGY.md | docs/prd/PRD-INDEX.md | .csp/review/REVIEW
 
 采用 **SemVer** `MAJOR.MINOR.PATCH[-pre.N]` 作为**对外发布版本**的唯一规范：
 
-- **MAJOR**：不兼容 API 变更 / 移除已弃用能力
+- **MAJOR**：不兼容 API 变更 / 移除已弃用能力 / 范式跃迁。**仅在 06 发布时验证到实际 breaking API 变更才 bump**——新增模块/新端点/新功能是 additive（MINOR），不是 MAJOR，无论战略愿景多宏大。
 - **MINOR**：向后兼容的功能新增（对应一个版本主题）
 - **PATCH**：向后兼容的 bug 修复
 - **pre**：`alpha`（功能未完，内部测）/ `beta`（功能完，公开测）/ `rc`（发布候选）
 
 **理由**：SAW 同时是 pip 可装的 Python 包（被他人依赖，SDK 性质）与桌面/Web 应用——SemVer 对 SDK 的依赖契约最清晰。CalVer 不采用。
 
-### 1.2 既有漂移收口（重要）
+### 1.2 既有漂移收口（已完成）
 
-当前存在版本号漂移，本规则即收口基线：
+历史存在版本号漂移，自 v1.0.1 起已**收口完成**：
 
-| 载体 | 现状 | 收口规则 |
+| 载体 | 现状 | 规则 |
 |---|---|---|
-| `pyproject.toml`（Python 包） | `1.4.0` | **canonical 真源**。下一个发布 = `1.5.0` |
-| git tags `v3.4.0` / `v3.7.0` | 内部 sprint 里程碑号 | 重新定性为**内部 milestone label**（见 1.3），不作为对外发布版本。今后对外 tag 一律 SemVer |
-| git tag `v1.0.1` | 与 pyproject 一致 | 保留，首个对外正式发布基线 |
-| `desktop/` (tauri.conf.json + package.json) | `0.1.0` | 桌面端**未达 1.0**，独立 0.x 跟踪至稳定；达 v1.0 后与 canonical 对齐 |
+| `pyproject.toml`（Python 包） | `1.10.0` | **canonical 真源**。下一个发布 = `v1.11.0`（TBD，待 07 复盘决策） |
+| git tags `v1.0.1` … `v1.9.0` | 全部 SemVer annotated，与 pyproject 一致 | 保留，对外发布基线 |
+| git tags `v3.4.0` / `v3.7.0` | 历史 internal sprint 里程碑号 | 重新定性为**内部 milestone label**（见 1.3），不作为对外发布版本；不可变，不移动/删除 |
+| `desktop/`（tauri.conf.json + package.json） | `0.1.0` | 桌面端**未达 1.0**，独立 0.x 跟踪至稳定；达 v1.0 后与 canonical 对齐 |
 | `web/package.json` | `0.1.0` | web 为桌面 bundle，随 desktop 版本 |
 
-> **决策点（用户可 override）**：是否将历史 `v3.x` git tag 保留为内部里程碑标记。默认保留（不移动/删除已推送 tag，遵守不可变），仅今后新增对外 tag 走 SemVer。lifecycle-state 当前的 `milestone: v3.8` 重新定性为内部里程碑，对应到对外版本 `v1.3.0`（见 2.1）。内部 milestone `v3.7` 对应对外版本 `v1.2.0`。
+> 历史内部 milestone `v3.7` 对应对外 release `v1.2.0`；`v3.8` → `v1.3.0`。此后内部 milestone 进入 v4.x 序列（见 1.3）。
 
-### 1.3 内部里程碑（lifecycle-state 专用）
+### 1.3 内部里程碑（lifecycle-state 专用，advisory）
 
-`.csp/lifecycle-state.json` 的 `milestone` 字段使用内部里程碑号（如 `v3.7`），跟踪 sprint 级迭代，**不等于**对外发布版本。映射：内部 milestone `v3.7` → 对外 release `v1.2.0`；`v3.8` → 对外 release `v1.3.0`。内外分离，避免 sprint 节奏污染 SemVer 契约。
+`.csp/lifecycle-state.json` 的 `milestone` 字段使用内部里程碑号（当前 `v4.0`），跟踪 sprint 级迭代，**不等于**对外发布版本。内部 milestone 与 SemVer 发布号**内外分离**，避免 sprint 节奏污染 SemVer 契约。
+
+当前映射（advisory，非权威）：
+
+| 内部 milestone | 对外 SemVer | 状态 |
+|---|---|---|
+| `v3.7` | v1.2.0 | released |
+| `v3.8` | v1.3.0 | released |
+| `v4.0` | v1.10.0 | released |
+
+> lifecycle-state `next_cycle: v1.10.0`。复盘引用的 `v4.2`(embedding) / `v4.3`(realtime 仪表盘) / `v4.4`(desktop) 是**内部候选主题标记**，**不是 SemVer 发布号**——仅作 backlog 索引，实际发布号按 1.1 规则从 v1.9.0 续编。v1.10.0 已采纳 v4.2(embedding) 候选。
 
 ### 1.4 Tag 规则
 
-- `v` 前缀 + annotated tag（`git tag -a v1.1.0 -m "..."`）
+- `v` 前缀 + annotated tag（`git tag -a v1.x.0 -m "..."`）
 - **不可变**：已推送 tag 不移动/不删除/不改写
 - CI 触发：`tags: ['v*']`（06 release 执行）
 
 ### 1.5 预发布与质量分级
 
-- **预发布**：`v1.1.0-alpha.1` / `-beta.1` / `-rc.1`
+- **预发布**：`v1.x.0-alpha.1` / `-beta.1` / `-rc.1`
 - **pip 预发布渠道**：PyPI 主版本号 + `--pre` 安装预发布；GitHub Releases 标 Pre-release
 - **质量分级**：`exploration`（内部探路）→ `insider`（beta 公开测）→ `stable`（正式）
 
@@ -72,101 +82,133 @@ canonical = `pyproject.toml`。发布时以下必须与之一致，用脚本校�
 
 > 每版本摘要级。详细 PRD/spec 留 01/03，此处只点明做什么 + 价值。
 
-### v1.1.0 — MCP 思考工具 + 前端可用性 + 提取器增强（status: released）
+### v1.0.1 — MVP 可运行基线（status: released）
 
-> 对应 git tag `v1.1.0`（e806d61）。首个功能版本，承接 v1.0.1 基线。
+- **目标**：首个对外正式发布基线，验证"四层存储 + 治理引擎 + 多代理"核心假设可运行。
+- **价值描述**：从原型到"能跑"。
+- **成功指标**：五引擎冒烟主链路通。
 
-- **目标**：在 v1.0.1 可运行基线上交付首批用户可感知的功能增强——MCP 思考工具、前端导航可用性、内容提取器扩展，并批量清理 correctness/security/dark-mode 缺陷。
-- **关键功能（摘要级）**：
-  1. MCP 思考工具（F-MCP-01）——agent 可调用的结构化思考/推理工具面
-  2. Breadcrumb 导航（F-WEB-08）——前端多层级页面定位与回溯
-  3. JSON/表格提取器（F-INGEST-03）——ingest 侧结构化内容提取增强
-  4. 41 批 correctness / security / dark-mode 修复（累计缺陷收敛）
-- **价值描述**：用户价值——agent 获得结构化思考能力、前端导航不再迷路、提取器覆盖更多格式；业务价值——从"能跑"到"好用"的首步。
-- **成功指标**：MCP 工具可调用；breadcrumb 全页面覆盖；提取器支持 JSON + 表格格式。
-- **前置依赖**：v1.0.1 基线。
-- **07 回流**：security 修复批次纳入后续 Wave 1 硬化输入。
+### v1.1.0 — MCP 思考工具 + 前端可用性 + 提取器增强（status: released, @e806d61）
 
-### v1.2.0 — 安全/可观测硬化（Wave 1）（status: released, 2026-09-03）
+- **目标**：在 v1.0.1 可运行基线上交付首批用户可感知的功能增强，并批量清理 correctness/security/dark-mode 缺陷。
+- **关键功能（摘要级）**：MCP 思考工具（F-MCP-01）/ Breadcrumb 导航（F-WEB-08）/ JSON·表格提取器（F-INGEST-03）/ 41 批缺陷收敛。
+- **价值描述**：从"能跑"到"好用"的首步。
+- **07 回流**：security 修复批次纳入 Wave 1 硬化输入。
 
-> 对应 git tag `v1.2.0`（532710f，2026-09-03）。内部 milestone `v3.7`。真正的"产品加固"版本——安全与可观测基础闭环落地。
+### v1.2.0 — 安全/可观测硬化 Wave 1（status: released, 2026-09-03, @532710f）
 
-- **目标**：在 v1.1.0 功能基线上建立安全审计与可观测性闭环（Wave 1），使产品达到"安全可审计、运行可观测"的基线。
-- **关键功能（摘要级）**：
-  1. Ed25519 receipt 链——高危操作签名验签，receipt 不可篡改
-  2. 裸路由检测——未鉴权路由自动发现与拦截
-  3. Token 同源校验——前后端 token 来源一致性校验
-  4. JSON 结构化日志默认——可观测性基线（结构化、可聚合）
-  5. /health/ready engine-aware——健康探针感知引擎状态
-  6. 覆盖率基线建立——核心链路 coverage 基线落 CI
-- **价值描述**：用户价值——操作可审计、运行可观测；业务价值——建立安全/可观测 ground，为后续扩张提供基线。
-- **成功指标**：receipt 链覆盖率 100%；裸路由检出率 100%；JSON 日志默认开启；/health/ready engine-aware。
-- **前置依赖**：v1.1.0 功能基线。
+> 内部 milestone `v3.7`。真正的"产品加固"版本。
+
+- **目标**：建立安全审计与可观测性闭环，使产品达到"安全可审计、运行可观测"基线。
+- **关键功能（摘要级）**：Ed25519 receipt 链 / 裸路由检测 / Token 同源校验 / JSON 结构化日志默认 / `/health/ready` engine-aware / 覆盖率基线落 CI。
 - **07 回流**：Wave 1 findings 回流至 v1.3.0 硬化尾巴。
 
-### v1.3.0 — 硬化尾巴 + 技术债清理（status: in-progress）
+### v1.3.0 — 硬化尾巴 + 技术债清理（status: released, @a82f0e3）
 
-> 对应 PRD `PRD-hardening-tail-v1.3.0`（进行中）。内部 milestone `v3.8`。承接 v1.2.0 Wave 1 硬化，完成 Wave 2/3 冒烟链与技术债收口。
+> 内部 milestone `v3.8`。承接 Wave 1，完成 Wave 2/3 冒烟链与技术债收口。
 
-- **目标**：完成 v1.2.0 未竟的硬化尾巴（Wave 2/3），并清理积累的技术债，使产品达到"宣称一致、trace 贯穿、CI 有门禁"的完整可用状态。
-- **关键功能（摘要级）**：
-  1. Wave 2/3 冒烟链——五引擎主链路端到端冒烟基线补全（ingest→compile→query→govern→learn）
-  2. 宣称-实现一致性校准——README/docs vs 代码自动 diff，产可信能力清单
-  3. Trace 贯穿——RequestId/结构化日志跨模块一致性
-  4. CI 门禁——核心链路覆盖率门禁纳入 CI
-  5. 技术债清理——ruff lint 规则收口、roadmap 重写（本文件）、迁移文档
-- **价值描述**：用户价值——按 README 试用不踩坑、端到端可复跑；业务价值——补全安全/可观测闭环，为 v1.4.0 平台化提供干净基座。
-- **成功指标**：冒烟通过率 100%；宣称一致率 100%；trace 贯穿率 100%；CI 覆盖率门禁生效。
-- **前置依赖**：v1.2.0 Wave 1 硬化基线。
-- **07 回流**：暂无 findings（`.csp/review/` 未建）。
+- **目标**：完成 Wave 2/3 冒烟，清理技术债，使产品达到"宣称一致、trace 贯穿、CI 有门禁"的完整可用状态。
+- **关键功能（摘要级）**：五引擎端到端冒烟基线补全 / 宣称-实现一致性校准（自动 diff）/ Trace 贯穿 / CI 覆盖率门禁 / ruff lint 收口（baseline → 0，F823 真 bug 修）/ roadmap 重写。
+- **成功指标**：冒烟 6/6；ruff 0；1874 passed。
+- **07 回流**：G1(F401/F841 defer) / G2(coverage 棘轮) / G3(heavy-SDK importorskip) → v1.4.0。
 
-### v1.4.0 — 平台化与团队协作（status: planned）
+### v1.4.0 — 平台化与团队协作（status: released, @a05d6b7）
 
 > platform-team track。从单机 local-first 走向可自托管的多用户平台。
 
 - **目标**：从单机 local-first 走向可自托管的多用户平台。
-- **关键功能（摘要级）**：
-  1. 多用户与 RBAC 深化（角色/权限/ Cedar 策略生产级）
-  2. 团队部署形态（docker-compose.prod 成熟 + 配置收敛）
-  3. 可观测性生产闭环（健康巡检、告警、审计面板）
-  4. 多工作空间隔离
-- **价值描述**：用户价值——OPS 可自托管运维；业务价值——覆盖团队场景，打开 to-B 路径。
-- **成功指标**：部署一键化 `[TBD]`；高危操作审计覆盖率持续 100%。
-- **前置依赖**：v1.3.0 硬化尾巴 + 技术债清理完成。
-- **07 回流**：待前版本复盘。
+- **关键功能（摘要级）**：RBAC 深化（13 用例）/ 团队部署形态（docker-compose.prod + secrets）/ 可观测生产闭环（health/audit）/ workspace 隔离原语（ADR-005, migration v8）/ ruff F401 启用（313 auto-fix）。
+- **价值描述**：覆盖团队场景，打开 to-B 路径。
+- **07 回流**：H1(F841 defer) / H2(workspace 仅原语级，全路径未做) / H4(Cedar 热加载无端点) / H5(coverage 仍 60) → v1.5.0。
 
-### v1.5.0 — 智能与自适应（status: planned）
+### v1.5.0 — 智能与自适应（status: released, @89b284e）
 
-- **目标**：让知识库自我演进——代理编排与学习引擎真实落地。
+> intelligence-adaptation track。让知识库自我演进。
+
+- **目标**：代理编排与学习引擎真实落地。
+- **关键功能（摘要级）**：多代理 workflow 编排生产级（ADR-006 resume 状态机）/ Learn 引擎（distill/trends）/ Token 优化实测 / agent 角色一致性（ADR-007 workspace scope）/ ruff F841 启用（27 手审）/ query coverage + fail_under 60→63。
+- **价值描述**：差异化"会进化的知识库"。
+- **07 回流**：I1(workspace 路由仅搜索路径) / I2(coverage 63 未达 65) / I4(policy reload 仅 CLI) → v1.6.0。
+
+### v1.6.0 — 债务收口 II（workspace 读写全路径）（status: released, @62f36cc）
+
+> core-trust track。承接 H2/I1：workspace 隔离从原语层走到全路径。
+
+- **目标**：完成 workspace 读全路径（tree/compile）+ 写隔离（insert/ingest）+ query 深覆盖 + policy Web 端点。
+- **关键功能（摘要级）**：ADR-008 workspace 写入 / tree_mode+compiler scope 注入 / insert+ingest 写隔离 / query 子模块深覆盖（engine 14→94% / compare 23→91% / tree 21→66%）/ `POST /api/admin/policy/reload`。
+- **成功指标**：1959 passed；workspace 读写双闭环。
+- **07 回流**：J1(coverage 65 未达，gap 移至 compile/compiler 17%) / J2(graph_traverse entity 表无 ws 列) / J3(setattr 私有属性耦合) → v1.7.0。
+
+### v1.7.0 — 债务收口 III（graph workspace 隔离）（status: released, @2c4a9d7）
+
+> core-trust track。workspace 三闭环收尾。
+
+- **目标**：graph 隔离 + scope 清理 + coverage 棘轮。
+- **关键功能（摘要级）**：ADR-009 entity workspace 隔离（entity 表加 ws 列 + graph 路由注入）/ scope 清理（消除 setattr 私有属性，AC-ARCH-1）/ synthesize 深覆盖（engine 37→65% / scheduler 32→85%，fail_under 63→64）。
+- **成功指标**：1977 passed；**workspace 三闭环完成**（读+写+graph 全通）。
+- **07 回流**：K1(coverage 65 未达，compile/compiler 17%) / K2(per-request workspace 未做，仍引擎级) / K3(entity_relation JOIN 过滤) → v1.8.0。workspace 故事告一段落，转新能力。
+
+### v1.8.0 — Smart Linking + AI Summarization（status: released, @0ae5149）
+
+> intelligence-adaptation track。转新能力首轮。
+
+- **目标**：智能链接建议 + 链接审计 + AI 摘要。
+- **关键功能（摘要级）**：`saw links suggest`（3-signal 启发式相关度，排除已链）/ `saw links audit`（孤儿页 + 断链）/ `saw summarize`（在线 AI 摘要，无 LLM 报错）。复用 query/LLM 引擎，无新引擎。
+- **成功指标**：1983 passed；smoke 6/6。
+- **07 回流**：L1(suggest 噪声，可加 embedding) / L2(自动 apply 未做) / L3(coverage 未增) → 后续。K1/K2 续留。
+
+### v1.9.0 — Agent & Workflow 可视化（status: released, 2026-09-04, @246f3d4）
+
+> intelligence-adaptation track。续新能力第二轮。
+
+- **目标**：agent 与 workflow 运行态可视化。
+- **关键功能（摘要级）**：`saw workflow list`（durable DB 历史）/ `saw agents` roster CLI（6 角色静态）/ `GET /api/v1/agents` REST（JSON）。复用 workflow 基建 + build_default_agents，无新引擎。
+- **成功指标**：1987 passed；coverage 64.2%（fail_under=64 持）。
+- **07 回流**：M1(embedding 语义搜索 defer，须用户确认装 SDK) / M2(agent "最近活动"未聚合) / M3(CLI list vs REST 语义双重) → v2.0.0。
+
+### v1.10.0 — embedding 语义搜索（status: released, 2026-09-04, @20b95f8）
+
+> intelligence-adaptation track。采纳内部候选 v4.2。**additive**——按 1.1 规则发 MINOR，不强行 MAJOR（无 breaking API 变更）。
+
+- **目标**：引入 embedding 语义搜索，从 BM25 词面匹配扩到语义匹配，直接提升 trustworthy-claim coverage 北极星，并解掉 L1(smart-linking suggest 启发式噪声)。
 - **关键功能（摘要级）**：
-  1. 多代理 workflow 编排生产级（声明式 workflow yaml + 执行器）
-  2. Learn 引擎落地（distill 蒸馏、trends 趋势）
-  3. Token 优化真实可用（从理论 benchmark 走到实测收益）
-  4. agent 角色执行链路一致性校验
-- **价值描述**：用户价值——库自动保鲜、人工介入降低；业务价值——差异化"会进化的知识库"。
-- **成功指标**：workflow 执行成功率 `[TBD]`；Token 实测节省 `[TBD]`。
-- **前置依赖**：v1.3.0 硬化尾巴基线 + v1.4.0 平台化。
-- **07 回流**：待前版本复盘。
+  1. embedding 索引（claim/wiki 页面向量入库，复用 `[learn]` extra 的 sentence-transformers）
+  2. 语义检索端点/CLI（query engine 增 semantic 模式，与既有 BM25 并行/融合）
+  3. smart-linking suggest 接 embedding 相似度（替代/增强 3-signal 启发式，解 L1）
+  4. heavy-SDK 测试 importorskip 模式沿用（distiller/fsrs/trends 已有先例）
+- **价值描述**：用户价值——语义查询不再漏同义结果、链接建议更准；业务价值——north-star 杠杆，且让"会进化的知识库"具备语义层。
+- **成功指标**：embedding 索引可建；语义检索召回率优于纯 BM25 `[TBD]`；L1 suggest 噪声下降 `[TBD]`。
+- **前置依赖**：v1.9.0 基线 + 用户本地/CI 装 `[learn]` extra（sentence-transformers，heavy SDK，硬约定 #12）。
+- **07 回流**：M1(embedding defer 解除) + L1(smart-linking 噪声)。K1(coverage 65)/K2(per-request ws) 续留。
+
+> v2.0.0（MAJOR）推迟到出现真实 breaking API 变更/范式跃迁时再 bump；当前 v1.x 序列继续 additive 逼近。
 
 ### 版本-主题表（1 年）
 
 | 版本 | 主题 | Track | status |
 |---|---|---|---|
+| v1.0.1 | MVP 可运行基线 | core-trust | released |
 | v1.1.0 | MCP 思考工具 + 前端可用性 + 提取器增强 | core-trust | released |
 | v1.2.0 | 安全/可观测硬化（Wave 1） | core-trust | released (2026-09-03) |
-| v1.3.0 | 硬化尾巴 + 技术债清理 | core-trust | in-progress |
-| v1.4.0 | 平台化与团队协作 | platform-team | planned |
-| v1.5.0 | 智能与自适应 | intelligence-adaptation | planned |
+| v1.3.0 | 硬化尾巴 + 技术债清理 | core-trust | released |
+| v1.4.0 | 平台化与团队协作 | platform-team | released |
+| v1.5.0 | 智能与自适应 | intelligence-adaptation | released |
+| v1.6.0 | 债务收口 II（workspace 读写全路径） | core-trust | released |
+| v1.7.0 | 债务收口 III（graph workspace 隔离） | core-trust | released |
+| v1.8.0 | Smart Linking + AI Summarization | intelligence-adaptation | released |
+| v1.9.0 | Agent & Workflow 可视化 | intelligence-adaptation | released (2026-09-04) |
+| v1.10.0 | embedding 语义搜索 | intelligence-adaptation | released (2026-09-04) |
 
 ## 3. 3 年路径（大版本里程碑）
 
-> 主题演进与关键能力跃迁。不排具体功能，只给"到那时产品该是什么样"。
+> 主题演进与关键能力跃迁。战略主题号是叙事愿景，不是确定 tag——实际发布号按 1.1 从 v1.9.0 续编增量，只在真实 breaking/范式跃迁发生时才到达 v2.0/v3.0。
 
 ### v2.0 — 平台化（约第 2 年）
 
 - **方向主题**：SAW 成为可自托管、多租户的"可信知识编译平台"。
 - **关键能力跃迁**：多租户隔离生产级、治理即平台原语（暴露给第三方插件/连接器）、插件/连接器 marketplace 雏形、部署与升级零停机。
 - **预期市场位置**：local-first + self-hosted 知识平台的开源标杆，AI agent 生态的默认可信后端候选。
+- **逼近说明**：当前 v1.x 序列正逐步逼近 v2.0；workspace 三闭环（v1.5–v1.7）已铺好隔离地基，v2.0.0 周期是否真正 bump MAJOR 取决于是否引入不兼容 API 变更。
 
 ### v3.0 — 生态 / 开放（约第 3 年）
 
@@ -180,7 +222,7 @@ SAW 的终局是**AI agent 与人类共用的、可验证、可溯源、可治�
 
 ## 5. 衔接声明
 
-- **01 PRD** 读本文件定位本版本主题；PRD front-matter 标 `roadmap_ref: ROADMAP` + `target_version`（如 v1.1.0）。
-- **06 release** 用「版本号规则」节（SemVer/Tag/预发布/多平台一致性），不另立方案。
-- **07 复盘** findings（status=open/deferred）回流更新本文件下一版本主题与版本-主题表 status（planned→in-progress→shipped→deferred）。
+- **01 PRD** 读本文件定位本版本主题；PRD front-matter 标 `roadmap_ref: ROADMAP` + `target_version`（如 v1.10.0）。v1.10.0 周期已闭环（released 2026-09-04），主题 = embedding 语义搜索。下一周期 v1.11.0 待 07 复盘后决策。
+- **06 release** 用「版本号规则」节（SemVer/Tag/预发布/多平台一致性），不另立方案。v1.10.0 为 additive → 发 MINOR，不强行 MAJOR。
+- **07 复盘** findings（status=open/deferred）回流更新本文件下一版本主题与版本-主题表 status（planned→in-progress→shipped→deferred）。当前回流 findings：M1/M2/M3 + K1/K2 + L1-L3。
 - **lifecycle**：读 `.csp/lifecycle-state.json` 对齐在跑版本；本文件不写 lifecycle（外环）。

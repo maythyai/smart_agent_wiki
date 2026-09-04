@@ -1,0 +1,72 @@
+feature:
+  id: "F-N-1"
+  name: "embedding 索引（claim/wiki 页面向量入库 + 重建命令）"
+  domain: "embedding"
+  prd_ref: "docs/prd/PRD-embedding-v1.10.0.md#3.1"
+  pms_module: "embedding"
+  user_story: "作为 Knowledge Worker，我想 claim/wiki 页面的 embedding 向量随 ingest 自动入库并可重建，以便后续语义检索可查。"
+  acceptance_criteria:
+    - "Given 一个已初始化的 wiki, [learn] extra 已安装, when 用户执行 saw ingest 写入新 claim 或 wiki 页面, then 对应的 embedding 向量被生成并持久化，可在后续语义检索中召回（AC-EMB-1）"
+    - "Given [learn] extra 未安装（tier=LIGHTWEIGHT）, when 用户执行 saw ingest, then claim 正常写入（FTS5 索引正常），不生成 embedding 向量，不报错，日志提示 embeddings unavailable, skipping vector index（AC-EMB-2）"
+    - "Given 已有存量 claim/wiki 页面（FTS5 索引已有但无向量）, when 用户执行重建索引命令, then 全量页面被扫描、生成向量、入库；已删除的 claim 不被索引（AC-EMB-3）"
+  scope:
+    includes:
+      - "EmbeddingSink（Write Queue sink，参照 fts5_sink.py 范式）：can_handle(sink_name) + write(op) 生成向量并持久化"
+      - "复用 embeddings.py::embed_texts()（all-MiniLM-L6-v2, L2-normalized）生成向量"
+      - "向量-claim 映射持久化（doc_id → 向量，含 workspace_id 隔离）"
+      - "重建索引命令（扫描全量页面，生成向量，跳过已删除 claim）"
+      - "tier=LIGHTWEIGHT/OFFLINE 时 skip 向量入库，不报错"
+      - "向量维度变更检测（模型升级时全量重建）"
+    excludes:
+      - "语义检索端点（归 F-N-2）"
+      - "smart-linking embedding 信号（归 F-N-3）"
+      - "向量数据库选型/部署（归 03 ADR）"
+  frontend: {pages: [], components: [], interactions: []}
+  backend:
+    endpoints: []
+    business_logic:
+      - "EmbeddingSink.write(op)：claim/wiki 写入时同步触发向量入库"
+      - "EmbeddingSink.can_handle(sink_name)：匹配 embedding sink"
+      - "重建索引命令逻辑：全量扫描 + 向量生成 + 入库 + 维度变更检测"
+      - "tier 检测：tier<FULL 时 skip，日志提示"
+    integrations:
+      - "embeddings.py::embed_texts()（复用）"
+      - "config/settings.py::detect_tier()（复用）"
+      - "write_queue sink 范式（参照 fts5_sink.py）"
+  data_entities:
+    - "embedding_vector（doc_id → 向量, workspace_id, model_name, dim）"
+  data_operations:
+    - "insert（ingest 时同步写入向量）"
+    - "bulk_insert（重建索引时全量写入）"
+    - "delete（claim 删除时清理向量）"
+    - "detect_dim_change（维度变更检测）"
+  tech_dimensions:
+    needs_database: true
+    needs_cache: false
+    needs_queue: true
+    needs_ai: true
+    needs_vector_store: true
+    needs_realtime: false
+    needs_file_storage: false
+    needs_search: false
+    needs_scheduler: false
+    needs_notification: false
+  nfr:
+    performance: "向量生成批量处理，单文档 ingest 不显著增加延迟（P99 [TBD]）"
+    security: "向量索引须含 workspace_id 隔离（参照 ADR-008/009），跨 workspace 不泄漏"
+    scalability: "向量存储开销 [TBD]（每 claim/wiki 页面向量大小 × 总量）"
+    availability: "embed_texts() 失败返回 None 时降级到非语义路径，不中断 ingest"
+  priority: "P0"
+  complexity: "M"
+  depends_on: []
+  blocked_by: []
+  risks:
+    - "sentence_transformers 模型下载失败（网络/OOM）——embed_texts() 已有 try/except 返回 None，调用方须降级"
+    - "向量维度变更（模型升级后旧向量维度不一致）——索引重建须检测维度变更并全量重建"
+    - "向量存储方案未定（SQLite 生态 vs 向量库）——归 03 ADR"
+    - "workspace 隔离遗漏——向量索引须含 workspace_id（参照 ADR-008/009）"
+  assumptions:
+    - "[learn] extra 已安装时 embed_texts() 返回 L2-normalized 向量（既有实现）"
+    - "向量存储在本地 SQLite 生态内（PRD §2.3 非目标：不引入外部 DB）"
+    - "重建索引命令名归 02/03 设计（PRD AC-EMB-3 未指定具体命令名）"
+    - "Write Queue sink 范式可参照 fts5_sink.py（PRD ground 确认 FTS5Sink 范式）"
