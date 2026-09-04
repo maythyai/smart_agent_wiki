@@ -46,7 +46,14 @@
 | SPEC-F-J-3 | F-J-3 | query 深覆盖→65 | M | test-gate | 1/1 | SPEC-F-J-3.md |
 | SPEC-F-J-4 | F-J-4 | policy reload Web admin 端点 | S | debt-closure | 1/1 | SPEC-F-J-4.md |
 
+## v1.7.0 delta（+3）
+| spec_id | feature_id | title | complexity | pms_module | ac_coverage | file |
+|---|---|---|---|---|---|---|
+| SPEC-F-K-1 | F-K-1 | graph workspace 隔离（migration v9 + 读写） | M | graph-workspace | 1/1 | SPEC-F-K-1.md |
+| SPEC-F-K-2 | F-K-2 | scope 传播清理（显式 workspace_id） | S | graph-workspace | 1/1 | SPEC-F-K-2.md |
+| SPEC-F-K-3 | F-K-3 | synthesize 覆盖 + 棘轮 64 | M | test-gate | 1/1 | SPEC-F-K-3.md |
+
 ## 校验
-- Spec 数 == 20 + 8(v1.5.0) + 4(v1.6.0) == decomposition 原子 Feature 数 ✓（1:1）
+- Spec 数 == 20 + 8(v1.5.0) + 4(v1.6.0) + 3(v1.7.0) == decomposition 原子 Feature 数 ✓（1:1）
 - 每个 feature_id 在 decomposition FEATURE-DETAILS 存在 ✓
 - 每份 Spec ac_coverage 自检无未覆盖 AC ✓
