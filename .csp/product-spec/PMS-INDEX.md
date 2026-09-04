@@ -14,6 +14,7 @@
 | debt-closure | workspace 全路径 II + ingest 写入 + query 深覆盖 65 + policy web 端点 | P0 | PRD-debt-closure-v1.6.0 §2 | [待回填] | ready | PMS-debt-closure.md |
 | graph-workspace | graph workspace 隔离 + scope 清理 + coverage→65 | P0 | PRD-graph-workspace-v1.7.0 §2 | [待回填] | ready | PMS-graph-workspace.md |
 | smart-linking | 智能链接建议 + 链接审计 + AI 摘要 | P0 | PRD-smart-linking-v1.8.0 §2 | [待回填] | ready | PMS-smart-linking.md |
+| agent-viz | workflow 历史 + agent roster CLI + REST | P0 | PRD-agent-viz-v1.9.0 §2 | [待回填] | ready | PMS-agent-viz.md |
 
 ## 状态约定
 - ready（边界已定）/ built（spec 已产出）/ degraded（source 变更待 re-align）/ blocked

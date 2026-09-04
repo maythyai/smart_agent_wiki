@@ -2,7 +2,7 @@
 id: PRD-smart-linking-v1.8.0
 title: Smart Linking + AI Summarization
 version: 1.0
-status: Approved
+status: Released
 author: lifecycle-orchestrator
 date: "2026-09-04"
 product_type: platform
