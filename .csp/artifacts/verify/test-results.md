@@ -40,3 +40,18 @@ AC-LINK-2) pass unconditionally via mock.
   have `pytest.importorskip("sentence_transformers")` ✓
 - `test_embedding_degradation_uses_mock_not_importorskip`: verifies
   degradation file uses mock, not importorskip ✓
+
+---
+
+## 06-Ship Verification (2026-09-04)
+
+| Gate | Command | Result | Status |
+|---|---|---|---|
+| pytest | `.venv/bin/python -m pytest tests/ -q` | 1993 passed, 6 skipped, 0 failed (112.34s) | PASS |
+| ruff | `ruff check src/ tests/` | All checks passed (0 errors) | PASS |
+| smoke | `.venv/bin/saw smoke` | 6/6 passed (skeleton.import, skeleton.console, ingest.compile, query.keyword, govern.learn, offline.fallback) | PASS |
+| wheel build | `uv build` | dist/smart_agent_wiki-1.10.0-py3-none-any.whl (820KB) + sdist | PASS |
+| version | `pyproject.toml [project].version` | 1.10.0 | PASS |
+| multi-platform | desktop 0.1.0 / web 0.1.0 | independent 0.x (pre-1.0, not aligned to canonical — per §1.2 rules) | PASS |
+
+**Verdict**: All gates green. Code is finalized. Proceeding to reconcile + local tag.

@@ -9,6 +9,7 @@
 | ADR-002 | DB/搜索 | SQLite + FTS5 + Write Queue outbox 复用 | Accepted | A1-3, C2, C3 |
 | ADR-003 | 可观测 | 自建 JSON log + trace_id middleware 复用 | Accepted | D1-3, E3 |
 | ADR-004 | 安全 | JWT/Cedar/Ed25519 receipt/限流/URL guard 复用 | Accepted | C1-5 |
+| ADR-010 | 向量存储+检索融合 | 新表 embedding_store + BLOB + numpy cosine 内存计算；--mode 并行不融合；all-MiniLM-L6-v2 384 维 | Accepted | F-N-1, F-N-2, F-N-3 |
 
 ## 复用原则
 - 全栈既有（六角架构/write_queue/observability/RBAC/receipt/FTS5），硬化只补"有模块→全链路闭环"。

@@ -40,3 +40,34 @@
 - 分析/埋点：PRD §5 定义 5 事件
 
 > 命中项若 PRD 未声明 → 标 [TBD] 并记入对应 Feature `assumptions`，不擅自塞进已确认需求。
+
+## v1.10.0 NFR delta（embedding track）
+
+> 来源：PRD-embedding-v1.10.0 §4。Feature 级下沉见 F-N-1..4 各 yaml `nfr`。
+
+### 性能
+- 向量检索 P99 延迟 [TBD]（须优于或接近 BM25 的毫秒级）——本地 benchmark 测量
+- F-N-3 smart-linking O(pages²) 相似度计算——须限 top N + 缓存策略 [TBD]
+- 向量索引存储开销 [TBD]（每 claim/wiki 页面向量大小 × 总量）——磁盘测量
+
+### 降级策略
+- 无 `[learn]` extra（tier=LIGHTWEIGHT/OFFLINE）时全功能回退 BM25：
+  - F-N-1：skip 向量入库，日志提示 "embeddings unavailable, skipping vector index"
+  - F-N-2：语义检索降级到 BM25，meta 标注 `semantic_fallback: true`
+  - F-N-3：smart-linking 保持原有 3-signal 启发式，行为与 v1.8.0 一致
+- 模型下载失败（网络/OOM）：`embed_texts()` 已有 try/except 返回 None，调用方降级
+- 查询文本 embedding 失败：降级到 BM25，meta 标注 `embedding_error`
+
+### workspace 隔离
+- 向量索引须含 workspace_id（claim 表已有 `workspace_id` 列，ADR-008/009）
+- 语义检索、smart-linking suggest 均须透传 workspace_id，跨 workspace 查询不泄漏
+- 参照既有 QueryEngine 已透传 workspace_id 范式（`engine.py:58,86`）
+
+### 可测性
+- CI 无 `[learn]` extra 时：embedding 相关测试 `pytest.importorskip("sentence_transformers")` 自动 skip，不 fail，不需 `--ignore`
+- 本地有 `[learn]` extra 时：embedding 测试正常运行并 pass
+- coverage 不因 embedding 测试 skip 而下降（沿用 `--ignore learn` → `importorskip` 策略）
+
+### 安全
+- 向量索引与 claim 数据同源（同 SQLite 生态），workspace_id 隔离参照既有 RBAC 范式
+- 向量数据不含额外 PII（embedding 输入为 claim/wiki 内容文本，非用户数据）

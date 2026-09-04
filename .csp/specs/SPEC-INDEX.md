@@ -67,7 +67,15 @@
 | SPEC-F-M-2 | F-M-2 | agent roster CLI（saw agents） | S | agent-viz | 1/1 | SPEC-F-M-2.md |
 | SPEC-F-M-3 | F-M-3 | agent roster REST（GET /api/v1/agents） | S | agent-viz | 1/1 | SPEC-F-M-3.md |
 
+## v1.10.0 delta（+4）
+| spec_id | feature_id | title | complexity | pms_module | ac_coverage | file |
+|---|---|---|---|---|---|---|
+| SPEC-F-N-1 | F-N-1 | embedding 索引（EmbeddingSink + embedding_store 表 + 重建命令） | M | embedding | 3/3 | SPEC-F-N-1.md |
+| SPEC-F-N-2 | F-N-2 | 语义检索端点+CLI（QueryEngine semantic + CLI + REST） | M | embedding | 3/3 | SPEC-F-N-2.md |
+| SPEC-F-N-3 | F-N-3 | smart-linking suggest 接 embedding 相似度信号 | M | embedding | 3/3 | SPEC-F-N-3.md |
+| SPEC-F-N-4 | F-N-4 | heavy-SDK 测试 importorskip 沿用 | S | embedding | 3/3 | SPEC-F-N-4.md |
+
 ## 校验
-- Spec 数 == 20 + 8(v1.5.0) + 4(v1.6.0) + 3(v1.7.0) + 3(v1.8.0) + 3(v1.9.0) == decomposition 原子 Feature 数 ✓（1:1）
+- Spec 数 == 20 + 8(v1.5.0) + 4(v1.6.0) + 3(v1.7.0) + 3(v1.8.0) + 3(v1.9.0) + 4(v1.10.0) == 45 == decomposition 原子 Feature 数 ✓（1:1）
 - 每个 feature_id 在 decomposition FEATURE-DETAILS 存在 ✓
 - 每份 Spec ac_coverage 自检无未覆盖 AC ✓

@@ -111,3 +111,36 @@
 - M4（Wave 1）：platform 基座（RBAC/deploy/observability CLI）+ heavy-SDK 优雅跳过。
 - M5（Wave 2）：多 workspace 隔离可用 → 多团队共存。
 - M6（Wave 3）：ruff F401/F841 启用 → lint 门禁加严 → v1.4.0 可交付。
+
+---
+
+# v1.10.0 波次（embedding 语义搜索，2026-09-04）
+
+> 源自 PRD-embedding-v1.10.0 + 02 delta + ADR-010。4 Task，2 Wave。DAG N-1→{N-2,N-3,N-4} 无环。
+
+## v1.10.0 Wave 1 — embedding 索引基座（串行先行）
+| task_id | 描述 | 类型 | 里程碑 |
+|---|---|---|---|
+| T-F-N-1 | embedding_store migration v10 + EmbeddingSink + rebuild-embeddings 命令 | db-migration | embedding_store 表 + sink 就绪 |
+
+## v1.10.0 Wave 2 — 语义检索 + smart-linking + 测试（全并行）
+| task_id | 描述 | 依赖 | 可并行性 |
+|---|---|---|---|
+| T-F-N-2 | QueryEngine semantic mode + CLI --mode semantic + REST + 降级 | T-F-N-1 | 独立（engine.py + search_cmd.py + REST） |
+| T-F-N-3 | compute_related_pages embedding 第 4 信号 | T-F-N-1 | 独立（related_pages.py + links_cmd.py） |
+| T-F-N-4 | importorskip 测试策略 + 降级测试分离 | T-F-N-1 | 独立（tests/unit/ 独占） |
+
+## v1.10.0 共享资源串行
+- `db/migrations.py`（migration v10）：Wave 1 串行先行，T-F-N-1 独占。Wave 2 Task 均依赖 embedding_store 表存在。
+- `search_cmd.py`：T-F-N-1（Wave 1，rebuild-embeddings 子命令）→ T-F-N-2（Wave 2，--mode semantic）。Wave 1→2 串行，无并行写冲突。
+
+## v1.10.0 Wave 2 文件冲突分析
+| 文件 | Wave 2 写入方 | 冲突? |
+|---|---|---|
+| engines/query/engine.py | T-F-N-2 | 否（N-3 写 related_pages.py） |
+| engines/query/related_pages.py | T-F-N-3 | 否 |
+| tests/unit/test_*.py | T-F-N-4 | 否（测试文件独占） |
+
+## v1.10.0 里程碑
+- M-EMB-1（Wave 1）：embedding_store 表 + EmbeddingSink + rebuild 命令就绪 → 向量可持久化。
+- M-EMB-2（Wave 2）：语义检索 + smart-linking embedding + 测试就绪 → v1.10.0 可交付。

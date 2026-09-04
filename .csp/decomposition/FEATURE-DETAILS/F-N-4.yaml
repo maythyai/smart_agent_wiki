@@ -1,0 +1,51 @@
+feature:
+  id: "F-N-4"
+  name: "heavy-SDK 测试 importorskip 沿用（embedding 测试 skip 策略 + CI coverage 不回归）"
+  domain: "embedding"
+  prd_ref: "docs/prd/PRD-embedding-v1.10.0.md#3.4"
+  pms_module: "embedding"
+  user_story: "作为 CI，我想 embedding 相关测试在 sentence_transformers 缺失时优雅跳过，以便 pytest tests/ 全量跑不需 --ignore。"
+  acceptance_criteria:
+    - "Given CI 环境未安装 [learn] extra, when pytest tests/ 执行, then embedding 相关测试被 skip（status=skipped），不 fail，不需 --ignore（AC-TEST-1）"
+    - "Given 本地环境安装了 [learn] extra, when pytest tests/unit/.../test_embedding_*.py 执行, then 测试正常运行并 pass（AC-TEST-2）"
+    - "Given CI workflow 文件, when 检查 coverage step, then coverage 不因 embedding 测试 skip 而下降（沿用既有 --ignore learn → importorskip 策略，参照 tests/unit/test_ci_workflow.py:62-70）（AC-TEST-3）"
+  scope:
+    includes:
+      - "embedding 相关测试文件加 pytest.importorskip('sentence_transformers')"
+      - "CI workflow coverage 步兼容 embedding 测试 skip（不回归）"
+      - "test_ci_workflow.py importorskip 检测逻辑覆盖 embedding 测试文件"
+    excludes:
+      - "把 sentence-transformers 入 dev deps（重 SDK，不擅自安装——硬约定 #12）"
+      - "测试逻辑本身（归各 Feature 实现时编写）"
+  frontend: {pages: [], components: [], interactions: []}
+  backend: {endpoints: [], business_logic: [], integrations: []}
+  data_entities: []
+  data_operations: []
+  tech_dimensions:
+    needs_database: false
+    needs_cache: false
+    needs_queue: false
+    needs_ai: false
+    needs_vector_store: false
+    needs_realtime: false
+    needs_file_storage: false
+    needs_search: false
+    needs_scheduler: false
+    needs_notification: false
+  nfr:
+    performance: ""
+    security: ""
+    scalability: ""
+    availability: "CI 无 [learn] extra 时测试 skip 不 fail；本地有 [learn] 时全绿"
+  priority: "P0"
+  complexity: "S"
+  depends_on: ["F-N-1"]
+  blocked_by: []
+  risks:
+    - "sentence_transformers 安装但模型下载失败——embed_texts() 返回 None，测试须 mock 模型行为"
+    - "CI workflow 回归——须验证 test_ci_workflow.py 中 importorskip 检测逻辑覆盖 embedding 测试文件"
+  assumptions:
+    - "importorskip 先例已有（tests/unit/engines/learn/test_fsrs.py:15 pytest.importorskip('fsrs')）"
+    - "CI workflow 检测逻辑在 tests/unit/test_ci_workflow.py:62-70（PRD ground 确认）"
+    - "coverage 不因 skip 下降——importorskip 跳过的测试不计入 fail（PRD AC-TEST-3 确认）"
+    - "硬约定 #12：不擅自安装 heavy SDK；PRD 假定用户已确认安装"

@@ -24,3 +24,11 @@
 - 用例总数：39 → 69。
 - 新覆盖 AC：AC-SEC-1（URL guard track）/ AC-SEC-3（限流 429）/ AC-ALIGN-1（宣称 diff）/ AC-E2E-1（冒烟骨架 partial）。
 - ruff 未跑（未装，[TBD]）；coverage 基线 deferred（T-F-E-1-1）。
+
+## v1.10.0 delta（embedding 语义搜索）
+- 模块：embedding（PMS-embedding），ADR-010 向量存储 + 检索融合。
+- 新增 12 AC（AC-EMB-1/2/3, AC-SEM-1/2/3, AC-LINK-1/2/3, AC-TEST-1/2/3），全映射。
+- 测试文件：test_embedding_index.py（importorskip）、test_semantic_search.py（importorskip）、test_related_pages_embedding.py（importorskip）、test_embedding_degradation.py（mock 降级）、test_ci_workflow.py（扩）。
+- 用例总数：69 → 69 + 12 = 81（[TBD-impl] 实施后落定）。
+- 新覆盖 AC：AC-EMB-1/2/3, AC-SEM-1/2/3, AC-LINK-1/2/3, AC-TEST-1/2/3（12 条全映射）。
+- TMS delta 见 `TMS-DELTA-v1.10.0.md`。

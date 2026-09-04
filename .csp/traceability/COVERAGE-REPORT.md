@@ -27,3 +27,31 @@
 - F-C-5 前端 token 互通（实机核验后补）
 - F-E-1 覆盖率基线数值（实测后定）
 - F-A-1 冒烟命令名
+
+## v1.10.0 delta（embedding 语义搜索，12 AC）
+
+| AC | 描述 | 映射 Feature | 用例 | 状态 |
+|---|---|---|---|---|
+| AC-EMB-1 | embedding 索引随 ingest 写入 | F-N-1 | test_embedding_index.py（importorskip） | [TBD-impl] |
+| AC-EMB-2 | 无 [learn] 时不报错 | F-N-1 | test_embedding_degradation.py（mock） | [TBD-impl] |
+| AC-EMB-3 | 存量重建索引 | F-N-1 | test_embedding_index.py（importorskip） | [TBD-impl] |
+| AC-SEM-1 | 语义检索返回同义结果 | F-N-2 | test_semantic_search.py（importorskip） | [TBD-impl] |
+| AC-SEM-2 | 无 [learn] 降级 BM25 | F-N-2 | test_embedding_degradation.py（mock） | [TBD-impl] |
+| AC-SEM-3 | 空索引优雅处理 | F-N-2 | test_semantic_search.py（importorskip） | [TBD-impl] |
+| AC-LINK-1 | suggest 含语义相似页面 | F-N-3 | test_related_pages_embedding.py（importorskip） | [TBD-impl] |
+| AC-LINK-2 | 无 [learn] 保持 3-signal | F-N-3 | test_embedding_degradation.py（mock） | [TBD-impl] |
+| AC-LINK-3 | 语义不相似排名下降 | F-N-3 | test_related_pages_embedding.py（importorskip） | [TBD-impl] |
+| AC-TEST-1 | CI skip embedding 测试 | F-N-4 | test_embedding_index.py（importorskip skip） | [TBD-impl] |
+| AC-TEST-2 | 本地 embedding 测试 pass | F-N-4 | test_embedding_index.py（importorskip pass） | [TBD-impl] |
+| AC-TEST-3 | coverage 不回归 | F-N-4 | test_ci_workflow.py（扩） | [TBD-impl] |
+
+### v1.10.0 汇总
+- PRD AC 总数（本轮）：12
+- 已映射：12（100%）
+- 缺口：0
+- 全部 [TBD-impl]：05 实施后落定
+
+### 全局汇总（v1.0 + v1.10.0）
+- PRD AC 总数：11（v1.0）+ 12（v1.10.0）= 23
+- 已覆盖：11（v1.0 covered）+ 12（v1.10.0 mapped [TBD-impl]）= 23
+- 缺口：0

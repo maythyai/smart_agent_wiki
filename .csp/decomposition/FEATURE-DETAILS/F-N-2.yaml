@@ -1,0 +1,71 @@
+feature:
+  id: "F-N-2"
+  name: "语义检索端点+CLI（QueryEngine semantic 模式 + saw search --mode semantic + REST）"
+  domain: "embedding"
+  prd_ref: "docs/prd/PRD-embedding-v1.10.0.md#3.2"
+  pms_module: "embedding"
+  user_story: "作为 Developer，我想通过 CLI 和 REST 端点用语义模式检索 claim/wiki，以便召回 BM25 漏掉的同义结果。"
+  acceptance_criteria:
+    - "Given [learn] extra 已安装，embedding 索引已建, when 用户执行 saw search \"machine learning\" --mode semantic, then 返回语义相似结果（包括内容为 ML 或 machine learning 的 claim），结果按相似度降序排列，exit 0（AC-SEM-1）"
+    - "Given [learn] extra 未安装（tier=LIGHTWEIGHT）, when 用户执行 saw search \"query\" --mode semantic, then 自动降级到 BM25 词面检索，结果中 meta 标注 semantic_fallback: true，exit 0，不报错（AC-SEM-2）"
+    - "Given [learn] extra 已安装但 embedding 索引为空（刚 init 未 ingest）, when 用户执行 saw search \"query\" --mode semantic, then 返回空结果或提示 embedding index empty, use BM25 mode，exit 0（AC-SEM-3）"
+  scope:
+    includes:
+      - "QueryEngine.query() 增 mode=semantic（与 search/graph/compare/tree 并行）"
+      - "语义检索：查询文本 embedding 与已索引向量做相似度计算，返回 top-K"
+      - "CLI saw search 增 --mode semantic 选项（参照既有 --mode default|tree）"
+      - "REST GET /api/v1/search 增 mode=semantic 参数"
+      - "tier=LIGHTWEIGHT 时降级到 BM25 + meta semantic_fallback: true"
+      - "空索引时返回空结果或提示"
+      - "查询文本 embedding 失败时降级到 BM25 + meta embedding_error"
+    excludes:
+      - "embedding 索引构建（归 F-N-1）"
+      - "BM25+semantic 融合策略（归 03 Spec）"
+      - "smart-linking embedding 信号（归 F-N-3）"
+  frontend: {pages: [], components: [], interactions: []}
+  backend:
+    endpoints:
+      - "GET /api/v1/search?mode=semantic（REST，tier=LIGHTWEIGHT 时返回 BM25 + semantic_fallback: true）"
+    business_logic:
+      - "QueryEngine.query(mode='semantic')：查询文本 embed → 向量相似度 → top-K"
+      - "降级逻辑：tier<FULL 或 embed 失败 → BM25 + meta 标注"
+      - "空索引检测：索引为空时返回空结果或提示"
+    integrations:
+      - "embeddings.py::embed_texts()（查询文本 embedding）"
+      - "embeddings.py::cosine_similarity()（相似度计算）"
+      - "FTS5Search.search()（降级路径）"
+      - "config/settings.py::detect_tier()（tier 检测）"
+  data_entities:
+    - "embedding_vector（读取向量，workspace_id 隔离）"
+  data_operations:
+    - "semantic_search（查询文本 embedding → 相似度 → top-K）"
+    - "fallback_bm25（降级到 BM25 + meta 标注）"
+  tech_dimensions:
+    needs_database: true
+    needs_cache: false
+    needs_queue: false
+    needs_ai: true
+    needs_vector_store: true
+    needs_realtime: false
+    needs_file_storage: false
+    needs_search: true
+    needs_scheduler: false
+    needs_notification: false
+  nfr:
+    performance: "向量检索 P99 延迟 [TBD]（须优于或接近 BM25 的毫秒级）"
+    security: "语义检索须透传 workspace_id（跨 workspace 不泄漏）"
+    scalability: ""
+    availability: "tier=LIGHTWEIGHT/OFFLINE 时降级到 BM25，不报错不中断"
+  priority: "P0"
+  complexity: "M"
+  depends_on: ["F-N-1"]
+  blocked_by: []
+  risks:
+    - "向量检索 P99 延迟可能显著高于 BM25——需 03 benchmark（[TBD]）"
+    - "BM25+semantic 融合策略未定（并行/加权/RRF）——归 03 Spec"
+    - "空索引处理边界：须区分索引为空 vs 无匹配"
+  assumptions:
+    - "QueryEngine.query() 已支持 mode 参数（PRD ground 确认 engine.py:107-120）"
+    - "CLI search_cmd.py 已有 --mode 选项（PRD ground 确认 search_cmd.py）"
+    - "REST /api/v1/search 端点已存在（增 mode=semantic 参数）"
+    - "embed_texts() 可用于单条查询文本（既有实现支持批量）"

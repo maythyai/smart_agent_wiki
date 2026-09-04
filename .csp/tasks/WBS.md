@@ -53,6 +53,10 @@
 | T-F-M-1 | SPEC-F-M-1 | saw workflow list（durable 历史，workflow_executions v4） | backend-cli | S | — | commands/workflow_cmd.py, main.py | AC-WF-3 | agent-viz |
 | T-F-M-2 | SPEC-F-M-2 | saw agents（6-role roster CLI） | backend-cli | S | — | commands/agents_cmd.py, main.py | AC-AG-2 | agent-viz |
 | T-F-M-3 | SPEC-F-M-3 | GET /api/v1/agents（roster REST） | backend | S | — | api/routes/collaborate.py | AC-API-1 | agent-viz |
+| T-F-N-1 | SPEC-F-N-1 | embedding_store migration v10 + EmbeddingSink + Write Queue 注册 + `saw search rebuild-embeddings` 重建命令 | db-migration | M | — | db/migrations.py, write_queue/sinks/embedding_sink.py, engines/ingest/pipeline.py, drivers/cli/commands/search_cmd.py, drivers/cli/main.py | AC-EMB-1, AC-EMB-2, AC-EMB-3 | embedding |
+| T-F-N-2 | SPEC-F-N-2 | QueryEngine `_semantic_search()` + `saw search --mode semantic` CLI + REST `mode=semantic` + 降级 BM25 | backend-api | M | T-F-N-1 | engines/query/engine.py, drivers/cli/commands/search_cmd.py, drivers/web/routes/search.py, api/routes/query_ingest_learn.py | AC-SEM-1, AC-SEM-2, AC-SEM-3 | embedding |
+| T-F-N-3 | SPEC-F-N-3 | `compute_related_pages()` 增 embedding 第 4 信号（权重 2.5）+ RelatedPage `embedding_sim` + links_cmd 透传 conn | backend-logic | M | T-F-N-1 | engines/query/related_pages.py, drivers/cli/commands/links_cmd.py | AC-LINK-1, AC-LINK-2, AC-LINK-3 | embedding |
+| T-F-N-4 | SPEC-F-N-4 | importorskip 测试策略（3 文件 importorskip + 降级测试分离 mock）+ ci_workflow 扩 importorskip 断言 | test | S | T-F-N-1 | tests/unit/test_embedding_index.py, tests/unit/test_semantic_search.py, tests/unit/test_related_pages_embedding.py, tests/unit/test_embedding_degradation.py, tests/unit/test_ci_workflow.py | AC-TEST-1, AC-TEST-2, AC-TEST-3 | embedding |
 
 ## 汇总
 - Task：20（1:1 Spec）；类型：backend-cli×1 / test×4 / infra-ci×4 / infra-script×2 / doc×1 / test-security×3 / backend-security×2 / backend×3
@@ -109,3 +113,9 @@
 | T-F-Z-5-1 | done | 9d93e7d | heavy-SDK learn tests importorskip + CI --ignore removed (AC-LINT-3) |
 - **v1.4.0: platform + debt 全 6 Task done → M4+M5+M6 达成。**
 - 全量回归 1898 passed, 3 skipped；saw smoke 6/6 PASS；ruff src/+tests/ 0 errors（F401 启用）。
+
+## v1.10.0 任务拆解（embedding，2026-09-04）
+- 4 Task（1:1 Spec）：T-F-N-1（db-migration）/ T-F-N-2（backend-api）/ T-F-N-3（backend-logic）/ T-F-N-4（test）
+- 2 Wave：Wave 1 T-F-N-1（migration v10 串行先行）→ Wave 2 T-F-N-2/N-3/N-4（全并行）
+- DAG N-1→{N-2,N-3,N-4} 无环，与 decomposition 一致
+- 详见 `.csp/tasks/TASKS-DELTA-v1.10.0.md`

@@ -1,0 +1,66 @@
+feature:
+  id: "F-N-3"
+  name: "smart-linking suggest 接 embedding 相似度信号"
+  domain: "embedding"
+  prd_ref: "docs/prd/PRD-embedding-v1.10.0.md#3.3"
+  pms_module: "embedding"
+  user_story: "作为 Knowledge Worker，我想 saw links suggest 利用 embedding 相似度排序相关页面，以便减少纯启发式 3-signal 的噪声（解 L1）。"
+  acceptance_criteria:
+    - "Given [learn] extra 已安装，wiki 页面已有 embedding 索引, when 用户执行 saw links suggest <page>, then 建议列表包含语义相似页面（即使无共享 tag/link），排序优于纯启发式，exit 0（AC-LINK-1）"
+    - "Given [learn] extra 未安装, when 用户执行 saw links suggest <page>, then 使用原有 3-signal 启发式，行为与 v1.8.0 一致，不报错（AC-LINK-2）"
+    - "Given 两页面共享 tag 但内容语义不同（如 tag python 但一个是爬虫、一个是 Web 框架）, when embedding 信号参与排序, then 语义不相似的页面排名下降，减少 L1 噪声（AC-LINK-3）"
+  scope:
+    includes:
+      - "compute_related_pages() 增第 4 信号：页面内容 embedding 相似度"
+      - "tier=FULL 时 embedding 信号参与排序（可加权或替代启发式信号）"
+      - "tier<FULL 时保持原有 3-signal 不变"
+      - "页面无 embedding 向量时跳过 embedding 信号，仅用 3-signal 评分"
+      - "全部页面均无 embedding 向量时完全降级到 3-signal"
+    excludes:
+      - "embedding 索引构建（归 F-N-1）"
+      - "语义检索端点（归 F-N-2）"
+      - "3-signal 启发式逻辑改动（tier<FULL 时行为不变）"
+  frontend: {pages: [], components: [], interactions: []}
+  backend:
+    endpoints: []
+    business_logic:
+      - "compute_related_pages() 增 embedding 相似度信号（第 4 信号）"
+      - "tier=FULL 时加权/替代启发式信号"
+      - "页面无向量时跳过 embedding 信号"
+    integrations:
+      - "embeddings.py::cosine_similarity()（页面间相似度）"
+      - "engines/query/related_pages.py::compute_related_pages()（既有 3-signal）"
+      - "config/settings.py::detect_tier()（tier 检测）"
+  data_entities:
+    - "embedding_vector（读取页面向量，workspace_id 隔离）"
+  data_operations:
+    - "compute_embedding_similarity（页面间 embedding 相似度）"
+    - "merge_signals（3-signal + embedding 信号融合）"
+  tech_dimensions:
+    needs_database: true
+    needs_cache: false
+    needs_queue: false
+    needs_ai: true
+    needs_vector_store: true
+    needs_realtime: false
+    needs_file_storage: false
+    needs_search: false
+    needs_scheduler: false
+    needs_notification: false
+  nfr:
+    performance: "embedding 信号计算 O(pages²) 相似度——限 top N + 缓存 [TBD]"
+    security: "suggest 须透传 workspace_id（跨 workspace 不泄漏）"
+    scalability: ""
+    availability: "tier<FULL 时完全降级到 3-signal，行为与 v1.8.0 一致"
+  priority: "P1"
+  complexity: "M"
+  depends_on: ["F-N-1"]
+  blocked_by: []
+  risks:
+    - "smart-linking 排序回归——tier<FULL 时须完全保持 3-signal，行为不变"
+    - "embedding 信号权重未定——归 03 Spec（可加权或替代）"
+    - "O(pages²) 相似度计算性能——需 top N 限制 + 缓存策略 [TBD]"
+  assumptions:
+    - "compute_related_pages() 既有 3-signal 逻辑不变（PRD ground 确认 related_pages.py:26,35-57）"
+    - "embedding 信号参与排序的方式（加权/替代）归 03 Spec 设计"
+    - "页面无向量时跳过 embedding 信号是安全降级（不改变 3-signal 评分）"

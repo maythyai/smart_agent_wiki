@@ -93,7 +93,29 @@ F-A-1 → F-A-2 → F-A-5 → F-A-6 → F-E-3（5 步，最长链）
 - 次长：F-E-1 → F-E-2 → F-E-3（3 步）
 - A2/A3/A4 并行可压缩 A1→A5 段。
 
+## v1.10.0 delta（embedding track）
+
+```mermaid
+graph LR
+  N1[F-N-1 embedding 索引]
+  N2[F-N-2 语义检索]
+  N3[F-N-3 smart-linking embedding]
+  N4[F-N-4 importorskip 测试]
+
+  N1 --> N2
+  N1 --> N3
+  N1 --> N4
+```
+
+### v1.10.0 Wave
+- **Wave 1**：F-N-1（embedding 索引 — EmbeddingSink + 重建命令，无依赖）
+- **Wave 2（全并行）**：F-N-2（语义检索） / F-N-3（smart-linking embedding） / F-N-4（importorskip 测试）— 均依赖 F-N-1，互相独立
+
+### v1.10.0 DAG 校验
+- 拓扑序无环：N1 → {N2, N3, N4}，无回边 ✓
+
 ## 并行机会
 - Wave 1 全并行（10 路无依赖）。
 - Wave 2 中 A2/A3/A4 三个引擎冒烟并行。
 - B 域（P1）可与 P0 域异步推进，不阻塞关键路径。
+- v1.10.0 Wave 2 中 N2/N3/N4 全并行（3 路独立）。

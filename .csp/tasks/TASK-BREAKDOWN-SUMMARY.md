@@ -43,3 +43,45 @@
 ## manifest 回写
 - tasks 索引 item：`.csp/tasks/TASK-BREAKDOWN-SUMMARY.md`（source_type=doc, kind=feature, built）
 - 单 Task 经 WBS 索引（不入 manifest，避免膨胀）
+
+---
+
+# v1.10.0 delta（embedding 语义搜索，2026-09-04）
+
+## 项目概览（v1.10.0）
+- 上游：4 Spec（1:1 decomposition 4 Feature F-N-1..4），1 PMS 模块（embedding）
+- Task：4（1:1 Spec，S×1 / M×3），2 Wave，DAG 无环
+- 关键路径：T-F-N-1 → T-F-N-2（2 步，最长链）
+- 估时：S/M 粒度，人日 [TBD]（无团队速率）
+
+## Task 类型分派矩阵（v1.10.0）
+| 类型 | Task | 推荐分派 |
+|---|---|---|
+| db-migration | T-F-N-1 | 后端（DB + sink + CLI） |
+| backend-api | T-F-N-2 | 后端（engine + CLI + REST） |
+| backend-logic | T-F-N-3 | 后端（related_pages 逻辑） |
+| test | T-F-N-4 | QA（测试策略 + 用例） |
+
+## 拆解门控（v1.10.0）
+- [x] Spec 完整性：4 Task == 4 Spec（03 穷尽门控通过）
+- [x] 每个 Feature 有 ≥1 Task（4/4）
+- [x] Task 粒度 ≤4h（S×1 / M×3）
+- [x] DAG 无环（N1→{N2,N3,N4}，实机校验 cycle=none）
+- [x] Task 依赖与 decomposition Feature 依赖一致（N-1→{N-2,N-3,N-4}）
+- [x] Wave 划分合理（db migration Wave 1 串行先行；Wave 2 全并行无文件冲突）
+- [x] 每 Task acceptance 非空（指向 AC，共 12 AC 全映射）
+- [x] 不越 PMS 边界（embedding 模块）
+
+## 05 实施指引（v1.10.0）
+- Lead 按 `WAVE-PLAN.md` 组建子 Agent 团队；Wave 1 T-F-N-1 独占（migration 共享资源）。
+- Wave 2 三路并行（worktree 隔离）：T-F-N-2（engine+CLI+REST）/ T-F-N-3（related_pages）/ T-F-N-4（tests）。
+- 每 Task 一个 commit；完成后续写 commit + 追溯矩阵。
+- 共享文件 `search_cmd.py`：T-F-N-1（Wave 1）→ T-F-N-2（Wave 2），Wave 1→2 串行，禁并行写。
+- 共享文件 `db/migrations.py`：T-F-N-1 独占 Wave 1。
+
+## assumptions / [TBD]（v1.10.0）
+- 向量检索 P99 延迟 [TBD]（05 实施后 benchmark）
+- 规模上限 [TBD]（预估 ~10K docs 可接受）
+- embedding 信号权重 2.5 需 benchmark 调优 [TBD]
+- 相似度缓存 [TBD]（后续优化）
+- 降级测试 mock 策略需 05 实施时验证 mock 边界

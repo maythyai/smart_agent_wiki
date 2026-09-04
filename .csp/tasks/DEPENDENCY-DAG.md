@@ -37,3 +37,27 @@ T-F-A-1-1 → T-F-A-2-1 → T-F-A-5-1 → T-F-A-6-1 → T-F-E-3-1（5 步）
 - Wave 1 全并行（10 Task 无依赖）。
 - Wave 2 中 A2/A3/A4 三引擎冒烟并行。
 - C 域 5 Task 全独立并行；B 域（P1）可与 P0 异步。
+
+---
+
+## v1.10.0 delta（embedding track）
+
+```mermaid
+graph LR
+  N1[T-F-N-1 embedding 索引] --> N2[T-F-N-2 语义检索]
+  N1 --> N3[T-F-N-3 smart-linking embedding]
+  N1 --> N4[T-F-N-4 importorskip 测试]
+```
+
+### v1.10.0 DAG 校验
+- 拓扑序无环：N1 → {N2, N3, N4}，无回边 ✓
+- 与 decomposition DEPENDENCY-GRAPH v1.10.0 delta 一致（N-1 → {N-2, N-3, N-4}）✓
+- 无自环、无环。若 05 重构致环 → 报错停步。
+
+### v1.10.0 关键路径
+T-F-N-1 → T-F-N-2（2 步，最长链）
+- N-2/N-3/N-4 并行可压缩 N-1→{N-2/N-3/N-4} 段。
+
+### v1.10.0 并行机会
+- Wave 1：T-F-N-1 独占（db migration 共享资源串行先行）。
+- Wave 2：T-F-N-2 / T-F-N-3 / T-F-N-4 全并行（3 路独立，无共享文件冲突）。

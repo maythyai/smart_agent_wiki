@@ -33,10 +33,14 @@
 | F-P-4 | 多工作空间隔离（schema 前缀 + 授权绑定） | platform-team | P0 | M | F-P-1 | 2 | §F-P-4 |
 | F-Z-4 | ruff 收口续（F401 import 审计 + F841 修） | tech-debt | P1 | M | — | 3 | §F-debt |
 | F-Z-5 | heavy-SDK learn 测试 importorskip | tech-debt | P2 | S | — | 1 | §F-debt |
+| F-N-1 | embedding 索引（向量入库 Write Queue sink + 重建命令） | embedding | P0 | M | — | 1 | §3.1 |
+| F-N-2 | 语义检索端点+CLI（QueryEngine semantic + CLI + REST） | embedding | P0 | M | F-N-1 | 2 | §3.2 |
+| F-N-3 | smart-linking suggest 接 embedding 相似度 | embedding | P1 | M | F-N-1 | 2 | §3.3 |
+| F-N-4 | heavy-SDK 测试 importorskip 沿用 | embedding | P0 | S | F-N-1 | 2 | §3.4 |
 
 ## 汇总
-- 域：7（A e2e-usability / B claim-alignment / C security-hardening / D observability / E test-gate / Z tech-debt / P platform-team）
-- Feature：29（P0=16，P1=10，P2=3）— v1.4.0 新增 F-P-1..4 + F-Z-4/5（源自 PRD-platform-team-v1.4.0 + retro G1/G3）
-- 复杂度：S=8，M=12
-- Wave：1=10，2=7，3=3
-- 关键路径：F-A-1 → F-A-2 → F-A-5 → F-A-6 → F-E-3（5 步）
+- 域：8（A e2e-usability / B claim-alignment / C security-hardening / D observability / E test-gate / Z tech-debt / P platform-team / N embedding）
+- Feature：33（P0=20，P1=11，P2=3）— v1.4.0 新增 F-P-1..4 + F-Z-4/5；v1.5.0 +F-I-1..4+F-Z-6..9；v1.6.0 +F-J-1..4；v1.7.0 +F-K-1..3；v1.8.0 +F-L-1..3；v1.9.0 +F-M-1..3；**v1.10.0 +F-N-1..4（源自 PRD-embedding-v1.10.0 + retro M1/L1）**
+- 复杂度：S=9，M=13（v1.10.0 增量：S=1, M=3）
+- Wave：v1.10.0 新增 Wave 1=1, Wave 2=3
+- 关键路径：F-A-1 → F-A-2 → F-A-5 → F-A-6 → F-E-3（5 步）；v1.10.0 次路径：F-N-1 → F-N-2（2 步）

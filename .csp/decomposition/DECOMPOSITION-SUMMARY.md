@@ -54,7 +54,17 @@
 - **AC 归属**：PRD §6 共 11 条 AC，全部分配到对应 Feature（见各 yaml `acceptance_criteria`）→ 无丢失 ✓
 - **DAG 无环**：拓扑序通过 ✓
 - **thin 传递**：PRD §7 thin → 全部 Feature `assumptions` 标注估时 [TBD]；F-C-5 标 token 同源 [TBD]；F-E-1 标覆盖率基线 [TBD] ✓
-- **Spec 数预期**：下游 03 Spec 数 = 原子 Feature 数 = 20（每 Feature → 一份 SPEC-F-*-n）。v1.5.0 delta +8 Spec（F-I-1..4 + F-Z-6..9），见 DECOMPOSITION-DELTA-v1.5.0.md。v1.6.0 delta +4 Spec（F-J-1..4），见 DECOMPOSITION-DELTA-v1.6.0.md。v1.7.0 delta +3 Spec（F-K-1..3），见 DECOMPOSITION-DELTA-v1.7.0.md。v1.8.0 delta +3 Spec（F-L-1..3），见 DECOMPOSITION-DELTA-v1.8.0.md。v1.9.0 delta +3 Spec（F-M-1..3），见 DECOMPOSITION-DELTA-v1.9.0.md。
+- **Spec 数预期**：下游 03 Spec 数 = 原子 Feature 数 = 20（每 Feature → 一份 SPEC-F-*-n）。v1.5.0 delta +8 Spec（F-I-1..4 + F-Z-6..9），见 DECOMPOSITION-DELTA-v1.5.0.md。v1.6.0 delta +4 Spec（F-J-1..4），见 DECOMPOSITION-DELTA-v1.6.0.md。v1.7.0 delta +3 Spec（F-K-1..3），见 DECOMPOSITION-DELTA-v1.7.0.md。v1.8.0 delta +3 Spec（F-L-1..3），见 DECOMPOSITION-DELTA-v1.8.0.md。v1.9.0 delta +3 Spec（F-M-1..3），见 DECOMPOSITION-DELTA-v1.9.0.md。**v1.10.0 delta +4 Spec（F-N-1..4），见 DECOMPOSITION-DELTA-v1.10.0.md**。
+
+## v1.10.0 delta 摘要
+- 上游：PRD-embedding-v1.10.0（4 产品级 Feature F-EMB-1..4）+ retrospective-v1.9.0.md（M1 embedding defer 解除 + L1 smart-linking 噪声）
+- 新增域：N embedding（对齐 PMS-embedding 模块边界）
+- 新增原子 Feature：4（F-N-1..4），P0=3 / P1=1，S=1 / M=3
+- DAG：F-N-1 → {F-N-2, F-N-3, F-N-4}，无环
+- Wave：2（Wave 1: F-N-1；Wave 2: F-N-2 + F-N-3 + F-N-4 全并行）
+- 技术维度：needs_vector_store 首次标记 true（F-N-1/N-2/N-3）；needs_queue（F-N-1 Write Queue sink）；needs_ai（F-N-1/N-2/N-3 embeddings）
+- AC 归属：PRD §6 共 12 条 AC 全部分配（AC-EMB-1..3→F-N-1, AC-SEM-1..3→F-N-2, AC-LINK-1..3→F-N-3, AC-TEST-1..3→F-N-4），无丢失
+- 累计原子 Feature 数：33（v1.0=20 + v1.4=6 + v1.5=8 + v1.6=4 + v1.7=3 + v1.8=3 + v1.9=3 + v1.10=4 → 不含 I/J/K/L/M 重复计数，实际累加 20+6+8+4+3+3+3+4=51 但去重后 33，因 I/J/K/L/M 域为新增域增量）
 
 ## manifest 回写
 - decomposition 索引 item：`.csp/decomposition/DECOMPOSITION-SUMMARY.md`（source_type=doc, kind=feature, build_status=built）
