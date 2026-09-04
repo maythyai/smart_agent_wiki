@@ -48,6 +48,8 @@
 | T-F-K-1 | SPEC-F-K-1 | graph workspace 隔离（migration v9 + entity domain + GraphSink 写 + graph_traverse 读 + QueryEngine 透传） | backend | M | — | db/migrations.py, domain/*.py, write_queue/sinks/graph_sink.py, engines/query/graph_traverse.py, engines/query/engine.py, engines/ingest/pipeline.py, drivers/web/app.py, drivers/cli/commands/query_cmd.py | AC-WS-6 | graph-workspace |
 | T-F-K-2 | SPEC-F-K-2 | scope 传播清理（tree_mode/compiler 显式 workspace_id，去 setattr） | backend | S | T-F-K-1 | engines/query/tree_mode.py, engines/query/compiler.py, engines/query/engine.py | AC-ARCH-1 | graph-workspace |
 | T-F-K-3 | SPEC-F-K-3 | synthesize 覆盖（engine+scheduler）+ fail_under 63→64 | test | M | T-F-K-1 | tests/unit/engines/synthesize/*, pyproject.toml | AC-COV-3 | test-gate |
+| T-F-L-1 | SPEC-F-L-1 | 智能链接建议 + 链接审计 bundle（saw links suggest/audit） | backend-cli | M | — | commands/links_cmd.py, main.py | AC-LINK-1, AC-LINK-2 | smart-linking |
+| T-F-L-3 | SPEC-F-L-3 | AI 摘要（saw summarize） | backend-cli | S | — | commands/summarize_cmd.py, main.py | AC-SUM-1 | smart-linking |
 
 ## 汇总
 - Task：20（1:1 Spec）；类型：backend-cli×1 / test×4 / infra-ci×4 / infra-script×2 / doc×1 / test-security×3 / backend-security×2 / backend×3
