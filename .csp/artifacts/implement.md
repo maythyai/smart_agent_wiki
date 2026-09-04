@@ -187,3 +187,49 @@
 - **desktop 完成**（v4.4，Tauri）：defer。
 - **"最近活动"聚合**：roster 是静态，agent 最近活动需 event bus 聚合，留后续。
 - **L1-L3 / K1 / K2**：续留 finding。
+
+---
+
+## v1.10.0 embedding 实施（2026-09-04）
+
+### 范围
+4 Task（T-F-N-1..4），2 Wave，DAG N-1→{N-2,N-3,N-4}。PMS 模块=embedding。
+
+### Commit 链
+1. `ecbdb75` — `feat(embedding): F-N-1 vector index sink + migration v10 + rebuild cmd`
+2. `9660ecc` — `feat(embedding): F-N-2 semantic search mode + CLI + REST`
+3. `3b2039e` — `feat(embedding): F-N-3 smart-linking embedding signal`
+4. `e7fb6c6` — `test(embedding): F-N-4 importorskip + degradation tests`
+
+### Ground 发现（源码 ground truth）
+- `embeddings.py:19-29` — `embeddings_available()` 全局缓存 `_ST_available`，try/except ImportError 降级。复用不变。
+- `embeddings.py:41-57` — `embed_texts()` 返回 L2-normalized list[list[float]] | None。复用不变。
+- `embeddings.py:60-66` — `cosine_similarity()` 纯 Python dot product。复用不变。
+- `migrations.py` v9 是最新，v10 新增 `_create_embedding_store`（`_register(10, ...)`），表 `embedding_store` 含 doc_id/entity_type/model/vector/dim/workspace_id/created_at，PK (doc_id, workspace_id)。
+- `fts5_sink.py:18-40` — FTS5Sink 范式（write/can_handle/name），EmbeddingSink 照此实现。
+- `pipeline.py:319-419` — `_build_write_ops` 中 fts5 op 在 claim 循环中生成。embedding op 照此追加（payload 含 doc_id/content/entity_type/workspace_id）。
+- `engine.py:107-120` — `query()` mode 路由，新增 `elif mode == "semantic"` 分支。`_keyword_search()` 用 cache（search mode），semantic 不走 cache（ADR-010 [TBD]）。
+- `engine.py:58` — `__init__` 已有 `workspace_id` 参数，semantic search 复用 `self._workspace_id` 做 WHERE 过滤。
+- `related_pages.py:26` — `compute_related_pages` 3-signal（tag 2.0/link 3.0/type 1.0），扩展增 `conn`/`workspace_id` 可选参数 + embedding 第 4 信号（weight 2.5）。`conn=None` 时跳过 embedding，行为与 v1.8.0 一致。
+- `search_cmd.py` — 独立函数范式（非 Typer app）。新增 `_semantic_search` + `_display_semantic_results` + `rebuild_embeddings` 独立函数，注册为 `app.command(name="rebuild-embeddings")`。
+- `links_cmd.py` — `suggest` 命令中 detect_tier() >= FULL 时传 conn 给 `compute_related_pages`。
+- `web/app.py:588-598` — dispatcher sinks 列表新增 `EmbeddingSink(conn)`。
+- `ingest_cmd.py:92-96` + `smoke_harness.py:108-112` — 同上 sink 注册。
+- `search.py` REST route — 新增 `mode` query 参数，`default|tree|semantic`，映射到 QueryEngine.query(mode=...)。
+
+### 偏离/决策
+1. **CLI 子命令路径**：Spec 写 `saw search rebuild-embeddings`，但 `search` 是独立函数非 Typer 子命令组。改为独立顶层命令 `saw rebuild-embeddings`（更简单、不破坏既有 `saw search "keywords"` 用法）。功能等价。
+2. **semantic mode 不走 cache**：`_keyword_search` 有 F-QS-07 cache。`_semantic_search` 不复用 cache 路径，因向量相似度时效性依赖索引完整性（ADR-010 [TBD] 缓存优化）。
+3. **REST mode 参数映射**：REST `mode=default` 映射到 `query_mode="search"`（既有行为不变），`mode=semantic` 直通。
+
+### SDK 未装诚实标注
+- `sentence_transformers` 未安装（`python3 -c "import sentence_transformers"` → ImportError）。
+- 3 个 importorskip 测试文件（7 个测试）在 CI 环境自动 skip。
+- 降级测试文件（4 个测试）用 mock 通过，无需 SDK。
+- **实际 embedding E2E（AC-EMB-1/3, AC-SEM-1, AC-LINK-1/3）须用户装 `[learn]` extra 后验证**——本轮无法验证，诚实标注 [TBD]。
+- 非 embedding 测试全绿：1993 passed, 6 skipped (3 原有 + 3 新 embedding skip)。
+
+### 验证
+- pytest: 1993 passed, 6 skipped, 0 failed
+- ruff check src/ tests/: 0 errors
+- saw smoke: 6/6 passed

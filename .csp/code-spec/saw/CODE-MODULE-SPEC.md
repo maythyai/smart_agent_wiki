@@ -163,3 +163,32 @@ updated: "2026-09-01"
 - `cms:saw:module-spec` → output_path=`.csp/code-spec/saw/CODE-MODULE-SPEC.md`
 - `cms:saw:entry-points` → output_path=`.csp/code-spec/saw/entry-points.jsonl`
 - `cms:saw:knowledge-graph` → output_path=`.csp/code-spec/saw/knowledge-graph.json`
+
+---
+
+## CMS Delta — v1.10.0 embedding（增量对齐）
+
+### 新增入口点
+
+| 类型 | 路径 | file:line | 说明 |
+|---|---|---|---|
+| Write Queue Sink | `saw.write_queue.sinks.embedding_sink.EmbeddingSink` | `src/saw/write_queue/sinks/embedding_sink.py:20` | 向量持久化 sink（write/can_handle/name 范式参照 FTS5Sink） |
+| DB Migration | `saw.db.migrations._create_embedding_store` | `src/saw/db/migrations.py:~350` | v10: embedding_store 表（doc_id/entity_type/model/vector/dim/workspace_id） |
+| CLI Command | `saw.drivers.cli.commands.search_cmd.rebuild_embeddings` | `src/saw/drivers/cli/commands/search_cmd.py:~150` | `saw rebuild-embeddings` 全量重建命令 |
+| QueryEngine mode | `QueryEngine._semantic_search` | `src/saw/engines/query/engine.py:~300` | semantic mode 分支（cosine top-K） |
+| REST param | `mode` on `GET /api/v1/search` | `src/saw/drivers/web/routes/search.py:18` | `default|tree|semantic` 枚举 |
+| Write Queue op | `sink_name="embedding"` in `_build_write_ops` | `src/saw/engines/ingest/pipeline.py:~400` | 每个 claim 追加 embedding op |
+
+### 新增调用链边
+
+- `pipeline._build_write_ops → EmbeddingSink.write → embed_texts → INSERT embedding_store`
+- `QueryEngine.query(mode=semantic) → _semantic_search → embed_texts + cosine_similarity → SELECT embedding_store WHERE workspace_id=?`
+- `compute_related_pages(conn=…) → SELECT embedding_store → cosine_similarity` (Signal 4, weight 2.5)
+- `links_cmd.suggest → detect_tier() ≥ FULL → compute_related_pages(conn=conn)`
+- `search_cmd.search(mode=semantic) → _semantic_search → QueryEngine.query(mode="semantic")`
+
+### 降级路径
+
+- `EmbeddingSink.write()` → `embeddings_available()=False` → skip (no error, no vector)
+- `QueryEngine._semantic_search()` → `embeddings_available()=False` → `_keyword_search()` + `semantic_fallback: true`
+- `compute_related_pages(conn=…)` → `embeddings_available()=False` → 3-signal (embedding_score=0)

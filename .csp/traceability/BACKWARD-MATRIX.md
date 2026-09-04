@@ -24,3 +24,12 @@
 | SPEC-F-E-1 | F-E-1 | §3.5 | (基线) | test-gate | [无] |
 | SPEC-F-E-2 | F-E-2 | §3.5 | AC-TEST-1 | test-gate | [无] |
 | SPEC-F-E-3 | F-E-3 | §3.5 | AC-TEST-2 | test-gate | [无] |
+
+## v1.10.0 delta（embedding 语义搜索）
+
+| Spec | Feature | PRD 模块 | AC | PMS | CMS ref | Commit |
+|---|---|---|---|---|---|---|
+| SPEC-F-N-1 | F-N-1 | §3.1 | AC-EMB-1/2/3 | embedding | CODE-MODULE-SPEC | ecbdb75 |
+| SPEC-F-N-2 | F-N-2 | §3.2 | AC-SEM-1/2/3 | embedding | CODE-MODULE-SPEC | 9660ecc |
+| SPEC-F-N-3 | F-N-3 | §3.3 | AC-LINK-1/2/3 | embedding | CODE-MODULE-SPEC | 3b2039e |
+| SPEC-F-N-4 | F-N-4 | §3.4 | AC-TEST-1/2/3 | embedding | [无] | e7fb6c6 |

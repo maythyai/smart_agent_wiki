@@ -58,3 +58,31 @@ PRD feature_count=5（模块）→ decomposition 5 域 → 20 原子 Feature →
 | T-F-E-1-1 | deferred | — |
 
 链 PRD AC → Feature → Spec → Task → commit 续写；本切片覆盖 AC-SEC-1(URL guard)/AC-SEC-3(限流)/AC-ALIGN-1(宣称diff)/AC-E2E-1(冒烟骨架 partial)。
+
+## v1.10.0 delta（embedding 语义搜索）
+
+| PRD 模块(§3) | AC | Feature | Spec |
+|---|---|---|---|
+| §3.1 F-EMB-1 | AC-EMB-1 | F-N-1 | SPEC-F-N-1 |
+| §3.1 | AC-EMB-2 | F-N-1 | SPEC-F-N-1 |
+| §3.1 | AC-EMB-3 | F-N-1 | SPEC-F-N-1 |
+| §3.2 F-EMB-2 | AC-SEM-1 | F-N-2 | SPEC-F-N-2 |
+| §3.2 | AC-SEM-2 | F-N-2 | SPEC-F-N-2 |
+| §3.2 | AC-SEM-3 | F-N-2 | SPEC-F-N-2 |
+| §3.3 F-EMB-3 | AC-LINK-1 | F-N-3 | SPEC-F-N-3 |
+| §3.3 | AC-LINK-2 | F-N-3 | SPEC-F-N-3 |
+| §3.3 | AC-LINK-3 | F-N-3 | SPEC-F-N-3 |
+| §3.4 F-EMB-4 | AC-TEST-1 | F-N-4 | SPEC-F-N-4 |
+| §3.4 | AC-TEST-2 | F-N-4 | SPEC-F-N-4 |
+| §3.4 | AC-TEST-3 | F-N-4 | SPEC-F-N-4 |
+
+### Task 追溯（Feature → Task，[TBD-04 待拆]）
+
+| Feature | Spec | Task | Wave | Commit |
+|---|---|---|---|---|
+| F-N-1 | SPEC-F-N-1 | T-F-N-1 | 1 | ecbdb75 |
+| F-N-2 | SPEC-F-N-2 | T-F-N-2 | 2 | 9660ecc |
+| F-N-3 | SPEC-F-N-3 | T-F-N-3 | 2 | 3b2039e |
+| F-N-4 | SPEC-F-N-4 | T-F-N-4 | 2 | e7fb6c6 |
+
+链：PRD AC → Feature → Spec → Task → commit，12 AC 全闭环。05-impl done.
