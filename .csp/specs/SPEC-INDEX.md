@@ -60,7 +60,14 @@
 | SPEC-F-L-2 | F-L-2 | 链接审计（孤儿页+断链） | M | smart-linking | 1/1 | SPEC-F-L-2.md |
 | SPEC-F-L-3 | F-L-3 | AI 摘要（saw summarize） | S | smart-linking | 1/1 | SPEC-F-L-3.md |
 
+## v1.9.0 delta（+3）
+| spec_id | feature_id | title | complexity | pms_module | ac_coverage | file |
+|---|---|---|---|---|---|---|
+| SPEC-F-M-1 | F-M-1 | workflow list durable（saw workflow list） | S | agent-viz | 1/1 | SPEC-F-M-1.md |
+| SPEC-F-M-2 | F-M-2 | agent roster CLI（saw agents） | S | agent-viz | 1/1 | SPEC-F-M-2.md |
+| SPEC-F-M-3 | F-M-3 | agent roster REST（GET /api/v1/agents） | S | agent-viz | 1/1 | SPEC-F-M-3.md |
+
 ## 校验
-- Spec 数 == 20 + 8(v1.5.0) + 4(v1.6.0) + 3(v1.7.0) + 3(v1.8.0) == decomposition 原子 Feature 数 ✓（1:1）
+- Spec 数 == 20 + 8(v1.5.0) + 4(v1.6.0) + 3(v1.7.0) + 3(v1.8.0) + 3(v1.9.0) == decomposition 原子 Feature 数 ✓（1:1）
 - 每个 feature_id 在 decomposition FEATURE-DETAILS 存在 ✓
 - 每份 Spec ac_coverage 自检无未覆盖 AC ✓
