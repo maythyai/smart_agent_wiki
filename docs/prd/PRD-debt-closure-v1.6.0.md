@@ -2,7 +2,7 @@
 id: PRD-debt-closure-v1.6.0
 title: workspace 全路径 II + 深覆盖 + policy web 端点
 version: 1.0
-status: Approved
+status: Released
 author: lifecycle-orchestrator
 date: "2026-09-03"
 product_type: platform

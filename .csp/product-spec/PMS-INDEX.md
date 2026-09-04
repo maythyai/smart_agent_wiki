@@ -12,6 +12,7 @@
 | test-gate | 核心引擎覆盖率门禁+CI 阻断 | P0 | PRD-product-hardening-v1 §3.5 | [待回填] | ready | PMS-test-gate.md |
 | intelligence-adaptation | workflow 编排/Learn 在线/Token 实测/agent 一致性 + v1.4.0 债 H1/H2/H4/H5 | P0 | PRD-intelligence-adaptation-v1.5.0 §2 | [待回填] | ready | PMS-intelligence-adaptation.md |
 | debt-closure | workspace 全路径 II + ingest 写入 + query 深覆盖 65 + policy web 端点 | P0 | PRD-debt-closure-v1.6.0 §2 | [待回填] | ready | PMS-debt-closure.md |
+| graph-workspace | graph workspace 隔离 + scope 清理 + coverage→65 | P0 | PRD-graph-workspace-v1.7.0 §2 | [待回填] | ready | PMS-graph-workspace.md |
 
 ## 状态约定
 - ready（边界已定）/ built（spec 已产出）/ degraded（source 变更待 re-align）/ blocked

@@ -8,7 +8,8 @@
 | PRD-hardening-tail-v1.3.0 | 硬化尾巴 + 技术债清理 | 1.0 | Released | 2026-09-03 | hardening-tail-v1.3.0 | e2e-usability, claim-alignment, test-gate, tech-debt | docs/prd/PRD-hardening-tail-v1.3.0.md |
 | PRD-platform-team-v1.4.0 | 平台化与团队协作 | 1.0 | Released | 2026-09-03 | platform-team-v1.4.0 | platform-team, deployment, observability, workspace-isolation | docs/prd/PRD-platform-team-v1.4.0.md |
 | PRD-intelligence-adaptation-v1.5.0 | 智能与自适应 | 1.0 | Released | 2026-09-03 | intelligence-adaptation-v1.5.0 | intelligence-adaptation, workflow-orchestration, learn-engine, token-optimization | docs/prd/PRD-intelligence-adaptation-v1.5.0.md |
-| PRD-debt-closure-v1.6.0 | workspace 全路径 II + 深覆盖 + policy web 端点 | 1.0 | Approved | 2026-09-03 | debt-closure-v1.6.0 | workspace-routing-ii, ingest-workspace-write, query-deep-coverage, policy-web-endpoint | docs/prd/PRD-debt-closure-v1.6.0.md |
+| PRD-debt-closure-v1.6.0 | workspace 全路径 II + 深覆盖 + policy web 端点 | 1.0 | Released | 2026-09-03 | debt-closure-v1.6.0 | workspace-routing-ii, ingest-workspace-write, query-deep-coverage, policy-web-endpoint | docs/prd/PRD-debt-closure-v1.6.0.md |
+| PRD-graph-workspace-v1.7.0 | graph 隔离 + scope 清理 + coverage→65 | 1.0 | Approved | 2026-09-04 | graph-workspace-v1.7.0 | graph-workspace-isolation, scope-propagation-cleanup, coverage-65 | docs/prd/PRD-graph-workspace-v1.7.0.md |
 
 ## 状态约定
 - Draft → Reviewing → Approved → Released → Deprecated
