@@ -42,6 +42,16 @@
 | TMS | +3 用例（TMS-DELTA-v1.7.0） | AC 3/3 ✓ |
 | PRD AC（v1.7.0） | 3（AC-WS-6, AC-ARCH-1, AC-COV-3） | 3/3 ✓ |
 
+## v1.8.0 delta（2026-09-04）
+| 层 | v1.8.0 增量 | 校验 |
+|---|---|---|
+| PRD feature_count | 3 新能力（smart linking + summarize） | PRD-smart-linking-v1.8.0 §2 ✓ |
+| decomposition 原子 Feature | +3（F-L-1..3） | DECOMPOSITION-DELTA-v1.8.0 ✓ |
+| Spec | +3（SPEC-F-L-1..3） | 强校验 == Feature 数 ✓（1:1） |
+| ADR | — | 无架构变更（新能力复用引擎） |
+| TMS | +3 用例（TMS-DELTA-v1.8.0） | AC 3/3 ✓ |
+| PRD AC（v1.8.0） | 3（AC-LINK-1, AC-LINK-2, AC-SUM-1） | 3/3 ✓ |
+
 ## 追溯链
 - 正向：`FORWARD-MATRIX.md`（PRD→Feature→Spec）
 - 反向：`BACKWARD-MATRIX.md`（Spec→Feature→PRD）
