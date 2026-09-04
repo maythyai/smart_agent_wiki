@@ -258,3 +258,58 @@ def status(
     for e in errs:
         console.print(f"  [red]-[/red] {e}")
     raise typer.Exit(code=0)
+
+
+@app.command(name="list")
+def list_recent(
+    path: str = typer.Option(".", "--path", "-p", help="Wiki directory path"),
+    limit: int = typer.Option(20, "--limit", "-n", help="Max runs to show"),
+) -> None:
+    """List recent durable workflow runs (AC-WF-3).
+
+    Reads the persisted ``workflow_executions`` table (HI-9, survives
+    restarts) — complementary to the REST ``GET /api/v1/workflows`` which
+    lists in-memory live runs.
+    """
+    from rich.table import Table
+
+    from saw.drivers.cli.main import console
+
+    wiki_path = Path(path).resolve()
+    db_path = wiki_path / ".saw" / "db" / "claims.db"
+    if not db_path.is_file():
+        console.print(f"[red]Error:[/red] Claims DB not found at {db_path}")
+        raise typer.Exit(code=1)
+    from saw.db.migrations import apply_migrations
+
+    conn = sqlite3.connect(str(db_path))
+    try:
+        apply_migrations(conn)  # ensure workflow_executions table (v4)
+        rows = conn.execute(
+            "SELECT workflow_id, definition_name, status, steps_completed, "
+            "steps_total, updated_at, finished_at "
+            "FROM workflow_executions "
+            "ORDER BY COALESCE(updated_at, started_at) DESC "
+            "LIMIT ?",
+            (limit,),
+        ).fetchall()
+    except sqlite3.OperationalError as e:
+        console.print(f"[red]Error:[/red] {e}")
+        raise typer.Exit(code=1)
+    finally:
+        conn.close()
+
+    if not rows:
+        console.print("[yellow]No workflow runs recorded yet.[/yellow]")
+        raise typer.Exit(code=0)
+
+    table = Table(title=f"{len(rows)} recent workflow run(s)")
+    table.add_column("id", style="cyan")
+    table.add_column("name")
+    table.add_column("status")
+    table.add_column("steps", justify="right")
+    table.add_column("updated")
+    for wid, name, st, sc, tot, updated, _finished in rows:
+        table.add_row(wid[:8] + "…", str(name), str(st), f"{sc}/{tot}", str(updated))
+    console.print(table)
+    raise typer.Exit(code=0)

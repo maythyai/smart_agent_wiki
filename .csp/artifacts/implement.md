@@ -164,3 +164,26 @@
 - **embedding 语义搜索**：需 sentence-transformers heavy SDK（v1.3.0 Z-5 defer 纪律），本轮仍 defer → v2.0。
 - **链接自动应用**：suggest 只输出，不自动改文件（用户审阅手改）。
 - **K1/K2/K3**：见上，续留 finding。
+
+## 2026-09-04 — v1.9.0 Agent & Workflow 可视化（3 Feature，1 Wave，Lead 单线）
+
+**范围**：F-M-1（saw workflow list）/ F-M-2（saw agents）/ F-M-3（GET /api/v1/agents）。续新能力，复用 v1.5.0 workflow 基建 + build_default_agents。
+**测试**：1987 passed / 3 skipped / 0 failed（+4 新测试）；ruff 0；smoke 6/6。
+
+### 决策与偏离
+- **embedding 语义搜索 defer**：需 sentence-transformers heavy SDK；硬约定 #12"缺依赖须用户确认"——不擅自装；本环境无法本地验证。本轮不开，留待用户确认装 SDK 后。
+- **F-M-1 durable vs live 语义**：CLI `list` 查 workflow_executions DB 表（durable 历史，跨重启），REST GET /workflows 查 in-memory _workflows（live，重启丢）。文档明确互补，避免混淆。
+- **F-M-1 轻装 bootstrap**：list 只需 conn，不走完整 collab 装配（dispatcher/a2a）——减负；复用 status 的直连 claims.db 模式。
+- **F-M-3 端点位置**：加到既有 collaborate router（GET /agents，紧邻 GET /workflows）；router 级 auth_dep 已在 create_app 加，无需重守。
+
+### CMS drift 核验
+- F-M-1：workflow_executions v4 表就绪（migrations.py:_create_workflow_executions）；CLI bootstrap 复用 workflow_cmd v1.5.0。
+- F-M-2/F-M-3：build_default_agents（agents/__init__.py）就绪；agent 属性 .name/.model_tier/_tools_allowed（base.py:37-51）。
+- collaborate router（api/routes/collaborate.py:29，prefix=/api/v1）已有 GET /workflows（in-memory，line 327）——确认不冗余，list 是 durable 互补。
+
+### Deferred / [TBD]
+- **embedding 语义搜索**：heavy SDK，须用户确认装。
+- **realtime WS 仪表盘**（v4.3 完整前端）：本轮只 CLI+REST 铺路，前端实时留后续。
+- **desktop 完成**（v4.4，Tauri）：defer。
+- **"最近活动"聚合**：roster 是静态，agent 最近活动需 event bus 聚合，留后续。
+- **L1-L3 / K1 / K2**：续留 finding。

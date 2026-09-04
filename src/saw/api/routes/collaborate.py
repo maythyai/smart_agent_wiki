@@ -335,6 +335,28 @@ async def list_workflows() -> dict[str, Any]:
     return {"workflows": items[:20], "total": len(_workflows)}
 
 
+@router.get("/agents")
+async def list_agents() -> dict[str, Any]:
+    """List the 6-agent roster (T-F-M-3, AC-API-1).
+
+    Returns each role's name, model tier, allowed tools, and whether it is
+    a zero-cost rule agent (Guardian). Frontend-dashboard prep (roadmap v4.3).
+    """
+    from saw.engines.collaborate.agents import build_default_agents
+
+    roster = build_default_agents(llm_router=None)
+    agents = []
+    for name in sorted(roster):
+        a = roster[name]
+        agents.append({
+            "name": a.name,
+            "model_tier": a.model_tier,
+            "tools_allowed": list(getattr(a, "_tools_allowed", []) or []),
+            "rule": a.model_tier == "rule",
+        })
+    return {"agents": agents, "total": len(agents)}
+
+
 @router.get("/workflows/{workflow_id}/status")
 async def workflow_status(
     workflow_id: str = Path(..., description="Workflow UUID"),

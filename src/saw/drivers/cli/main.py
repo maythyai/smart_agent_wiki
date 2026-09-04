@@ -102,12 +102,14 @@ from saw.drivers.cli.commands.token_cmd import app as token_app  # noqa: E402
 from saw.drivers.cli.commands.policy_cmd import app as policy_app  # noqa: E402
 from saw.drivers.cli.commands.links_cmd import app as links_app  # noqa: E402
 from saw.drivers.cli.commands.summarize_cmd import summarize  # noqa: E402
+from saw.drivers.cli.commands.agents_cmd import agents  # noqa: E402
 app.add_typer(workflow_app, name="workflow")
 app.add_typer(learn_app, name="learn")
 app.add_typer(token_app, name="token")
 app.add_typer(policy_app, name="policy")
 app.add_typer(links_app, name="links")
 app.command(name="summarize")(summarize)
+app.command(name="agents")(agents)
 
 # Code Graph lifecycle commands
 from saw.code_graph.cli import register_code_graph_commands  # noqa: E402
