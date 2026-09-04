@@ -11,7 +11,7 @@
 set -e
 
 # Version
-SAW_VERSION="1.6.0"
+SAW_VERSION="1.7.0"
 SCRIPT_VERSION="1.0.0"
 
 # Colors
