@@ -34,6 +34,7 @@ from saw.write_queue.sinks.fts5_sink import FTS5Sink
 from saw.write_queue.sinks.graph_sink import GraphSink
 from saw.write_queue.sinks.vault_sink import VaultSink
 from saw.write_queue.sinks.wiki_sink import WikiSink
+from saw.write_queue.sinks.embedding_sink import EmbeddingSink
 
 
 @dataclass
@@ -110,6 +111,7 @@ def build_smoke_context(*, with_receipts: bool = False) -> SmokeContext:
     dispatcher.register_sink(WikiSink(wiki_repo))
     dispatcher.register_sink(FTS5Sink(conn))
     dispatcher.register_sink(GraphSink(conn))
+    dispatcher.register_sink(EmbeddingSink(conn))
 
     # Ingest pipeline — offline (llm_router=None): rule/template extraction.
     pipeline = IngestPipeline(

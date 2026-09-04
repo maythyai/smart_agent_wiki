@@ -589,6 +589,7 @@ def create_app_from_config(
         from saw.write_queue.sinks.claims_sink import ClaimsSink
         from saw.write_queue.sinks.graph_sink import GraphSink
         from saw.write_queue.sinks.contradictions_sink import ContradictionsSink
+        from saw.write_queue.sinks.embedding_sink import EmbeddingSink
         _dispatcher = Dispatcher(
             write_queue,
             sinks=[
@@ -597,6 +598,7 @@ def create_app_from_config(
                 ClaimsSink(claims_repo),
                 GraphSink(conn),
                 ContradictionsSink(conn),
+                EmbeddingSink(conn),
             ],
             event_bus=_event_bus,
         )

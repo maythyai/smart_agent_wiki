@@ -397,6 +397,20 @@ class IngestPipeline:
                 },
             ))
 
+        # Embedding operations (vector index, tier=FULL only at sink level)
+        for claim in claims:
+            ops.append(WriteOp(
+                op_id=str(uuid.uuid4()),
+                session_id=session_id,
+                sink_name="embedding",
+                payload={
+                    "doc_id": claim.uuid,
+                    "content": claim.content,
+                    "entity_type": "claim",
+                    "workspace_id": claim.workspace_id,
+                },
+            ))
+
         # Graph operations (entities and relations)
         for entity in entities:
             ops.append(WriteOp(

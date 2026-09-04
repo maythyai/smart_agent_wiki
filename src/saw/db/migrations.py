@@ -328,6 +328,36 @@ def _add_entity_workspace(conn: sqlite3.Connection) -> None:
 
 _register(9, _add_entity_workspace)
 
+# v10: embedding store (T-F-N-1, ADR-010). Vectors for semantic search +
+# smart-linking.  Independent table (not a column on claim) because
+# embeddings are optional (tier<FULL has no vectors) — a column would cause
+# NULL bloat for non-FULL tiers.  BLOB = struct.pack float32 array;
+# doc_id+workspace_id composite PK gives workspace isolation (ADR-008/009
+# pattern).  model+dim columns enable dimension-change detection on rebuild.
+def _create_embedding_store(conn: sqlite3.Connection) -> None:
+    conn.executescript(
+        """CREATE TABLE IF NOT EXISTS embedding_store (
+    doc_id TEXT NOT NULL,
+    entity_type TEXT NOT NULL,
+    model TEXT NOT NULL,
+    vector BLOB NOT NULL,
+    dim INTEGER NOT NULL,
+    workspace_id TEXT NOT NULL DEFAULT 'default',
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    PRIMARY KEY (doc_id, workspace_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_embedding_workspace
+    ON embedding_store(workspace_id);
+CREATE INDEX IF NOT EXISTS idx_embedding_model
+    ON embedding_store(model);
+"""
+    )
+
+
+_register(10, _create_embedding_store)
+
+
 # ── Public API ────────────────────────────────────────────────────────
 
 TARGET_VERSION = max(v for v, _ in _MIGRATIONS) if _MIGRATIONS else 1
