@@ -119,13 +119,10 @@ omit = [
 # not the target: raise `fail_under` toward 80% (the core-engine target) as
 # coverage improves. A gate that fails on day one (80% < current 62%) would
 # block all merges — so we ratchet from the measured baseline.
-# T-F-Z-9 (v1.5.0): ratcheted 60→63 (measured 63.1% @ 1927 tests).
-# T-F-J-3 (v1.6.0): query deep coverage landed (engine 14→94%, compare
-# 23→91%, tree_mode 21→66%) but overall only 63.7% — gap is non-query
-# modules (compile/compiler 17%, synthesize/scheduler 32%). Held at 63
-# (honest floor; 64/65 needs compile+synthesize coverage, finding J1, v1.7.0).
-# Never set above measured or CI goes permanently red (硬约定 #10).
-fail_under = 63
+# T-F-K-3 (v1.7.0): ratcheted 63→64 (measured 64.2% @ 1977 tests after
+# synthesize engine/scheduler coverage). 65 still thin — remaining gap is
+# compile/compiler.py (17%); finding K1, v1.8.0.
+fail_under = 64
 show_missing = true
 exclude_lines = [
     "pragma: no cover",
