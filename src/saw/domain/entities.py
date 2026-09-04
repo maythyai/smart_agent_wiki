@@ -12,6 +12,7 @@ class Entity:
     entity_type: str
     aliases: list[str] = field(default_factory=list)
     description: str = ""
+    workspace_id: str = "default"  # T-F-K-1 (ADR-009): workspace isolation
 
 
 @dataclass

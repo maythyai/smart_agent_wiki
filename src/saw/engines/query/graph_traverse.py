@@ -27,23 +27,43 @@ class GraphTraverse:
     loaded into NetworkX for traversal operations.
     """
 
-    def __init__(self, conn: sqlite3.Connection) -> None:
+    def __init__(self, conn: sqlite3.Connection, workspace_id: str = "default") -> None:
         """Initialize and load graph from database.
 
         Args:
             conn: SQLite connection with entity tables.
+            workspace_id: Workspace scope (T-F-K-1, ADR-009). Only entities
+                in this workspace (and relations whose both endpoints are
+                in it) are loaded. Defaults to 'default' for single-wiki.
         """
         self._conn = conn
+        self._workspace_id = workspace_id
         self._graph: nx.DiGraph = nx.DiGraph()
         self._entity_cache: dict[str, Entity] = {}
         self._relation_count: int = 0
         self._load_graph()
 
+    def set_workspace_id(self, workspace_id: str) -> None:
+        """Re-scope the graph and reload entities/relations (T-F-K-2)."""
+        self._workspace_id = workspace_id
+        self._graph = nx.DiGraph()
+        self._entity_cache = {}
+        self._relation_count = 0
+        self._load_graph()
+
     def _load_graph(self) -> None:
-        """Load entity_relation table into NetworkX graph."""
-        # Load all entities
+        """Load entity_relation table into NetworkX graph.
+
+        T-F-K-1 (ADR-009): scoped to ``self._workspace_id`` — only entities in
+        that workspace are loaded, and only relations whose both endpoints
+        belong to it (so cross-workspace edges never appear).
+        """
+        ws = self._workspace_id
+        # Load entities in this workspace
         entity_rows = self._conn.execute(
-            "SELECT uuid, name, aliases, entity_type, description FROM entity"
+            "SELECT uuid, name, aliases, entity_type, description "
+            "FROM entity WHERE workspace_id = ?",
+            (ws,),
         ).fetchall()
 
         for row in entity_rows:
@@ -57,10 +77,14 @@ class GraphTraverse:
             self._entity_cache[entity.uuid] = entity
             self._graph.add_node(entity.uuid, entity=entity)
 
-        # Load all relations as edges
+        # Load relations whose both endpoints are in this workspace
         edge_rows = self._conn.execute(
-            """SELECT source_uuid, target_uuid, relation_type, weight
-               FROM entity_relation"""
+            """SELECT er.source_uuid, er.target_uuid, er.relation_type, er.weight
+               FROM entity_relation er
+               JOIN entity s ON s.uuid = er.source_uuid
+               JOIN entity t ON t.uuid = er.target_uuid
+               WHERE s.workspace_id = ? AND t.workspace_id = ?""",
+            (ws, ws),
         ).fetchall()
 
         for row in edge_rows:
@@ -245,14 +269,15 @@ class GraphTraverse:
             if name.lower() in [a.lower() for a in entity.aliases]:
                 return entity
 
-        # If not in cache, query database directly
+        # If not in cache, query database directly (T-F-K-1: scoped to ws)
         row = self._conn.execute(
             """SELECT uuid, name, aliases, entity_type, description
                FROM entity
-               WHERE LOWER(name) = ?
-                  OR (aliases IS NOT NULL AND aliases LIKE ?)
+               WHERE (LOWER(name) = ?
+                  OR (aliases IS NOT NULL AND aliases LIKE ?))
+                  AND workspace_id = ?
                LIMIT 1""",
-            (name.lower(), f'%"{name.lower()}"%'),
+            (name.lower(), f'%"{name.lower()}"%', self._workspace_id),
         ).fetchone()
 
         if row:

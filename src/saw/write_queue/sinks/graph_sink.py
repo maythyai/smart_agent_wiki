@@ -44,14 +44,15 @@ class GraphSink:
             if node_type == "entity" or "entity" in payload:
                 entity = payload.get("entity") if "entity" in payload else payload
                 self._conn.execute(
-                    """INSERT OR IGNORE INTO entity (uuid, name, aliases, entity_type, description)
-                       VALUES (?, ?, ?, ?, ?)""",
+                    """INSERT OR IGNORE INTO entity (uuid, name, aliases, entity_type, description, workspace_id)
+                       VALUES (?, ?, ?, ?, ?, ?)""",
                     (
                         entity.get("uuid", op.op_id),
                         entity.get("name", ""),
                         json.dumps(entity.get("aliases", [])),
                         entity.get("entity_type", "unknown"),
                         entity.get("description", ""),
+                        entity.get("workspace_id", "default"),
                     ),
                 )
 

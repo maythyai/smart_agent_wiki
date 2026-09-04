@@ -60,6 +60,10 @@ class ContextCompiler:
         self._conn = conn
         self._workspace_id = workspace_id
 
+    def set_workspace_id(self, workspace_id: str) -> None:
+        """Set the workspace scope (T-F-K-2: public, replaces private setattr)."""
+        self._workspace_id = workspace_id
+
     def compile(
         self,
         question: str,

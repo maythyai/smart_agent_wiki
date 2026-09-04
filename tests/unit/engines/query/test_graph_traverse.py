@@ -22,6 +22,7 @@ def in_memory_db() -> sqlite3.Connection:
             aliases TEXT NOT NULL DEFAULT '[]',
             entity_type TEXT NOT NULL,
             description TEXT,
+            workspace_id TEXT NOT NULL DEFAULT 'default',
             created_at TEXT NOT NULL DEFAULT (datetime('now'))
         )
     """)

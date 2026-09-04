@@ -308,6 +308,26 @@ def _add_workspace_isolation(conn: sqlite3.Connection) -> None:
 
 _register(8, _add_workspace_isolation)
 
+
+# v9: entity workspace isolation (T-F-K-1, ADR-009). Mirror the claim
+# workspace_id column onto the `entity` table so graph_traverse can filter
+# the knowledge graph per workspace. Existing entities default to 'default'
+# (backward compatible). entity_relation is NOT given a column — relations
+# are filtered by joining both endpoints to entities in the same workspace.
+def _add_entity_workspace(conn: sqlite3.Connection) -> None:
+    cols = {r[1] for r in conn.execute("PRAGMA table_info(entity)")}
+    if "workspace_id" not in cols:
+        conn.execute(
+            "ALTER TABLE entity ADD COLUMN workspace_id TEXT NOT NULL DEFAULT 'default'"
+        )
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_entity_workspace "
+        "ON entity(workspace_id)"
+    )
+
+
+_register(9, _add_entity_workspace)
+
 # ── Public API ────────────────────────────────────────────────────────
 
 TARGET_VERSION = max(v for v, _ in _MIGRATIONS) if _MIGRATIONS else 1

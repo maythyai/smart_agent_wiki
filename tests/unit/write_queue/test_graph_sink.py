@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS entity (
     aliases TEXT NOT NULL DEFAULT '[]',
     entity_type TEXT NOT NULL,
     description TEXT,
+    workspace_id TEXT NOT NULL DEFAULT 'default',
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE TABLE IF NOT EXISTS entity_relation (

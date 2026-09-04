@@ -68,6 +68,10 @@ class TreeModeSearch:
         self._workspace_id = workspace_id
         self._heading_cache: dict[str, HeadingNode] = {}
 
+    def set_workspace_id(self, workspace_id: str) -> None:
+        """Set the workspace scope (T-F-K-2: public, replaces private setattr)."""
+        self._workspace_id = workspace_id
+
     def search(self, query: str, limit: int = 10) -> list[SectionPath]:
         """Execute tree mode search.
 

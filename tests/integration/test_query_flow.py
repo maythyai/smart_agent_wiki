@@ -72,6 +72,10 @@ def populated_db(temp_wiki: Path) -> sqlite3.Connection:
 
     # Create schema - use the authoritative production schema directly
     conn.executescript(CLAIMS_DB_SCHEMA)
+    # T-F-K-1: bring the entity/claim tables up to migration v9 so they
+    # carry workspace_id (graph_traverse filters on it).
+    from saw.db.migrations import apply_migrations
+    apply_migrations(conn)
 
     # Insert test claims - order must match schema columns
     claims = [

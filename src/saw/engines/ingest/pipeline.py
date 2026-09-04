@@ -245,6 +245,10 @@ class IngestPipeline:
         # the ClaimsSink persists workspace_id (insert now writes the column).
         for _c in validated.valid_claims:
             _c.workspace_id = workspace_id
+        # T-F-K-1 (ADR-009): stamp entities too so GraphSink persists the
+        # workspace_id column (entity graph isolation).
+        for _e in validated.valid_entities:
+            _e.workspace_id = workspace_id
         # 6. Build WriteOp list for all sinks
         ops = self._build_write_ops(
             session_id=session_id,
@@ -404,6 +408,7 @@ class IngestPipeline:
                     "uuid": entity.uuid,
                     "name": entity.name,
                     "entity_type": entity.entity_type,
+                    "workspace_id": entity.workspace_id,
                 },
             ))
 

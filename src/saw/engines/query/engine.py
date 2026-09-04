@@ -84,14 +84,16 @@ class QueryEngine:
         self._wiki_repo = wiki_repo
         self._conn = conn
         self._workspace_id = workspace_id
-        # T-F-J-1: propagate the workspace scope into the sub-services so
-        # their claim lookups (get_by_id) filter by the same workspace.
-        # Best-effort: tests may pass Mocks without the attribute.
-        for _sub in (self._tree_mode, self._compiler):
-            try:
-                setattr(_sub, "_workspace_id", workspace_id)
-            except Exception:  # pragma: no cover — Mocks/foreign impls
-                pass
+        # T-F-K-2 (J3 cleanup): propagate the workspace scope into the
+        # sub-services via a public setter instead of touching their private
+        # ``_workspace_id`` attribute. Best-effort: tests may pass Mocks.
+        for _sub in (self._tree_mode, self._compiler, self._graph):
+            _setter = getattr(_sub, "set_workspace_id", None)
+            if callable(_setter):
+                try:
+                    _setter(workspace_id)
+                except Exception:  # pragma: no cover — Mocks/foreign impls
+                    pass
 
     def query(
         self,
