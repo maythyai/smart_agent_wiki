@@ -65,7 +65,32 @@ def suggest(
     src = wiki.read(resolved)
     outlinked = extract_unique_targets(src.content) | {slugify(Path(resolved).stem)}
 
-    related = compute_related_pages(resolved, wiki, top_k=top_k * 2)
+    # T-F-N-3: pass conn + workspace_id when tier=FULL so the embedding
+    # signal (weight 2.5) participates in related-page scoring.
+    conn_to_pass = None
+    workspace_id = "default"
+    try:
+        from saw.config.settings import detect_tier
+        from saw.domain.value_objects import CapabilityTier
+        import sqlite3
+        from pathlib import Path as _Path
+
+        wiki_path = _Path(path).resolve()
+        db_path = wiki_path / ".saw" / "db" / "claims.db"
+        tier = detect_tier()
+        if tier >= CapabilityTier.FULL and db_path.is_file():
+            conn_to_pass = sqlite3.connect(str(db_path))
+    except Exception:
+        pass  # degrade to 3-signal if anything goes wrong
+
+    try:
+        related = compute_related_pages(
+            resolved, wiki, top_k=top_k * 2,
+            conn=conn_to_pass, workspace_id=workspace_id,
+        )
+    finally:
+        if conn_to_pass is not None:
+            conn_to_pass.close()
     suggestions = [
         r for r in related
         if slugify(Path(r["slug"]).stem) not in outlinked
