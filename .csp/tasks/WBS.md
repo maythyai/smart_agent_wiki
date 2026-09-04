@@ -50,6 +50,9 @@
 | T-F-K-3 | SPEC-F-K-3 | synthesize 覆盖（engine+scheduler）+ fail_under 63→64 | test | M | T-F-K-1 | tests/unit/engines/synthesize/*, pyproject.toml | AC-COV-3 | test-gate |
 | T-F-L-1 | SPEC-F-L-1 | 智能链接建议 + 链接审计 bundle（saw links suggest/audit） | backend-cli | M | — | commands/links_cmd.py, main.py | AC-LINK-1, AC-LINK-2 | smart-linking |
 | T-F-L-3 | SPEC-F-L-3 | AI 摘要（saw summarize） | backend-cli | S | — | commands/summarize_cmd.py, main.py | AC-SUM-1 | smart-linking |
+| T-F-M-1 | SPEC-F-M-1 | saw workflow list（durable 历史，workflow_executions v4） | backend-cli | S | — | commands/workflow_cmd.py, main.py | AC-WF-3 | agent-viz |
+| T-F-M-2 | SPEC-F-M-2 | saw agents（6-role roster CLI） | backend-cli | S | — | commands/agents_cmd.py, main.py | AC-AG-2 | agent-viz |
+| T-F-M-3 | SPEC-F-M-3 | GET /api/v1/agents（roster REST） | backend | S | — | api/routes/collaborate.py | AC-API-1 | agent-viz |
 
 ## 汇总
 - Task：20（1:1 Spec）；类型：backend-cli×1 / test×4 / infra-ci×4 / infra-script×2 / doc×1 / test-security×3 / backend-security×2 / backend×3
