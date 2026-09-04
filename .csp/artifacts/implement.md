@@ -122,3 +122,23 @@
 - **J1（coverage 65）**：compile/compiler.py（17%）/ synthesize/scheduler.py（32%）深覆盖——v1.7.0。
 - **graph_traverse workspace 隔离**：entity 表无 workspace_id 列（需 migration）→defer v1.7.0+。
 - **resume 全量 context 快照**（I3）：v2.0。
+
+## 2026-09-04 — v1.7.0 graph 隔离 + 清理 + 覆盖（3 Task，2 Wave，Lead 单线）
+
+**范围**：F-K-1（graph workspace 隔离）/ F-K-2（scope 传播清理）/ F-K-3（synthesize 覆盖）。
+**Commits**：ec22914(Wave1 K-1+K-2) / 763e748(Wave2 K-3)。
+**测试**：1977 passed / 3 skipped / 0 failed（+18 新测试）；ruff 0；coverage 64.2%；smoke 6/6。
+
+### 决策与偏离
+- **F-K-1 graph 隔离（ADR-009）**：migration v9 给 entity 表加 workspace_id（relation 不加列——两端 JOIN entity 过滤，保图连通在 ws 内闭合）。Entity domain +workspace_id；IngestPipeline stamp entities（同 F-J-2 claims 模式）；GraphSink INSERT 带列；GraphTraverse._load_graph + _find_entity 加 WHERE workspace_id=?。QueryEngine 透传。
+- **F-K-2 scope 清理（J3）**：改 public `set_workspace_id()` 方法（tree_mode/compiler/graph）替代 setattr 私有属性。graph 的 setter 重载图（eager-load 必要）。AC-ARCH-1 lint 守（engine.py 无 setattr）。
+- **F-K-3 coverage ratchet 63→64（AC-COV-3 达）**：synthesize/engine 37→65% / scheduler 32→85%。全量 64.2%→ fail_under=64（实测 64.2，过门）。65 仍 thin（compile/compiler 17% 是最后 gap → finding K1 defer v1.8.0）。
+
+### CMS drift 核验
+- F-K-1：entity/entity_relation 表无 workspace_id（claims_repository.py:73/83）→ migration v9 补；graph_traverse._load_graph 全量载（graph_traverse.py:46）+ _find_entity 直查 DB 无 ws 过滤 → 补 WHERE；GraphSink INSERT 无 ws 列（graph_sink.py:47）→ 补；Entity domain 无 ws 字段（domain/entities.py:8）→ 补。
+- F-K-2：v1.6.0 QueryEngine setattr 块（engine.py __init__）→ 改 set_workspace_id 调用。
+
+### Deferred / [TBD]
+- **K1（coverage 65）**：compile/compiler.py 17% 深覆盖——v1.8.0（复杂编译器，高成本）。
+- **per-request workspace 注入（web 路径）**：QueryEngine 仍 startup 单例 default ws；graph/tree/compiler 的 scope 是引擎级，非请求级。请求级 ws 注入（request context → engine）留后续架构演进。
+- **entity_relation workspace_id 冗余列**：本轮用两端 JOIN 过滤，未加列（避免冗余）。
