@@ -2,7 +2,7 @@
 id: ROADMAP
 project: smart-agent-wiki
 version: 1.1
-last_updated: 2026-09-04
+last_updated: 2026-09-05
 status: active
 tracks: [core-trust, platform-team, ecosystem-integration, intelligence-adaptation]
 north_star: trustworthy-claim coverage
@@ -33,7 +33,7 @@ see_also: docs/strategy/STRATEGY.md | docs/prd/PRD-INDEX.md | .csp/review/REVIEW
 
 | 载体 | 现状 | 规则 |
 |---|---|---|
-| `pyproject.toml`（Python 包） | `1.10.0` | **canonical 真源**。下一个发布 = `v1.11.0`（债务收口 IV / bug fix，MINOR） |
+| `pyproject.toml`（Python 包） | `1.11.0` | **canonical 真源**。下一个发布 = `v1.12.0`（待 07 复盘后决策，MINOR） |
 | git tags `v1.0.1` … `v1.9.0` | 全部 SemVer annotated，与 pyproject 一致 | 保留，对外发布基线 |
 | git tags `v3.4.0` / `v3.7.0` | 历史 internal sprint 里程碑号 | 重新定性为**内部 milestone label**（见 1.3），不作为对外发布版本；不可变，不移动/删除 |
 | `desktop/`（tauri.conf.json + package.json） | `0.1.0` | 桌面端**未达 1.0**，独立 0.x 跟踪至稳定；达 v1.0 后与 canonical 对齐 |
@@ -52,7 +52,7 @@ see_also: docs/strategy/STRATEGY.md | docs/prd/PRD-INDEX.md | .csp/review/REVIEW
 | `v3.7` | v1.2.0 | released |
 | `v3.8` | v1.3.0 | released |
 | `v4.0` | v1.10.0 | released |
-| `v4.1` | v1.11.0（下一周期） | in-progress（01-prd） |
+| `v4.1` | v1.11.0 | released |
 
 > lifecycle-state `next_cycle: v1.11.0`。复盘引用的 `v4.2`(embedding) / `v4.3`(realtime 仪表盘) / `v4.4`(desktop) 是**内部候选主题标记**，**不是 SemVer 发布号**——仅作 backlog 索引，实际发布号按 1.1 规则从 v1.10.0 续编。v1.10.0 已采纳 v4.2(embedding) 候选；v1.11.0 采纳"清债/修 bug"候选（N7/N2·K1/M3/N5/N6）。
 
@@ -184,7 +184,7 @@ canonical = `pyproject.toml`。发布时以下必须与之一致，用脚本校�
 
 > v2.0.0（MAJOR）推迟到出现真实 breaking API 变更/范式跃迁时再 bump；当前 v1.x 序列继续 additive 逼近。
 
-### v1.11.0 — 债务收口 IV / bug fix（status: in-progress, 03-tech done → 04-tasks）
+### v1.11.0 — 债务收口 IV / bug fix（status: released, 2026-09-05, @5fca85b）
 
 > core-trust track。采纳 07 复盘"清债/修 bug"候选（内部 milestone v4.1）。**additive**——bug fix + 测试覆盖 + 行为统一，无 breaking API 变更 → MINOR。
 
@@ -230,7 +230,7 @@ canonical = `pyproject.toml`。发布时以下必须与之一致，用脚本校�
 | v1.8.0 | Smart Linking + AI Summarization | intelligence-adaptation | released |
 | v1.9.0 | Agent & Workflow 可视化 | intelligence-adaptation | released (2026-09-04) |
 | v1.10.0 | embedding 语义搜索 | intelligence-adaptation | released (2026-09-04) |
-| v1.11.0 | 债务收口 IV / bug fix（N7 cache + K1 coverage + M3 + N5/N6） | core-trust | in-progress (01-prd) |
+| v1.11.0 | 债务收口 IV / bug fix（N7 cache + K1 coverage + M3 + N5/N6） | core-trust | released (2026-09-05) |
 
 ## 3. 3 年路径（大版本里程碑）
 
@@ -255,7 +255,7 @@ SAW 的终局是**AI agent 与人类共用的、可验证、可溯源、可治�
 
 ## 5. 衔接声明
 
-- **01 PRD** 读本文件定位本版本主题；PRD front-matter 标 `roadmap_ref: ROADMAP` + `target_version`（如 v1.10.0）。v1.10.0 周期已闭环（released 2026-09-04），主题 = embedding 语义搜索。下一周期 v1.11.0 待 07 复盘后决策。
-- **06 release** 用「版本号规则」节（SemVer/Tag/预发布/多平台一致性），不另立方案。v1.10.0 为 additive → 发 MINOR，不强行 MAJOR。
+- **01 PRD** 读本文件定位本版本主题；PRD front-matter 标 `roadmap_ref: ROADMAP` + `target_version`（如 v1.11.0）。v1.11.0 周期已闭环（released 2026-09-05），主题 = 债务收口 IV / bug fix。下一周期 v1.12.0 待 07 复盘后决策。
+- **06 release** 用「版本号规则」节（SemVer/Tag/预发布/多平台一致性），不另立方案。v1.11.0 为 additive → 发 MINOR，不强行 MAJOR。
 - **07 复盘** findings（status=open/deferred）回流更新本文件下一版本主题与版本-主题表 status（planned→in-progress→shipped→deferred）。当前回流 findings：M1/M2/M3 + K1/K2 + L1-L3。
 - **lifecycle**：读 `.csp/lifecycle-state.json` 对齐在跑版本；本文件不写 lifecycle（外环）。

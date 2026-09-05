@@ -1,0 +1,73 @@
+feature:
+  id: "F-O-2"
+  name: "compile/compiler.py 深覆盖（30 函数 17%→高，fail_under 64→65）"
+  domain: "debt-closure"
+  prd_ref: "docs/prd/PRD-debt-closure-v1.11.0.md#3.2"
+  pms_module: "debt-closure"
+  user_story: "作为项目维护者，我想 compile/compiler.py 的 30 个函数有测试覆盖，以便 coverage 北极星 65 达成、最后洼地填平。"
+  acceptance_criteria:
+    - "Given tests/unit/engines/compile/ 测试目录新建, when 运行 pytest --cov=saw.engines.compile.compiler, then compiler.py 覆盖率显著提升（17%→[TBD]），全量 coverage ≥65%（AC-COV-1）"
+    - "Given pyproject.toml [tool.coverage.report], when 检查 fail_under 值, then =65（AC-COV-2）"
+  scope:
+    includes:
+      - "新建 tests/unit/engines/compile/ 测试目录"
+      - "覆盖 compiler.py 30 个函数（compiler.py:67-658）：_content_hash(L282) / _scan_vault_sources(L297) / _classify_sources_by_topic(L316) / _infer_topic(L324) / _ensure_topic_directories(L337) / _detect_page_type(L393) / _assess_confidence(L407) / _compile_content(L419) / _rule_based_compile(L443) / _llm_synthesize(L461) / _extract_title(L497) / _slugify(L504) / _write_page(L511) / _update_index_entry(L534) / _update_index_header(L555) / _cascade_update(L570) / _append_log(L600) / _parse_index(L608) / _parse_index_row(L614) / _parse_page(L620) / _parse_log(L626) / _render_empty_index(L632) / _render_index(L638) / _render_log_header(L658)"
+      - "优先覆盖高价值路径：_compile_content / _cascade_update / _render_index"
+      - "mock LLM 路径（_llm_synthesize）测规则路径 + LLM 路径降级"
+      - "seed 多页 + 触发 _cascade_update 级联 → 断言索引更新"
+      - "pyproject.toml fail_under 从 64 提升到 65"
+    excludes:
+      - "compiler.py 实现代码改动（仅加测试，不改实现）"
+      - "其他引擎模块的覆盖（仅 compile/compiler.py）"
+      - "embedding 相关测试（不依赖 [learn] extra）"
+  frontend: {pages: [], components: [], interactions: []}
+  backend:
+    endpoints: []
+    business_logic:
+      - "新建 tests/unit/engines/compile/test_compiler.py（或按函数聚类拆多文件）"
+      - "覆盖 24 个函数的 rule-based 路径（_rule_based_compile / _compile_content / _cascade_update / _render_index / _parse_* / _render_*）"
+      - "mock LLM 测 _llm_synthesize 路径 + 降级到 rule-based"
+      - "seed 多页 + 触发 _cascade_update → 断言 index 更新级联"
+      - "pyproject.toml [tool.coverage.report] fail_under = 65"
+    integrations:
+      - "compiler.py（既有实现，仅加测试）"
+      - "pyproject.toml coverage 配置（修改 fail_under）"
+  data_entities:
+    - "compiler 测试 fixture（临时 vault 目录 + seed claim/wiki 页面）"
+  data_operations:
+    - "test_compile_content（编译内容路径测试）"
+    - "test_cascade_update（级联索引更新测试）"
+    - "test_render_index（索引渲染测试）"
+    - "test_parse_*（解析函数测试）"
+    - "test_llm_synthesize_mock（LLM 路径 mock 测试）"
+  tech_dimensions:
+    needs_database: false
+    needs_cache: false
+    needs_queue: false
+    needs_ai: false
+    needs_vector_store: false
+    needs_realtime: false
+    needs_file_storage: true
+    needs_search: false
+    needs_scheduler: false
+    needs_notification: false
+  nfr:
+    performance: "测试执行时间不显著增加（mock LLM，不依赖外部服务）"
+    security: "测试使用临时目录，不污染生产数据"
+    scalability: "N/A（测试基础设施）"
+    availability: "N/A（测试基础设施）"
+  priority: "P0"
+  complexity: "L"
+  depends_on: []
+  blocked_by: []
+  risks:
+    - "compile/compiler.py 深覆盖成本高（复杂编译器，30 函数）——优先覆盖高价值路径（_compile_content/_cascade_update/_render_index），剩余标 P2 续留"
+    - "_llm_synthesize 依赖 LLM 须 mock——mock 返回测规则路径 + LLM 路径降级"
+    - "_cascade_update 递归更新逻辑复杂——seed 多页 + 触发级联断言"
+    - "coverage 65 目标可能差 ~1pp——须覆盖足够函数拖动全量"
+  assumptions:
+    - "compiler.py 30 个函数均可通过 mock + fixture 测试（不依赖真实 LLM）"
+    - "coverage 17%→65% 的全量提升仅靠 compiler.py 深覆盖即可达成（PRD §3.2 假设）"
+    - "测试不依赖 [learn] extra（compiler 不涉及 embedding）"
+    - "剩余未覆盖函数标 P2 续留（PRD §8 风险缓解）"
+    - "compiler.py 覆盖率目标值 [TBD]——PRD §6 AC-COV-1 标 [TBD]，须实施后测量"
