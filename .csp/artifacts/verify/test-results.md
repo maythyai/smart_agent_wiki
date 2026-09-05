@@ -83,3 +83,19 @@ AC-LINK-2) pass unconditionally via mock.
 | T-F-O-4 (Spec naming + hash) | 0f0e82e | AC-SPEC-1/2, AC-HASH-1 | 4 (test_spec_naming.py + test_hash_consistency.py) |
 
 **Verdict**: All gates green. 2064 passed, ruff 0, coverage 65.36% ≥ 65, smoke 6/6.
+
+---
+
+## 06-Ship Verification (2026-09-05)
+
+| Gate | Command | Result | Status |
+|---|---|---|---|
+| pytest | `.venv/bin/python -m pytest tests/ -q` | 2064 passed, 6 skipped, 0 failed (102.83s) | PASS |
+| ruff | `.venv/bin/ruff check src/ tests/` | All checks passed! (0 errors) | PASS |
+| coverage | `.venv/bin/python -m pytest tests/ -q --cov=src/saw --cov-fail-under=65` | 65.36% (fail_under=65 ✓) | PASS |
+| smoke | `.venv/bin/saw smoke` | 6/6 passed (skeleton.import, skeleton.console, ingest.compile, query.keyword, govern.learn, offline.fallback) | PASS |
+| wheel build | `uv build` | dist/smart_agent_wiki-1.11.0-py3-none-any.whl (822KB) + sdist (2.6MB) | PASS |
+| version | `pyproject.toml [project].version` | 1.11.0 (bumped from 1.10.0) | PASS |
+| multi-platform | desktop 0.1.0 / web 0.1.0 | independent 0.x (pre-1.0, per §1.2 rules — OK) | PASS |
+
+**Verdict**: All gates green. Code is finalized. Proceeding to reconcile + local tag.
