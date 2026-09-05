@@ -71,9 +71,10 @@ def test_fsrs_skips_without_sdk() -> None:
     )
 
 
-def test_embedding_tests_importorskip() -> None:
-    """AC-TEST-3 (F-N-4): embedding test files guard their sentence_transformers
-    import with importorskip so CI (without [learn]) skips, not fails."""
+def test_embedding_tests_no_importorskip() -> None:
+    """AC-TEST-2 (F-Q-4): embedding test files no longer use
+    ``pytest.importorskip("sentence_transformers")`` — they mock
+    litellm.embedding instead so CI runs them without the [learn] extra."""
     _root = Path(__file__).resolve().parents[2]
     embedding_test_files = [
         "tests/unit/test_embedding_index.py",
@@ -82,8 +83,11 @@ def test_embedding_tests_importorskip() -> None:
     ]
     for f in embedding_test_files:
         src = (_root / f).read_text()
-        assert "importorskip" in src and "sentence_transformers" in src, (
-            f"{f} does not importorskip sentence_transformers"
+        assert "pytest.importorskip" not in src, (
+            f"{f} still uses pytest.importorskip — should mock litellm.embedding instead"
+        )
+        assert "litellm" in src or "mock" in src.lower(), (
+            f"{f} should mock litellm.embedding (no pytest.importorskip)"
         )
 
 

@@ -200,7 +200,7 @@ def rebuild_embeddings(
     conn = sqlite3.connect(str(db_path))
     apply_migrations(conn)
     try:
-        from saw.adapters.embeddings import _current_model_name, embeddings_available, embed_texts
+        from saw.adapters.embeddings import embeddings_available, embed_texts
 
         if not embeddings_available():
             console.print(
