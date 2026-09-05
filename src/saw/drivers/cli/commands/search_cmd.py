@@ -200,12 +200,14 @@ def rebuild_embeddings(
     conn = sqlite3.connect(str(db_path))
     apply_migrations(conn)
     try:
-        from saw.adapters.embeddings import embeddings_available, embed_texts
+        from saw.adapters.embeddings import _current_model_name, embeddings_available, embed_texts
 
         if not embeddings_available():
             console.print(
-                "[yellow]Embeddings unavailable. Install the [learn] extra:[/yellow]\n"
-                "  pip install -e \".[learn]\""
+                "[yellow]Embeddings unavailable. Configure the embedding API "
+                "or install the [learn] extra:[/yellow]\n"
+                "  Set SAW_EMBEDDING_MODEL + EMBEDDING_API_KEY env vars, or\n"
+                "  pip install -e \".[learn]\"  (local ST fallback)"
             )
             raise typer.Exit(code=0)
 
@@ -280,8 +282,11 @@ def _upsert_embedding(
     workspace_id: str,
 ) -> None:
     """Upsert a single embedding vector (DELETE + INSERT)."""
+    from saw.adapters.embeddings import _current_model_name
+
     dim = len(vec)
     blob = struct.pack(f"<{dim}f", *vec)
+    model_name = _current_model_name()
     conn.execute(
         "DELETE FROM embedding_store WHERE doc_id = ? AND workspace_id = ?",
         (doc_id, workspace_id),
@@ -290,7 +295,7 @@ def _upsert_embedding(
         """INSERT INTO embedding_store
            (doc_id, entity_type, model, vector, dim, workspace_id)
            VALUES (?, ?, ?, ?, ?, ?)""",
-        (doc_id, entity_type, "all-MiniLM-L6-v2", blob, dim, workspace_id),
+        (doc_id, entity_type, model_name, blob, dim, workspace_id),
     )
 
 

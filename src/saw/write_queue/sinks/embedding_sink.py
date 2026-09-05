@@ -15,7 +15,7 @@ import logging
 import sqlite3
 import struct
 
-from saw.adapters.embeddings import embed_texts, embeddings_available
+from saw.adapters.embeddings import _current_model_name, embed_texts, embeddings_available
 
 logger = logging.getLogger(__name__)
 
@@ -56,6 +56,7 @@ class EmbeddingSink:
         vec = vecs[0]
         dim = len(vec)
         blob = struct.pack(f"<{dim}f", *vec)
+        model_name = _current_model_name()
 
         # Upsert (DELETE + INSERT pattern, same as FTS5Sink)
         self._conn.execute(
@@ -66,7 +67,7 @@ class EmbeddingSink:
             """INSERT INTO embedding_store
                (doc_id, entity_type, model, vector, dim, workspace_id)
                VALUES (?, ?, ?, ?, ?, ?)""",
-            (doc_id, entity_type, "all-MiniLM-L6-v2", blob, dim, workspace_id),
+            (doc_id, entity_type, model_name, blob, dim, workspace_id),
         )
 
     def can_handle(self, sink_name: str) -> bool:
