@@ -465,6 +465,9 @@ class QueryEngine:
         index empty, with ``semantic_fallback`` / ``index_empty`` meta flags.
 
         Per SPEC-F-N-2 + ADR-010: parallel mode (not fused with BM25).
+        Per SPEC-F-O-1 / ADR-011: reuses the F-QS-07 ``QueryCache`` singleton
+        with ``mode="semantic"`` key isolation (TTL 300s, cleared on ingest /
+        rebuild). Fallback and empty-index results are NOT cached.
         """
         import struct
 
@@ -473,6 +476,23 @@ class QueryEngine:
             embed_texts,
             embeddings_available,
         )
+
+        # F-O-1: serve from the query cache before doing any embedding work.
+        # Reuses the same ``get_cache()`` singleton as ``_keyword_search``
+        # (F-QS-07); ``mode="semantic"`` in params ensures the SHA256 key
+        # is distinct from the ``mode="search"`` keyspace.
+        from saw.engines.query.cache import get_cache
+
+        _cache = get_cache()
+        _cache_params = {
+            "limit": limit,
+            "offset": offset,
+            "mode": "semantic",
+            "workspace_id": self._workspace_id,
+        }
+        _cached = _cache.get(question, _cache_params)
+        if _cached is not None:
+            return _cached
 
         # 1. Tier check: degrade to BM25 if embeddings unavailable
         if not embeddings_available():
@@ -544,7 +564,7 @@ class QueryEngine:
                         "tags": list(getattr(page, "tags", []) or []),
                     })
 
-        return QueryResult(
+        _qr = QueryResult(
             answer=(
                 f"Found {len(sources)} semantic results for '{question}':\n"
                 + "\n".join(
@@ -563,6 +583,13 @@ class QueryEngine:
                 "semantic_fallback": False,
             },
         )
+        # F-O-1: cache the result (TTL-bounded; cleared on ingest / rebuild).
+        # Mirrors the ``_keyword_search`` cache.set pattern (L299-300).
+        try:
+            _cache.set(question, _cache_params, _qr)
+        except Exception as cache_exc:  # pragma: no cover — best-effort
+            logger.warning("semantic cache write failed: %s", cache_exc)
+        return _qr
 
     def _get_query_prompt(self) -> str:
         """Load query system prompt from YAML.

@@ -255,6 +255,11 @@ def rebuild_embeddings(
             count += 1
 
         conn.commit()
+        # F-O-1: invalidate the query cache so stale semantic / keyword
+        # results are not served after the embedding index is rebuilt.
+        from saw.engines.query.cache import get_cache
+
+        get_cache().clear()
         console.print(f"[green]Rebuilt {count} embedding vectors.[/green]")
         raise typer.Exit(code=0)
     finally:
