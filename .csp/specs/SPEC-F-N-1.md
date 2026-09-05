@@ -24,7 +24,7 @@ related_tasks: [T-F-N-1]
 - **EmbeddingSink**（`src/saw/write_queue/sinks/embedding_sink.py`，新建）：参照 `fts5_sink.py` 范式（`write(op)` + `can_handle(sink_name)` + `name` property）。
 - **复用** `embeddings.py::embed_texts()`（`src/saw/adapters/embeddings.py:41-57`）生成向量，`embeddings_available()` 检测可用性。
 - **复用** `config/settings.py::detect_tier()`（`src/saw/config/settings.py:115-120`）检测 FULL tier。
-- **重建命令**：`saw search rebuild-embeddings`（新增 CLI 子命令，参照 `learn_cmd.py` 的 `_open_db` + Typer app 范式）。
+- **重建命令**：`saw rebuild-embeddings`（新增 CLI 顶层命令，参照 `learn_cmd.py` 的 `_open_db` + Typer app 范式）。
 
 ## 数据库 Schema（DDL 级）
 
@@ -130,7 +130,7 @@ class EmbeddingSink:
 
 在 IngestPipeline `_build_write_ops`（`pipeline.py:310`）中，当 `embeddings_available()` 为 True 时，为每个 claim/wiki write op 追加一个 `sink_name="embedding"` 的 op 条目（参照 fts5 sink 的 op 生成模式）。
 
-### 重建命令（`saw search rebuild-embeddings`）
+### 重建命令（`saw rebuild-embeddings`）
 
 新增 CLI 子命令，参照 `learn_cmd.py::_open_db` + Typer app 范式：
 
@@ -186,7 +186,7 @@ def rebuild_embeddings(path: str = typer.Option(".", "--path", "-p")):
 ### CLI
 
 ```
-saw search rebuild-embeddings [--path DIR]
+saw rebuild-embeddings [--path DIR]
 ```
 
 - **参数**：`--path` wiki 目录路径（默认 `.`）。
