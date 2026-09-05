@@ -1,8 +1,10 @@
 """Degradation tests for embedding features (F-N-4, AC-EMB-2 / AC-SEM-2 / AC-LINK-2).
 
-These tests do NOT use importorskip — they mock ``embeddings_available()``
-to False, simulating tier < FULL, and verify graceful degradation without
-needing the real ``sentence_transformers`` package.
+v1.12.0 (F-Q-4): extended to mock both API unavailable AND ST unavailable
+scenarios. These tests do NOT use importorskip — they mock
+``embeddings_available()`` to False, simulating tier < FULL, and verify
+graceful degradation without needing the real ``sentence_transformers``
+package.
 """
 from __future__ import annotations
 
@@ -20,9 +22,39 @@ def _make_db() -> sqlite3.Connection:
     return conn
 
 
+def _patch_embeddings_unavailable():
+    """Context manager that patches embeddings_available=False everywhere.
+
+    Patches both the embeddings module and the embedding_sink module to
+    ensure the mock reaches all call sites (module-level imports in
+    embedding_sink.py, lazy imports in engine.py/related_pages.py).
+    Also patches _st_available and _api_embedding_available to prevent
+    any torch/sentence_transformers import or API call.
+    """
+    from contextlib import ExitStack
+
+    stack = ExitStack()
+    stack.enter_context(
+        patch("saw.adapters.embeddings.embeddings_available", return_value=False)
+    )
+    stack.enter_context(
+        patch("saw.adapters.embeddings._st_available", return_value=False)
+    )
+    stack.enter_context(
+        patch("saw.adapters.embeddings._api_embedding_available", return_value=False)
+    )
+    stack.enter_context(
+        patch("saw.write_queue.sinks.embedding_sink.embeddings_available", return_value=False)
+    )
+    return stack
+
+
 def test_emb_ac2_no_learn_no_error():
     """AC-EMB-2: tier=LIGHTWEIGHT → EmbeddingSink.write() skips silently,
-    embedding_store stays empty, no exception."""
+    embedding_store stays empty, no exception.
+
+    v1.12.0: mocks both API unavailable AND ST unavailable.
+    """
     from saw.write_queue.sinks.embedding_sink import EmbeddingSink
     from saw.write_queue.queue import WriteOp
 
@@ -40,9 +72,7 @@ def test_emb_ac2_no_learn_no_error():
             "workspace_id": "default",
         },
     )
-    with patch(
-        "saw.adapters.embeddings.embeddings_available", return_value=False
-    ):
+    with _patch_embeddings_unavailable():
         sink.write(op)  # should not raise
 
     count = conn.execute(
@@ -53,7 +83,10 @@ def test_emb_ac2_no_learn_no_error():
 
 def test_sem_ac2_degrades_to_bm25():
     """AC-SEM-2: semantic search with no embeddings → degrades to BM25
-    with semantic_fallback=True in meta."""
+    with semantic_fallback=True in meta.
+
+    v1.12.0: mocks both API unavailable AND ST unavailable.
+    """
     from saw.adapters.storage.claims_repository import SQLiteClaimsRepository
     from saw.engines.query.compare import CompareEngine
     from saw.engines.query.compiler import ContextCompiler
@@ -87,9 +120,7 @@ def test_sem_ac2_degrades_to_bm25():
         conn=conn,
     )
 
-    with patch(
-        "saw.adapters.embeddings.embeddings_available", return_value=False
-    ):
+    with _patch_embeddings_unavailable():
         result = engine.query(
             question="machine learning", mode="semantic", limit=10
         )
@@ -101,7 +132,10 @@ def test_sem_ac2_degrades_to_bm25():
 def test_link_ac2_no_learn_keeps_3signal():
     """AC-LINK-2: with embeddings unavailable, compute_related_pages
     behaves identically to the 3-signal v1.8.0 path — no embedding
-    reason, no exception."""
+    reason, no exception.
+
+    v1.12.0: mocks both API unavailable AND ST unavailable.
+    """
     from saw.adapters.storage.wiki_repository import WikiRepository
     from saw.engines.query.related_pages import compute_related_pages
 
@@ -118,9 +152,7 @@ def test_link_ac2_no_learn_keeps_3signal():
 
     conn = _make_db()
 
-    with patch(
-        "saw.adapters.embeddings.embeddings_available", return_value=False
-    ):
+    with _patch_embeddings_unavailable():
         related = compute_related_pages(
             "page-a.md", wiki, top_k=8, conn=conn, workspace_id="default"
         )
@@ -136,7 +168,10 @@ def test_link_ac2_no_learn_keeps_3signal():
 
 def test_sem_ac3_empty_index_with_embeddings_unavailable():
     """When embeddings unavailable AND index empty, semantic_fallback
-    takes priority (degrades to BM25, not empty result)."""
+    takes priority (degrades to BM25, not empty result).
+
+    v1.12.0: mocks both API unavailable AND ST unavailable.
+    """
     from saw.adapters.storage.claims_repository import SQLiteClaimsRepository
     from saw.engines.query.compare import CompareEngine
     from saw.engines.query.compiler import ContextCompiler
@@ -170,9 +205,7 @@ def test_sem_ac3_empty_index_with_embeddings_unavailable():
         conn=conn,
     )
 
-    with patch(
-        "saw.adapters.embeddings.embeddings_available", return_value=False
-    ):
+    with _patch_embeddings_unavailable():
         result = engine.query(
             question="anything", mode="semantic", limit=10
         )

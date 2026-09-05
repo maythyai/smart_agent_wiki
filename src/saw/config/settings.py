@@ -41,6 +41,20 @@ class LLMSettings(BaseModel):
     enable_thinking: bool = False  # Reasoning models: disable for fast extraction
 
 
+class EmbeddingSettings(BaseModel):
+    """Embedding configuration (OpenAI-style API via litellm).
+
+    Reuses the same env-var / config pattern as LLMSettings.
+    When ``model`` is empty the embedding API is considered unconfigured
+    and the system falls back to local ST (if installed) or BM25.
+    """
+
+    model: str = ""
+    api_key: str = ""
+    api_base: str = ""
+    timeout: int = 60
+
+
 class WikiSettings(BaseModel):
     """Main wiki configuration."""
     model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -48,6 +62,7 @@ class WikiSettings(BaseModel):
     path: Path = Path(".")
     agent: str | None = None
     llm: LLMSettings = LLMSettings()
+    embedding: EmbeddingSettings = EmbeddingSettings()
 
 
 # File extension to format mapping
@@ -114,13 +129,53 @@ def _llm_available(llm: "LLMSettings | None" = None) -> bool:
 
 
 def _embeddings_available() -> bool:
-    """Check if sentence-transformers is available for local embeddings."""
+    """Check if embeddings are available (API configured OR local ST importable).
+
+    v1.12.0: API configuration is the primary path; local ST is optional fallback.
+    """
+    # API: check embedding API configuration via env vars
+    if _api_embedding_configured():
+        return True
+    # Local ST: legacy check (v1.10.0 backward compat)
     try:
         import importlib
         importlib.import_module("sentence_transformers")
         return True
     except ImportError:
         return False
+
+
+def _api_embedding_configured() -> bool:
+    """Check if embedding API is configured (model + api_key or api_base).
+
+    Reads from environment variables:
+    - SAW_EMBEDDING_MODEL / EMBEDDING_MODEL: embedding model name
+    - EMBEDDING_API_KEY / SAW_EMBEDDING_API_KEY: API key (fallback: OPENAI_API_KEY)
+    - SAW_EMBEDDING_API_BASE / OPENAI_BASE_URL: custom endpoint
+    """
+    import os
+    model = (
+        os.environ.get("SAW_EMBEDDING_MODEL")
+        or os.environ.get("EMBEDDING_MODEL", "")
+    )
+    if not model:
+        return False
+    # api_base configured → assume reachable (same as router.py _check_available)
+    api_base = (
+        os.environ.get("SAW_EMBEDDING_API_BASE")
+        or os.environ.get("OPENAI_BASE_URL", "")
+    )
+    if api_base:
+        return True
+    # Check API key (embedding-specific or fallback to OPENAI_API_KEY)
+    api_key = (
+        os.environ.get("EMBEDDING_API_KEY")
+        or os.environ.get("SAW_EMBEDDING_API_KEY")
+        or os.environ.get("OPENAI_API_KEY", "")
+    )
+    if api_key:
+        return True
+    return False
 
 
 def load_config(config_path: Path) -> WikiSettings:
