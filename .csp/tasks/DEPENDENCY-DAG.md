@@ -61,3 +61,26 @@ T-F-N-1 → T-F-N-2（2 步，最长链）
 ### v1.10.0 并行机会
 - Wave 1：T-F-N-1 独占（db migration 共享资源串行先行）。
 - Wave 2：T-F-N-2 / T-F-N-3 / T-F-N-4 全并行（3 路独立，无共享文件冲突）。
+
+---
+
+## v1.11.0 delta（债务收口 IV / bug fix track）
+
+```mermaid
+graph LR
+  O1[T-F-O-1 semantic cache]
+  O2[T-F-O-2 compile 深覆盖]
+  O3[T-F-O-3 workflow REST 统一]
+  O4[T-F-O-4 Spec 回更+hash 复核]
+```
+
+### v1.11.0 DAG 校验
+- 拓扑序无环：O1 / O2 / O3 / O4 互相独立，无依赖边 → 无回边 ✓
+- 与 decomposition DEPENDENCY-GRAPH v1.11.0 delta 一致（4 Feature 全并行，无依赖边）✓
+- 无自环、无环。若 05 重构致环 → 报错停步。
+
+### v1.11.0 关键路径
+- 无关键路径（4 Task 无依赖，全并行 1 步完成）。
+
+### v1.11.0 并行机会
+- Wave 1：T-F-O-1 / T-F-O-2 / T-F-O-3 / T-F-O-4 全并行（4 路独立，无共享文件冲突）。

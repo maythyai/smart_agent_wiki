@@ -11,7 +11,7 @@
 | observability | 统一 logger+trace_id 贯穿+健康真实 | P1 | PRD-product-hardening-v1 §3.4 | [待回填] | ready | PMS-observability.md |
 | test-gate | 核心引擎覆盖率门禁+CI 阻断 | P0 | PRD-product-hardening-v1 §3.5 | [待回填] | ready | PMS-test-gate.md |
 | intelligence-adaptation | workflow 编排/Learn 在线/Token 实测/agent 一致性 + v1.4.0 债 H1/H2/H4/H5 | P0 | PRD-intelligence-adaptation-v1.5.0 §2 | [待回填] | ready | PMS-intelligence-adaptation.md |
-| debt-closure | workspace 全路径 II + ingest 写入 + query 深覆盖 65 + policy web 端点 | P0 | PRD-debt-closure-v1.6.0 §2 | [待回填] | ready | PMS-debt-closure.md |
+| debt-closure | 债务收口模块（v1.6.0 workspace 全路径 II / v1.11.0 semantic cache + compile 深覆盖 + workflow REST 统一 + Spec 回更 + hash 复核） | P0 | PRD-debt-closure-v1.11.0 §2 | [待回填] | ready | PMS-debt-closure.md |
 | graph-workspace | graph workspace 隔离 + scope 清理 + coverage→65 | P0 | PRD-graph-workspace-v1.7.0 §2 | [待回填] | ready | PMS-graph-workspace.md |
 | smart-linking | 智能链接建议 + 链接审计 + AI 摘要 | P0 | PRD-smart-linking-v1.8.0 §2 | [待回填] | ready | PMS-smart-linking.md |
 | agent-viz | workflow 历史 + agent roster CLI + REST | P0 | PRD-agent-viz-v1.9.0 §2 | [待回填] | ready | PMS-agent-viz.md |

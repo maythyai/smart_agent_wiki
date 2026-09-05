@@ -33,7 +33,7 @@ see_also: docs/strategy/STRATEGY.md | docs/prd/PRD-INDEX.md | .csp/review/REVIEW
 
 | 载体 | 现状 | 规则 |
 |---|---|---|
-| `pyproject.toml`（Python 包） | `1.10.0` | **canonical 真源**。下一个发布 = `v1.11.0`（TBD，待 07 复盘决策） |
+| `pyproject.toml`（Python 包） | `1.10.0` | **canonical 真源**。下一个发布 = `v1.11.0`（债务收口 IV / bug fix，MINOR） |
 | git tags `v1.0.1` … `v1.9.0` | 全部 SemVer annotated，与 pyproject 一致 | 保留，对外发布基线 |
 | git tags `v3.4.0` / `v3.7.0` | 历史 internal sprint 里程碑号 | 重新定性为**内部 milestone label**（见 1.3），不作为对外发布版本；不可变，不移动/删除 |
 | `desktop/`（tauri.conf.json + package.json） | `0.1.0` | 桌面端**未达 1.0**，独立 0.x 跟踪至稳定；达 v1.0 后与 canonical 对齐 |
@@ -52,8 +52,9 @@ see_also: docs/strategy/STRATEGY.md | docs/prd/PRD-INDEX.md | .csp/review/REVIEW
 | `v3.7` | v1.2.0 | released |
 | `v3.8` | v1.3.0 | released |
 | `v4.0` | v1.10.0 | released |
+| `v4.1` | v1.11.0（下一周期） | in-progress（01-prd） |
 
-> lifecycle-state `next_cycle: v1.10.0`。复盘引用的 `v4.2`(embedding) / `v4.3`(realtime 仪表盘) / `v4.4`(desktop) 是**内部候选主题标记**，**不是 SemVer 发布号**——仅作 backlog 索引，实际发布号按 1.1 规则从 v1.9.0 续编。v1.10.0 已采纳 v4.2(embedding) 候选。
+> lifecycle-state `next_cycle: v1.11.0`。复盘引用的 `v4.2`(embedding) / `v4.3`(realtime 仪表盘) / `v4.4`(desktop) 是**内部候选主题标记**，**不是 SemVer 发布号**——仅作 backlog 索引，实际发布号按 1.1 规则从 v1.10.0 续编。v1.10.0 已采纳 v4.2(embedding) 候选；v1.11.0 采纳"清债/修 bug"候选（N7/N2·K1/M3/N5/N6）。
 
 ### 1.4 Tag 规则
 
@@ -166,7 +167,7 @@ canonical = `pyproject.toml`。发布时以下必须与之一致，用脚本校�
 - **成功指标**：1987 passed；coverage 64.2%（fail_under=64 持）。
 - **07 回流**：M1(embedding 语义搜索 defer，须用户确认装 SDK) / M2(agent "最近活动"未聚合) / M3(CLI list vs REST 语义双重) → v2.0.0。
 
-### v1.10.0 — embedding 语义搜索（status: released, 2026-09-04, @20b95f8）
+### v1.10.0 — embedding 语义搜索（status: released, 2026-09-04, @3865c75）
 
 > intelligence-adaptation track。采纳内部候选 v4.2。**additive**——按 1.1 规则发 MINOR，不强行 MAJOR（无 breaking API 变更）。
 
@@ -183,6 +184,37 @@ canonical = `pyproject.toml`。发布时以下必须与之一致，用脚本校�
 
 > v2.0.0（MAJOR）推迟到出现真实 breaking API 变更/范式跃迁时再 bump；当前 v1.x 序列继续 additive 逼近。
 
+### v1.11.0 — 债务收口 IV / bug fix（status: in-progress, 03-tech done → 04-tasks）
+
+> core-trust track。采纳 07 复盘"清债/修 bug"候选（内部 milestone v4.1）。**additive**——bug fix + 测试覆盖 + 行为统一，无 breaking API 变更 → MINOR。
+
+- **目标**：收敛 v1.10.0 及累积的可修缺陷（不引入新能力、不需 SDK），把 coverage 棘轮推进到 65，统一既有行为语义。
+- **关键功能（摘要级，源自 07 findings）**：
+  1. **N7** semantic search 走 query cache（复用 F-QS-07 cache 路径，query-text→embedding→results，TTL + 索引变更失效）——修 v1.10.0 新引入的 perf bug
+  2. **N2/K1** compile/compiler.py 17% → 深覆盖（拖 6 轮的最后 coverage 洼地），fail_under 64→65
+  3. **M3** CLI `saw workflow list` vs REST `/workflows` 语义双重——统一 REST 读 DB（merge live + durable）消歧
+  4. **N5** SPEC-F-N-1 命令名回更（`saw rebuild-embeddings` 实现偏离 Spec，回更 Spec）
+  5. **N6** tag hash 一致性复核（ROADMAP/lifecycle = @3865c75）
+- **价值描述**：用户价值——semantic 重复查询变快、workflow list 语义一致；业务价值——coverage 65 北极星达成，技术债收敛。
+- **成功指标**：semantic cache 命中率 `[TBD]`；coverage ≥65%（fail_under 65）；REST/CLI workflow 语义一致；1993+ passed；ruff 0。
+- **前置依赖**：v1.10.0 基线。**不需** `[learn]` extra（N1/N4 embedding E2E/benchmark 续留，须用户装 SDK）。
+- **07 回流**：N7 + N2/K1 + M3 + N5 + N6。续留：N1(embedding E2E) / N3(K2 per-request ws) / N4(benchmark) / M2 / L2。
+
+### 下一版本候选（07 复盘回流，待下一轮 01 决策）
+
+> v1.10.0 周期闭环 2026-09-04（07-retro done，retrospective-v1.10.0.md）。以下为候选主题，**不定论**，供下一轮 01 PRD 决策。
+
+| 候选 | findings 关联 | 说明 |
+|---|---|---|
+| embedding E2E 验证 + benchmark | N1(embedding E2E 未验证, P1) / N4(P99 未 benchmark) | 须用户装 `[learn]` extra（sentence-transformers），跑真实语义检索 + 对比 BM25 P99 |
+| realtime 仪表盘（v4.3 完整前端） | M2/M3 续留 | agent/workflow 运行态实时可视化 |
+| desktop 完成（v4.4 Tauri） | — | 桌面端达 v1.0 |
+| 清 K1/K2 债 | N2(coverage 65, compile/compiler 17%) / N3(per-request ws) | 债务收口第四轮 |
+| 自定义 agent 角色注册 | — | v1.5.0 留 v2.0 候选 |
+| 缓存优化 + ANN 索引 | N7(semantic 不走 cache) | semantic 检索性能 |
+
+续留 findings（跨迭代 backlog）：K1(coverage 65) / K2(per-request ws) / M2(agent 活动聚合) / M3(CLI vs REST 语义双重) / L2(链接自动 apply) / N5(Spec 命名偏离) / N6(ROADMAP hash 已更正)。
+
 ### 版本-主题表（1 年）
 
 | 版本 | 主题 | Track | status |
@@ -198,6 +230,7 @@ canonical = `pyproject.toml`。发布时以下必须与之一致，用脚本校�
 | v1.8.0 | Smart Linking + AI Summarization | intelligence-adaptation | released |
 | v1.9.0 | Agent & Workflow 可视化 | intelligence-adaptation | released (2026-09-04) |
 | v1.10.0 | embedding 语义搜索 | intelligence-adaptation | released (2026-09-04) |
+| v1.11.0 | 债务收口 IV / bug fix（N7 cache + K1 coverage + M3 + N5/N6） | core-trust | in-progress (01-prd) |
 
 ## 3. 3 年路径（大版本里程碑）
 

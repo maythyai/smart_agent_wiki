@@ -1,0 +1,75 @@
+feature:
+  id: "F-O-3"
+  name: "workflow REST 统一读 DB（collaborate.py list_workflows 读 workflow_executions + merge live）"
+  domain: "debt-closure"
+  prd_ref: "docs/prd/PRD-debt-closure-v1.11.0.md#3.3"
+  pms_module: "debt-closure"
+  user_story: "作为平台开发者，我想 REST /workflows 返回 durable 历史（与 CLI 一致），以便 API 集成时 workflow 列表语义不矛盾。"
+  acceptance_criteria:
+    - "Given workflow_executions 表有 3 条历史记录, when GET /api/v1/workflows, then 返回 ≥3 条，字段含 workflow_id/status/steps（AC-WF-1）"
+    - "Given in-memory _workflows 有 1 条 running（DB 无记录或 status 未更新）, when GET /api/v1/workflows, then 返回列表含该 live running workflow（AC-WF-2）"
+    - "Given 同一 wiki DB, when CLI saw workflow list 与 REST GET /api/v1/workflows, then 返回相同数据源（workflow_executions 表），结果集一致（AC-WF-3）"
+  scope:
+    includes:
+      - "collaborate.py list_workflows 从读 in-memory _workflows dict 改为读 workflow_executions DB 表"
+      - "DB 查询：SELECT ... ORDER BY COALESCE(updated_at, started_at) DESC LIMIT ?"
+      - "live 运行中的 workflow（in-memory _workflows 中 status=running）merge 进 DB 结果"
+      - "live 覆盖 DB status：DB 中无记录或 status 未更新的 live run 须在返回中体现"
+      - "返回 schema 不变：{\"workflows\": [...], \"total\": N}，字段对齐 DB 列"
+      - "字段：workflow_id / definition_name / status / steps_completed / steps_total / updated_at / finished_at"
+      - "--limit 默认 20（与既有 REST 行为一致）"
+    excludes:
+      - "DB 查询方式/merge 策略的具体实现（HOW 留 03 技术方案）"
+      - "workflow_executions 表 schema 变更（v4 migration 既有表，不改 schema）"
+      - "CLI saw workflow list 实现（已有，读 DB，不改）"
+      - "workflow 执行/持久化逻辑（既有实现，不改）"
+  frontend: {pages: [], components: [], interactions: []}
+  backend:
+    endpoints:
+      - "GET /api/v1/workflows（既有端点，行为变更：in-memory → DB + merge live）"
+    business_logic:
+      - "list_workflows 改为读 workflow_executions DB 表（与 CLI list_recent 同源）"
+      - "DB 查询 ORDER BY COALESCE(updated_at, started_at) DESC LIMIT ?"
+      - "merge live：in-memory _workflows 中 status=running 的 workflow 合并进 DB 结果"
+      - "live 覆盖 DB status：live run 的 status 优先于 DB 中 stale status"
+      - "DB 无表时 apply_migrations 确保 v4 表存在；查询失败返回 500"
+      - "返回 schema 不变，字段对齐 DB 列"
+    integrations:
+      - "workflow_executions DB 表（v4 migration 既有，复用）"
+      - "CLI workflow_cmd.py list_recent（同源查询逻辑参照）"
+      - "in-memory _workflows dict（live run merge 来源）"
+  data_entities:
+    - "workflow_executions（既有 DB 表：workflow_id / definition_name / status / steps_completed / steps_total / updated_at / finished_at）"
+  data_operations:
+    - "select_recent（ORDER BY COALESCE(updated_at, started_at) DESC LIMIT ?）"
+    - "merge_live（in-memory running workflow 合并进 DB 结果）"
+  tech_dimensions:
+    needs_database: true
+    needs_cache: false
+    needs_queue: false
+    needs_ai: false
+    needs_vector_store: false
+    needs_realtime: false
+    needs_file_storage: false
+    needs_search: false
+    needs_scheduler: false
+    needs_notification: false
+  nfr:
+    performance: "REST /workflows 查询延迟 [TBD]（DB SELECT + merge live，须与 CLI 同量级）"
+    security: "REST 端点鉴权不变（既有 auth 中间件）"
+    scalability: "limit 默认 20，大库下 DB 查询有 LIMIT 保护"
+    availability: "DB 无表时 apply_migrations 确保 v4 表存在；查询失败返回 500 + error message"
+  priority: "P0"
+  complexity: "M"
+  depends_on: []
+  blocked_by: []
+  risks:
+    - "REST 改行为（in-memory→DB）须回归——AC-WF-1/2/3 全覆盖，merge live 确保不丢运行态"
+    - "DB 无 workflow_executions 表（migration 未跑）——apply_migrations 确保 v4 表存在"
+    - "live workflow 在 DB 无记录（刚启动未持久化）——merge in-memory live run 进结果"
+    - "merge 策略 HOW 留 03——02 仅明确 merge live + durable 的 Feature 边界"
+  assumptions:
+    - "workflow_executions v4 表已存在（v1.9.0 migration 既有）"
+    - "in-memory _workflows dict 仍保留 live running 状态（用于 merge）"
+    - "返回 schema 不变（{\"workflows\": [...], \"total\": N}），仅数据源变更"
+    - "DB 查询方式/merge 策略的具体 HOW 留 03 技术方案"

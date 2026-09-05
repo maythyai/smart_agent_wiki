@@ -32,3 +32,11 @@
 - 用例总数：69 → 69 + 12 = 81（[TBD-impl] 实施后落定）。
 - 新覆盖 AC：AC-EMB-1/2/3, AC-SEM-1/2/3, AC-LINK-1/2/3, AC-TEST-1/2/3（12 条全映射）。
 - TMS delta 见 `TMS-DELTA-v1.10.0.md`。
+
+## v1.11.0 delta（债务收口 IV / bug fix）
+- 模块：debt-closure（PMS-debt-closure），ADR-011 semantic search cache 策略。
+- 新增 12 AC（AC-CACHE-1/2/3/4, AC-COV-1/2, AC-WF-1/2/3, AC-SPEC-1/2, AC-HASH-1），全映射。
+- 测试文件：test_semantic_cache.py（mock，无 SDK）、tests/unit/engines/compile/（新建 7 文件 + conftest，20 用例）、test_workflow_rest_db.py（in-memory DB）、test_spec_naming.py（grep + subprocess）、test_hash_consistency.py（git rev-list）。
+- 用例总数：81 → 81 + 12 = 93（[TBD-impl] 实施后落定）。
+- 新覆盖 AC：AC-CACHE-1/2/3/4, AC-COV-1/2, AC-WF-1/2/3, AC-SPEC-1/2, AC-HASH-1（12 条全映射）。
+- TMS delta 见 `TMS-DELTA-v1.11.0.md`。

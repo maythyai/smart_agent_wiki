@@ -86,3 +86,31 @@ PRD feature_count=5（模块）→ decomposition 5 域 → 20 原子 Feature →
 | F-N-4 | SPEC-F-N-4 | T-F-N-4 | 2 | e7fb6c6 |
 
 链：PRD AC → Feature → Spec → Task → commit，12 AC 全闭环。05-impl done.
+
+## v1.11.0 delta（债务收口 IV / bug fix）
+
+| PRD 模块(§3) | AC | Feature | Spec |
+|---|---|---|---|
+| §3.1 F-O-1 (N7) | AC-CACHE-1 | F-O-1 | SPEC-F-O-1 |
+| §3.1 | AC-CACHE-2 | F-O-1 | SPEC-F-O-1 |
+| §3.1 | AC-CACHE-3 | F-O-1 | SPEC-F-O-1 |
+| §3.1 | AC-CACHE-4 | F-O-1 | SPEC-F-O-1 |
+| §3.2 F-O-2 (N2/K1) | AC-COV-1 | F-O-2 | SPEC-F-O-2 |
+| §3.2 | AC-COV-2 | F-O-2 | SPEC-F-O-2 |
+| §3.3 F-O-3 (M3) | AC-WF-1 | F-O-3 | SPEC-F-O-3 |
+| §3.3 | AC-WF-2 | F-O-3 | SPEC-F-O-3 |
+| §3.3 | AC-WF-3 | F-O-3 | SPEC-F-O-3 |
+| §3.4 F-O-4 (N5) | AC-SPEC-1 | F-O-4 | SPEC-F-O-4 |
+| §3.4 | AC-SPEC-2 | F-O-4 | SPEC-F-O-4 |
+| §3.5 F-O-4 (N6) | AC-HASH-1 | F-O-4 | SPEC-F-O-4 |
+
+### Task 追溯（Feature → Task，05 实施完成）
+
+| Feature | Spec | Task | Wave | Commit |
+|---|---|---|---|---|
+| F-O-1 | SPEC-F-O-1 | T-F-O-1 | 1 | 209c294 |
+| F-O-2 | SPEC-F-O-2 | T-F-O-2 | 1 | 42b9399 |
+| F-O-3 | SPEC-F-O-3 | T-F-O-3 | 1 | e3869d3 |
+| F-O-4 | SPEC-F-O-4 | T-F-O-4 | 1 | 0f0e82e |
+
+链：PRD AC → Feature → Spec → Task → commit，12 AC 全闭环。05-impl done.

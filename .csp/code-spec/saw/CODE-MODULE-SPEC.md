@@ -192,3 +192,32 @@ updated: "2026-09-01"
 - `EmbeddingSink.write()` → `embeddings_available()=False` → skip (no error, no vector)
 - `QueryEngine._semantic_search()` → `embeddings_available()=False` → `_keyword_search()` + `semantic_fallback: true`
 - `compute_related_pages(conn=…)` → `embeddings_available()=False` → 3-signal (embedding_score=0)
+
+---
+
+## CMS Delta — v1.11.0 债务收口 IV / bug fix（增量对齐）
+
+### F-O-1: semantic search cache（复用 F-QS-07）
+
+| 变更类型 | 位置 | file:line | 说明 |
+|---|---|---|---|
+| cache.get 插入 | `QueryEngine._semantic_search` 入口 | `src/saw/engines/query/engine.py:474-489` | `get_cache()` 单例 + `mode="semantic"` key 隔离 + workspace_id + limit/offset |
+| cache.set 插入 | `QueryEngine._semantic_search` 出口 | `src/saw/engines/query/engine.py:~535-540` | `try/except _cache.set` + `logger.warning` 守卫 |
+| cache.clear 钩子 | `rebuild_embeddings` 命令 | `src/saw/drivers/cli/commands/search_cmd.py:~163-166` | `conn.commit()` 后调 `get_cache().clear()` |
+| 不缓存路径 | fallback / index_empty | `src/saw/engines/query/engine.py:~491-507` | 降级和空索引在 `cache.set` 之前 return |
+
+新增调用链边：
+- `_semantic_search → get_cache().get(question, {mode:"semantic",...})` → 命中返回
+- `_semantic_search → get_cache().set(question, params, _qr)` → miss 后缓存
+- `rebuild_embeddings → get_cache().clear()` → 重建后失效
+
+### F-O-3: workflow REST 统一读 DB
+
+| 变更类型 | 位置 | file:line | 说明 |
+|---|---|---|---|
+| 签名变更 | `list_workflows` | `src/saw/api/routes/collaborate.py:~328` | 增加 `request: Request` + `limit: Query(20)` 参数 |
+| DB 读取 | `list_workflows` 主体 | `src/saw/api/routes/collaborate.py:~340-360` | `SELECT ... FROM workflow_executions ORDER BY COALESCE(updated_at, started_at) DESC LIMIT ?`（与 CLI `list_recent` 同源） |
+| live merge | `list_workflows` 循环 | `src/saw/api/routes/collaborate.py:~365-390` | in-memory `_workflows` running 覆盖 DB stale + not-in-DB 追加 |
+| conn 获取 | `list_workflows` 入口 | `src/saw/api/routes/collaborate.py:~332-336` | `getattr(request.app.state, "conn", None)` → fallback `getattr(query, "_conn", None)` |
+| auto-migrate | `list_workflows` | `src/saw/api/routes/collaborate.py:~339` | `apply_migrations(conn)` 确保 v4 表 |
+| fallback | `list_workflows` | `src/saw/api/routes/collaborate.py:~337` | `conn is None` → in-memory only（向后兼容） |

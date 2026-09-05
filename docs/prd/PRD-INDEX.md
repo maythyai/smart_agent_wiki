@@ -12,7 +12,8 @@
 | PRD-graph-workspace-v1.7.0 | graph 隔离 + scope 清理 + coverage→65 | 1.0 | Released | 2026-09-04 | graph-workspace-v1.7.0 | graph-workspace-isolation, scope-propagation-cleanup, coverage-65 | docs/prd/PRD-graph-workspace-v1.7.0.md |
 | PRD-smart-linking-v1.8.0 | Smart Linking + AI Summarization | 1.0 | Released | 2026-09-04 | smart-linking-v1.8.0 | smart-linking-suggest, link-audit, ai-summarize | docs/prd/PRD-smart-linking-v1.8.0.md |
 | PRD-agent-viz-v1.9.0 | Agent & Workflow 可视化（CLI+REST） | 1.0 | Released | 2026-09-04 | agent-viz-v1.9.0 | workflow-list-durable, agents-roster, agents-rest | docs/prd/PRD-agent-viz-v1.9.0.md |
-| PRD-embedding-v1.10.0 | embedding 语义搜索 | 1.0 | Approved | 2026-09-04 | embedding-v1.10.0 | embedding-index, semantic-search-endpoint, smart-linking-embedding, importorskip-heavy-sdk | docs/prd/PRD-embedding-v1.10.0.md |
+| PRD-embedding-v1.10.0 | embedding 语义搜索 | 1.0 | Released | 2026-09-04 | embedding-v1.10.0 | embedding-index, semantic-search-endpoint, smart-linking-embedding, importorskip-heavy-sdk | docs/prd/PRD-embedding-v1.10.0.md |
+| PRD-debt-closure-v1.11.0 | 债务收口 IV / bug fix | 1.0 | Approved | 2026-09-05 | debt-closure-v1.11.0 | semantic-cache, compile-coverage, workflow-rest-unify, spec-naming-revert, hash-reverify | docs/prd/PRD-debt-closure-v1.11.0.md |
 
 ## 状态约定
 - Draft → Reviewing → Approved → Released → Deprecated

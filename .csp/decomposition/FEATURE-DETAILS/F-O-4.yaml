@@ -1,0 +1,73 @@
+feature:
+  id: "F-O-4"
+  name: "Spec 命名回更 + tag hash 复核（N5+N6，文档修复）"
+  domain: "debt-closure"
+  prd_ref: "docs/prd/PRD-debt-closure-v1.11.0.md#3.4"
+  pms_module: "debt-closure"
+  user_story: "作为项目维护者，我想 Spec 命名与实现一致、tag hash 三处一致，以便追溯链 PRD→Spec→Task→commit→tag 不混淆。"
+  acceptance_criteria:
+    - "Given SPEC-F-N-1.md 已回更, when grep 'saw search rebuild-embeddings' 于 SPEC-F-N-1.md, then 0 匹配（全部回更为 saw rebuild-embeddings）（AC-SPEC-1）"
+    - "Given 实现未改动, when saw rebuild-embeddings --help, then 顶层命令可用（exit 0）（AC-SPEC-2）"
+    - "Given git tag / ROADMAP / lifecycle-state, when 对比 v1.10.0 tag hash, then 三处均 = @3865c75（AC-HASH-1）"
+  scope:
+    includes:
+      - "SPEC-F-N-1.md CLI 节 saw search rebuild-embeddings → 回更为 saw rebuild-embeddings（顶层命令）"
+      - "回更范围：CLI 用法示例 + 重建命令描述段落 + API 契约 CLI 节"
+      - "grep 全 Spec 文件，全量回更旧命令名引用"
+      - "不改实现（实现是正确的，search 是独立函数非 Typer 子命令组）"
+      - "tag hash 复核：git rev-list -n1 v1.10.0 = 3865c75（权威值）"
+      - "ROADMAP v1.10.0 行 = @3865c75（已更正，复核）"
+      - "lifecycle-state.json 06-ship progress = @3865c75（已更正，复核）"
+      - "若发现不一致 → 回更至一致"
+    excludes:
+      - "compiler/compiler.py 实现代码（不改实现）"
+      - "main.py 命令注册（不改实现，实现正确）"
+      - "新增 Spec 文件（仅回更既有 SPEC-F-N-1.md）"
+      - "tag 本身重打（仅复核，不改 tag 指向）"
+  frontend: {pages: [], components: [], interactions: []}
+  backend:
+    endpoints: []
+    business_logic:
+      - "SPEC-F-N-1.md grep 'saw search rebuild-embeddings' → 全量替换为 'saw rebuild-embeddings'"
+      - "git rev-list -n1 v1.10.0 取权威值"
+      - "对比 ROADMAP / lifecycle-state.json 06-ship progress / git tag 三处 hash"
+      - "不一致处回更"
+    integrations:
+      - "SPEC-F-N-1.md（既有 Spec 文件，回更 CLI 节）"
+      - "docs/strategy/ROADMAP.md（复核 v1.10.0 行 hash）"
+      - ".csp/lifecycle-state.json（复核 06-ship progress hash）"
+  data_entities: []
+  data_operations:
+    - "grep_spec（全量搜索旧命令名引用）"
+    - "replace_spec（回更命令名）"
+    - "verify_hash（三处 hash 对比）"
+    - "revert_hash（不一致时回更）"
+  tech_dimensions:
+    needs_database: false
+    needs_cache: false
+    needs_queue: false
+    needs_ai: false
+    needs_vector_store: false
+    needs_realtime: false
+    needs_file_storage: false
+    needs_search: false
+    needs_scheduler: false
+    needs_notification: false
+  nfr:
+    performance: "N/A（文档修复任务）"
+    security: "N/A（文档修复任务）"
+    scalability: "N/A（文档修复任务）"
+    availability: "N/A（文档修复任务）"
+  priority: "P1"
+  complexity: "S"
+  depends_on: []
+  blocked_by: []
+  risks:
+    - "Spec 其他章节引用旧命令名——grep 全 Spec 文件全量回更"
+    - "hash 不一致遗漏处——三处对比发现不一致时回更"
+    - "回更 Spec 后 07 闭环校验不再标偏离"
+  assumptions:
+    - "SPEC-F-N-1.md 是唯一含旧命令名的 Spec 文件（grep 全量确认）"
+    - "tag hash @3865c75 已在 07 复盘更正，本轮仅复核确认"
+    - "实现不改（main.py:73 app.command(name='rebuild-embeddings') 是正确的顶层命令）"
+    - "ROADMAP / lifecycle-state.json 已更正为 @3865c75，本轮复核"

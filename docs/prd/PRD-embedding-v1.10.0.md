@@ -2,7 +2,7 @@
 id: PRD-embedding-v1.10.0
 title: embedding 语义搜索
 version: 1.0
-status: Approved
+status: Released
 author: lifecycle-orchestrator
 date: "2026-09-04"
 product_type: platform

@@ -37,10 +37,14 @@
 | F-N-2 | 语义检索端点+CLI（QueryEngine semantic + CLI + REST） | embedding | P0 | M | F-N-1 | 2 | §3.2 |
 | F-N-3 | smart-linking suggest 接 embedding 相似度 | embedding | P1 | M | F-N-1 | 2 | §3.3 |
 | F-N-4 | heavy-SDK 测试 importorskip 沿用 | embedding | P0 | S | F-N-1 | 2 | §3.4 |
+| F-O-1 | semantic search 走 query cache（复用 F-QS-07，TTL + 索引变更失效） | debt-closure | P0 | M | — | 1 | §3.1 |
+| F-O-2 | compile/compiler.py 深覆盖（30 函数 17%→高，fail_under 64→65） | debt-closure | P0 | L | — | 1 | §3.2 |
+| F-O-3 | workflow REST 统一读 DB（collaborate.py list_workflows 读 workflow_executions + merge live） | debt-closure | P0 | M | — | 1 | §3.3 |
+| F-O-4 | Spec 命名回更 + tag hash 复核（N5+N6，文档修复） | debt-closure | P1 | S | — | 1 | §3.4+§3.5 |
 
 ## 汇总
-- 域：8（A e2e-usability / B claim-alignment / C security-hardening / D observability / E test-gate / Z tech-debt / P platform-team / N embedding）
-- Feature：33（P0=20，P1=11，P2=3）— v1.4.0 新增 F-P-1..4 + F-Z-4/5；v1.5.0 +F-I-1..4+F-Z-6..9；v1.6.0 +F-J-1..4；v1.7.0 +F-K-1..3；v1.8.0 +F-L-1..3；v1.9.0 +F-M-1..3；**v1.10.0 +F-N-1..4（源自 PRD-embedding-v1.10.0 + retro M1/L1）**
-- 复杂度：S=9，M=13（v1.10.0 增量：S=1, M=3）
-- Wave：v1.10.0 新增 Wave 1=1, Wave 2=3
-- 关键路径：F-A-1 → F-A-2 → F-A-5 → F-A-6 → F-E-3（5 步）；v1.10.0 次路径：F-N-1 → F-N-2（2 步）
+- 域：9（A e2e-usability / B claim-alignment / C security-hardening / D observability / E test-gate / Z tech-debt / P platform-team / N embedding / O debt-closure）
+- Feature：37（P0=22，P1=13，P2=3）— v1.4.0 新增 F-P-1..4 + F-Z-4/5；v1.5.0 +F-I-1..4+F-Z-6..9；v1.6.0 +F-J-1..4；v1.7.0 +F-K-1..3；v1.8.0 +F-L-1..3；v1.9.0 +F-M-1..3；v1.10.0 +F-N-1..4（源自 PRD-embedding-v1.10.0 + retro M1/L1）；**v1.11.0 +F-O-1..4（源自 PRD-debt-closure-v1.11.0 + retro N7/N2·K1/M3/N5/N6）**
+- 复杂度：S=10，M=14，L=1（v1.11.0 增量：S=1, M=2, L=1）
+- Wave：v1.11.0 新增 Wave 1=4（全并行，无依赖）
+- 关键路径：F-A-1 → F-A-2 → F-A-5 → F-A-6 → F-E-3（5 步）；v1.10.0 次路径：F-N-1 → F-N-2（2 步）；v1.11.0：无依赖链（4 Feature 全并行 Wave 1）

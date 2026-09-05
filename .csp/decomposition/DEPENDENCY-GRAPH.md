@@ -119,3 +119,23 @@ graph LR
 - Wave 2 中 A2/A3/A4 三个引擎冒烟并行。
 - B 域（P1）可与 P0 域异步推进，不阻塞关键路径。
 - v1.10.0 Wave 2 中 N2/N3/N4 全并行（3 路独立）。
+
+## v1.11.0 delta（debt-closure IV track）
+
+```mermaid
+graph LR
+  O1[F-O-1 semantic cache]
+  O2[F-O-2 compile 深覆盖]
+  O3[F-O-3 workflow REST 统一]
+  O4[F-O-4 Spec 回更+hash 复核]
+```
+
+### v1.11.0 Wave
+- **Wave 1（全并行，4 Feature）**：F-O-1（semantic cache） / F-O-2（compile 深覆盖） / F-O-3（workflow REST 统一） / F-O-4（Spec 回更+hash 复核）
+  - 4 Feature 互相独立（不同文件），可全并行启动。无 Wave 2 — 无依赖边。
+
+### v1.11.0 DAG 校验
+- 拓扑序无环：4 个独立节点，无边，无回边 ✓
+
+### v1.11.0 并行机会
+- 4 Feature 全并行（4 路独立，不同文件）。

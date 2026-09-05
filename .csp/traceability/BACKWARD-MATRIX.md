@@ -33,3 +33,12 @@
 | SPEC-F-N-2 | F-N-2 | §3.2 | AC-SEM-1/2/3 | embedding | CODE-MODULE-SPEC | 9660ecc |
 | SPEC-F-N-3 | F-N-3 | §3.3 | AC-LINK-1/2/3 | embedding | CODE-MODULE-SPEC | 3b2039e |
 | SPEC-F-N-4 | F-N-4 | §3.4 | AC-TEST-1/2/3 | embedding | [无] | e7fb6c6 |
+
+## v1.11.0 delta（债务收口 IV / bug fix）
+
+| Spec | Feature | PRD 模块 | AC | PMS | CMS ref | Commit |
+|---|---|---|---|---|---|---|
+| SPEC-F-O-1 | F-O-1 | §3.1 | AC-CACHE-1/2/3/4 | debt-closure | CODE-MODULE-SPEC | 209c294 |
+| SPEC-F-O-2 | F-O-2 | §3.2 | AC-COV-1/2 | debt-closure | CODE-MODULE-SPEC | 42b9399 |
+| SPEC-F-O-3 | F-O-3 | §3.3 | AC-WF-1/2/3 | debt-closure | CODE-MODULE-SPEC | e3869d3 |
+| SPEC-F-O-4 | F-O-4 | §3.4+§3.5 | AC-SPEC-1/2, AC-HASH-1 | debt-closure | CODE-MODULE-SPEC | 0f0e82e |

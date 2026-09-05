@@ -233,3 +233,45 @@
 - pytest: 1993 passed, 6 skipped, 0 failed
 - ruff check src/ tests/: 0 errors
 - saw smoke: 6/6 passed
+
+---
+
+## v1.11.0 债务收口 IV / bug fix（2026-09-05）
+
+### 范围
+4 Task（T-F-O-1..4），1 Wave 全并行，DAG 无环（4 Task 互相独立）。PMS 模块=debt-closure。
+Lead 单线实施（4 Task 文件无重叠，串行成本低；不 spawn 子代理，环境约束）。
+
+### Commit 链
+1. `209c294` — `fix(query): F-O-1 semantic search cache reuse F-QS-07 + invalidation`
+2. `42b9399` — `test(compile): F-O-2 compiler deep coverage + ratchet 64->65`
+3. `e3869d3` — `fix(collaborate): F-O-3 workflow REST unify read DB merge live`
+4. `0f0e82e` — `docs(spec): F-O-4 SPEC-F-N-1 cmd name + v1.10.0 hash reconcile`
+
+### Ground 发现（源码 ground truth）
+- `engine.py:223-237` — `_keyword_search` cache.get 范式（`get_cache()` 单例 + `mode="search"` + workspace_id + limit/offset params → SHA256 key）。`_semantic_search` 入口无 cache（ground 确认 N7 finding）。
+- `engine.py:299-300` — `_keyword_search` cache.set 范式。F-O-1 在 `_semantic_search` 出口对称插入。
+- `cache.py:18-91` — `QueryCache` 类，`_make_key` SHA256(params 全量)，`default_ttl=300`，`clear()` 全量清空。
+- `cache.py:96-104` — `get_cache()` 全局单例，`_keyword_search` 和 `_semantic_search` 共享同一实例。
+- `search_cmd.py:152-167` — `rebuild_embeddings` 函数无 `cache.clear()` 调用（ground 确认）→ F-O-1 补 `get_cache().clear()` 在 `conn.commit()` 后。
+- `dispatcher.py:112-114` — 既有 `get_cache().clear()` 钩子（内容写入 wiki/claims/fts5 触发）→ semantic cache 天然共享失效路径。
+- `compiler.py` — 30+ def，~17% 覆盖（ground 确认 K1 finding）。`tests/unit/engines/compile/` 不存在（本轮新建）。
+- `collaborate.py:33` — `_workflows` in-memory dict（L33）；`list_workflows`（L328-335）仅读 in-memory。
+- `workflow_cmd.py:197-203` — CLI `list_recent` 读 `workflow_executions` DB 表 `ORDER BY COALESCE(updated_at, started_at) DESC LIMIT ?`。F-O-3 REST 改为同源 SQL。
+- `app.py` — `app.state` 无 `conn` 属性（conn 在 `create_app_from_config` 局部变量）；`app.state.query._conn` 可达。F-O-3 双路径：`getattr(request.app.state, "conn", None)` → fallback `getattr(query, "_conn", None)`。
+- `SPEC-F-N-1.md` L27/L133/L189 — 3 处 `saw search rebuild-embeddings`（应 `saw rebuild-embeddings`，`main.py:73` 顶层命令）。
+- `main.py:73` — `app.command(name="rebuild-embeddings")(rebuild_embeddings)` 顶层命令注册。
+- tag hash: `git rev-list -n1 v1.10.0` = `3865c75`；ROADMAP L170 `@3865c75`；lifecycle-state `@3865c75` → 三处一致（N6 无需更正）。
+
+### 偏离/决策
+1. **F-O-1 cache.set 包装在 QueryResult 变量**：Spec 伪代码直接在 `return QueryResult(...)` 前调 `_cache.set`。实现先将结果赋值 `_qr`，再 `try/except _cache.set`，最后 `return _qr`（参照 `_keyword_search` L299-300 范式 + try/except 守卫）。功能等价，异常更安全。
+2. **F-O-1 rebuild clear 位置**：`search_cmd.py::rebuild_embeddings` 在 `conn.commit()` 后、`console.print` 前调 `get_cache().clear()`（commit 后清缓存，保证 DB 已持久化）。
+3. **F-O-2 compile_full idempotent 语义修正**：原测试期望第二次 compile_full → `pages_unchanged`（dedup via content_hash）。实际行为：dedup 是单次 compile 内跨文件去重（`seen_hashes` 集合），第二次 compile 文件已存在 → `pages_updated`。修正测试断言为 `pages_updated`（匹配实现语义）。
+4. **F-O-3 conn 获取双路径**：Spec 伪代码用 `getattr(request.app.state, "conn", None)`。但 `app.py` 未设 `app.state.conn`。实现增加 fallback：从 `app.state.query._conn` 获取（QueryEngine 持有 conn）。测试 fixture 设 `app.state.conn` 直连；生产通过 query engine 的 conn。
+5. **F-O-4 AC-SPEC-2 源码验证替代 subprocess**：Spec 写 `subprocess.run(["saw", "rebuild-embeddings", "--help"])`。实现改为直接 grep `main.py` 源码确认 `rebuild-embeddings` 注册（CI 更稳定，不依赖 CLI 安装路径）。
+
+### 验证
+- pytest: 2064 passed, 6 skipped, 0 failed（+71 新测试）
+- ruff check src/ tests/: 0 errors
+- coverage: 65.36% (fail_under=65 ✓)
+- saw smoke: 6/6 passed

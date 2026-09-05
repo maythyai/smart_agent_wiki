@@ -55,3 +55,31 @@
 - PRD AC 总数：11（v1.0）+ 12（v1.10.0）= 23
 - 已覆盖：11（v1.0 covered）+ 12（v1.10.0 mapped [TBD-impl]）= 23
 - 缺口：0
+
+## v1.11.0 delta（债务收口 IV / bug fix，12 AC）
+
+| AC | 描述 | 映射 Feature | 用例 | 状态 |
+|---|---|---|---|---|
+| AC-CACHE-1 | semantic cache 命中 | F-O-1 | test_semantic_cache.py（mock） | [TBD-impl] |
+| AC-CACHE-2 | semantic cache workspace 隔离 | F-O-1 | test_semantic_cache.py（mock） | [TBD-impl] |
+| AC-CACHE-3 | semantic cache 索引变更失效 | F-O-1 | test_semantic_cache.py（mock） | [TBD-impl] |
+| AC-CACHE-4 | semantic fallback 不缓存 | F-O-1 | test_semantic_cache.py（mock） | [TBD-impl] |
+| AC-COV-1 | compile/compiler 深覆盖 | F-O-2 | tests/unit/engines/compile/（新建 7 文件） | [TBD-impl] |
+| AC-COV-2 | fail_under 棘轮 65 | F-O-2 | test_coverage_config.py | [TBD-impl] |
+| AC-WF-1 | REST 读 DB | F-O-3 | test_workflow_rest_db.py | [TBD-impl] |
+| AC-WF-2 | REST merge live | F-O-3 | test_workflow_rest_db.py | [TBD-impl] |
+| AC-WF-3 | CLI/REST 语义一致 | F-O-3 | test_workflow_rest_db.py | [TBD-impl] |
+| AC-SPEC-1 | Spec 命名回更 | F-O-4 | test_spec_naming.py | [TBD-impl] |
+| AC-SPEC-2 | 实现不变 | F-O-4 | test_spec_naming.py | [TBD-impl] |
+| AC-HASH-1 | hash 三处一致 | F-O-4 | test_hash_consistency.py | [TBD-impl] |
+
+### v1.11.0 汇总
+- PRD AC 总数（本轮）：12
+- 已映射：12（100%）
+- 缺口：0
+- 全部 [TBD-impl]：05 实施后落定
+
+### 全局汇总（v1.0 + v1.10.0 + v1.11.0）
+- PRD AC 总数：11（v1.0）+ 12（v1.10.0）+ 12（v1.11.0）= 35
+- 已覆盖：11（v1.0 covered）+ 12（v1.10.0 [TBD-impl]）+ 12（v1.11.0 [TBD-impl]）= 35
+- 缺口：0

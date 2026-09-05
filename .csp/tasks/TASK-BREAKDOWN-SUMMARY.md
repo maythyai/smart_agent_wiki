@@ -85,3 +85,44 @@
 - embedding 信号权重 2.5 需 benchmark 调优 [TBD]
 - 相似度缓存 [TBD]（后续优化）
 - 降级测试 mock 策略需 05 实施时验证 mock 边界
+
+---
+
+# v1.11.0 delta（债务收口 IV / bug fix，2026-09-05）
+
+## 项目概览（v1.11.0）
+- 上游：4 Spec（1:1 decomposition 4 Feature F-O-1..4），1 PMS 模块（debt-closure）
+- Task：4（1:1 Spec，S×1 / M×2 / L×1），1 Wave 全并行，DAG 无环
+- 关键路径：无（4 Task 无依赖，全并行 1 步）
+- 估时：S/M/L 粒度，人日 [TBD]（无团队速率）
+
+## Task 类型分派矩阵（v1.11.0）
+| 类型 | Task | 推荐分派 |
+|---|---|---|
+| backend-logic | T-F-O-1 | 后端（engine.py cache 插入 + 失效钩子） |
+| test | T-F-O-2 | QA（compiler 深覆盖测试 + fail_under 棘轮） |
+| backend-api | T-F-O-3 | 后端（collaborate.py REST 读 DB + merge live） |
+| docs | T-F-O-4 | Tech Writer（Spec 命名回更 + hash 复核） |
+
+## 拆解门控（v1.11.0）
+- [x] Spec 完整性：4 Task == 4 Spec（03 穷尽门控通过）
+- [x] 每个 Feature 有 ≥1 Task（4/4）
+- [x] Task 粒度 ≤4h（S×1 / M×2 / L×1）
+- [x] DAG 无环（O1/O2/O3/O4 互相独立，无依赖边，实机校验 cycle=none）
+- [x] Task 依赖与 decomposition Feature 依赖一致（4 Feature 全并行无依赖边）
+- [x] Wave 划分合理（全 Wave 1 并行，无共享资源串行约束）
+- [x] 每 Task acceptance 非空（指向 AC，共 12 AC 全映射）
+- [x] 不越 PMS 边界（debt-closure 模块）
+- [x] 并行检测通过（4 Task 文件集无重叠）
+
+## 05 实施指引（v1.11.0）
+- Lead 按 `WAVE-PLAN.md` 组建子 Agent 团队；Wave 1 四路并行（worktree 隔离）。
+- 每 Task 一个 commit；完成后续写 commit + 追溯矩阵。
+- 无共享文件冲突，4 Task 可同时启动。
+- 详见 `.csp/tasks/TASKS-DELTA-v1.11.0.md`。
+
+## assumptions / [TBD]（v1.11.0）
+- cache 命中率基线 [TBD]（须 05 实施后 benchmark）
+- compiler.py 覆盖率目标值 [TBD]（须 05 实施后测量，预计 17%→~70%+）
+- 全量 coverage 65 是否仅靠 compiler 深覆盖即可达成 [TBD]（须实施后验证）
+- REST 查询延迟 [TBD]（须 05 实施后与 CLI 同量级验证）

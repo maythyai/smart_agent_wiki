@@ -10,6 +10,7 @@
 | ADR-003 | 可观测 | 自建 JSON log + trace_id middleware 复用 | Accepted | D1-3, E3 |
 | ADR-004 | 安全 | JWT/Cedar/Ed25519 receipt/限流/URL guard 复用 | Accepted | C1-5 |
 | ADR-010 | 向量存储+检索融合 | 新表 embedding_store + BLOB + numpy cosine 内存计算；--mode 并行不融合；all-MiniLM-L6-v2 384 维 | Accepted | F-N-1, F-N-2, F-N-3 |
+| ADR-011 | semantic search cache | 复用 F-QS-07 cache 单例，mode="semantic" key 隔离；TTL 300s；ingest/rebuild clear 失效 | Accepted | F-O-1, F-N-1, F-N-2 |
 
 ## 复用原则
 - 全栈既有（六角架构/write_queue/observability/RBAC/receipt/FTS5），硬化只补"有模块→全链路闭环"。

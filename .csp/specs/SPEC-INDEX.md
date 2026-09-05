@@ -75,7 +75,15 @@
 | SPEC-F-N-3 | F-N-3 | smart-linking suggest 接 embedding 相似度信号 | M | embedding | 3/3 | SPEC-F-N-3.md |
 | SPEC-F-N-4 | F-N-4 | heavy-SDK 测试 importorskip 沿用 | S | embedding | 3/3 | SPEC-F-N-4.md |
 
+## v1.11.0 delta（+4）
+| spec_id | feature_id | title | complexity | pms_module | ac_coverage | file |
+|---|---|---|---|---|---|---|
+| SPEC-F-O-1 | F-O-1 | semantic search 走 query cache（复用 F-QS-07，TTL + 索引变更失效） | M | debt-closure | 4/4 | SPEC-F-O-1.md |
+| SPEC-F-O-2 | F-O-2 | compile/compiler.py 深覆盖（30 函数 17%→高，fail_under 64→65） | L | debt-closure | 2/2 | SPEC-F-O-2.md |
+| SPEC-F-O-3 | F-O-3 | workflow REST 统一读 DB（collaborate.py list_workflows 读 workflow_executions + merge live） | M | debt-closure | 3/3 | SPEC-F-O-3.md |
+| SPEC-F-O-4 | F-O-4 | Spec 命名回更 + tag hash 复核（N5+N6，文档修复） | S | debt-closure | 3/3 | SPEC-F-O-4.md |
+
 ## 校验
-- Spec 数 == 20 + 8(v1.5.0) + 4(v1.6.0) + 3(v1.7.0) + 3(v1.8.0) + 3(v1.9.0) + 4(v1.10.0) == 45 == decomposition 原子 Feature 数 ✓（1:1）
+- Spec 数 == 20 + 8(v1.5.0) + 4(v1.6.0) + 3(v1.7.0) + 3(v1.8.0) + 3(v1.9.0) + 4(v1.10.0) + 4(v1.11.0) == 49 == decomposition 原子 Feature 数 ✓（1:1）
 - 每个 feature_id 在 decomposition FEATURE-DETAILS 存在 ✓
 - 每份 Spec ac_coverage 自检无未覆盖 AC ✓

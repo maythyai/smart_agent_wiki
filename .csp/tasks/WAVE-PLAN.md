@@ -144,3 +144,33 @@
 ## v1.10.0 里程碑
 - M-EMB-1（Wave 1）：embedding_store 表 + EmbeddingSink + rebuild 命令就绪 → 向量可持久化。
 - M-EMB-2（Wave 2）：语义检索 + smart-linking embedding + 测试就绪 → v1.10.0 可交付。
+
+---
+
+# v1.11.0 波次（债务收口 IV / bug fix，2026-09-05）
+
+> 源自 PRD-debt-closure-v1.11.0 + 02 delta + ADR-011。4 Task，1 Wave 全并行。DAG 无环（4 Task 互相独立，无依赖边）。
+
+## v1.11.0 Wave 1 — 全并行（4 Task，无依赖）
+| task_id | 描述 | 类型 | 里程碑 |
+|---|---|---|---|
+| T-F-O-1 | semantic cache（_semantic_search 入口 cache.get + 出口 cache.set + 失效钩子） | backend-logic | semantic cache 命中/隔离/失效/不缓存 fallback |
+| T-F-O-2 | compile/compiler.py 深覆盖（7 测试文件 + 20 用例 + fail_under 64→65） | test | compiler 覆盖 17%→高 + coverage 棘轮 65 |
+| T-F-O-3 | workflow REST 统一读 DB（list_workflows 读 workflow_executions + merge live） | backend-api | REST/CLI 同源 DB |
+| T-F-O-4 | Spec 命名回更 + tag hash 复核 | docs | SPEC-F-N-1 命名 + hash 三处一致 |
+
+## v1.11.0 共享资源串行
+- 无共享资源串行约束。4 Task 触及完全不同的文件集，无重叠。
+
+## v1.11.0 Wave 1 文件冲突分析
+| 文件 | Wave 1 写入方 | 冲突? |
+|---|---|---|
+| engines/query/engine.py | T-F-O-1 | 否 |
+| tests/unit/engines/compile/* | T-F-O-2 | 否（新建测试目录） |
+| pyproject.toml | T-F-O-2 | 否（仅 O-2） |
+| api/routes/collaborate.py | T-F-O-3 | 否 |
+| .csp/specs/SPEC-F-N-1.md | T-F-O-4 | 否 |
+| docs/strategy/ROADMAP.md | T-F-O-4 | 否（仅复核） |
+
+## v1.11.0 里程碑
+- M-DEBT-IV（Wave 1）：semantic cache + compile 深覆盖 + workflow REST 统一 + Spec 回更就绪 → v1.11.0 可交付。

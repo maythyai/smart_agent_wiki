@@ -71,3 +71,31 @@
 ### 安全
 - 向量索引与 claim 数据同源（同 SQLite 生态），workspace_id 隔离参照既有 RBAC 范式
 - 向量数据不含额外 PII（embedding 输入为 claim/wiki 内容文本，非用户数据）
+
+## v1.11.0 NFR delta（debt-closure IV track）
+
+> 来源：PRD-debt-closure-v1.11.0 §4。Feature 级下沉见 F-O-1..4 各 yaml `nfr`。
+
+### 性能
+- semantic cache 命中后查询延迟 ≤ keyword cache 命中延迟（同量级）——复用 F-QS-07 cache 路径，命中时跳过 embed_texts() + 全量 cosine
+- cache 命中率 [TBD]（须 benchmark 后定基线，PRD §1.3 标 [TBD]）
+- REST /workflows 查询延迟 [TBD]（DB SELECT + merge live，须与 CLI 同量级）
+
+### 测试覆盖
+- 全量 coverage ≥65%，fail_under 从 64 提升到 65（AC-COV-2）
+- compile/compiler.py 覆盖率 17%→[TBD]（须实施后测量，PRD §6 AC-COV-1 标 [TBD]）
+- 测试不依赖 [learn] extra（compiler 不涉及 embedding）
+
+### 不回归
+- passed ≥1993（v1.10.0 基线 1993）
+- ruff 0 errors
+- smoke 6/6
+
+### 兼容
+- 无 breaking API 变更（additive MINOR）
+- REST schema 不变（`{"workflows": [...], "total": N}`）
+- CLI 命令不变（仅加 cache 层，不改命令接口）
+
+### workspace 隔离
+- semantic cache key 须含 workspace_id（与 _keyword_search 对称），防跨 workspace 泄漏
+- workflow REST /workflows 须透传 workspace_id（参照既有范式）

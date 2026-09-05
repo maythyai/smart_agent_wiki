@@ -55,3 +55,31 @@ AC-LINK-2) pass unconditionally via mock.
 | multi-platform | desktop 0.1.0 / web 0.1.0 | independent 0.x (pre-1.0, not aligned to canonical — per §1.2 rules) | PASS |
 
 **Verdict**: All gates green. Code is finalized. Proceeding to reconcile + local tag.
+
+---
+
+## v1.11.0 Implementation Verification (2026-09-05)
+
+**Version**: v1.11.0 (debt-closure IV / bug fix)
+**Commits**: 209c294 (F-O-1), 42b9399 (F-O-2), e3869d3 (F-O-3), 0f0e82e (F-O-4)
+
+| Metric | Value |
+|---|---|
+| pytest total | 2064 passed, 6 skipped, 0 failed |
+| (baseline v1.10.0) | 1993 passed, 6 skipped |
+| New tests added | 71 (4 semantic cache + 58 compile/compiler + 5 workflow REST DB + 4 spec/hash) |
+| ruff check src/ tests/ | 0 errors |
+| coverage total | 65.36% (fail_under=65 ✓) |
+| (baseline v1.10.0) | 64.2% (fail_under=64) |
+| saw smoke | 6/6 passed |
+
+### Task breakdown
+
+| Task | Commit | AC | Tests added |
+|---|---|---|---|
+| T-F-O-1 (semantic cache) | 209c294 | AC-CACHE-1/2/3/4 | 4 (test_semantic_cache.py, mock-based) |
+| T-F-O-2 (compile deep coverage) | 42b9399 | AC-COV-1/2 | 58 (7 test files + conftest, 30+ functions) |
+| T-F-O-3 (workflow REST unify) | e3869d3 | AC-WF-1/2/3 | 5 (test_workflow_rest_db.py, in-memory DB) |
+| T-F-O-4 (Spec naming + hash) | 0f0e82e | AC-SPEC-1/2, AC-HASH-1 | 4 (test_spec_naming.py + test_hash_consistency.py) |
+
+**Verdict**: All gates green. 2064 passed, ruff 0, coverage 65.36% ≥ 65, smoke 6/6.
