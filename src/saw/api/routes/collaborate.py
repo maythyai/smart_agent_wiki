@@ -325,14 +325,90 @@ async def _run_via_engine(engine: Any, wf_id: str, workflow: str, params: dict[s
 
 
 @router.get("/workflows")
-async def list_workflows() -> dict[str, Any]:
-    """List recent workflows (newest first)."""
-    items = sorted(
-        _workflows.values(),
-        key=lambda w: w.get("started_at", ""),
-        reverse=True,
-    )
-    return {"workflows": items[:20], "total": len(_workflows)}
+async def list_workflows(
+    request: Request,
+    limit: int = Query(20, ge=1, le=100, description="Max runs to show"),
+) -> dict[str, Any]:
+    """List recent workflows (durable DB + live in-memory merge).
+
+    Reads the persisted ``workflow_executions`` table (same source as CLI
+    ``saw workflow list``), then merges any in-memory live running
+    workflows that may not yet have a DB row or whose DB status is stale.
+    """
+    # 1. Read durable DB rows (same SQL as CLI list_recent)
+    conn = getattr(request.app.state, "conn", None)
+    if conn is None:
+        _query = getattr(request.app.state, "query", None)
+        conn = getattr(_query, "_conn", None) if _query else None
+
+    if conn is None:
+        # Fallback: no DB connection available → return in-memory only
+        items = sorted(
+            _workflows.values(),
+            key=lambda w: w.get("started_at", ""),
+            reverse=True,
+        )
+        return {"workflows": items[:limit], "total": len(items)}
+
+    from saw.db.migrations import apply_migrations
+
+    apply_migrations(conn)  # ensure workflow_executions table (v4)
+
+    rows = conn.execute(
+        "SELECT workflow_id, definition_name, status, steps_completed, "
+        "steps_total, updated_at, finished_at "
+        "FROM workflow_executions "
+        "ORDER BY COALESCE(updated_at, started_at) DESC "
+        "LIMIT ?",
+        (limit,),
+    ).fetchall()
+
+    # 2. Build durable items from DB rows
+    db_ids: set[str] = set()
+    items: list[dict[str, Any]] = []
+    for wid, name, st, sc, tot, updated, finished in rows:
+        db_ids.add(wid)
+        items.append({
+            "workflow_id": wid,
+            "definition_name": name,
+            "status": st,
+            "steps_completed": sc,
+            "steps_total": tot,
+            "updated_at": updated,
+            "finished_at": finished,
+        })
+
+    # 3. Merge live in-memory running workflows
+    for wid, wf in _workflows.items():
+        if wid in db_ids:
+            # Live overrides DB status if running (DB may be stale)
+            if wf.get("status") == "running":
+                for item in items:
+                    if item["workflow_id"] == wid:
+                        item["status"] = wf["status"]
+                        item["steps_completed"] = wf.get(
+                            "current_step", item["steps_completed"]
+                        )
+                        item["steps_total"] = wf.get(
+                            "steps_total", item["steps_total"]
+                        )
+                        break
+            continue
+        # Live workflow not in DB (just started, not persisted yet)
+        if wf.get("status") == "running":
+            items.append({
+                "workflow_id": wid,
+                "definition_name": wf.get("workflow", "unknown"),
+                "status": "running",
+                "steps_completed": wf.get("current_step", 0),
+                "steps_total": wf.get("steps_total", 0),
+                "updated_at": wf.get("started_at"),
+                "finished_at": None,
+            })
+
+    # 4. Sort merged by updated_at DESC, return top-N
+    items.sort(key=lambda w: w.get("updated_at") or "", reverse=True)
+    return {"workflows": items[:limit], "total": len(items)}
 
 
 @router.get("/agents")
