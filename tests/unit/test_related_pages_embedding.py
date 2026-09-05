@@ -1,15 +1,63 @@
 """Tests for smart-linking embedding signal (F-N-3, AC-LINK-1 / AC-LINK-3).
 
-Skips when ``sentence_transformers`` is not installed (the ``[learn]`` extra).
+v1.12.0 (F-Q-4): removed ``importorskip("sentence_transformers")`` — tests now
+mock ``litellm.embedding`` to return fixed vectors. No local ST or torch.
 """
-import pytest
-
-pytest.importorskip("sentence_transformers")
+from __future__ import annotations
 
 import sqlite3
 import struct
 import tempfile
 from pathlib import Path
+from unittest.mock import MagicMock
+
+_DIM = 1536
+_MOCK_MODEL = "text-embedding-3-small"
+
+_ML_KW = {"machine", "learning", "neural", "ai", "artificial",
+          "intelligence", "deep", "ml", "training", "network", "data"}
+_CRYPTO_KW = {"crypto", "ed25519", "signature", "elliptic", "curve",
+              "cryptography", "algorithm", "byte", "signatures"}
+_WEB_KW = {"web", "framework", "rest", "api", "html", "server", "building"}
+
+
+def _topic_vec(text: str) -> list[float]:
+    """Return a _DIM-dim vector biased by text topic for cosine ranking."""
+    words = set(text.lower().replace(".", "").replace(",", "").split())
+    vec = [0.01] * _DIM
+    if words & _ML_KW:
+        vec[0] = 0.9
+        vec[1] = 0.4
+    elif words & _CRYPTO_KW:
+        vec[0] = -0.8
+        vec[2] = 0.5
+    elif words & _WEB_KW:
+        vec[1] = 0.8
+        vec[3] = 0.3
+    else:
+        vec[0] = 0.5
+    return vec
+
+
+def _mock_embedding_response(**kwargs):
+    response = MagicMock()
+    texts = kwargs.get("input", [])
+    response.data = [
+        {"embedding": _topic_vec(t), "index": i}
+        for i, t in enumerate(texts)
+    ]
+    return response
+
+
+def _setup_mock_api(monkeypatch):
+    import saw.adapters.embeddings as emb_mod
+
+    monkeypatch.setenv("SAW_EMBEDDING_MODEL", _MOCK_MODEL)
+    monkeypatch.setenv("EMBEDDING_API_KEY", "test-key")
+    monkeypatch.setattr(emb_mod, "_embedding_settings", None)
+    monkeypatch.setattr(
+        emb_mod.litellm, "embedding", _mock_embedding_response
+    )
 
 
 def _make_wiki_with_pages():
@@ -21,7 +69,6 @@ def _make_wiki_with_pages():
     wiki_dir.mkdir(parents=True)
     wiki = WikiRepository(wiki_dir)
 
-    # Write pages with no shared tags — embedding signal is the only link
     pages = {
         "ml-basics.md": (
             "# ML Basics\n\nMachine learning is a subset of AI. "
@@ -47,8 +94,9 @@ def _make_wiki_with_pages():
     return wiki
 
 
-def _make_db_with_embeddings(wiki, conn):
+def _make_db_with_embeddings(wiki, conn, monkeypatch):
     """Embed all wiki pages and store in embedding_store."""
+    _setup_mock_api(monkeypatch)
     from saw.adapters.embeddings import embed_texts
 
     for slug in wiki.list_pages():
@@ -63,13 +111,13 @@ def _make_db_with_embeddings(wiki, conn):
         blob = struct.pack(f"<{dim}f", *vec)
         conn.execute(
             "INSERT INTO embedding_store (doc_id, entity_type, model, vector, dim, workspace_id) "
-            "VALUES (?, 'wiki', 'all-MiniLM-L6-v2', ?, ?, 'default')",
-            (slug, blob, dim),
+            "VALUES (?, 'wiki', ?, ?, ?, 'default')",
+            (slug, _MOCK_MODEL, blob, dim),
         )
     conn.commit()
 
 
-def test_link_ac1_semantic_suggestion():
+def test_link_ac1_semantic_suggestion(monkeypatch):
     """AC-LINK-1: suggest includes semantically similar pages with no
     shared tags/links, and reasons contain 'semantic similarity'."""
     from saw.db.migrations import apply_migrations
@@ -78,10 +126,8 @@ def test_link_ac1_semantic_suggestion():
     conn = sqlite3.connect(":memory:")
     apply_migrations(conn)
     wiki = _make_wiki_with_pages()
-    _make_db_with_embeddings(wiki, conn)
+    _make_db_with_embeddings(wiki, conn, monkeypatch)
 
-    # Suggest for "ml-basics" — "deep-learning" should appear (semantic sim)
-    # while "cryptography" should rank lower
     related = compute_related_pages(
         "ml-basics.md", wiki, top_k=8, conn=conn, workspace_id="default"
     )
@@ -95,7 +141,7 @@ def test_link_ac1_semantic_suggestion():
     assert "semantic similarity" in reasons_str
 
 
-def test_link_ac3_dissimilar_ranks_lower():
+def test_link_ac3_dissimilar_ranks_lower(monkeypatch):
     """AC-LINK-3: pages that share tags but are semantically dissimilar
     rank lower than pages that are semantically similar.
 
@@ -110,17 +156,14 @@ def test_link_ac3_dissimilar_ranks_lower():
     wiki_dir.mkdir(parents=True)
     wiki = WikiRepository(wiki_dir)
 
-    # Page A: ML with tag python
     (wiki_dir / "ml-page.md").write_text(
         "---\ntags: [python]\n---\n# ML Page\n\nMachine learning with Python. "
         "Training neural networks on data."
     )
-    # Page B: Web framework with tag python (shares tag but not semantic)
     (wiki_dir / "web-framework.md").write_text(
         "---\ntags: [python]\n---\n# Web Framework\n\nA Python web framework "
         "for building REST APIs and serving HTML."
     )
-    # Page C: ML with tag python (shares tag AND semantic)
     (wiki_dir / "nn-page.md").write_text(
         "---\ntags: [python]\n---\n# NN Page\n\nNeural network training "
         "with deep learning architectures."
@@ -128,7 +171,7 @@ def test_link_ac3_dissimilar_ranks_lower():
 
     conn = sqlite3.connect(":memory:")
     apply_migrations(conn)
-    _make_db_with_embeddings(wiki, conn)
+    _make_db_with_embeddings(wiki, conn, monkeypatch)
 
     related = compute_related_pages(
         "ml-page.md", wiki, top_k=8, conn=conn, workspace_id="default"
