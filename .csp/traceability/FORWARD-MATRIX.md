@@ -114,3 +114,37 @@ PRD feature_count=5（模块）→ decomposition 5 域 → 20 原子 Feature →
 | F-O-4 | SPEC-F-O-4 | T-F-O-4 | 1 | 0f0e82e |
 
 链：PRD AC → Feature → Spec → Task → commit，12 AC 全闭环。05-impl done.
+
+## v1.12.0 delta（embedding API 重构）
+
+| PRD 模块(§3) | AC | Feature | Spec |
+|---|---|---|---|
+| §3.1 F-EA-1 | AC-EA-1 | F-Q-1 | SPEC-F-Q-1 |
+| §3.1 | AC-EA-2 | F-Q-1 | SPEC-F-Q-1 |
+| §3.2 F-EA-2 | AC-DIM-1 | F-Q-2 | SPEC-F-Q-2 |
+| §3.2 | AC-DIM-2 | F-Q-2 | SPEC-F-Q-2 |
+| §3.3 F-EA-3 | AC-FB-1 | F-Q-3 | SPEC-F-Q-3 |
+| §3.3 | AC-FB-2 | F-Q-3 | SPEC-F-Q-3 |
+| §3.4 F-EA-4 | AC-TEST-1 | F-Q-4 | SPEC-F-Q-4 |
+| §3.4 | AC-TEST-2 | F-Q-4 | SPEC-F-Q-4 |
+| §3.4 | AC-TEST-3 | F-Q-4 | SPEC-F-Q-4 |
+
+### Task 追溯（Feature → Task，[TBD-04 待拆]）
+
+| Feature | Spec | Task | Wave | Commit |
+|---|---|---|---|---|
+| F-Q-1 | SPEC-F-Q-1 | T-F-Q-1 | 1 | [TBD-05] |
+| F-Q-2 | SPEC-F-Q-2 | T-F-Q-2 | 2 | [TBD-05] |
+| F-Q-3 | SPEC-F-Q-3 | T-F-Q-3 | 2 | [TBD-05] |
+| F-Q-4 | SPEC-F-Q-4 | T-F-Q-4 | 2 | [TBD-05] |
+
+链：PRD AC → Feature → Spec → Task，9 AC 全映射。03-tech done，04-tasks 待拆。
+
+### v1.12.0 — embedding API pivot
+
+| PRD Item | Feature | Spec | Task | Commit | AC | Test |
+|---|---|---|---|---|---|---|
+| PRD-EA-1 | F-Q-1 | SPEC-F-Q-1 | T-F-Q-1 | f4f4869 | AC-EA-1, AC-EA-2 | test_embedding_index (4), test_embedding_degradation (4) |
+| PRD-EA-2 | F-Q-2 | SPEC-F-Q-2 | T-F-Q-2 | f4e9f04 | AC-DIM-1, AC-DIM-2 | test_embedding_index::test_dim_change_triggers_rebuild, test_emb_ac1 (model 列) |
+| PRD-EA-3 | F-Q-3 | SPEC-F-Q-3 | T-F-Q-3 | 4818926 | AC-FB-1, AC-FB-2 | test_semantic_search::test_sem_fb1_st_fallback, test_sem_fb2_no_st_api |
+| PRD-EA-4 | F-Q-4 | SPEC-F-Q-4 | T-F-Q-4 | 65f036f | AC-TEST-1, AC-TEST-2, AC-TEST-3 | test_embedding_index/semantic/related (no importorskip), test_ci_workflow::test_embedding_tests_no_importorskip, test_embedding_benchmark |

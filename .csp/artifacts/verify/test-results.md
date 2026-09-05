@@ -99,3 +99,28 @@ AC-LINK-2) pass unconditionally via mock.
 | multi-platform | desktop 0.1.0 / web 0.1.0 | independent 0.x (pre-1.0, per §1.2 rules — OK) | PASS |
 
 **Verdict**: All gates green. Code is finalized. Proceeding to reconcile + local tag.
+
+---
+
+## v1.12.0 (2026-09-05)
+
+| Gate | Command | Result | Status |
+|---|---|---|---|
+| unit + integration | `.venv/bin/python -m pytest tests/ -q` | 2074 passed, 3 skipped, 0 failed | PASS |
+| ruff lint | `.venv/bin/ruff check src/ tests/` | 0 errors | PASS |
+| smoke | `test_smoke_cmd.py + test_smoke_chain.py` | 16 passed (6/6 chain + 5 cmd + 5 node) | PASS |
+| no torch load | embedding tests mock litellm.embedding | no sentence_transformers/torch import during tests | PASS |
+| no importorskip ST | `test_ci_workflow.py::test_embedding_tests_no_importorskip` | embedding tests have no pytest.importorskip | PASS |
+
+**Skip analysis**: 3 skipped (1 fsrs importorskip [learn] extra + 2 pre-existing). Zero embedding importorskip skips — all embedding tests now run via mock litellm.embedding.
+
+**Key changes**:
+- `embed_texts()` pivoted to `litellm.embedding()` API (primary) + local ST (optional fallback)
+- `EmbeddingSettings` added to settings.py (model/api_key/api_base/timeout)
+- `detect_tier()._embeddings_available()` now checks API config OR local ST
+- `EmbeddingSink.write()` + `_upsert_embedding()` use dynamic model name (`_current_model_name()`)
+- 3 test files removed `importorskip("sentence_transformers")`, now mock litellm.embedding
+- New `test_embedding_benchmark.py` (semantic vs BM25 recall + P99 latency)
+- `tests/conftest.py` sets `LITELLM_LOCAL_MODEL_COST_MAP=True` (skip remote fetch)
+
+**Verdict**: All gates green. 2074 passed (up from 2064), 3 skipped (down from 6). No torch loaded. Proceeding to 06-ship.

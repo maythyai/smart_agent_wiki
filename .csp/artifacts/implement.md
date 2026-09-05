@@ -275,3 +275,46 @@ Lead 单线实施（4 Task 文件无重叠，串行成本低；不 spawn 子代�
 - ruff check src/ tests/: 0 errors
 - coverage: 65.36% (fail_under=65 ✓)
 - saw smoke: 6/6 passed
+
+---
+
+## v1.12.0 (2026-09-05) — embedding pivot to API
+
+### Context
+v1.10.0 引入 embedding 走本地 sentence-transformers，7 个 importorskip 测试 CI 全 skip（N1 High/P1）。v1.12.0 pivot 到 litellm OpenAI 风格 API，闭合 N1。
+
+### Ground findings (file:line)
+- `embeddings.py:19-29` — `embeddings_available()` 检测 `importlib.import_module("sentence_transformers")` → 改为 API OR ST
+- `embeddings.py:41-57` — `embed_texts()` 调 `SentenceTransformer("all-MiniLM-L6-v2").encode()` → 改为 `litellm.embedding()`
+- `router.py:16,98-110` — `litellm.completion(**kwargs)` 范式 → embedding 照此调 `litellm.embedding(**kwargs)`
+- `settings.py:19-26` — `LLMSettings` 范式 → 新增 `EmbeddingSettings`(model/api_key/api_base/timeout)
+- `settings.py:79,92-93,116-120` — `detect_tier()._embeddings_available()` 改为 API OR ST
+- `embedding_sink.py:73` — model 列硬编码 `"all-MiniLM-L6-v2"` → 改为 `_current_model_name()` 动态
+- `search_cmd.py:249` — `_upsert_embedding` 硬编码 model → 改为动态
+- `search_cmd.py:217-227` — 维度检测范式已有，provider 换了自动走 API
+
+### Implementation
+- **T-F-Q-1** (commit f4f4869): embed_texts provider 重构 — 三级路由 API→ST→None，EmbeddingSettings 从 env 读取 (SAW_EMBEDDING_MODEL/EMBEDDING_API_KEY/OPENAI_API_KEY)，_normalize() L2 范数化，_current_model_name() 动态 model 列
+- **T-F-Q-2** (commit f4e9f04): embedding_sink + search_cmd model 列动态化，rebuild_embeddings hint 更新
+- **T-F-Q-3** (commit 4818926): ST fallback 分支确认 + test_semantic_search 4 测试 (含 ST fallback + API-only 两种场景)
+- **T-F-Q-4** (commit 65f036f): 3 文件去 importorskip 改 mock litellm.embedding，test_embedding_benchmark.py 新建 (semantic vs BM25 + P99)，test_ci_workflow 更新
+
+### Mock strategy
+- mock `litellm.embedding` via `monkeypatch.setattr(emb_mod.litellm, "embedding", mock_fn)`
+- mock 函数接收 `**kwargs`，从 `input` kwarg 提取 texts
+- 向量基于文本关键词生成 topic-direction 向量（ML/crypto/web），dim=1536
+- 降级测试用 `_patch_embeddings_unavailable()` context manager 同时 patch embeddings + sink + _st_available + _api_embedding_available
+
+### Key decisions
+- litellm import 慢（7s remote fetch）→ `tests/conftest.py` 设 `LITELLM_LOCAL_MODEL_COST_MAP=True`（1.4s）
+- `sentence_transformers` 实际已安装于本机 → `_st_available()` 返回 True → 但测试 mock API 为主路径，不走 ST
+- degradation 测试 patch 目标：必须 patch `saw.write_queue.sinks.embedding_sink.embeddings_available`（模块级 import 不受 embeddings 模块 patch 影响）
+- `_ML_KW` 去掉 "python"（web-framework 内容含 "Python" 导致误匹配 ML 向量）
+
+### No torch loaded
+- 模块级 `import litellm` 不加载 torch/ST
+- `_st_available()` 函数内 `import sentence_transformers` → 测试不调用（mock API 优先 + degradation patch `_st_available`=False）
+- 验证：`import saw.adapters.embeddings` 后 `sys.modules` 无 `torch`/`sentence_transformers`
+
+### Test results
+2074 passed, 3 skipped, ruff 0, smoke 16/16 (6/6 chain + 5 cmd + 5 node). 无 ST skip。

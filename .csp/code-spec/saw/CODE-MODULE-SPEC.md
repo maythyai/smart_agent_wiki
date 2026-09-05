@@ -221,3 +221,31 @@ updated: "2026-09-01"
 | conn 获取 | `list_workflows` 入口 | `src/saw/api/routes/collaborate.py:~332-336` | `getattr(request.app.state, "conn", None)` → fallback `getattr(query, "_conn", None)` |
 | auto-migrate | `list_workflows` | `src/saw/api/routes/collaborate.py:~339` | `apply_migrations(conn)` 确保 v4 表 |
 | fallback | `list_workflows` | `src/saw/api/routes/collaborate.py:~337` | `conn is None` → in-memory only（向后兼容） |
+
+---
+
+## CMS Delta — v1.12.0 (2026-09-05)
+
+### embed_texts API provider 重构
+
+| 改动 | file:line | 说明 |
+|---|---|---|
+| `embed_texts()` 改调 `litellm.embedding()` | `src/saw/adapters/embeddings.py:155-175` | 三级路由 API→ST→None；`_embed_via_api()` 调 `litellm.embedding(model=cfg.model, input=texts, api_base=cfg.api_base, api_key=cfg.api_key)` |
+| `_get_embedding_settings()` 从 env 读取配置 | `src/saw/adapters/embeddings.py:42-70` | 读 `SAW_EMBEDDING_MODEL`/`EMBEDDING_API_KEY`/`OPENAI_API_KEY`/`SAW_EMBEDDING_API_BASE`/`OPENAI_BASE_URL` |
+| `_api_embedding_available()` | `src/saw/adapters/embeddings.py:72-86` | 检测 model + api_key 或 api_base 配置 |
+| `_st_available()` / `_embed_via_st()` | `src/saw/adapters/embeddings.py:88-120` | 本地 ST fallback（v1.10.0 路径保留） |
+| `_normalize()` | `src/saw/adapters/embeddings.py:122-127` | L2 范数化 API 向量 |
+| `_current_model_name()` | `src/saw/adapters/embeddings.py:177-184` | 动态 model 列值（API model 名 or `all-MiniLM-L6-v2` fallback） |
+| `embeddings_available()` | `src/saw/adapters/embeddings.py:130` | `_api_embedding_available() or _st_available()` |
+| `EmbeddingSettings` 新增 | `src/saw/config/settings.py:29-38` | model/api_key/api_base/timeout，复用 LLMSettings 范式 |
+| `_embeddings_available()` 改 API OR ST | `src/saw/config/settings.py:122-133` | `_api_embedding_configured()` OR `importlib.import_module("sentence_transformers")` |
+| `_api_embedding_configured()` | `src/saw/config/settings.py:136-155` | 读 env 检测 API 配置 |
+| `EmbeddingSink.write()` model 列动态 | `src/saw/write_queue/sinks/embedding_sink.py:40` | `_current_model_name()` 替换硬编码 |
+| `_upsert_embedding()` model 列动态 | `src/saw/drivers/cli/commands/search_cmd.py:265` | `_current_model_name()` 替换硬编码 |
+| `tests/conftest.py` | `tests/conftest.py:1-8` | `LITELLM_LOCAL_MODEL_COST_MAP=True`（skip litellm remote fetch） |
+
+### 调用链（不变）
+- `EmbeddingSink.write()` → `embed_texts()` → `_embed_via_api()` / `_embed_via_st()` → `_normalize()`
+- `QueryEngine._semantic_search()` → `embed_texts()` + `embeddings_available()` (lazy import in function)
+- `compute_related_pages()` → `embeddings_available()` + `cosine_similarity()` (lazy import in function)
+- `rebuild_embeddings()` → `embed_texts()` (probe dim) + `_upsert_embedding()`

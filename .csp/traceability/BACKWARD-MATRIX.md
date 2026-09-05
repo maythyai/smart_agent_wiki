@@ -42,3 +42,21 @@
 | SPEC-F-O-2 | F-O-2 | §3.2 | AC-COV-1/2 | debt-closure | CODE-MODULE-SPEC | 42b9399 |
 | SPEC-F-O-3 | F-O-3 | §3.3 | AC-WF-1/2/3 | debt-closure | CODE-MODULE-SPEC | e3869d3 |
 | SPEC-F-O-4 | F-O-4 | §3.4+§3.5 | AC-SPEC-1/2, AC-HASH-1 | debt-closure | CODE-MODULE-SPEC | 0f0e82e |
+
+## v1.12.0 delta（embedding API 重构）
+
+| Spec | Feature | PRD 模块 | AC | PMS | CMS ref | Commit |
+|---|---|---|---|---|---|---|
+| SPEC-F-Q-1 | F-Q-1 | §3.1 | AC-EA-1/2 | embedding-api | CODE-MODULE-SPEC | [TBD-05] |
+| SPEC-F-Q-2 | F-Q-2 | §3.2 | AC-DIM-1/2 | embedding-api | CODE-MODULE-SPEC | [TBD-05] |
+| SPEC-F-Q-3 | F-Q-3 | §3.3 | AC-FB-1/2 | embedding-api | CODE-MODULE-SPEC | [TBD-05] |
+| SPEC-F-Q-4 | F-Q-4 | §3.4 | AC-TEST-1/2/3 | embedding-api | CODE-MODULE-SPEC | [TBD-05] |
+
+### v1.12.0 — embedding API pivot
+
+| Commit | Task | Spec | Feature | PRD Item | AC | Test |
+|---|---|---|---|---|---|---|
+| f4f4869 | T-F-Q-1 | SPEC-F-Q-1 | F-Q-1 | PRD-EA-1 | AC-EA-1, AC-EA-2 | test_embedding_index (4), test_embedding_degradation (4) |
+| f4e9f04 | T-F-Q-2 | SPEC-F-Q-2 | F-Q-2 | PRD-EA-2 | AC-DIM-1, AC-DIM-2 | test_embedding_index::test_dim_change, test_emb_ac1 |
+| 4818926 | T-F-Q-3 | SPEC-F-Q-3 | F-Q-3 | PRD-EA-3 | AC-FB-1, AC-FB-2 | test_semantic_search::test_sem_fb1, test_sem_fb2 |
+| 65f036f | T-F-Q-4 | SPEC-F-Q-4 | F-Q-4 | PRD-EA-4 | AC-TEST-1/2/3 | test_embedding_* (mock), test_ci_workflow, test_embedding_benchmark |
