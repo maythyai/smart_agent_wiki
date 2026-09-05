@@ -40,3 +40,11 @@
 - 用例总数：81 → 81 + 12 = 93（[TBD-impl] 实施后落定）。
 - 新覆盖 AC：AC-CACHE-1/2/3/4, AC-COV-1/2, AC-WF-1/2/3, AC-SPEC-1/2, AC-HASH-1（12 条全映射）。
 - TMS delta 见 `TMS-DELTA-v1.11.0.md`。
+
+## v1.12.0 delta（embedding API 重构）
+- 模块：embedding-api（PMS-embedding-api），ADR-012 embedding provider 选型 litellm API + 本地 ST fallback。
+- 新增 9 AC（AC-EA-1/2, AC-DIM-1/2, AC-FB-1/2, AC-TEST-1/2/3），全映射。
+- 测试文件：test_embedding_index.py（改 API mock，去 importorskip）、test_semantic_search.py（改 API mock，去 importorskip）、test_related_pages_embedding.py（改 API mock，去 importorskip）、test_embedding_degradation.py（扩 API 不可用场景）、test_ci_workflow.py（扩 importorskip 检测更新）、test_embedding_benchmark.py（新建 benchmark）。
+- 用例总数：93 → 93 + 9 = 102（[TBD-impl] 实施后落定）。
+- 新覆盖 AC：AC-EA-1/2, AC-DIM-1/2, AC-FB-1/2, AC-TEST-1/2/3（9 条全映射）。
+- TMS delta 见 `TMS-DELTA-v1.12.0.md`。

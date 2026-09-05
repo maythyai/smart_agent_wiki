@@ -33,7 +33,7 @@ see_also: docs/strategy/STRATEGY.md | docs/prd/PRD-INDEX.md | .csp/review/REVIEW
 
 | 载体 | 现状 | 规则 |
 |---|---|---|
-| `pyproject.toml`（Python 包） | `1.11.0` | **canonical 真源**。下一个发布 = `v1.12.0`（待 07 复盘后决策，MINOR） |
+| `pyproject.toml`（Python 包） | `1.11.0` | **canonical 真源**。下一个发布 = `v1.12.0`（embedding 改用 OpenAI 风格 API + E2E 验证，MINOR） |
 | git tags `v1.0.1` … `v1.9.0` | 全部 SemVer annotated，与 pyproject 一致 | 保留，对外发布基线 |
 | git tags `v3.4.0` / `v3.7.0` | 历史 internal sprint 里程碑号 | 重新定性为**内部 milestone label**（见 1.3），不作为对外发布版本；不可变，不移动/删除 |
 | `desktop/`（tauri.conf.json + package.json） | `0.1.0` | 桌面端**未达 1.0**，独立 0.x 跟踪至稳定；达 v1.0 后与 canonical 对齐 |
@@ -53,8 +53,9 @@ see_also: docs/strategy/STRATEGY.md | docs/prd/PRD-INDEX.md | .csp/review/REVIEW
 | `v3.8` | v1.3.0 | released |
 | `v4.0` | v1.10.0 | released |
 | `v4.1` | v1.11.0 | released |
+| `v4.2` | v1.12.0（下一周期） | in-progress（01-prd） |
 
-> lifecycle-state `next_cycle: v1.11.0`。复盘引用的 `v4.2`(embedding) / `v4.3`(realtime 仪表盘) / `v4.4`(desktop) 是**内部候选主题标记**，**不是 SemVer 发布号**——仅作 backlog 索引，实际发布号按 1.1 规则从 v1.10.0 续编。v1.10.0 已采纳 v4.2(embedding) 候选；v1.11.0 采纳"清债/修 bug"候选（N7/N2·K1/M3/N5/N6）。
+> lifecycle-state `next_cycle: v1.12.0`。复盘引用的 `v4.2`(embedding) / `v4.3`(realtime 仪表盘) / `v4.4`(desktop) 是**内部候选主题标记**，**不是 SemVer 发布号**——仅作 backlog 索引，实际发布号按 1.1 规则从 v1.11.0 续编。v1.10.0 采纳 v4.2(embedding) 新能力；v1.11.0 采纳"清债/修 bug"；v1.12.0 pivot：embedding 改用 OpenAI 风格 API + E2E 验证（闭合 N1/N4，不跑本地重 ML）。
 
 ### 1.4 Tag 规则
 
@@ -200,20 +201,37 @@ canonical = `pyproject.toml`。发布时以下必须与之一致，用脚本校�
 - **前置依赖**：v1.10.0 基线。**不需** `[learn]` extra（N1/N4 embedding E2E/benchmark 续留，须用户装 SDK）。
 - **07 回流**：N7 + N2/K1 + M3 + N5 + N6。续留：N1(embedding E2E) / N3(K2 per-request ws) / N4(benchmark) / M2 / L2。
 
+### v1.12.0 — embedding 改用 OpenAI 风格 API + E2E 验证（status: in-progress, 01-prd 进行中）
+
+> intelligence-adaptation track。**用户决策 pivot**：不跑本地重 ML 服务（torch/sentence-transformers 本地模型——会打死 runner 且非生产形态），embedding 改用 **OpenAI 风格 API**（litellm，与既有 LLM 调用同范式）。闭合 v1.10.0 N1（High/P1）。**additive**——换 provider + E2E 验证 + benchmark，无 breaking → MINOR。
+
+- **目标**：把 `embeddings.py::embed_texts()` 的 provider 从本地 `SentenceTransformer` 重构为 litellm OpenAI 风格 embedding API（`litellm.embedding`/`aembedding`，模型可配置如 `text-embedding-3-small`/`bge` 类），去掉本地 torch 重依赖，E2E 用 API mock 验证（不再 importorskip、不再打死 runner），并 benchmark semantic vs BM25（闭合 N1 + N4）。
+- **关键功能（摘要级）**：
+  1. `embeddings.py` provider 重构：litellm.embedding API 替代本地 SentenceTransformer（base_url/api_key/model 走 config，复用 LLM 同套 env）
+  2. embedding 维度可配置（API 模型 dim 如 1536 ≠ 本地 384），embedding_store dim 列驱动，索引重建检测维度变更
+  3. 本地 ST 降级为**可选 fallback**（`[learn]` extra 仍可装，但默认走 API；不装 ST 不影响功能）
+  4. v1.10.0 的 7 个 importorskip 测试改为 API mock 测（不依赖本地 SDK，CI 可跑）+ 真实 API key 可选 E2E
+  5. benchmark：semantic vs BM25 召回 + P99（API embedding）
+- **价值描述**：embedding 从"本地重 SDK、未验证"到"API 轻接入、E2E 实测通过"，真正可上线——生产部署不依赖本地 torch/模型下载。
+- **成功指标**：embedding 测试全 pass（API mock，不 skip）；semantic 召回优于 BM25；P99 优于或接近 BM25 `[TBD]`；2064+ passed 不回归；ruff 0；**无本地 torch 加载**（runner 稳定）。
+- **前置依赖**：v1.11.0 基线 + litellm（已在依赖）。**不要求**本地 sentence-transformers。
+- **07 回流**：N1(embedding E2E) + N4(benchmark)。续留：N3(K2) / M2 / L2 / O1-O4。
+
 ### 下一版本候选（07 复盘回流，待下一轮 01 决策）
 
-> v1.10.0 周期闭环 2026-09-04（07-retro done，retrospective-v1.10.0.md）。以下为候选主题，**不定论**，供下一轮 01 PRD 决策。
+> v1.11.0 周期闭环 2026-09-05（07-retro done，retrospective-v1.11.0.md）。以下为候选主题，**不定论**，供下一轮 01 PRD 决策。
 
 | 候选 | findings 关联 | 说明 |
 |---|---|---|
-| embedding E2E 验证 + benchmark | N1(embedding E2E 未验证, P1) / N4(P99 未 benchmark) | 须用户装 `[learn]` extra（sentence-transformers），跑真实语义检索 + 对比 BM25 P99 |
-| realtime 仪表盘（v4.3 完整前端） | M2/M3 续留 | agent/workflow 运行态实时可视化 |
+| embedding E2E 验证 + benchmark | N1(embedding E2E 未验证, P1) / N4(P99 未 benchmark) / O1(cache 命中率, P2) | 须用户装 `[learn]` extra（sentence-transformers），跑真实语义检索 + P99 + cache hit/miss 对比 |
+| realtime 仪表盘（v4.3 完整前端） | M2 续留 | agent/workflow 运行态实时可视化（M3 CLI vs REST 语义双重已清） |
 | desktop 完成（v4.4 Tauri） | — | 桌面端达 v1.0 |
-| 清 K1/K2 债 | N2(coverage 65, compile/compiler 17%) / N3(per-request ws) | 债务收口第四轮 |
+| K2 per-request workspace 注入 | N3/K2 续留 | web 路径请求级 workspace 隔离（v2.0 架构演进候选） |
 | 自定义 agent 角色注册 | — | v1.5.0 留 v2.0 候选 |
-| 缓存优化 + ANN 索引 | N7(semantic 不走 cache) | semantic 检索性能 |
+| 清剩余 coverage 边角 | O2(coverage 65.36% 余量薄, P3) | fail_under 65→67 给余量，compiler P2 函数深测 |
+| REST `/workflows` 兼容 alias + CHANGELOG | O3(REST 行为变更无标注, P3) | 字段名兼容 + 文档标注行为变更 |
 
-续留 findings（跨迭代 backlog）：K1(coverage 65) / K2(per-request ws) / M2(agent 活动聚合) / M3(CLI vs REST 语义双重) / L2(链接自动 apply) / N5(Spec 命名偏离) / N6(ROADMAP hash 已更正)。
+续留 findings（跨迭代 backlog）：N1(embedding E2E) / N3/K2(per-request ws) / N4(P99 benchmark) / M2(agent 活动聚合) / L2(链接自动 apply) / O1(cache 命中率) / O2(coverage 余量薄) / O3(REST 兼容/CHANGELOG) / O4(tag 指向 reconcile 非 release commit)。
 
 ### 版本-主题表（1 年）
 
@@ -231,6 +249,7 @@ canonical = `pyproject.toml`。发布时以下必须与之一致，用脚本校�
 | v1.9.0 | Agent & Workflow 可视化 | intelligence-adaptation | released (2026-09-04) |
 | v1.10.0 | embedding 语义搜索 | intelligence-adaptation | released (2026-09-04) |
 | v1.11.0 | 债务收口 IV / bug fix（N7 cache + K1 coverage + M3 + N5/N6） | core-trust | released (2026-09-05) |
+| v1.12.0 | embedding 改用 OpenAI 风格 API + E2E 验证（闭合 N1/N4） | intelligence-adaptation | in-progress (01-prd) |
 
 ## 3. 3 年路径（大版本里程碑）
 
@@ -255,7 +274,7 @@ SAW 的终局是**AI agent 与人类共用的、可验证、可溯源、可治�
 
 ## 5. 衔接声明
 
-- **01 PRD** 读本文件定位本版本主题；PRD front-matter 标 `roadmap_ref: ROADMAP` + `target_version`（如 v1.11.0）。v1.11.0 周期已闭环（released 2026-09-05），主题 = 债务收口 IV / bug fix。下一周期 v1.12.0 待 07 复盘后决策。
+- **01 PRD** 读本文件定位本版本主题；PRD front-matter 标 `roadmap_ref: ROADMAP` + `target_version`（如 v1.11.0）。v1.11.0 周期已闭环（released 2026-09-05）。当前 v1.12.0 周期 01-prd 进行中，主题 = embedding E2E 验证 + benchmark。
 - **06 release** 用「版本号规则」节（SemVer/Tag/预发布/多平台一致性），不另立方案。v1.11.0 为 additive → 发 MINOR，不强行 MAJOR。
-- **07 复盘** findings（status=open/deferred）回流更新本文件下一版本主题与版本-主题表 status（planned→in-progress→shipped→deferred）。当前回流 findings：M1/M2/M3 + K1/K2 + L1-L3。
+- **07 复盘** findings（status=open/deferred）回流更新本文件下一版本主题与版本-主题表 status（planned→in-progress→shipped→deferred）。当前回流 findings：N1/N3/N4/M2/L2 + O1/O2/O3/O4。v1.11.0 findings（N7/N2-K1/M3/N5/N6）已全部清掉。
 - **lifecycle**：读 `.csp/lifecycle-state.json` 对齐在跑版本；本文件不写 lifecycle（外环）。

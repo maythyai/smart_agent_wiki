@@ -83,7 +83,15 @@
 | SPEC-F-O-3 | F-O-3 | workflow REST 统一读 DB（collaborate.py list_workflows 读 workflow_executions + merge live） | M | debt-closure | 3/3 | SPEC-F-O-3.md |
 | SPEC-F-O-4 | F-O-4 | Spec 命名回更 + tag hash 复核（N5+N6，文档修复） | S | debt-closure | 3/3 | SPEC-F-O-4.md |
 
+## v1.12.0 delta（+4）
+| spec_id | feature_id | title | complexity | pms_module | ac_coverage | file |
+|---|---|---|---|---|---|---|
+| SPEC-F-Q-1 | F-Q-1 | embed_texts provider 重构为 litellm API（base_url/api_key/model 走 config） | M | embedding-api | 2/2 | SPEC-F-Q-1.md |
+| SPEC-F-Q-2 | F-Q-2 | 维度可配 + embedding_store dim 驱动 + 重建检测 + model 列动态化 | M | embedding-api | 2/2 | SPEC-F-Q-2.md |
+| SPEC-F-Q-3 | F-Q-3 | 本地 ST 可选 fallback（detect_tier API 为主 ST 为辅） | M | embedding-api | 2/2 | SPEC-F-Q-3.md |
+| SPEC-F-Q-4 | F-Q-4 | 测试改 API mock + benchmark semantic vs BM25 | M | embedding-api | 3/3 | SPEC-F-Q-4.md |
+
 ## 校验
-- Spec 数 == 20 + 8(v1.5.0) + 4(v1.6.0) + 3(v1.7.0) + 3(v1.8.0) + 3(v1.9.0) + 4(v1.10.0) + 4(v1.11.0) == 49 == decomposition 原子 Feature 数 ✓（1:1）
+- Spec 数 == 20 + 8(v1.5.0) + 4(v1.6.0) + 3(v1.7.0) + 3(v1.8.0) + 3(v1.9.0) + 4(v1.10.0) + 4(v1.11.0) + 4(v1.12.0) == 53 == decomposition 原子 Feature 数 ✓（1:1）
 - 每个 feature_id 在 decomposition FEATURE-DETAILS 存在 ✓
 - 每份 Spec ac_coverage 自检无未覆盖 AC ✓

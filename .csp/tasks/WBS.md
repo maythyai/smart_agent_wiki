@@ -61,6 +61,10 @@
 | T-F-O-2 | SPEC-F-O-2 | compile/compiler.py 深覆盖（新建 tests/unit/engines/compile/ 7 测试文件 + conftest 20 用例覆盖 30 函数）+ pyproject.toml fail_under 64→65 | test | L | — | tests/unit/engines/compile/*, pyproject.toml | AC-COV-1, AC-COV-2 | debt-closure |
 | T-F-O-3 | SPEC-F-O-3 | collaborate.py list_workflows 改读 workflow_executions DB 表 + merge live in-memory running + conn=None fallback + 无表 auto-migrate | backend-api | M | — | api/routes/collaborate.py, drivers/cli/commands/workflow_cmd.py | AC-WF-1, AC-WF-2, AC-WF-3 | debt-closure |
 | T-F-O-4 | SPEC-F-O-4 | SPEC-F-N-1.md L27/L133/L189 命名回更（saw search rebuild-embeddings→saw rebuild-embeddings）+ ROADMAP/lifecycle-state tag hash @3865c75 三处复核 | docs | S | — | .csp/specs/SPEC-F-N-1.md, docs/strategy/ROADMAP.md, .csp/lifecycle-state.json | AC-SPEC-1, AC-SPEC-2, AC-HASH-1 | debt-closure |
+| T-F-Q-1 | SPEC-F-Q-1 | `embed_texts()` 改调 `litellm.embedding` + 新增 `EmbeddingSettings`（复用 `LLMSettings` 范式）+ `_api_embedding_available`/`_embed_via_api`/`_normalize` + `embeddings_available` 改 API OR ST + `detect_tier._embeddings_available` 改 API OR ST；签名不变 | backend-logic | M | — | src/saw/adapters/embeddings.py, src/saw/config/settings.py | AC-EA-1, AC-EA-2 | embedding-api |
+| T-F-Q-2 | SPEC-F-Q-2 | `EmbeddingSink.write`/`_upsert_embedding` model 列动态化 + `rebuild_embeddings` 维度检测适配（provider 换了自动走 API/ST）；表结构不变（v10 已有 dim+model） | backend-logic | M | T-F-Q-1 | src/saw/write_queue/sinks/embedding_sink.py, src/saw/drivers/cli/commands/search_cmd.py | AC-DIM-1, AC-DIM-2 | embedding-api |
+| T-F-Q-3 | SPEC-F-Q-3 | 本地 ST 可选 fallback：`embed_texts` 三级路由 API→ST→None 补 ST 分支 + `embeddings_available`/`_embeddings_available` OR 逻辑对称；向后兼容 v1.10.0 | backend-logic | M | T-F-Q-1 | src/saw/adapters/embeddings.py, src/saw/config/settings.py | AC-FB-1, AC-FB-2 | embedding-api |
+| T-F-Q-4 | SPEC-F-Q-4 | 测试改 API mock（去 importorskip，7 测试改 mock litellm.embedding）+ 降级 mock 扩 API 不可用（4 测试）+ `test_ci_workflow` 更新 + 新建 `test_embedding_benchmark`（semantic vs BM25 召回+P99） | test | M | T-F-Q-1 | tests/unit/test_embedding_index.py, tests/unit/test_semantic_search.py, tests/unit/test_related_pages_embedding.py, tests/unit/test_embedding_degradation.py, tests/unit/test_ci_workflow.py, tests/unit/test_embedding_benchmark.py | AC-TEST-1, AC-TEST-2, AC-TEST-3 | embedding-api |
 
 ## 汇总
 - Task：20（1:1 Spec）；类型：backend-cli×1 / test×4 / infra-ci×4 / infra-script×2 / doc×1 / test-security×3 / backend-security×2 / backend×3
@@ -123,3 +127,9 @@
 - 2 Wave：Wave 1 T-F-N-1（migration v10 串行先行）→ Wave 2 T-F-N-2/N-3/N-4（全并行）
 - DAG N-1→{N-2,N-3,N-4} 无环，与 decomposition 一致
 - 详见 `.csp/tasks/TASKS-DELTA-v1.10.0.md`
+
+## v1.12.0 任务拆解（embedding API 重构，2026-09-05）
+- 4 Task（1:1 Spec）：T-F-Q-1（backend-logic provider 重构）/ T-F-Q-2（backend-logic 维度可配+重建检测）/ T-F-Q-3（backend-logic ST fallback）/ T-F-Q-4（test mock+benchmark）
+- 2 Wave：Wave 1 T-F-Q-1（provider 重构前置）→ Wave 2 T-F-Q-2/Q-3/Q-4（全并行）
+- DAG Q-1→{Q-2,Q-3,Q-4} 无环，与 decomposition 一致
+- 详见 `.csp/tasks/TASKS-DELTA-v1.12.0.md`

@@ -84,3 +84,27 @@ graph LR
 
 ### v1.11.0 并行机会
 - Wave 1：T-F-O-1 / T-F-O-2 / T-F-O-3 / T-F-O-4 全并行（4 路独立，无共享文件冲突）。
+
+---
+
+## v1.12.0 delta（embedding API 重构 track）
+
+```mermaid
+graph LR
+  Q1[T-F-Q-1 provider 重构] --> Q2[T-F-Q-2 维度可配+重建检测]
+  Q1 --> Q3[T-F-Q-3 本地 ST fallback]
+  Q1 --> Q4[T-F-Q-4 测试 mock+benchmark]
+```
+
+### v1.12.0 DAG 校验
+- 拓扑序无环：Q-1 → {Q-2, Q-3, Q-4}，无回边 ✓
+- 与 decomposition DEPENDENCY-GRAPH v1.12.0 delta 一致（F-Q-1 → {F-Q-2, F-Q-3, F-Q-4}）✓
+- 无自环、无环。若 05 重构致环 → 报错停步。
+
+### v1.12.0 关键路径
+T-F-Q-1 → T-F-Q-2（2 步，最长链，与 Q-1→Q-3/Q-1→Q-4 等长）
+- Q-2/Q-3/Q-4 并行可压缩 Q-1→{Q-2,Q-3,Q-4} 段。
+
+### v1.12.0 并行机会
+- Wave 1：T-F-Q-1 独占（provider 重构前置）。
+- Wave 2：T-F-Q-2 / T-F-Q-3 / T-F-Q-4 全并行（3 路独立，无共享文件冲突；`embeddings.py`/`settings.py` 由 Q-3 续写 Wave 1 Q-1 成果，串行 Wave 1→2 不构成 Wave 2 内冲突）。

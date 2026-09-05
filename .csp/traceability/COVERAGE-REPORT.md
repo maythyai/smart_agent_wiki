@@ -83,3 +83,28 @@
 - PRD AC 总数：11（v1.0）+ 12（v1.10.0）+ 12（v1.11.0）= 35
 - 已覆盖：11（v1.0 covered）+ 12（v1.10.0 [TBD-impl]）+ 12（v1.11.0 [TBD-impl]）= 35
 - 缺口：0
+
+## v1.12.0 delta（embedding API 重构，9 AC）
+
+| AC | 描述 | 映射 Feature | 用例 | 状态 |
+|---|---|---|---|---|
+| AC-EA-1 | API 配置可用时语义检索 | F-Q-1 | test_embedding_index.py（改 API mock） | [TBD-impl] |
+| AC-EA-2 | API 未配置时降级 | F-Q-1 | test_embedding_degradation.py（扩 API 不可用） | [TBD-impl] |
+| AC-DIM-1 | 维度变更触发重建 | F-Q-2 | test_embedding_index.py（改 API mock + dim 变更） | [TBD-impl] |
+| AC-DIM-2 | ingest 写入正确 model | F-Q-2 | test_embedding_index.py（改 assert model 列动态） | [TBD-impl] |
+| AC-FB-1 | 本地 ST fallback | F-Q-3 | test_semantic_search.py（改 mock API 不可用 + ST 可用） | [TBD-impl] |
+| AC-FB-2 | 无 ST 走 API | F-Q-3 | test_semantic_search.py（改 mock API + ST 不可用） | [TBD-impl] |
+| AC-TEST-1 | CI embedding 测试全 pass | F-Q-4 | test_embedding_index.py + test_semantic_search.py + test_related_pages_embedding.py（去 importorskip） | [TBD-impl] |
+| AC-TEST-2 | CI 无 importorskip | F-Q-4 | test_ci_workflow.py（扩） | [TBD-impl] |
+| AC-TEST-3 | benchmark 可执行 | F-Q-4 | test_embedding_benchmark.py（新建） | [TBD-impl] |
+
+### v1.12.0 汇总
+- PRD AC 总数（本轮）：9
+- 已映射：9（100%）
+- 缺口：0
+- 全部 [TBD-impl]：05 实施后落定
+
+### 全局汇总（v1.0 + v1.10.0 + v1.11.0 + v1.12.0）
+- PRD AC 总数：11（v1.0）+ 12（v1.10.0）+ 12（v1.11.0）+ 9（v1.12.0）= 44
+- 已覆盖：11（v1.0 covered）+ 12（v1.10.0 [TBD-impl]）+ 12（v1.11.0 [TBD-impl]）+ 9（v1.12.0 [TBD-impl]）= 44
+- 缺口：0

@@ -2,7 +2,7 @@
 id: PRD-debt-closure-v1.11.0
 title: 债务收口 IV / bug fix
 version: 1.0
-status: Approved
+status: Released
 author: lifecycle-orchestrator
 date: 2026-09-05
 product_type: platform

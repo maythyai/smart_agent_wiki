@@ -124,3 +124,26 @@ AC-LINK-2) pass unconditionally via mock.
 - `tests/conftest.py` sets `LITELLM_LOCAL_MODEL_COST_MAP=True` (skip remote fetch)
 
 **Verdict**: All gates green. 2074 passed (up from 2064), 3 skipped (down from 6). No torch loaded. Proceeding to 06-ship.
+
+---
+
+## v1.12.0 06-ship Verification (2026-09-05)
+
+**Date**: 2026-09-05
+**Version**: v1.12.0 (embedding 改用 OpenAI 风格 API)
+**pyproject.toml**: version bumped 1.11.0 → 1.12.0
+
+### Gate Results
+
+| Gate | Command | Result | Status |
+|---|---|---|---|
+| pytest | `.venv/bin/python -m pytest tests/ -q` | 2076 passed, 3 skipped, 0 failed (108.92s) | PASS |
+| ruff lint | `.venv/bin/ruff check src/ tests/` | All checks passed! (0 errors) | PASS |
+| smoke | `.venv/bin/saw smoke` | 6/6 passed (skeleton 2 + ingest.compile + query.keyword + govern.learn + offline.fallback) | PASS |
+| coverage | `pytest --cov=src/saw --cov-report=term-missing` | TOTAL 29284 10092 66% (≥65) | PASS |
+| wheel | `.venv/bin/python -m build --wheel` | smart_agent_wiki-1.12.0-py3-none-any.whl built | PASS |
+| pyproject version | `grep '^version' pyproject.toml` | 1.12.0 | PASS |
+
+**Skip analysis**: 3 skipped (1 fsrs importorskip [learn] extra + 2 pre-existing). Zero embedding importorskip — all embedding tests run via mock litellm.embedding. No torch loaded during test suite.
+
+**Verdict**: All gates green. 2076 passed (up from 2074 at 05-impl), 3 skipped (no ST importorskip). Proceeding to reconcile + tag v1.12.0.

@@ -126,3 +126,46 @@
 - compiler.py 覆盖率目标值 [TBD]（须 05 实施后测量，预计 17%→~70%+）
 - 全量 coverage 65 是否仅靠 compiler 深覆盖即可达成 [TBD]（须实施后验证）
 - REST 查询延迟 [TBD]（须 05 实施后与 CLI 同量级验证）
+
+---
+
+# v1.12.0 delta（embedding API 重构，2026-09-05）
+
+## 项目概览（v1.12.0）
+- 上游：4 Spec（1:1 decomposition 4 Feature F-Q-1..4），1 PMS 模块（embedding-api）
+- Task：4（1:1 Spec，M×4），2 Wave，DAG 无环
+- 关键路径：T-F-Q-1 → T-F-Q-2（2 步，最长链，与 Q-1→Q-3/Q-1→Q-4 等长）
+- 估时：M 粒度，人日 [TBD]（无团队速率）
+
+## Task 类型分派矩阵（v1.12.0）
+| 类型 | Task | 推荐分派 |
+|---|---|---|
+| backend-logic | T-F-Q-1 | 后端（embeddings.py provider 重构 + settings.py EmbeddingSettings） |
+| backend-logic | T-F-Q-2 | 后端（embedding_sink.py model 列动态 + search_cmd.py 维度检测） |
+| backend-logic | T-F-Q-3 | 后端（embeddings.py ST fallback 分支 + settings.py OR 逻辑） |
+| test | T-F-Q-4 | QA（测试改 mock + benchmark 新建） |
+
+## 拆解门控（v1.12.0）
+- [x] Spec 完整性：4 Task == 4 Spec（03 穷尽门控通过，4 Spec == 4 原子 Feature F-Q-1..4）
+- [x] 每个 Feature 有 ≥1 Task（4/4）
+- [x] Task 粒度 ≤4h（M×4）
+- [x] DAG 无环（Q-1→{Q-2,Q-3,Q-4}，拓扑序无回边，实机校验 cycle=none）
+- [x] Task 依赖与 decomposition Feature 依赖一致（F-Q-1→{F-Q-2,F-Q-3,F-Q-4}）
+- [x] Wave 划分合理（Q-1 Wave 1 独占前置；Q-2/Q-3/Q-4 Wave 2 全并行，共享 `embeddings.py`/`settings.py` 串行 Wave 1→2）
+- [x] 每 Task acceptance 非空（指向 AC，共 9 AC 全映射）
+- [x] 不越 PMS 边界（embedding-api 模块）
+- [x] 并行检测通过（Wave 2 三 Task 文件集无重叠）
+
+## 05 实施指引（v1.12.0）
+- Lead 按 `WAVE-PLAN.md` 组建子 Agent 团队；Wave 1 T-F-Q-1 独占（provider 重构前置）。
+- Wave 2 三路并行（worktree 隔离）：T-F-Q-2（embedding_sink+search_cmd）/ T-F-Q-3（embeddings+settings 续写）/ T-F-Q-4（tests）。
+- 每 Task 一个 commit；完成后续写 commit + 追溯矩阵。
+- 共享文件 `embeddings.py`/`settings.py`：T-F-Q-1（Wave 1）→ T-F-Q-3（Wave 2），Wave 1→2 串行，禁并行写。
+- 详见 `.csp/tasks/TASKS-DELTA-v1.12.0.md`。
+
+## assumptions / [TBD]（v1.12.0）
+- API embedding P99 延迟 [TBD]（须 05 实施后 benchmark，真实 API key 可选 E2E）
+- semantic vs BM25 召回率 [TBD]（须同义查询集 benchmark 后定 baseline）
+- 具体模型名 [TBD]（默认 `text-embedding-3-small` 或 config 驱动，dim=1536）
+- 向量索引存储开销 [TBD]（API dim 如 1536 > 本地 384，须磁盘测量）
+- 全量重建延迟 [TBD]（取决于 claim/wiki 总量 × API embedding 单次延迟）

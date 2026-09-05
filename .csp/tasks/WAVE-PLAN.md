@@ -174,3 +174,38 @@
 
 ## v1.11.0 里程碑
 - M-DEBT-IV（Wave 1）：semantic cache + compile 深覆盖 + workflow REST 统一 + Spec 回更就绪 → v1.11.0 可交付。
+
+---
+
+# v1.12.0 波次（embedding API 重构，2026-09-05）
+
+> 源自 PRD-embedding-api-v1.12.0 + 02 delta + ADR-012。4 Task，2 Wave。DAG Q-1→{Q-2,Q-3,Q-4} 无环。
+
+## v1.12.0 Wave 1 — provider 重构（串行先行）
+| task_id | 描述 | 类型 | 里程碑 |
+|---|---|---|---|
+| T-F-Q-1 | embed_texts 改 litellm.embedding + EmbeddingSettings + embeddings_available/detect_tier API 检测 | backend-logic | embed_texts 走 litellm API 就绪 |
+
+## v1.12.0 Wave 2 — 维度+fallback+测试（全并行）
+| task_id | 描述 | 依赖 | 可并行性 |
+|---|---|---|---|
+| T-F-Q-2 | EmbeddingSink/_upsert model 列动态 + rebuild 维度检测适配 | T-F-Q-1 | 独立（embedding_sink.py + search_cmd.py） |
+| T-F-Q-3 | 本地 ST 可选 fallback 分支 + embeddings_available OR 逻辑 | T-F-Q-1 | 独立（embeddings.py + settings.py，续写 Wave 1） |
+| T-F-Q-4 | 测试改 API mock + benchmark semantic vs BM25 | T-F-Q-1 | 独立（tests/unit/ 独占） |
+
+## v1.12.0 共享资源串行
+- `src/saw/adapters/embeddings.py`：T-F-Q-1（Wave 1，建 API 路径 + OR 骨架）→ T-F-Q-3（Wave 2，补 ST fallback 分支 + OR 对称）。Wave 1→2 串行。
+- `src/saw/config/settings.py`：T-F-Q-1（Wave 1，新增 EmbeddingSettings + API 检测）→ T-F-Q-3（Wave 2，OR 逻辑扩展 ST importable）。Wave 1→2 串行。
+
+## v1.12.0 Wave 2 文件冲突分析
+| 文件 | Wave 2 写入方 | 冲突? |
+|---|---|---|
+| src/saw/write_queue/sinks/embedding_sink.py | T-F-Q-2 | 否 |
+| src/saw/drivers/cli/commands/search_cmd.py | T-F-Q-2 | 否 |
+| src/saw/adapters/embeddings.py | T-F-Q-3 | 否（Q-1 Wave 1 已完成，Wave 2 仅 Q-3 续写） |
+| src/saw/config/settings.py | T-F-Q-3 | 否（同上） |
+| tests/unit/test_*.py | T-F-Q-4 | 否（测试文件独占） |
+
+## v1.12.0 里程碑
+- M-EMB-API-1（Wave 1）：embed_texts 走 litellm API 就绪（provider 重构前置，解锁 Wave 2）。
+- M-EMB-API-2（Wave 2）：维度可配+重建检测 / ST fallback / 测试 mock+benchmark 就绪 → v1.12.0 可交付。

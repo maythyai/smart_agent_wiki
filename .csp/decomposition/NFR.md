@@ -99,3 +99,44 @@
 ### workspace 隔离
 - semantic cache key 须含 workspace_id（与 _keyword_search 对称），防跨 workspace 泄漏
 - workflow REST /workflows 须透传 workspace_id（参照既有范式）
+
+## v1.12.0 NFR delta（embedding API pivot track）
+
+> 来源：PRD-embedding-api-v1.12.0 §4。Feature 级下沉见 F-Q-1..4 各 yaml `nfr`。
+
+### 性能
+- API embedding P99 延迟 [TBD]（须优于或接近 BM25 的毫秒级）——benchmark 对比（真实 API key 可选 E2E）
+- semantic vs BM25 召回率 [TBD]——须用同义查询集 benchmark 后定 baseline
+- 全量重建延迟 [TBD]（取决于 claim/wiki 总量 × API embedding 单次延迟）
+
+### 无本地 torch 加载
+- runner 进程不 import torch——API 为默认路径，不要求 [learn] extra
+- CI 日志 + `pip show torch` 不存在
+- [learn] extra 装了可用作 fallback（不装不影响功能）
+
+### 降级策略
+- API 配置可用 → 走 litellm API（默认路径，无需本地 ST）
+- API 不可用但 [learn] 已装（本地 ST 可 import）→ 走本地 ST fallback（日志 info "API unavailable, falling back to local ST"）
+- 两者都不可用 → embed_texts() 返回 None，语义检索降级到 BM25（semantic_fallback: true），不报错不中断
+- detect_tier() FULL 条件：API 配置可用 OR 本地 ST 可 import
+
+### 测试覆盖
+- CI 无 [learn] extra 时：embedding 测试不再 importorskip skip，改 API mock 全 pass
+- coverage 不因 embedding 测试改 mock 而下降（去掉 importorskip 后测试从 skip 变 pass，coverage 应升不降）
+
+### 不回归
+- passed ≥2064（v1.11.0 基线）
+- ruff 0 errors
+- smoke 6/6
+
+### workspace 隔离
+- embedding 索引须遵守 workspace_id 隔离（embedding_store PK (doc_id, workspace_id) 既有，不变）
+- 维度变更重建须全 workspace 生效（DELETE FROM embedding_store 全量 wipe）
+
+### 向量索引存储开销
+- [TBD]（API dim 如 1536 > 本地 384，每 claim/wiki 页面向量大小 × 总量）——磁盘测量
+
+### 兼容
+- 无 breaking API 变更（additive MINOR）
+- embed_texts() 签名不变（list[list[float]] | None）
+- REST/CLI 命令不变（仅 provider 换 + dim 驱动 + fallback 路由）

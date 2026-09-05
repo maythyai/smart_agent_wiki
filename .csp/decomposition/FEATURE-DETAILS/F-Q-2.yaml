@@ -1,0 +1,78 @@
+feature:
+  id: "F-Q-2"
+  name: "维度可配 + embedding_store dim 列驱动 + 索引重建检测维度变更"
+  domain: "embedding-api"
+  prd_ref: "docs/prd/PRD-embedding-api-v1.12.0.md#3.2"
+  pms_module: "embedding-api"
+  user_story: "作为 DEV，我想切换 embedding 模型时维度自动检测并重建索引，以便不同 API 模型（不同 dim）无缝切换。"
+  acceptance_criteria:
+    - "Given embedding_store 有 dim=384 的旧向量（v1.10.0 本地 ST 生成），用户切换到 API 模型（dim=1536）, when 用户执行 saw rebuild-embeddings, then 检测到 dim 不匹配，wipe 旧向量，用 API 模型重新嵌入全量 claim/wiki，新向量 dim=1536，model 列反映当前 API 模型名（AC-DIM-1）"
+    - "Given embedding API 配置可用，用户执行 saw ingest 写入新 claim, when EmbeddingSink.write() 被调用, then 向量以当前 API 模型 dim 入库，model 列值为当前配置的 model 名（非硬编码 all-MiniLM-L6-v2）（AC-DIM-2）"
+  scope:
+    includes:
+      - "rebuild_embeddings 维度变更检测适配 API provider——probe dim 时调 embed_texts([\"dimension probe\"]) 获取当前 API 模型 dim（search_cmd.py:217-227 既有范式沿用）"
+      - "SELECT DISTINCT dim FROM embedding_store 比对 current_dim，不匹配则 DELETE FROM embedding_store 全量重建"
+      - "EmbeddingSink.write() 的 model 列值从硬编码 \"all-MiniLM-L6-v2\"（embedding_sink.py:73）改为动态使用当前配置的 model 名"
+      - "维度变更时全量重建——旧 dim 向量与新 dim 不兼容，须 DELETE FROM embedding_store 后全量重新嵌入"
+      - "rebuild 时 API 调用失败（chunk 级）跳过该 chunk，继续其他 chunk"
+      - "rebuild 时 API 完全不可用提示配置 API，exit 0"
+    excludes:
+      - "embed_texts provider 重构本身（F-Q-1）"
+      - "embedding_store 表结构变更（已有 dim + model 列，无需新 migration）"
+      - "本地 ST 可选 fallback（F-Q-3）"
+      - "测试改 API mock（F-Q-4）"
+  frontend: {pages: [], components: [], interactions: []}
+  backend:
+    endpoints:
+      - "CLI saw rebuild-embeddings（既有命令，维度检测逻辑适配 API provider）"
+      - "CLI saw ingest（既有命令，EmbeddingSink.write model 列动态化）"
+    business_logic:
+      - "rebuild_embeddings：probe dim → embed_texts([\"dimension probe\"]) 获取当前 API model dim"
+      - "SELECT DISTINCT dim FROM embedding_store → 比对 current_dim → 不匹配 → DELETE FROM embedding_store → 全量重建"
+      - "EmbeddingSink.write()：INSERT 时 model 列值 = 当前配置的 embedding model 名（非硬编码）"
+      - "维度变更提示：Dimension changed (OLD → NEW), wiping old vectors."
+      - "chunk 级失败跳过：Embedding failed for a chunk, skipping."
+      - "API 完全不可用：Embeddings unavailable. Configure embedding API in config."
+    integrations:
+      - "F-Q-1 embed_texts()（provider 重构后，probe dim 调 embed_texts）"
+      - "embedding_store 表（migrations.py:337-358，已有 dim + model 列，PK (doc_id, workspace_id)）"
+      - "EmbeddingSink（embedding_sink.py Write Queue sink 范式）"
+      - "rebuild_embeddings（search_cmd.py:176-227 既有维度变更检测范式）"
+  data_entities:
+    - "embedding_store（既有表，含 dim/model/vector BLOB/workspace_id 列，无需新 migration）"
+  data_operations:
+    - "dim_probe（embed_texts 获取当前 API model dim）"
+    - "dim_compare（SELECT DISTINCT dim 比对 current_dim）"
+    - "full_rebuild（DELETE FROM embedding_store + 全量重新嵌入）"
+    - "write_with_model（EmbeddingSink.write 存储动态 model 名）"
+  tech_dimensions:
+    needs_database: true
+    needs_cache: false
+    needs_queue: true
+    needs_ai: true
+    needs_vector_store: true
+    needs_realtime: false
+    needs_file_storage: false
+    needs_search: false
+    needs_scheduler: false
+    needs_notification: false
+  nfr:
+    performance: "全量重建延迟 [TBD]（取决于 claim/wiki 总量 × API embedding 单次延迟）"
+    security: "向量索引须遵守 workspace_id 隔离（embedding_store PK (doc_id, workspace_id) 既有）"
+    scalability: "向量索引存储开销 [TBD]（每 claim/wiki 页面向量大小 × 总量，API dim 如 1536 > 本地 384）"
+    availability: "rebuild 时 API 不可用提示配置，exit 0；chunk 级失败跳过不中断"
+  priority: "P0"
+  complexity: "M"
+  depends_on: ["F-Q-1"]
+  blocked_by: ["F-Q-1"]
+  risks:
+    - "维度切换数据迁移——rebuild_embeddings 已有 dim 变更检测 + wipe 重建范式（search_cmd.py:217-227），范式沿用"
+    - "API dim（如 1536）远大于本地 384 → 存储开销增加——须磁盘测量 [TBD]"
+    - "rebuild 时 API 限流——chunk 级跳过 + 继续其他 chunk，不中断"
+    - "EmbeddingSink.write model 列动态化遗漏——须确保所有 INSERT 路径都用动态 model 名"
+  assumptions:
+    - "embedding_store 表已有 dim + model 列（migrations.py v10），无需新 migration"
+    - "rebuild_embeddings 维度变更检测范式（search_cmd.py:217-227）可直接适配 API provider——probe dim 改调 embed_texts"
+    - "API model dim 通过 embed_texts([\"dimension probe\"]) 可探测（返回向量长度即为 dim）"
+    - "全量重建延迟 [TBD]——取决于 claim/wiki 总量 × API embedding 单次延迟"
+    - "向量索引存储开销 [TBD]——API dim 如 1536 > 本地 384，须磁盘测量"

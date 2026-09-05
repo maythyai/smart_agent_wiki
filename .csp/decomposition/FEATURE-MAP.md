@@ -41,10 +41,14 @@
 | F-O-2 | compile/compiler.py 深覆盖（30 函数 17%→高，fail_under 64→65） | debt-closure | P0 | L | — | 1 | §3.2 |
 | F-O-3 | workflow REST 统一读 DB（collaborate.py list_workflows 读 workflow_executions + merge live） | debt-closure | P0 | M | — | 1 | §3.3 |
 | F-O-4 | Spec 命名回更 + tag hash 复核（N5+N6，文档修复） | debt-closure | P1 | S | — | 1 | §3.4+§3.5 |
+| F-Q-1 | embed_texts provider 重构为 litellm API（替代本地 ST，config 驱动） | embedding-api | P0 | M | — | 1 | §3.1 |
+| F-Q-2 | 维度可配 + embedding_store dim 列驱动 + 索引重建检测维度变更 | embedding-api | P0 | M | F-Q-1 | 2 | §3.2 |
+| F-Q-3 | 本地 ST 可选 fallback（[learn] 装了可用，API 为主 ST 为辅） | embedding-api | P1 | M | F-Q-1 | 2 | §3.3 |
+| F-Q-4 | 测试改 API mock（去 importorskip，CI 可跑）+ benchmark | embedding-api | P0 | M | F-Q-1 | 2 | §3.4 |
 
 ## 汇总
-- 域：9（A e2e-usability / B claim-alignment / C security-hardening / D observability / E test-gate / Z tech-debt / P platform-team / N embedding / O debt-closure）
-- Feature：37（P0=22，P1=13，P2=3）— v1.4.0 新增 F-P-1..4 + F-Z-4/5；v1.5.0 +F-I-1..4+F-Z-6..9；v1.6.0 +F-J-1..4；v1.7.0 +F-K-1..3；v1.8.0 +F-L-1..3；v1.9.0 +F-M-1..3；v1.10.0 +F-N-1..4（源自 PRD-embedding-v1.10.0 + retro M1/L1）；**v1.11.0 +F-O-1..4（源自 PRD-debt-closure-v1.11.0 + retro N7/N2·K1/M3/N5/N6）**
-- 复杂度：S=10，M=14，L=1（v1.11.0 增量：S=1, M=2, L=1）
-- Wave：v1.11.0 新增 Wave 1=4（全并行，无依赖）
-- 关键路径：F-A-1 → F-A-2 → F-A-5 → F-A-6 → F-E-3（5 步）；v1.10.0 次路径：F-N-1 → F-N-2（2 步）；v1.11.0：无依赖链（4 Feature 全并行 Wave 1）
+- 域：10（A e2e-usability / B claim-alignment / C security-hardening / D observability / E test-gate / Z tech-debt / P platform-team / N embedding / O debt-closure / Q embedding-api）
+- Feature：41（P0=25，P1=14，P2=3）— v1.4.0 新增 F-P-1..4 + F-Z-4/5；v1.5.0 +F-I-1..4+F-Z-6..9；v1.6.0 +F-J-1..4；v1.7.0 +F-K-1..3；v1.8.0 +F-L-1..3；v1.9.0 +F-M-1..3；v1.10.0 +F-N-1..4（源自 PRD-embedding-v1.10.0 + retro M1/L1）；v1.11.0 +F-O-1..4（源自 PRD-debt-closure-v1.11.0 + retro N7/N2·K1/M3/N5/N6）；**v1.12.0 +F-Q-1..4（源自 PRD-embedding-api-v1.12.0 + retro N1/N4 + 用户决策 pivot to API）**
+- 复杂度：S=10，M=18，L=1（v1.12.0 增量：M=4）
+- Wave：v1.12.0 新增 Wave 1=1（F-Q-1），Wave 2=3（F-Q-2/Q-3/Q-4 全并行）
+- 关键路径：F-A-1 → F-A-2 → F-A-5 → F-A-6 → F-E-3（5 步）；v1.10.0 次路径：F-N-1 → F-N-2（2 步）；v1.11.0：无依赖链（4 Feature 全并行 Wave 1）；v1.12.0 次路径：F-Q-1 → {F-Q-2, F-Q-3, F-Q-4}（2 步）

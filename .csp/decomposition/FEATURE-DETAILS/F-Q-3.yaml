@@ -1,0 +1,73 @@
+feature:
+  id: "F-Q-3"
+  name: "本地 ST 可选 fallback（[learn] extra 装了可用，detect_tier 感知 API 配置为主、ST 为辅）"
+  domain: "embedding-api"
+  prd_ref: "docs/prd/PRD-embedding-api-v1.12.0.md#3.3"
+  pms_module: "embedding-api"
+  user_story: "作为 OPS，我想在 API 不可用时仍能用本地 ST（如果已装），以便离线/内网环境也有 embedding 能力。"
+  acceptance_criteria:
+    - "Given [learn] extra 已装（本地 ST 可用），embedding API 未配置, when 用户执行 saw search \"concept\" --mode semantic, then 走本地 ST fallback，语义检索返回结果，semantic_fallback: false，日志提示 \"API unavailable, falling back to local ST\"（AC-FB-1）"
+    - "Given [learn] extra 未装，embedding API 已配置, when 用户执行 saw search \"concept\" --mode semantic, then 走 API，语义检索返回结果，semantic_fallback: false，无需本地 ST（AC-FB-2）"
+  scope:
+    includes:
+      - "本地 sentence-transformers 降为可选 fallback——[learn] extra 仍可装，装了 ST 且 API 未配置时可走本地 ST（向后兼容 v1.10.0 用户）"
+      - "provider 选择优先级：API 配置可用 → 走 API；API 不可用但本地 ST 可用 → 走本地 ST；两者都不可用 → 降级 BM25"
+      - "embeddings_available() 返回 True 的条件：API 配置可用 OR 本地 ST 可 import（二者满足其一即 FULL tier）"
+      - "embed_texts() 内部 provider 路由：检查 API 配置 → API 可用则调 API；API 不可用则检查本地 ST → ST 可用则走本地；两者不可用返回 None"
+      - "不装 ST 不影响任何功能——CI 不再 importorskip skip，改 API mock 测试（F-Q-4）"
+      - "cluster_by_embedding() 同样走新 provider 路由（embed_texts 层面重构，自动受益）"
+    excludes:
+      - "embed_texts provider 重构本身（F-Q-1，本 Feature 仅扩展 fallback 路由）"
+      - "[learn] extra 的其他用途（fsrs/trends/distiller 的 importorskip 先例不变）"
+      - "测试改 API mock（F-Q-4）"
+  frontend: {pages: [], components: [], interactions: []}
+  backend:
+    endpoints:
+      - "CLI saw search --mode semantic（既有命令，provider 路由扩展 fallback）"
+      - "CLI saw ingest（既有命令，embed_texts fallback 路由）"
+      - "CLI saw links suggest（既有命令，compute_related_pages fallback）"
+    business_logic:
+      - "embed_texts() provider 路由：1) 检查 API 配置 → API 可用则调 litellm API；2) API 不可用则检查本地 ST → ST 可用则走 SentenceTransformer.encode(); 3) 两者不可用返回 None"
+      - "embeddings_available()：API 配置可用 OR 本地 ST 可 import → True"
+      - "detect_tier() FULL 条件：API 配置可用 OR 本地 ST 可 import"
+      - "日志 info：API 不可用 + ST 已装时提示 \"API unavailable, falling back to local ST\""
+      - "API 可用 + ST 已装 → 走 API（默认优先），不提示"
+      - "API 不可用 + ST 未装 → 返回 None，降级 BM25，tier=LIGHTWEIGHT"
+    integrations:
+      - "F-Q-1 embed_texts() provider 重构（本 Feature 扩展 fallback 分支）"
+      - "sentence-transformers（[learn] extra，pyproject.toml:64 learn=[\"fsrs>=4.0\", \"sentence-transformers>=2.2\"]）"
+      - "既有 SentenceTransformer(\"all-MiniLM-L6-v2\").encode() 路径（v1.10.0 实现，保留为 fallback）"
+  data_entities: []
+  data_operations:
+    - "provider_route（API > 本地 ST > 降级 BM25 三级路由）"
+    - "embeddings_available（API 配置可用 OR 本地 ST 可 import）"
+    - "detect_tier（FULL 条件扩展为 OR）"
+  tech_dimensions:
+    needs_database: false
+    needs_cache: false
+    needs_queue: false
+    needs_ai: true
+    needs_vector_store: true
+    needs_realtime: false
+    needs_file_storage: false
+    needs_search: true
+    needs_scheduler: false
+    needs_notification: false
+  nfr:
+    performance: "本地 ST fallback 性能同 v1.10.0（torch CPU 前向），仅离线/内网场景使用"
+    security: "本地 ST fallback 不涉及 API key，无额外安全面"
+    scalability: "本地 ST fallback 仅单机场景，非生产形态"
+    availability: "API 不可用 + ST 已装 → 走本地 ST；两者不可用 → 降级 BM25，不报错不中断"
+  priority: "P1"
+  complexity: "M"
+  depends_on: ["F-Q-1"]
+  blocked_by: ["F-Q-1"]
+  risks:
+    - "provider 路由优先级与 detect_tier 不一致——须确保 embeddings_available() OR 逻辑与 detect_tier FULL 条件对称"
+    - "本地 ST fallback 与 API dim 不一致（ST 384 vs API 1536）——dim 变更检测（F-Q-2）须能处理 ST→API 切换"
+    - "向后兼容 v1.10.0 用户——装了 ST 且无 API 配置时行为不变（走本地 ST）"
+  assumptions:
+    - "[learn] extra 装了 sentence-transformers 可 import（pyproject.toml:64 learn extra）"
+    - "本地 ST fallback 走既有 SentenceTransformer(\"all-MiniLM-L6-v2\").encode() 路径（v1.10.0 实现，保留）"
+    - "provider 优先级 API > 本地 ST > 降级 BM25 是 PRD §3.3 明确声明的决策"
+    - "不装 ST 不影响任何功能——CI 走 API mock（F-Q-4），生产走 API"

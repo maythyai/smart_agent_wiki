@@ -1,0 +1,79 @@
+feature:
+  id: "F-Q-4"
+  name: "测试改 API mock（去 importorskip，CI 可跑）+ benchmark semantic vs BM25"
+  domain: "embedding-api"
+  prd_ref: "docs/prd/PRD-embedding-api-v1.12.0.md#3.4"
+  pms_module: "embedding-api"
+  user_story: "作为 DEV，我想 embedding 测试在 CI 全 pass（不 skip），以便真实验证语义检索逻辑而非仅降级路径。"
+  acceptance_criteria:
+    - "Given CI 环境未安装 [learn] extra（无 sentence_transformers）, when pytest tests/unit/test_embedding_index.py tests/unit/test_semantic_search.py tests/unit/test_related_pages_embedding.py 执行, then 全部测试 pass（不 skip），用 API mock 验证语义检索逻辑（AC-TEST-1）"
+    - "Given CI workflow 文件, when 检查 embedding 测试执行状态, then 无 importorskip(\"sentence_transformers\")，embedding 测试全 pass，CI 不需 [learn] extra（AC-TEST-2）"
+    - "Given benchmark 测试已编写（API mock 向量集）, when 执行 benchmark 测试, then 输出 semantic vs BM25 召回率对比 + P99 延迟（mock 数据），结果可记录为 baseline [TBD]（AC-TEST-3）"
+  scope:
+    includes:
+      - "7 个原 importorskip 测试去掉 pytest.importorskip(\"sentence_transformers\")，改 mock litellm embedding API 返回固定维度向量（如 1536 维 mock）"
+      - "mock 须验证：向量入库、cosine 排序、空索引处理、维度变更检测、upsert——即原 AC-EMB-1/3、AC-SEM-1/3、AC-LINK-1/3 的逻辑验证不变，只是向量来源从本地 ST 改为 API mock"
+      - "既有 4 个降级 mock 测试（test_embedding_degradation.py）的 mock 目标从 embeddings_available 扩展到也覆盖 API 不可用场景"
+      - "新增 benchmark：semantic vs BM25 召回 + P99（用 API mock 跑，真实 API key 可选 E2E）"
+      - "CI workflow 不再需要装 [learn] extra 跑 embedding 测试"
+      - "test_ci_workflow.py 中 importorskip 检测逻辑须更新——embedding 测试不再 importorskip ST"
+    excludes:
+      - "embed_texts provider 重构本身（F-Q-1）"
+      - "维度可配 + 重建检测（F-Q-2）"
+      - "本地 ST 可选 fallback（F-Q-3）"
+      - "[learn] extra 的其他用途（fsrs/trends/distiller 的 importorskip 先例不变）"
+  frontend: {pages: [], components: [], interactions: []}
+  backend:
+    endpoints: []
+    business_logic:
+      - "test_embedding_index.py（3 测试）：去 importorskip，改 mock litellm.embedding 返回固定 1536 维向量"
+      - "test_semantic_search.py（2 测试）：去 importorskip，改 mock litellm.embedding 返回固定向量"
+      - "test_related_pages_embedding.py（2 测试）：去 importorskip，改 mock litellm.embedding 返回固定向量"
+      - "test_embedding_degradation.py（4 测试）：mock 目标从 embeddings_available 扩展到 API 不可用场景"
+      - "新增 benchmark 测试：API mock 向量集，对比 semantic vs BM25 召回率 + P99 延迟"
+      - "test_ci_workflow.py：更新 importorskip 检测逻辑，embedding 测试不再 importorskip ST"
+      - "mock 验证：向量入库、cosine 排序、空索引处理、维度变更检测、upsert"
+    integrations:
+      - "F-Q-1 embed_texts() provider 重构（mock 目标为 litellm.embedding）"
+      - "litellm（mock litellm.embedding 返回固定向量）"
+      - "既有测试 fixture（test_embedding_index.py / test_semantic_search.py / test_related_pages_embedding.py / test_embedding_degradation.py）"
+      - "CI workflow（不再需 [learn] extra 跑 embedding 测试）"
+  data_entities: []
+  data_operations:
+    - "test_mock_api（mock litellm.embedding 返回固定向量）"
+    - "test_vector_storage（向量入库验证）"
+    - "test_cosine_ranking（cosine 排序验证）"
+    - "test_dim_change（维度变更检测验证）"
+    - "test_degradation（降级路径 mock 扩展）"
+    - "benchmark（semantic vs BM25 召回 + P99）"
+  tech_dimensions:
+    needs_database: false
+    needs_cache: false
+    needs_queue: false
+    needs_ai: true
+    needs_vector_store: true
+    needs_realtime: false
+    needs_file_storage: true
+    needs_search: true
+    needs_scheduler: false
+    needs_notification: false
+  nfr:
+    performance: "benchmark semantic vs BM25 召回 + P99（mock 延迟为 0，真实 E2E benchmark 须用户配 API key 可选跑）"
+    security: "测试 mock 不涉及真实 API key，CI 安全"
+    scalability: "CI 测试全 pass 不 skip，coverage 应升不降（去掉 importorskip 后测试从 skip 变 pass）"
+    availability: "CI 环境 litellm mock 失败 → 测试 fail（不 skip），须修复"
+  priority: "P0"
+  complexity: "M"
+  depends_on: ["F-Q-1"]
+  blocked_by: ["F-Q-1"]
+  risks:
+    - "测试 mock 与真实 API 行为偏差——mock 验证逻辑路径；真实 API key 可选 E2E benchmark 补充"
+    - "mock 维度与实际 API dim 不符——测试 assert dim 一致，须用固定 dim（如 1536）mock"
+    - "coverage 回归——去掉 importorskip 后测试从 skip 变 pass，coverage 应升不降"
+    - "test_ci_workflow.py importorskip 检测逻辑遗漏更新——须同步更新"
+  assumptions:
+    - "7 个原 importorskip 测试的逻辑验证不变，只是向量来源从本地 ST 改为 API mock"
+    - "mock litellm.embedding 返回固定维度向量（如 1536 维），验证入库/检索/排序逻辑"
+    - "CI workflow 不再需要装 [learn] extra 跑 embedding 测试（但 distiller/fsrs/trends 的 importorskip 先例不变）"
+    - "benchmark baseline [TBD]——mock 延迟为 0，真实 E2E benchmark 须用户配 API key 可选跑"
+    - "semantic vs BM25 召回率 [TBD]——须用同义查询集 benchmark 后定 baseline"

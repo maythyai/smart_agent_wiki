@@ -139,3 +139,27 @@ graph LR
 
 ### v1.11.0 并行机会
 - 4 Feature 全并行（4 路独立，不同文件）。
+
+## v1.12.0 delta（embedding API pivot track）
+
+```mermaid
+graph LR
+  Q1[F-Q-1 provider 重构]
+  Q2[F-Q-2 维度可配+重建检测]
+  Q3[F-Q-3 本地 ST fallback]
+  Q4[F-Q-4 测试 mock+benchmark]
+
+  Q1 --> Q2
+  Q1 --> Q3
+  Q1 --> Q4
+```
+
+### v1.12.0 Wave
+- **Wave 1（基础层，1 Feature）**：F-Q-1（embed_texts provider 重构为 litellm API）— 无依赖，先行启动。
+- **Wave 2（核心业务+测试，3 Feature 全并行）**：F-Q-2（维度可配 + 重建检测） / F-Q-3（本地 ST 可选 fallback） / F-Q-4（测试改 API mock + benchmark）— 均依赖 F-Q-1，互相独立，可全并行启动。
+
+### v1.12.0 DAG 校验
+- 拓扑序无环：Q-1 → {Q-2, Q-3, Q-4}，无回边 ✓
+
+### v1.12.0 并行机会
+- Wave 2 中 Q-2/Q-3/Q-4 全并行（3 路独立，不同关注点：dim 驱动 / fallback 路由 / 测试 mock）。
