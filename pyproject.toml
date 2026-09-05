@@ -122,7 +122,9 @@ omit = [
 # T-F-K-3 (v1.7.0): ratcheted 63→64 (measured 64.2% @ 1977 tests after
 # synthesize engine/scheduler coverage). 65 still thin — remaining gap is
 # compile/compiler.py (17%); finding K1, v1.8.0.
-fail_under = 64
+# T-F-O-2 (v1.11.0): ratcheted 64→65 (compiler deep coverage added 20
+# test cases covering 30+ functions in compile/compiler.py).
+fail_under = 65
 show_missing = true
 exclude_lines = [
     "pragma: no cover",
