@@ -1244,7 +1244,7 @@
       "raw_path": "docs/strategy/ROADMAP.md",
       "output_path": "",
       "original_ref": "docs/strategy/ROADMAP.md",
-      "content_hash": "8589209404ad04f37a635cd27e2e0ad790b1fcca",
+      "content_hash": "69db3c0b270b0018abd1c02383bb4f8b17e2b02c",
       "source_updated_at": "2026-09-06T19:00:00+08:00",
       "build_status": "built",
       "wiki_pages": [],
@@ -1499,7 +1499,7 @@
       "raw_path": ".csp/ship/VERSION-REGISTRY.md",
       "output_path": "",
       "original_ref": ".csp/ship/VERSION-REGISTRY.md",
-      "content_hash": "bb04f39f111ffce003eadb2686d394d8d98f428c",
+      "content_hash": "4cfdad236a2fff7e344fa3218580ef84b7e7b7f2",
       "source_updated_at": "2026-09-06T15:10:00+08:00",
       "build_status": "built",
       "wiki_pages": [],
@@ -2557,52 +2557,7 @@
       "build_status": "built",
       "wiki_pages": [],
       "status": "ready"
-    },
-    {
-      "source_id": "doc:ship:release-notes-v1.15.0",
-      "source_type": "doc",
-      "kind": "ship",
-      "domain": "ship",
-      "title": "Release Notes v1.15.0 (agent/link)",
-      "raw_path": ".csp/ship/RELEASE-NOTES-v1.15.0.md",
-      "output_path": ".csp/ship/RELEASE-NOTES-v1.15.0.md",
-      "original_ref": ".csp/ship/RELEASE-NOTES-v1.15.0.md",
-      "content_hash": "7c051858df77671a075943b395e29bfd73a24690",
-      "source_updated_at": "2026-09-06T21:10:00+08:00",
-      "build_status": "built",
-      "wiki_pages": [],
-      "status": "ready"
-    },
-    {
-      "source_id": "doc:milestone:v1.15.0",
-      "source_type": "doc",
-      "kind": "milestone",
-      "domain": "milestone",
-      "title": "Milestone v1.15.0 (agent/link)",
-      "raw_path": ".csp/milestones/v1.15.0/",
-      "output_path": ".csp/milestones/v1.15.0/",
-      "original_ref": ".csp/milestones/v1.15.0/",
-      "content_hash": "d5b644f",
-      "source_updated_at": "2026-09-06T21:11:00+08:00",
-      "build_status": "built",
-      "wiki_pages": [],
-      "status": "ready"
-    },
-    {
-      "source_id": "doc:milestone:v1.15.0:archive-manifest",
-      "source_type": "doc",
-      "kind": "milestone",
-      "domain": "milestone",
-      "title": "Archive Manifest v1.15.0",
-      "raw_path": ".csp/milestones/v1.15.0/ARCHIVE-MANIFEST.md",
-      "output_path": ".csp/milestones/v1.15.0/ARCHIVE-MANIFEST.md",
-      "original_ref": ".csp/milestones/v1.15.0/ARCHIVE-MANIFEST.md",
-      "content_hash": "a4f2d592e12cf994b03bd1c9e1a26b5149e6a933",
-      "source_updated_at": "2026-09-06T21:11:00+08:00",
-      "build_status": "built",
-      "wiki_pages": [],
-      "status": "ready"
     }
   ],
-  "last_updated": "2026-09-06T21:12:00+08:00"
+  "last_updated": "2026-09-06"
 }

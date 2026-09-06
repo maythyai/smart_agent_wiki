@@ -33,7 +33,7 @@ see_also: docs/strategy/STRATEGY.md | docs/prd/PRD-INDEX.md | .csp/review/REVIEW
 
 | 载体 | 现状 | 规则 |
 |---|---|---|
-| `pyproject.toml`（Python 包） | `1.14.0` | **canonical 真源**。下一个发布 = `v1.15.0`（agent/link 能力：自定义 agent 角色 + L2 links apply + M2 活动聚合，MINOR） |
+| `pyproject.toml`（Python 包） | `1.15.0` | **canonical 真源**。下一个发布 = `v1.16.0`（TBD 下一轮 01 PRD 决策），MINOR |
 | git tags `v1.0.1` … `v1.9.0` | 全部 SemVer annotated，与 pyproject 一致 | 保留，对外发布基线 |
 | git tags `v3.4.0` / `v3.7.0` | 历史 internal sprint 里程碑号 | 重新定性为**内部 milestone label**（见 1.3），不作为对外发布版本；不可变，不移动/删除 |
 | `desktop/`（tauri.conf.json + package.json） | `0.1.0` | 桌面端**未达 1.0**，独立 0.x 跟踪至稳定；达 v1.0 后与 canonical 对齐 |
@@ -56,9 +56,9 @@ see_also: docs/strategy/STRATEGY.md | docs/prd/PRD-INDEX.md | .csp/review/REVIEW
 | `v4.2` | v1.12.0 | released |
 | `v4.3` | v1.13.0 | released |
 | `v4.4` | v1.14.0 | released |
-| `v4.5` | v1.15.0（下一周期） | in-progress（01-prd） |
+| `v4.5` | v1.15.0 | released |
 
-> lifecycle-state `next_cycle: v1.15.0`。v1.14.0 = semantic 性能优化（R1 cache 阈值可配 + R2 ANN 索引，已 released）；v1.15.0 = agent/link 能力（自定义 agent 角色 + L2 links apply + M2 活动聚合）。
+> lifecycle-state `next_cycle: v1.16.0`。v1.14.0 = semantic 性能优化（R1 cache 阈值可配 + R2 ANN 索引，已 released）；v1.15.0 = agent/link 能力（自定义 agent 角色 + L2 links apply + M2 活动聚合，已 released）。
 
 ### 1.4 Tag 规则
 
@@ -251,7 +251,7 @@ canonical = `pyproject.toml`。发布时以下必须与之一致，用脚本校�
 
 
 
-### v1.15.0 — agent/link 能力（status: in-progress, 01-prd 进行中）
+### v1.15.0 — agent/link 能力（status: released, 2026-09-06, @d5b644f）
 
 > intelligence-adaptation track。承接近续留 findings（M2/L2 + v1.5.0 留候选）。**additive**——新能力，无 breaking → MINOR。
 
@@ -301,7 +301,7 @@ canonical = `pyproject.toml`。发布时以下必须与之一致，用脚本校�
 | v1.12.0 | embedding 改用 OpenAI 风格 API + E2E 验证（闭合 N1/N4） | intelligence-adaptation | released (2026-09-05) |
 | v1.13.0 | E2E 收尾轮（ingest recursion + benchmark + REST alias + coverage 67 + Q1/Q3 closure） | core-trust | released (2026-09-06) |
 | v1.14.0 | semantic 性能优化（R1 cache 阈值可配 + R2 ANN 索引） | intelligence-adaptation | released (2026-09-06) |
-| v1.15.0 | agent/link 能力（自定义 agent 角色 + L2 links apply + M2 活动聚合） | intelligence-adaptation | in-progress (01-prd) |
+| v1.15.0 | agent/link 能力（自定义 agent 角色 + L2 links apply + M2 活动聚合） | intelligence-adaptation | released (2026-09-06) |
 
 ## 3. 3 年路径（大版本里程碑）
 
@@ -326,7 +326,7 @@ SAW 的终局是**AI agent 与人类共用的、可验证、可溯源、可治�
 
 ## 5. 衔接声明
 
-- **01 PRD** 读本文件定位本版本主题；PRD front-matter 标 `roadmap_ref: ROADMAP` + `target_version`（如 v1.11.0）。v1.11.0 周期已闭环（released 2026-09-05）。v1.12.0 周期已闭环（released 2026-09-05，embedding 改用 OpenAI 风格 API + E2E 验证）。v1.13.0 周期已闭环（released 2026-09-06，E2E 收尾轮）。v1.14.0 周期已闭环（released 2026-09-06，semantic 性能优化：cache 阈值可配 + ANN 索引 hnswlib + benchmark cache.stats 真实度量）。下一候选 v1.15.0（agent/link 能力：自定义 agent 角色 + L2 links apply + M2 agent 活动聚合）。
-- **06 release** 用「版本号规则」节（SemVer/Tag/预发布/多平台一致性），不另立方案。v1.14.0 为 additive → 发 MINOR，不强行 MAJOR。
-- **07 复盘** findings（status=open/deferred）回流更新本文件下一版本主题与版本-主题表 status（planned→in-progress→shipped→deferred）。v1.12.0 findings（N1/N4）已清掉。v1.13.0 findings（Q1/Q2/Q3 + O3）已清掉，O1 改善→R1。v1.14.0 findings（R1/R2）已清掉，R4 改善→S3。当前回流 findings：N3/M2/L2 + O2/O4 + R3 + S1/S2/S3/S4。
+- **01 PRD** 读本文件定位本版本主题；PRD front-matter 标 `roadmap_ref: ROADMAP` + `target_version`（如 v1.11.0）。v1.11.0 周期已闭环（released 2026-09-05）。v1.12.0 周期已闭环（released 2026-09-05，embedding 改用 OpenAI 风格 API + E2E 验证）。v1.13.0 周期已闭环（released 2026-09-06，E2E 收尾轮）。v1.14.0 周期已闭环（released 2026-09-06，semantic 性能优化：cache 阈值可配 + ANN 索引 hnswlib + benchmark cache.stats 真实度量）。v1.15.0 周期已闭环（released 2026-09-06，agent/link 能力：自定义 agent 角色 + L2 links apply + M2 agent 活动聚合）。下一候选 v1.16.0（TBD，待下一轮 01 PRD 决策）。
+- **06 release** 用「版本号规则」节（SemVer/Tag/预发布/多平台一致性），不另立方案。v1.15.0 为 additive → 发 MINOR，不强行 MAJOR。
+- **07 复盘** findings（status=open/deferred）回流更新本文件下一版本主题与版本-主题表 status（planned→in-progress→shipped→deferred）。v1.12.0 findings（N1/N4）已清掉。v1.13.0 findings（Q1/Q2/Q3 + O3）已清掉，O1 改善→R1。v1.14.0 findings（R1/R2）已清掉，R4 改善→S3。v1.15.0 findings（M2/L2 + 自定义角色）已清掉。当前回流 findings：N3/K2/O2/O4 + R3 + S1/S2/S3/S4。
 - **lifecycle**：读 `.csp/lifecycle-state.json` 对齐在跑版本；本文件不写 lifecycle（外环）。
