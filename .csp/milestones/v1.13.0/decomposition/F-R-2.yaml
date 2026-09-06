@@ -1,0 +1,104 @@
+feature:
+  id: "F-R-2"
+  name: "真实 embedding benchmark 脚本（semantic vs BM25 召回 + P99 + cache 命中率）"
+  domain: "e2e-tail"
+  prd_ref: "docs/prd/PRD-e2e-tail-v1.13.0.md#3.2"
+  pms_module: "e2e-tail"
+
+  # 用户视角
+  user_story: "作为 OPS，我想跑真实 embedding benchmark 得到 P99 + 召回率 baseline，以便判断 semantic 检索是否可上生产。"
+
+  acceptance_criteria:
+    - "Given vLLM 8001 可达，3 主题数据集, when 跑 benchmark, then semantic 召回率 ≥ BM25 召回率（同义查询集）（AC-B-1）"
+    - "Given vLLM 8001 可达，100 次查询, when 跑 benchmark P99 统计, then 输出 P99 数值，记录 baseline（目标值 [TBD] ms）（AC-B-2）"
+    - "Given vLLM 8001 可达，同一查询跑 2 次, when 跑 benchmark cache 测试, then 第 2 次命中 cache，延迟显著低于第 1 次，输出 hit/miss（AC-B-3）"
+    - "Given vLLM 8001 不可达, when 跑 benchmark, then 报 'vLLM endpoint unreachable' 错误退出，不 mock（AC-B-4）"
+
+  # 边界
+  scope:
+    includes:
+      - "新建 scripts/benchmark_semantic.py 可执行脚本，用真实 vLLM API（qwen_embedding@8001）跑 semantic vs BM25 召回率对比"
+      - "测试数据集覆盖 ≥3 主题域（如 ML/crypto/web），每主题 ≥5 文档"
+      - "查询集含同义查询（query 与文档无字面重叠但语义相关——BM25 会漏、semantic 应召回）"
+      - "P99 延迟统计：同一查询跑 N≥100 次，统计 P99"
+      - "semantic cache 命中率测试：同一查询重复跑 2 次，第 2 次应命中 cache，统计 hit/miss"
+      - "输出结构化结果（recall_semantic/recall_bm25/p99_ms/cache_hit_rate + 查询集明细）"
+      - "vLLM 8001 不可达 → 报错退出，不静默退化到 mock"
+      - "API 超时 → 记超时，跳过该查询，继续"
+      - "API 返回维度不匹配 → 报错退出"
+    excludes:
+      - "benchmark 脚本具体实现框架（HOW 留 03）"
+      - "测试数据集具体内容（03 任务拆解定，PRD 只要求 ≥3 主题 × ≥5 文档）"
+      - "P99 目标值（跑完填实际值，PRD 标 [TBD] ms）"
+      - "embedding provider 改动（v1.12.0 已 pivot 到 API，benchmark 走 API 路径）"
+
+  # 前后端边界
+  frontend: {pages: [], components: [], interactions: []}
+  backend:
+    endpoints:
+      - "CLI/脚本 scripts/benchmark_semantic.py（新建，可执行入口）"
+    business_logic:
+      - "检测 vLLM 8001 可达（health check）→ 不可达报错退出，不 mock"
+      - "建测试数据集（≥3 主题 × ≥5 文档）→ ingest 到临时 wiki"
+      - "BM25 baseline 查询 → 统计召回"
+      - "semantic 查询（走 embed_texts API 路径）→ 统计召回"
+      - "P99 延迟：同一查询跑 N≥100 次，统计 P99（semantic + BM25 对比）"
+      - "cache 命中率：同一查询重复跑 2 次，第 2 次应命中 cache（延迟显著降低），统计 hit/miss"
+      - "输出结构化结果（JSON/表格：recall_semantic/recall_bm25/p99_ms/cache_hit_rate + 查询集明细）"
+      - "API 超时 → 跳过该查询，继续；API 维度不匹配 → 报错退出"
+    integrations:
+      - "vLLM qwen_embedding@8001（真实 API，用户已起）"
+      - "embed_texts() API 路径（v1.12.0 已 pivot，httpx 直连 vLLM）"
+      - "QueryEngine _semantic_search()（cache 路径 + cosine 排序）"
+      - "QueryEngine _keyword_search()（BM25 baseline）"
+
+  # 数据维度
+  data_entities:
+    - "benchmark 结果（recall_semantic/recall_bm25/p99_ms/cache_hit_rate）"
+    - "测试数据集（≥3 主题 × ≥5 文档）"
+    - "查询集（含同义查询）"
+  data_operations:
+    - "benchmark run（执行 benchmark 脚本）"
+    - "recall measure（统计召回率）"
+    - "latency measure（统计 P99 延迟）"
+    - "cache hit/miss measure（统计 cache 命中率）"
+
+  # 技术维度预标记
+  tech_dimensions:
+    needs_database: false
+    needs_cache: true
+    needs_queue: false
+    needs_ai: true
+    needs_vector_store: true
+    needs_realtime: false
+    needs_file_storage: true
+    needs_search: true
+    needs_scheduler: false
+    needs_notification: false
+
+  # 非功能性需求
+  nfr:
+    performance: "benchmark 脚本在 vLLM 8001 可达时跑完不超时（单次 < 5 min）"
+    security: "benchmark 不依赖本地 torch/SentenceTransformer（走 API 路径）"
+    scalability: "[TBD]（数据集规模 PRD 定 ≥3 主题 × ≥5 文档，P99 目标值跑完填）"
+    availability: "vLLM 8001 不可达 → 报错退出，不 mock；API 超时跳过该查询继续"
+
+  # 依赖与优先级
+  priority: "P0"
+  complexity: "M"
+  depends_on: []
+  blocked_by: []
+
+  # 风险与假设
+  risks:
+    - "vLLM 8001 不稳定/用户关停——benchmark 项标 '需 vLLM 可达' 前置依赖；不可达时报错不 mock；其他 4 项不依赖 vLLM 可先行"
+    - "P99 目标值 [TBD]——跑完填实际值，PRD 标 [TBD] ms"
+    - "cache 命中率 [TBD]——重复查询加速，PRD 标 [TBD]%"
+    - "同义查询集设计影响召回对比——须保证 BM25 会漏、semantic 应召回"
+  assumptions:
+    - "vLLM qwen_embedding@8001 已由用户启动，benchmark 运行时可达"
+    - "测试数据集 ≥3 主题 × ≥5 文档，具体内容归 03 任务拆解定"
+    - "P99 目标值 [TBD] ms——跑完填实际值，PRD §1.3 标 [TBD]"
+    - "cache 命中率 [TBD]%——重复查询加速，PRD §1.3 标 [TBD]"
+    - "benchmark 走 API 路径（v1.12.0 已 pivot），不依赖本地 torch"
+    - "benchmark 脚本落 scripts/benchmark_semantic.py"

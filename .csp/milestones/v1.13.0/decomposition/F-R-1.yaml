@@ -1,0 +1,91 @@
+feature:
+  id: "F-R-1"
+  name: "ingest 目录递归遍历（Bug A）"
+  domain: "e2e-tail"
+  prd_ref: "docs/prd/PRD-e2e-tail-v1.13.0.md#3.1"
+  pms_module: "e2e-tail"
+
+  # 用户视角
+  user_story: "作为 KW，我想 saw ingest ./docs 递归导入目录下所有文档，以便批量入库不报错。"
+
+  acceptance_criteria:
+    - "Given 一个含 3 个 .md 文件的目录, when saw ingest <dir>, then 3 文件全部入库，claim_count ≥ 3，0 'Is a directory' 错误（AC-A-1）"
+    - "Given 一个无任何可识别文件的目录, when saw ingest <dir>, then 返回 'No ingestible files found'，Exit 1（AC-A-2）"
+    - "Given 目录含 2 .md + 1 损坏 .pdf, when saw ingest <dir>, then 2 .md 成功入库，1 .pdf 记入 errors，不中断（AC-A-3）"
+    - "Given 目录含子目录，子目录内 1 .md, when saw ingest <dir>, then 子目录内文件也被 ingest，claim_count 含子目录文件（AC-A-4）"
+    - "Given 目录含 .saw/ 子目录, when saw ingest <dir>, then .saw/ 内文件不被 ingest（AC-A-5）"
+
+  # 边界
+  scope:
+    includes:
+      - "pipeline.py ingest() 在 classifier.py is_dir 检测后，walk 目录递归枚举子文件（os.walk/Path.rglob），逐文件走既有 classify→extract→fuse→validate→enqueue 链路"
+      - "跳过 .git/、.saw/、node_modules/ 等已知噪声目录（排除清单 HOW 留 03，PRD 只要求排除 SAW 内部 + VCS 目录）"
+      - "空目录（无任何可识别文件）返回 IngestResult errors 含 'No ingestible files found in directory: {dir}'，claim_count=0"
+      - "部分文件失败不中断（best-effort），失败记入 errors，成功继续"
+      - "聚合 IngestResult：汇总 claim_count/entity_count/relation_count，errors 汇总所有失败文件，parser 标 'directory-batch'"
+      - "单文件路径不触发递归（既有 classify→单 extractor 路径不变）"
+    excludes:
+      - "具体排除目录清单（HOW 留 03，PRD 只要求排除 SAW 内部 + VCS 目录）"
+      - "新增文件格式支持（沿用既有 classify 识别的 markdown/pdf/code/json/table/audio/video）"
+      - "session_id 共享还是独立（HOW 留 03）"
+
+  # 前后端边界
+  frontend: {pages: [], components: [], interactions: []}
+  backend:
+    endpoints:
+      - "CLI saw ingest <dir> --path <wiki>（既有命令，加目录递归分支）"
+    business_logic:
+      - "classifier.py is_dir 检测后，pipeline.py ingest() 新增目录递归分支：os.walk 枚举子文件 → 逐文件 classify+extract+fuse+validate+enqueue"
+      - "跳过 .git/、.saw/、node_modules/ 目录（排除清单 HOW 留 03）"
+      - "空目录 → IngestResult errors=['No ingestible files found in directory: {dir}'], claim_count=0"
+      - "部分失败 → best-effort 继续，errors 汇总"
+      - "聚合 IngestResult：parser='directory-batch'，汇总 claim_count/entity_count/relation_count"
+      - "单文件路径不变（不触发递归）"
+    integrations:
+      - "classifier.py（is_dir 检测既有，复用格式识别）"
+      - "既有 extract→fuse→validate→enqueue 链路（逐文件调用，不变）"
+
+  # 数据维度
+  data_entities:
+    - "IngestResult（聚合：claim_count/entity_count/relation_count/errors/parser='directory-batch'）"
+  data_operations:
+    - "directory walk（递归枚举子文件）"
+    - "file classify（逐文件分类，跳过 UNKNOWN）"
+    - "file extract（逐文件提取，best-effort）"
+    - "result aggregate（聚合 IngestResult）"
+
+  # 技术维度预标记
+  tech_dimensions:
+    needs_database: false
+    needs_cache: false
+    needs_queue: false
+    needs_ai: false
+    needs_vector_store: false
+    needs_realtime: false
+    needs_file_storage: true
+    needs_search: false
+    needs_scheduler: false
+    needs_notification: false
+
+  # 非功能性需求
+  nfr:
+    performance: "100 文件目录 ingest 在 60s 内完成（无 LLM 模式）"
+    security: "排除 .git/ 目录防止 VCS 内部文件泄露；排除 .saw/ 防止 SAW 内部目录干扰"
+    scalability: "[TBD]（目录文件量级未提供，100 文件 60s 为 PRD NFR 基线）"
+    availability: "部分文件失败不中断（best-effort），全失败 Exit 1"
+
+  # 依赖与优先级
+  priority: "P0"
+  complexity: "M"
+  depends_on: []
+  blocked_by: []
+
+  # 风险与假设
+  risks:
+    - "ingest 递归改动影响既有单文件路径——AC-A-4 排除内部目录 + 单文件路径测试覆盖不回归"
+    - "目录文件量大时性能——100 文件 60s NFR 基线，超大目录 [TBD]"
+    - "排除清单不完整导致噪声——PRD 只要求排除 SAW 内部 + VCS，具体清单 HOW 留 03"
+  assumptions:
+    - "排除目录清单至少含 .git/、.saw/，node_modules/ 为建议项，具体清单归 03 技术方案"
+    - "session_id 共享还是独立聚合——HOW 留 03，PRD 只要求聚合结果"
+    - "100 文件目录 60s NFR 基线基于无 LLM 模式（纯 classify+extract+fuse）"
