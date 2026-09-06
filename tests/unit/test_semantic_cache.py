@@ -111,19 +111,23 @@ class TestSemanticCache:
                 "saw.adapters.embeddings.cosine_similarity",
                 return_value=0.95,
             ) as mock_cosine,
+            patch(
+                "saw.adapters.embeddings.batch_cosine_similarity",
+                return_value=[0.95],
+            ) as mock_batch_cosine,
         ):
             # First call — cache miss, embed/cosine invoked
             r1 = engine.query("test query", mode="semantic", limit=10)
             assert r1.mode == "semantic"
             assert mock_embed.call_count == 1
-            assert mock_cosine.call_count == 1
+            assert mock_batch_cosine.call_count == 1
 
             # Second identical call — cache hit, embed/cosine NOT invoked
             r2 = engine.query("test query", mode="semantic", limit=10)
             assert r2.mode == "semantic"
-            # embed_texts / cosine_similarity must NOT have been called again
+            # embed_texts / batch_cosine_similarity must NOT have been called again
             assert mock_embed.call_count == 1
-            assert mock_cosine.call_count == 1
+            assert mock_batch_cosine.call_count == 1
             # Results are the same cached object
             assert r2.answer == r1.answer
 

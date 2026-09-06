@@ -62,6 +62,7 @@ connectors = [
     "PyGithub>=2.0",     # github connector
 ]
 learn = ["fsrs>=4.0", "sentence-transformers>=2.2"]   # spaced-repetition scheduler + embeddings (FULL tier, M-19)
+semantic = ["hnswlib>=0.7"]   # ANN vector index for large-scale semantic search (T-F-S-2, ADR-014)
 dev = ["pytest>=8.0", "pytest-asyncio>=1.0", "pytest-benchmark>=4.0", "ruff>=0.4"]
 
 [tool.hatch.build.targets.wheel]

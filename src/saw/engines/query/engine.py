@@ -8,6 +8,7 @@ Per D-07 QUER-07: Comparison analysis.
 from __future__ import annotations
 
 import logging
+import os
 import re
 import sqlite3
 from dataclasses import dataclass, field
@@ -498,13 +499,7 @@ class QueryEngine:
                 return _cached
 
         # 1. Tier check: degrade to BM25 if embeddings unavailable
-        import struct
-
-        from saw.adapters.embeddings import (
-            cosine_similarity,
-            embed_texts,
-            embeddings_available,
-        )
+        from saw.adapters.embeddings import embed_texts, embeddings_available
 
         if not embeddings_available():
             result = self._keyword_search(question, limit=limit, offset=offset)
@@ -542,14 +537,27 @@ class QueryEngine:
                 meta={"semantic_fallback": False, "index_empty": True},
             )
 
-        # 4. Compute cosine similarity for each, sort descending, take top-K
-        scored: list[tuple[str, float]] = []
-        for doc_id, blob, dim in rows:
-            vec = list(struct.unpack(f"<{dim}f", blob))
-            sim = cosine_similarity(query_vec, vec)
-            scored.append((doc_id, sim))
-        scored.sort(key=lambda x: -x[1])
-        top_k = scored[offset : offset + limit]
+        # 4. Scale-driven search: ANN (hnswlib) for large scale, numpy batch
+        #    cosine for small scale; ANN failure → cosine fallback.
+        #    T-F-S-2, ADR-014, SPEC-F-S-2.
+        ann_threshold = int(os.environ.get("SAW_ANN_THRESHOLD", "500"))
+        doc_count = len(rows)
+        _ann_meta: dict[str, Any] = {}
+
+        if doc_count > ann_threshold:
+            # Try ANN path
+            try:
+                top_k = self._ann_search(rows, query_vec, limit, offset)
+                _ann_meta["ann_search"] = True
+            except Exception as ann_exc:
+                logger.warning(
+                    "ANN search failed, falling back to cosine: %s", ann_exc
+                )
+                top_k = self._cosine_search_batch(rows, query_vec, limit, offset)
+                _ann_meta["ann_fallback"] = True
+        else:
+            # Small scale → numpy batch cosine
+            top_k = self._cosine_search_batch(rows, query_vec, limit, offset)
 
         # 5. Resolve doc_id → claim/wiki content
         sources: list[dict] = []
@@ -594,6 +602,7 @@ class QueryEngine:
                 "limit": limit,
                 "offset": offset,
                 "semantic_fallback": False,
+                **_ann_meta,
             },
         )
         # F-O-1: cache the result (TTL-bounded; cleared on ingest / rebuild).
@@ -610,6 +619,97 @@ class QueryEngine:
         except Exception as cache_exc:  # pragma: no cover — best-effort
             logger.warning("semantic cache write failed: %s", cache_exc)
         return _qr
+
+    # ── T-F-S-2: ANN + numpy batch cosine helpers ──────────────────────
+
+    _ann_index: Any = None  # class-level default; per-instance override
+
+    def _cosine_search_batch(
+        self,
+        rows: list[tuple],
+        query_vec: list[float],
+        limit: int,
+        offset: int,
+    ) -> list[tuple[str, float]]:
+        """Numpy batch cosine similarity search (T-F-S-2, ADR-014).
+
+        Unpacks all BLOB vectors, computes batch cosine via numpy matrix
+        multiply, returns sorted (doc_id, score) pairs.
+        """
+        import struct
+
+        from saw.adapters.embeddings import batch_cosine_similarity
+
+        doc_ids: list[str] = []
+        matrix: list[list[float]] = []
+        for doc_id, blob, dim in rows:
+            vec = list(struct.unpack(f"<{dim}f", blob))
+            doc_ids.append(doc_id)
+            matrix.append(vec)
+        sims = batch_cosine_similarity(query_vec, matrix)
+        scored = list(zip(doc_ids, sims))
+        scored.sort(key=lambda x: -x[1])
+        return scored[offset : offset + limit]
+
+    def _ann_search(
+        self,
+        rows: list[tuple],
+        query_vec: list[float],
+        limit: int,
+        offset: int,
+    ) -> list[tuple[str, float]]:
+        """ANN search via hnswlib index (T-F-S-2, ADR-014).
+
+        Lazy-loads the HNSW index from ``.saw/ann_index_<ws>.bin``;
+        builds it from ``embedding_store`` rows if the file is missing.
+        Returns sorted (doc_id, score) pairs.
+        Raises on failure (caller catches → cosine fallback).
+        """
+        import struct
+
+        import hnswlib
+
+        index_path = os.path.join(
+            ".saw", f"ann_index_{self._workspace_id}.bin"
+        )
+
+        # Determine vector dimension from first row
+        dim = rows[0][2] if rows else len(query_vec)
+        doc_ids = [r[0] for r in rows]
+
+        # Lazy load / build index
+        if getattr(self, "_ann_index", None) is None:
+            index = hnswlib.Index(space="cosine", dim=dim)
+            if os.path.exists(index_path):
+                index.load_index(index_path)
+            else:
+                # Build from rows
+                import numpy as np
+
+                vectors = np.array(
+                    [list(struct.unpack(f"<{r[2]}f", r[1])) for r in rows],
+                    dtype=np.float32,
+                )
+                index.init_index(max_elements=len(rows), ef_construction=200, M=16)
+                index.add_items(vectors, np.arange(len(rows)))
+                # Persist for future loads
+                os.makedirs(os.path.dirname(index_path), exist_ok=True)
+                index.save_index(index_path)
+            self._ann_index = index
+
+        # Query top-K (with offset)
+        k = min(offset + limit, len(rows))
+        labels, distances = self._ann_index.knn_query(
+            [query_vec], k=k
+        )
+        # hnswlib cosine distance = 1 - cosine_similarity
+        scored: list[tuple[str, float]] = []
+        for i in range(len(labels[0])):
+            idx = int(labels[0][i])
+            sim = 1.0 - float(distances[0][i])
+            scored.append((doc_ids[idx], sim))
+        # hnswlib returns by distance ascending (most similar first)
+        return scored[offset : offset + limit]
 
     def _get_query_prompt(self) -> str:
         """Load query system prompt from YAML.

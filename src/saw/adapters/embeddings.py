@@ -244,6 +244,35 @@ def cosine_similarity(a: list[float], b: list[float]) -> float:
     return dot / (na * nb)
 
 
+def batch_cosine_similarity(
+    query_vec: list[float], matrix: list[list[float]]
+) -> list[float]:
+    """Batch cosine similarity via numpy matrix multiply (T-F-S-2, ADR-014).
+
+    L2-normalizes both the query and all document vectors, then computes
+    all cosine similarities in a single matrix multiply. Used by the
+    small-scale / fallback cosine path in ``_semantic_search``.
+
+    Args:
+        query_vec: Query embedding vector (1D).
+        matrix: Document embedding vectors (2D, rows=docs).
+
+    Returns:
+        List of cosine similarity scores (one per document).
+    """
+    import numpy as np
+
+    if not matrix:
+        return []
+    q = np.array(query_vec, dtype=np.float32)
+    m = np.array(matrix, dtype=np.float32)
+    # L2 normalize
+    q_norm = q / (np.linalg.norm(q) + 1e-12)
+    m_norm = m / (np.linalg.norm(m, axis=1, keepdims=True) + 1e-12)
+    # Batch cosine via matrix multiply
+    return (m_norm @ q_norm).tolist()
+
+
 def cluster_by_embedding(
     texts: list[str], threshold: float = 0.65
 ) -> dict[int, list[int]]:

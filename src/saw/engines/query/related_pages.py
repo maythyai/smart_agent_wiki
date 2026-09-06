@@ -74,6 +74,26 @@ def compute_related_pages(
             if src_row:
                 src_embedding = list(struct.unpack(f"<{src_row[1]}f", src_row[0]))
 
+    # T-F-S-2: batch-load all candidate page embeddings in one SELECT
+    # instead of per-page SELECT+cosine (ADR-014, AC-B-5).
+    _candidate_embeddings: dict[str, list[float]] = {}
+    if conn is not None and src_embedding is not None:
+        from saw.adapters.embeddings import embeddings_available
+
+        if embeddings_available():
+            import struct
+
+            emb_rows = conn.execute(
+                "SELECT doc_id, vector, dim FROM embedding_store "
+                "WHERE workspace_id = ?",
+                (workspace_id,),
+            ).fetchall()
+            for doc_id, blob, dim in emb_rows:
+                if doc_id != slug:
+                    _candidate_embeddings[doc_id] = list(
+                        struct.unpack(f"<{dim}f", blob)
+                    )
+
     results: list[RelatedPage] = []
 
     for page_slug in wiki_repo.list_pages():
@@ -107,21 +127,17 @@ def compute_related_pages(
         type_score = 1.0 if same_type else 0.0
 
         # Signal 4: Embedding similarity (weight 2.5, tier=FULL only)
+        # T-F-S-2: use pre-loaded batch embeddings, not per-page SELECT
         embedding_sim: float | None = None
         embedding_score = 0.0
         if conn is not None and src_embedding is not None:
-            from saw.adapters.embeddings import embeddings_available, cosine_similarity
+            from saw.adapters.embeddings import embeddings_available
 
             if embeddings_available():
-                import struct
+                tgt_vec = _candidate_embeddings.get(page_slug)
+                if tgt_vec is not None:
+                    from saw.adapters.embeddings import cosine_similarity
 
-                tgt_row = conn.execute(
-                    "SELECT vector, dim FROM embedding_store "
-                    "WHERE doc_id = ? AND workspace_id = ?",
-                    (page_slug, workspace_id),
-                ).fetchone()
-                if tgt_row:
-                    tgt_vec = list(struct.unpack(f"<{tgt_row[1]}f", tgt_row[0]))
                     sim = cosine_similarity(src_embedding, tgt_vec)
                     embedding_sim = sim
                     embedding_score = sim * 2.5  # weight 2.5
