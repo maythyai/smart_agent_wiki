@@ -239,3 +239,56 @@ class TestWorkflowRestDB:
         workflows = r.json()["workflows"]
         assert len(workflows) >= 1
         assert workflows[0]["workflow_id"] == "wf-mem"
+
+
+# ── T-F-R-3 (v1.13.0): AC-C-1 name/workflow alias ───────────────────
+
+class TestWorkflowRestAlias:
+    """AC-C-1: REST /workflows items include name/workflow alias fields."""
+
+    def setup_method(self):
+        collaborate._workflows.clear()
+
+    def test_ac_c_1_durable_item_has_name_alias(self, tmp_path):
+        """Durable DB item has name == definition_name + workflow == definition_name."""
+        client, conn = _build_client_with_conn(tmp_path)
+        _seed_workflow_executions(conn, [
+            ("wf-alias-1", "knowledge_review", "completed", 4, 4,
+             "2026-09-05T10:00:00", "2026-09-05T10:05:00", "2026-09-05T10:05:00"),
+        ])
+
+        r = client.get("/api/v1/workflows")
+        assert r.status_code == 200
+        workflows = r.json()["workflows"]
+        assert len(workflows) >= 1
+        wf = workflows[0]
+        assert "name" in wf, "missing 'name' alias field"
+        assert "workflow" in wf, "missing 'workflow' alias field"
+        assert wf["name"] == wf["definition_name"]
+        assert wf["workflow"] == wf["definition_name"]
+
+    def test_ac_c_1_live_item_has_name_alias(self, tmp_path):
+        """Live in-memory running workflow item has name/workflow alias."""
+        client, conn = _build_client_with_conn(tmp_path)
+        _seed_workflow_executions(conn, [
+            ("wf-db-2", "review", "completed", 4, 4,
+             "2026-09-05T10:00:00", "2026-09-05T10:05:00", "2026-09-05T10:05:00"),
+        ])
+
+        collaborate._workflows["wf-live-alias"] = {
+            "workflow_id": "wf-live-alias",
+            "workflow": "adhoc_review",
+            "status": "running",
+            "current_step": 2,
+            "steps_total": 4,
+            "started_at": "2026-09-05T13:00:00",
+        }
+
+        r = client.get("/api/v1/workflows")
+        workflows = r.json()["workflows"]
+        live = [w for w in workflows if w["workflow_id"] == "wf-live-alias"]
+        assert len(live) == 1
+        wf = live[0]
+        assert wf["name"] == wf["definition_name"]
+        assert wf["workflow"] == wf["definition_name"]
+        assert wf["definition_name"] == "adhoc_review"

@@ -371,6 +371,8 @@ async def list_workflows(
         items.append({
             "workflow_id": wid,
             "definition_name": name,
+            "name": name,            # alias (compat, = definition_name)
+            "workflow": name,        # alias (compat with POST response)
             "status": st,
             "steps_completed": sc,
             "steps_total": tot,
@@ -396,9 +398,12 @@ async def list_workflows(
             continue
         # Live workflow not in DB (just started, not persisted yet)
         if wf.get("status") == "running":
+            wf_name = wf.get("workflow", "unknown")
             items.append({
                 "workflow_id": wid,
-                "definition_name": wf.get("workflow", "unknown"),
+                "definition_name": wf_name,
+                "name": wf_name,        # alias
+                "workflow": wf_name,    # alias
                 "status": "running",
                 "steps_completed": wf.get("current_step", 0),
                 "steps_total": wf.get("steps_total", 0),
