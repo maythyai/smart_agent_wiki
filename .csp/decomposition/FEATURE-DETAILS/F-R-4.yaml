@@ -1,0 +1,76 @@
+feature:
+  id: "F-R-4"
+  name: "coverage 棘轮 fail_under 65→67 + 补测达 67%"
+  domain: "e2e-tail"
+  prd_ref: "docs/prd/PRD-e2e-tail-v1.13.0.md#3.4"
+  pms_module: "e2e-tail"
+
+  # 用户视角
+  user_story: "作为 DEV，我想 coverage 门禁有 2pp 余量，以免新增测试波动就 break CI。"
+
+  acceptance_criteria:
+    - "Given 读 pyproject.toml, when 查 fail_under, then 值为 67（AC-D-1）"
+    - "Given 跑 pytest --cov, when coverage 报告, then ≥ 67%，CI 绿（AC-D-2）"
+
+  # 边界
+  scope:
+    includes:
+      - "pyproject.toml [tool.coverage.report] fail_under 从 65 改为 67"
+      - "补测非核心模块边角提升实际覆盖率到 ≥67%（当前 66%，需补 ≥1pp）"
+      - "补测须是真实测试（非 pragma: no cover 绕过），pragma: no cover 使用不增加"
+      - "CI 须在 fail_under=67 下绿"
+    excludes:
+      - "具体补哪些模块（留 03 任务拆解定，PRD 建议优先补 ingest/query 核心路径未覆盖分支）"
+      - "新功能代码（只加测试覆盖既有未覆盖路径）"
+
+  # 前后端边界
+  frontend: {pages: [], components: [], interactions: []}
+  backend:
+    endpoints: []
+    business_logic:
+      - "pyproject.toml fail_under 改 65→67"
+      - "补测覆盖既有未覆盖路径（具体模块归 03 任务拆解，PRD 建议优先 ingest/query 核心路径）"
+      - "不引入 pragma: no cover 绕过"
+    integrations: []
+
+  # 数据维度
+  data_entities:
+    - "pyproject.toml [tool.coverage.report] fail_under"
+  data_operations:
+    - "config update（fail_under 65→67）"
+    - "test add（补测覆盖既有未覆盖路径）"
+
+  # 技术维度预标记
+  tech_dimensions:
+    needs_database: false
+    needs_cache: false
+    needs_queue: false
+    needs_ai: false
+    needs_vector_store: false
+    needs_realtime: false
+    needs_file_storage: false
+    needs_search: false
+    needs_scheduler: false
+    needs_notification: false
+
+  # 非功能性需求
+  nfr:
+    performance: "补测不引入新功能代码，只加测试覆盖既有未覆盖路径"
+    security: "无安全影响（纯测试+配置）"
+    scalability: "无影响"
+    availability: "CI 在 fail_under=67 下绿"
+
+  # 依赖与优先级
+  priority: "P2"
+  complexity: "S"
+  depends_on: []
+  blocked_by: []
+
+  # 风险与假设
+  risks:
+    - "coverage 补测 ROI 低——PRD 建议优先补 ingest/query 核心路径未覆盖分支，非边角"
+    - "补测后仍不足 67%——当前 66%，需补 ≥1pp，具体模块归 03 任务拆解"
+  assumptions:
+    - "当前 coverage 66%（v1.12.0 基线），补 ≥1pp 达 67%"
+    - "补测不引入 pragma: no cover 绕过"
+    - "具体补哪些模块留 03 任务拆解定，PRD 建议优先 ingest/query 核心路径"

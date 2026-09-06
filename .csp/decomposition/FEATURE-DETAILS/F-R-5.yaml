@@ -1,0 +1,73 @@
+feature:
+  id: "F-R-5"
+  name: "闭合 Q1/Q3 复盘补记（retrospective-v1.12.0.md 标注闭合）"
+  domain: "e2e-tail"
+  prd_ref: "docs/prd/PRD-e2e-tail-v1.13.0.md#3.5"
+  pms_module: "e2e-tail"
+
+  # 用户视角
+  user_story: "作为 DEV，我想复盘 findings Q1/Q3 标记为闭合，以便 backlog 准确。"
+
+  acceptance_criteria:
+    - "Given 读 retrospective-v1.12.0.md Q1, when 查找闭合标注, then 含 '**v1.13.0 闭合**' + commit 84e1776（AC-E-1）"
+    - "Given 读 retrospective-v1.12.0.md Q3, when 查找闭合标注, then 含 '**v1.13.0 闭合**' + ST fallback 已删（AC-E-2）"
+
+  # 边界
+  scope:
+    includes:
+      - "在 .csp/artifacts/retrospective-v1.12.0.md 的 Q1 finding 下追加闭合标注：commit 84e1776 用 httpx 直连 vLLM qwen_embedding@8001，真实 API E2E 验证通过"
+      - "在 .csp/artifacts/retrospective-v1.12.0.md 的 Q3 finding 下追加闭合标注：commit 84e1776 删除 ST fallback 路径，provider 改为 API-only"
+      - "标注格式：**v1.13.0 闭合** + commit 84e1776 证据"
+      - "不新建 retrospective 文件（Q1/Q3 是 v1.12.0 findings，在原文件补记）"
+    excludes:
+      - "新建 retrospective 文件（在原文件补记）"
+      - "闭合其他 findings（N3/M2/L2/O1-O4 续留，非本轮范围）"
+
+  # 前后端边界
+  frontend: {pages: [], components: [], interactions: []}
+  backend:
+    endpoints: []
+    business_logic:
+      - "读 retrospective-v1.12.0.md → 在 Q1/Q3 finding 下追加闭合标注 → 保存"
+      - "Q1/Q3 已标闭合 → 不重复标注，跳过"
+    integrations: []
+
+  # 数据维度
+  data_entities:
+    - "retrospective-v1.12.0.md Q1/Q3 findings（追加闭合标注）"
+  data_operations:
+    - "doc annotate（追加闭合标注）"
+
+  # 技术维度预标记
+  tech_dimensions:
+    needs_database: false
+    needs_cache: false
+    needs_queue: false
+    needs_ai: false
+    needs_vector_store: false
+    needs_realtime: false
+    needs_file_storage: true
+    needs_search: false
+    needs_scheduler: false
+    needs_notification: false
+
+  # 非功能性需求
+  nfr:
+    performance: "无性能影响（纯文档标注）"
+    security: "无安全影响"
+    scalability: "无影响"
+    availability: "无影响"
+
+  # 依赖与优先级
+  priority: "P2"
+  complexity: "S"
+  depends_on: []
+  blocked_by: []
+
+  # 风险与假设
+  risks:
+    - "Q1/Q3 已标闭合导致重复——标注前检查，已标则跳过"
+  assumptions:
+    - "Q1（真实 API E2E 未跑）已由 commit 84e1776 闭合（httpx 直连 vLLM qwen_embedding@8001，真实 API E2E 验证通过）"
+    - "Q3（ST fallback 路径未测）已由 commit 84e1776 闭合（ST fallback 已删，provider 改 API-only，无 ST fallback 分支需测）"
+    - "不新建 retrospective 文件（在 retrospective-v1.12.0.md 原文件补记）"

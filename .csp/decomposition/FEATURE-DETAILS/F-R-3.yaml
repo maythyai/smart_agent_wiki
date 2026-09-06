@@ -1,0 +1,86 @@
+feature:
+  id: "F-R-3"
+  name: "REST /workflows 字段别名 + CHANGELOG.md"
+  domain: "e2e-tail"
+  prd_ref: "docs/prd/PRD-e2e-tail-v1.13.0.md#3.3"
+  pms_module: "e2e-tail"
+
+  # 用户视角
+  user_story: "作为 DEV，我想 /workflows 响应有兼容别名且行为变更有 CHANGELOG，以便集成时不踩坑。"
+
+  acceptance_criteria:
+    - "Given GET /workflows 返回非空列表, when 解析响应, then 每个 item 含 name 且 == definition_name（AC-C-1）"
+    - "Given 项目根, when 读 CHANGELOG.md, then 文件存在，含 v1.11.0 /workflows 行为变更条目（AC-C-2）"
+    - "Given 读 CHANGELOG.md, when 查找条目, then 含 v1.12.0 embedding pivot 条目 + v1.13.0 本轮条目（AC-C-3）"
+
+  # 边界
+  scope:
+    includes:
+      - "GET /api/v1/workflows 响应每个 item 除 definition_name 外，加 name 别名（同值）"
+      - "GET /api/v1/workflows 响应每个 item 加 workflow 别名（= definition_name），兼容 POST 响应字段名"
+      - "建立 CHANGELOG.md 文件（项目根），遵循 Keep a Changelog 约定"
+      - "CHANGELOG 回溯标注 v1.10.0–v1.13.0 关键行为变更（至少 v1.11.0 REST 行为 + v1.12.0 embedding provider pivot + v1.13.0 本轮变更）"
+      - "REST 测试断言别名字段存在且等于主字段"
+      - "别名不改变现有字段语义——definition_name 仍是主字段，别名是镜像值"
+    excludes:
+      - "别名字段 deprecated 时间线（未来 deprecated 时再移除，本轮只加）"
+      - "REST 响应格式重构（只加别名字段，既有字段不变）"
+      - "其他端点的兼容别名（只针对 /workflows）"
+
+  # 前后端边界
+  frontend: {pages: [], components: [], interactions: []}
+  backend:
+    endpoints:
+      - "GET /api/v1/workflows（既有端点，响应 body 每个 item 加 name/workflow 别名字段）"
+    business_logic:
+      - "list_workflows() 响应构建时，每个 item 除 definition_name 外加 name 别名（同值）"
+      - "每个 item 加 workflow 别名（= definition_name）"
+      - "既有字段（definition_name/status/steps_completed/steps_total/updated_at/finished_at）值不变"
+      - "DB 无行（空 wiki）→ 既有逻辑返回 {workflows: [], total: 0}，别名不影响空响应"
+    integrations:
+      - "collaborate.py list_workflows()（既有，v1.11.0 读 DB merge live 逻辑不变）"
+      - "既有 REST 测试（加别名字段断言）"
+
+  # 数据维度
+  data_entities:
+    - "Workflow item 响应（新增 name/workflow 别名字段，= definition_name 镜像值）"
+    - "CHANGELOG.md（新建，项目根）"
+  data_operations:
+    - "workflows list（响应加别名字段）"
+    - "changelog write（新建 CHANGELOG.md + 回溯标注）"
+
+  # 技术维度预标记
+  tech_dimensions:
+    needs_database: true
+    needs_cache: false
+    needs_queue: false
+    needs_ai: false
+    needs_vector_store: false
+    needs_realtime: false
+    needs_file_storage: true
+    needs_search: false
+    needs_scheduler: false
+    needs_notification: false
+
+  # 非功能性需求
+  nfr:
+    performance: "REST 别名不引入额外查询开销（镜像值，同响应构建时加）"
+    security: "别名不暴露额外数据（= definition_name 同值镜像）"
+    scalability: "响应体增大可忽略（2 个别名字段/item）"
+    availability: "别名不影响既有契约，DB 空响应正常"
+
+  # 依赖与优先级
+  priority: "P1"
+  complexity: "S"
+  depends_on: []
+  blocked_by: []
+
+  # 风险与假设
+  risks:
+    - "REST 别名引入字段冗余——别名是镜像值，未来 deprecated 时移除；监控 alias_hit 事件"
+    - "CHANGELOG 回溯不完整——PRD 要求至少 v1.11.0 + v1.12.0 + v1.13.0，具体条目归 03"
+  assumptions:
+    - "name 别名 = definition_name 同值镜像，不改变现有字段语义"
+    - "workflow 别名 = definition_name 同值，兼容 POST 响应字段名"
+    - "CHANGELOG 格式遵循 Keep a Changelog 约定（语义化版本 + 日期 + 变更类型 Added/Changed/Fixed/Deprecated）"
+    - "CHANGELOG 回溯范围 v1.10.0–v1.13.0，至少含 v1.11.0 REST 行为 + v1.12.0 embedding pivot + v1.13.0 本轮变更"
