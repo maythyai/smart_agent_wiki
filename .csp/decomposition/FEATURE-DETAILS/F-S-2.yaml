@@ -1,0 +1,111 @@
+feature:
+  id: "F-S-2"
+  name: "ANN 索引替代全量 cosine 扫描（规模驱动自动切换 + cosine 降级兜底）"
+  domain: "semantic-perf"
+  prd_ref: "docs/prd/PRD-semantic-perf-v1.14.0.md#3.2"
+  pms_module: "semantic-perf"
+
+  # 用户视角
+  user_story: "作为 KW，我想在 1000+ 文档的知识库中 semantic 检索时延迟不退化，以便大规模库仍可交互级响应。"
+
+  acceptance_criteria:
+    - "Given embedding_store 行数 > SAW_ANN_THRESHOLD, when semantic 查询, then 走 ANN 路径，meta 不含 ann_fallback，ANN P99 < cosine P99 @ ≥1k [TBD]（AC-B-1）"
+    - "Given embedding_store 行数 ≤ SAW_ANN_THRESHOLD, when semantic 查询, then 走全量 cosine 路径，meta 不含 ANN 标记（AC-B-2）"
+    - "Given ANN 库未安装或索引损坏, when semantic 查询, then 降级全量 cosine，meta.ann_fallback: true，不报错（AC-B-3）"
+    - "Given ANN 路径 vs cosine 路径，同一查询, when 比较 top-K 结果, then 召回率 ≥95%（top-K 重叠率）[TBD]（AC-B-4）"
+    - "Given related_pages.py embedding 相似度计算，规模 > 阈值, when 计算, then 走 ANN 路径，不重复实现 cosine 扫描（AC-B-5）"
+
+  # 边界
+  scope:
+    includes:
+      - "engine.py _semantic_search: 全量 cosine O(n) 改 ANN——规模 > SAW_ANN_THRESHOLD 时自动走 ANN 路径"
+      - "候选 ANN 库选型：sqlite-vss / hnswlib / numpy 分块矩阵乘——03 技术方案 ADR 选型"
+      - "ANN 库选型约束：纯 Python 或轻量 C 扩展（pip 可装），MIT/Apache 许可；不引入 faiss（重依赖）/ torch（重依赖）"
+      - "规模阈值 SAW_ANN_THRESHOLD：整数，默认 [TBD]（03 技术方案定）——embedding_store 行数超过时切换 ANN"
+      - "小规模（≤ 阈值）保持全量 cosine fallback"
+      - "ANN 索引在 rebuild-embeddings 时构建，随 embedding_store 写入增量更新（或重建）"
+      - "ANN 索引生命周期与 embedding_store 一致"
+      - "ANN 检索结果与 cosine 排序结果在 top-K 上应一致或近似（召回率 ≥95%）[TBD]"
+      - "ANN 路径失败（库未装、索引损坏）时降级到全量 cosine，不报错不中断（meta.ann_fallback: true）"
+      - "ANN 索引不改变 embedding_store 表结构（向量仍 BLOB 存储），索引为附加结构（内存或辅助表）"
+      - "related_pages.py 的 embedding 相似度计算同样从全量 cosine 改为 ANN——复用同一 ANN 路径，不重复实现"
+    excludes:
+      - "cache 阈值可配（F-S-1）"
+      - "benchmark 更新（F-S-3）"
+      - "ANN 库具体选型（03 技术方案 ADR 决策）"
+      - "SAW_ANN_THRESHOLD 默认值（03 技术方案 benchmark 实测定）"
+      - "召回率精度指标 [TBD]（03 技术方案定）"
+      - "embedding_store 表结构变更（向量仍 BLOB 存储）"
+      - "embedding provider 变更（沿用 v1.12.0 litellm API）"
+
+  # 前后端边界
+  frontend: {pages: [], components: [], interactions: []}
+  backend:
+    endpoints: []
+    business_logic:
+      - "engine.py _semantic_search: 检查 embedding_store 规模 → 若 > SAW_ANN_THRESHOLD 走 ANN 索引检索 top-K → 若 ≤ 阈值走全量 cosine → 若 ANN 失败降级 cosine"
+      - "adapters/embeddings.py: cosine_similarity 纯 Python dot product → ANN 索引路径替代（大规模时）"
+      - "related_pages.py: embedding 相似度计算复用 ANN 路径（不重复实现 cosine 扫描）"
+      - "rebuild-embeddings 命令: 构建 ANN 索引（随 embedding_store 重建）"
+      - "ANN 索引结构: 附加结构（内存或辅助表），不改 embedding_store 表结构"
+      - "降级逻辑: ANN 库未装/索引损坏 → 全量 cosine + meta.ann_fallback: true"
+    integrations:
+      - "src/saw/engines/query/engine.py（_semantic_search cosine→ANN 切换）"
+      - "src/saw/engines/query/related_pages.py（embedding 相似度复用 ANN 路径）"
+      - "src/saw/adapters/embeddings.py（cosine_similarity 既有，ANN 路径新增）"
+      - "src/saw/db/migrations.py（embedding_store 表结构不变，ANN 索引为附加结构）"
+      - "ANN 库（sqlite-vss / hnswlib / numpy 分块——03 选型）"
+
+  # 数据维度
+  data_entities:
+    - "ANN 索引结构（附加于 embedding_store，内存或辅助表）"
+    - "embedding_store（既有 BLOB 向量存储，不变）"
+    - "SAW_ANN_THRESHOLD（配置项）"
+  data_operations:
+    - "ANN 索引构建（rebuild-embeddings 时）"
+    - "ANN 索引增量更新（embedding_store 写入时）或重建"
+    - "ANN 检索（top-K 近似最近邻）"
+    - "cosine fallback（ANN 失败时全量扫描）"
+
+  # 技术维度预标记
+  tech_dimensions:
+    needs_database: true
+    needs_cache: false
+    needs_queue: false
+    needs_ai: true
+    needs_vector_store: true
+    needs_realtime: false
+    needs_file_storage: false
+    needs_search: true
+    needs_scheduler: false
+    needs_notification: false
+
+  # 非功能性需求
+  nfr:
+    performance: "ANN 检索 P99 优于全量 cosine（规模 ≥1k 时）——benchmark 输出 ANN P99 < cosine P99 @ ≥1k 文档 [TBD]"
+    security: "ANN 库须 MIT/Apache 许可；不引入 faiss/torch 等重依赖；向量数据不含额外 PII"
+    scalability: "大规模（≥1k 文档）ANN 路径不退化——替代 O(n) cosine 线性增长"
+    availability: "ANN 路径失败（库未装、索引损坏）降级到全量 cosine，不报错不中断（ann_fallback: true）"
+
+  # 依赖与优先级
+  priority: "P0"
+  complexity: "L"
+  depends_on: []
+  blocked_by: []
+
+  # 风险与假设
+  risks:
+    - "ANN 库选型不当（重依赖/不稳定）——03 ADR 对比候选（sqlite-vss / hnswlib / numpy 分块），约束不引 faiss/torch；降级 cosine 兜底"
+    - "ANN 召回率不足（top-K 与 cosine 差异大）——设召回率 ≥95% 验收门槛；不达标时降级 cosine [TBD]"
+    - "ANN 索引与 embedding_store 增量同步——rebuild-embeddings 全量重建索引；写入时增量更新或标记 dirty [TBD]"
+    - "SAW_ANN_THRESHOLD 默认值须 benchmark 实测确定 cosine 可接受延迟的拐点 [TBD]"
+    - "召回率精度指标 [TBD]——03 技术方案定"
+  assumptions:
+    - "ANN 库须纯 Python 或轻量 C 扩展（pip 可装），MIT/Apache 许可"
+    - "不引入 faiss（重依赖）/ torch（重依赖）"
+    - "ANN 索引在 rebuild-embeddings 时构建"
+    - "ANN 索引不改变 embedding_store 表结构（向量仍 BLOB 存储）"
+    - "related_pages.py 复用同一 ANN 路径，不重复实现"
+    - "SAW_ANN_THRESHOLD 默认值 [TBD]——03 技术方案 benchmark 实测定"
+    - "召回率 ≥95% [TBD]——03 技术方案定"
+    - "ANN 路径失败降级 cosine，meta.ann_fallback: true"

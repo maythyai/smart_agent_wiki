@@ -140,3 +140,44 @@
 - 无 breaking API 变更（additive MINOR）
 - embed_texts() 签名不变（list[list[float]] | None）
 - REST/CLI 命令不变（仅 provider 换 + dim 驱动 + fallback 路由）
+
+## v1.14.0 NFR delta（semantic perf track）
+
+> 来源：PRD-semantic-perf-v1.14.0 §4。Feature 级下沉见 F-S-1..3 各 yaml `nfr`。
+
+### 性能 — ANN 加速
+- ANN 检索 P99 优于全量 cosine（规模 ≥1k 时）——benchmark 输出 ANN P99 < cosine P99 @ ≥1k 文档 `[TBD]`
+- 规模阈值 `SAW_ANN_THRESHOLD` 默认值 `[TBD]`——03 技术方案 benchmark 实测确定 cosine 可接受延迟的拐点
+
+### 性能 — cache 可配
+- env 配置 cache 启用/禁用后行为可验证——`SAW_SEMANTIC_CACHE_ENABLED=false` 时 `cache.stats()` 无新增 hit；`=true`（默认）时行为不变
+- `SAW_SEMANTIC_CACHE_THRESHOLD_MS` 阈值跳过写入——API 响应 < 阈值时 `cache.set` 跳过，`cache.get` 仍可命中
+
+### 不回归
+- passed ≥2179（v1.13.0 基线 2179）
+- ruff 0 errors
+- smoke 6/6
+
+### 覆盖率
+- coverage ≥67% 不回归（CI fail_under=67）
+
+### 依赖约束
+- 不引入重依赖——不新增 faiss/torch/scikit-learn 等
+- ANN 库须 pip 可装、MIT/Apache 许可（候选：sqlite-vss / hnswlib / numpy 分块矩阵乘）
+
+### 向后兼容
+- 默认行为不变——不设 env 时行为与 v1.13.0 一致（cache 始终启用 + 全量 cosine）
+- 无 breaking API 变更（additive MINOR）
+- `_semantic_search` 返回值结构（`QueryResult`）不变，仅影响内部 cache 命中/写入路径 + ANN 切换路径
+- `embedding_store` 表结构不变（向量仍 BLOB 存储，ANN 索引为附加结构）
+
+### workspace 隔离
+- ANN 索引须遵守 workspace_id 隔离（参照既有 embedding_store PK (doc_id, workspace_id)）
+- cache 配置控制不影响 `_keyword_search` 的 cache 路径（F-QS-07），两个 cache 路径独立控制
+
+### 降级策略
+- ANN 库已装 + 索引可用 + 规模 > 阈值 → 走 ANN 路径
+- ANN 库未装 / 索引损坏 / 规模 ≤ 阈值 → 走全量 cosine（`ann_fallback: true` 或无 ANN 标记），不报错不中断
+- cache 禁用 → 跳过 cache.get/set，直接 embedding + cosine/ANN
+- cache 启用 + 阈值未达 → 正常 cache.get/set
+- cache 启用 + API 响应 < 阈值 → cache.get 可命中已有，cache.set 跳过新写入

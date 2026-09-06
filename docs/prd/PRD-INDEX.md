@@ -14,7 +14,9 @@
 | PRD-agent-viz-v1.9.0 | Agent & Workflow 可视化（CLI+REST） | 1.0 | Released | 2026-09-04 | agent-viz-v1.9.0 | workflow-list-durable, agents-roster, agents-rest | docs/prd/PRD-agent-viz-v1.9.0.md |
 | PRD-embedding-v1.10.0 | embedding 语义搜索 | 1.0 | Released | 2026-09-04 | embedding-v1.10.0 | embedding-index, semantic-search-endpoint, smart-linking-embedding, importorskip-heavy-sdk | docs/prd/PRD-embedding-v1.10.0.md |
 | PRD-debt-closure-v1.11.0 | 债务收口 IV / bug fix | 1.0 | Released | 2026-09-05 | debt-closure-v1.11.0 | semantic-cache, compile-coverage, workflow-rest-unify, spec-naming-revert, hash-reverify | docs/prd/PRD-debt-closure-v1.11.0.md |
-| PRD-embedding-api-v1.12.0 | embedding 改用 OpenAI 风格 API + E2E 验证 | 1.0 | Approved | 2026-09-05 | embedding-api-v1.12.0 | embedding-provider-api, embedding-dim-configurable, local-st-optional-fallback, test-api-mock-e2e | docs/prd/PRD-embedding-api-v1.12.0.md |
+| PRD-embedding-api-v1.12.0 | embedding 改用 OpenAI 风格 API + E2E 验证 | 1.0 | Released | 2026-09-05 | embedding-api-v1.12.0 | embedding-provider-api, embedding-dim-configurable, local-st-optional-fallback, test-api-mock-e2e | docs/prd/PRD-embedding-api-v1.12.0.md |
+| PRD-e2e-tail-v1.13.0 | E2E 收尾轮（ingest recursion + benchmark + REST alias + coverage 67 + Q1/Q3 closure） | 1.0 | Released | 2026-09-06 | e2e-tail-v1.13.0 | ingest-dir-recursion, real-vllm-benchmark, rest-alias-changelog, coverage-67, retrospective-closure | docs/prd/PRD-e2e-tail-v1.13.0.md |
+| PRD-semantic-perf-v1.14.0 | semantic 性能优化 | 1.0 | Approved | 2026-09-06 | semantic-perf-v1.14.0 | cache-threshold-config, ann-index, benchmark-update | docs/prd/PRD-semantic-perf-v1.14.0.md |
 
 ## 状态约定
 - Draft → Reviewing → Approved → Released → Deprecated

@@ -91,7 +91,23 @@
 | SPEC-F-Q-3 | F-Q-3 | 本地 ST 可选 fallback（detect_tier API 为主 ST 为辅） | M | embedding-api | 2/2 | SPEC-F-Q-3.md |
 | SPEC-F-Q-4 | F-Q-4 | 测试改 API mock + benchmark semantic vs BM25 | M | embedding-api | 3/3 | SPEC-F-Q-4.md |
 
+## v1.13.0 delta（+5）
+| spec_id | feature_id | title | complexity | pms_module | ac_coverage | file |
+|---|---|---|---|---|---|---|
+| SPEC-F-R-1 | F-R-1 | ingest 目录递归遍历 | M | e2e-tail | 5/5 | SPEC-F-R-1.md |
+| SPEC-F-R-2 | F-R-2 | 真实 embedding benchmark 脚本 | M | e2e-tail | 4/4 | SPEC-F-R-2.md |
+| SPEC-F-R-3 | F-R-3 | REST 兼容别名 + CHANGELOG | S | e2e-tail | 3/3 | SPEC-F-R-3.md |
+| SPEC-F-R-4 | F-R-4 | coverage 棘轮 67 | M | e2e-tail | 2/2 | SPEC-F-R-4.md |
+| SPEC-F-R-5 | F-R-5 | Q1/Q3 闭合补记 | S | e2e-tail | 2/2 | SPEC-F-R-5.md |
+
+## v1.14.0 delta（+3）
+| spec_id | feature_id | title | complexity | pms_module | ac_coverage | file |
+|---|---|---|---|---|---|---|
+| SPEC-F-S-1 | F-S-1 | semantic cache 阈值可配（env 驱动） | M | semantic-perf | 5/5 | SPEC-F-S-1.md |
+| SPEC-F-S-2 | F-S-2 | ANN 索引替代全量 cosine（hnswlib + numpy 批量） | L | semantic-perf | 5/5 | SPEC-F-S-2.md |
+| SPEC-F-S-3 | F-S-3 | benchmark 更新（cache 真实度量 + ANN vs cosine + 规模曲线） | M | semantic-perf | 5/5 | SPEC-F-S-3.md |
+
 ## 校验
-- Spec 数 == 20 + 8(v1.5.0) + 4(v1.6.0) + 3(v1.7.0) + 3(v1.8.0) + 3(v1.9.0) + 4(v1.10.0) + 4(v1.11.0) + 4(v1.12.0) == 53 == decomposition 原子 Feature 数 ✓（1:1）
+- Spec 数 == 20 + 8(v1.5.0) + 4(v1.6.0) + 3(v1.7.0) + 3(v1.8.0) + 3(v1.9.0) + 4(v1.10.0) + 4(v1.11.0) + 4(v1.12.0) + 5(v1.13.0) + 3(v1.14.0) == 61 == decomposition 原子 Feature 数 ✓（1:1）
 - 每个 feature_id 在 decomposition FEATURE-DETAILS 存在 ✓
 - 每份 Spec ac_coverage 自检无未覆盖 AC ✓

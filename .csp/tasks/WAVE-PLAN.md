@@ -209,3 +209,42 @@
 ## v1.12.0 里程碑
 - M-EMB-API-1（Wave 1）：embed_texts 走 litellm API 就绪（provider 重构前置，解锁 Wave 2）。
 - M-EMB-API-2（Wave 2）：维度可配+重建检测 / ST fallback / 测试 mock+benchmark 就绪 → v1.12.0 可交付。
+
+---
+
+# v1.14.0 波次（semantic 性能优化，2026-09-06）
+
+> 源自 PRD-semantic-perf-v1.14.0 + 02 delta + ADR-014。3 Task，2 Wave。DAG S-2→S-3 单向边，S-1 独立，无环。
+
+## v1.14.0 Wave 1 — cache 可配 + ANN 索引（2 路并行）
+| task_id | 描述 | 类型 | 并行性 |
+|---|---|---|---|
+| T-F-S-1 | cache 阈值可配（engine.py cache 条件分支 + settings.py env + benchmark 阈值读 env + CHANGELOG） | backend-logic | 独立（engine.py cache section / settings.py / benchmark / CHANGELOG） |
+| T-F-S-2 | ANN 索引（engine.py cosine→ANN 切换 + embeddings.py batch cosine + related_pages.py 复用 + pyproject.toml hnswlib） | backend-logic | 独立（engine.py ANN section / embeddings.py / related_pages.py / pyproject.toml） |
+
+## v1.14.0 Wave 2 — benchmark 更新（依赖 S-2）
+| task_id | 描述 | 依赖 | 里程碑 |
+|---|---|---|---|
+| T-F-S-3 | benchmark 更新（cache.stats() 真实度量 + ANN vs cosine P99 + 规模延迟曲线） | T-F-S-2 | benchmark 更新就绪 → v1.14.0 可交付 |
+
+## v1.14.0 共享资源串行
+- `scripts/benchmark_semantic.py`：T-F-S-1（Wave 1，阈值读 env 小改）→ T-F-S-3（Wave 2，大规模更新 cache/ANN/scale）。Wave 1→2 串行，无并行写冲突。
+- `src/saw/engines/query/engine.py`：T-F-S-1（cache 条件分支）+ T-F-S-2（cosine→ANN 切换）均 Wave 1 写同文件不同 section。05 实施须 worktree 隔离 + 合并协调（不同代码段，merge 可行）。
+
+## v1.14.0 Wave 1 文件冲突分析
+| 文件 | Wave 1 写入方 | 冲突? |
+|---|---|---|
+| src/saw/engines/query/engine.py | T-F-S-1 + T-F-S-2 | 同文件不同 section（cache 条件分支 vs cosine→ANN），需合并协调 |
+| src/saw/config/settings.py | T-F-S-1 | 否 |
+| scripts/benchmark_semantic.py | T-F-S-1 | 否（S-3 在 Wave 2） |
+| CHANGELOG.md | T-F-S-1 | 否 |
+| tests/unit/test_semantic_cache_config.py | T-F-S-1 | 否（新建） |
+| src/saw/adapters/embeddings.py | T-F-S-2 | 否 |
+| src/saw/engines/query/related_pages.py | T-F-S-2 | 否 |
+| pyproject.toml | T-F-S-2 | 否 |
+| tests/unit/test_ann_search.py | T-F-S-2 | 否（新建） |
+| tests/unit/test_related_pages_ann.py | T-F-S-2 | 否（新建） |
+
+## v1.14.0 里程碑
+- M-SEM-PERF-1（Wave 1）：cache 阈值可配 + ANN 索引就绪（cosine→ANN 规模驱动切换 + numpy fallback）。
+- M-SEM-PERF-2（Wave 2）：benchmark 更新就绪（cache 真实度量 + ANN vs cosine + 规模曲线）→ v1.14.0 可交付。

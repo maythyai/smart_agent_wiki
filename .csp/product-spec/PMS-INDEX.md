@@ -17,6 +17,7 @@
 | agent-viz | workflow 历史 + agent roster CLI + REST | P0 | PRD-agent-viz-v1.9.0 §2 | [待回填] | ready | PMS-agent-viz.md |
 | embedding | embedding 语义索引与检索 + smart-linking 语义增强 | P0 | PRD-embedding-v1.10.0 §2 | [待回填] | ready | PMS-embedding.md |
 | embedding-api | embedding provider 重构为 litellm API + 维度可配 + 本地 ST 可选 fallback + 测试改 API mock | P0 | PRD-embedding-api-v1.12.0 §2 | [待回填] | ready | PMS-embedding-api.md |
+| semantic-perf | semantic cache 阈值可配 + ANN 索引替代全量 cosine + benchmark 更新 | P0 | PRD-semantic-perf-v1.14.0 §2 | [待回填] | ready | PMS-semantic-perf.md |
 
 ## 状态约定
 - ready（边界已定）/ built（spec 已产出）/ degraded（source 变更待 re-align）/ blocked

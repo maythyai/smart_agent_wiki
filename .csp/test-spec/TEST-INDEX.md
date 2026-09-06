@@ -48,3 +48,19 @@
 - 用例总数：93 → 93 + 9 = 102（[TBD-impl] 实施后落定）。
 - 新覆盖 AC：AC-EA-1/2, AC-DIM-1/2, AC-FB-1/2, AC-TEST-1/2/3（9 条全映射）。
 - TMS delta 见 `TMS-DELTA-v1.12.0.md`。
+
+## v1.13.0 delta（E2E 收尾轮）
+- 模块：e2e-tail（PMS-e2e-tail），ADR-013 ingest 递归 + benchmark 方法论。
+- 新增 16 AC（AC-A-1..5, AC-B-1..4, AC-C-1..3, AC-D-1..2, AC-E-1..2），全映射。
+- 测试文件：test_ingest_directory.py（新建 5）、test_embedding_benchmark.py（扩 4，marker）、test_workflow_rest_db.py（扩 2）、test_changelog.py（新建 2）、test_coverage_config.py（改 1）、test_coverage_gate.py（改 1）、test_retrospective_closure.py（新建 2）+ 5 覆盖率测试文件（90 用例）。
+- 用例总数：102 → 102 + 16 + 90 = 208（05 实施后落定 2179 passed）。
+- 新覆盖 AC：AC-A-1..5, AC-B-1..4, AC-C-1..3, AC-D-1..2, AC-E-1..2（16 条全映射）。
+- TMS delta 见 `TMS-DELTA-v1.13.0.md`。
+
+## v1.14.0 delta（semantic 性能优化）
+- 模块：semantic-perf（PMS-semantic-perf），ADR-014 ANN 向量索引选型 hnswlib + numpy 批量 cosine 改进。
+- 新增 15 AC（AC-A-1..5, AC-B-1..5, AC-C-1..5），全映射。
+- 测试文件：test_semantic_cache_config.py（新建 5）、test_ann_search.py（新建 5）、test_related_pages_ann.py（新建 1）、test_embedding_benchmark.py（扩 5）。
+- 用例总数：[TBD-impl] 实施后落定（基线 2179 passed）。
+- 新覆盖 AC：AC-A-1..5, AC-B-1..5, AC-C-1..5（15 条全映射）。
+- TMS delta 见 `TMS-DELTA-v1.14.0.md`。

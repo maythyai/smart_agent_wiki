@@ -65,6 +65,9 @@
 | T-F-Q-2 | SPEC-F-Q-2 | `EmbeddingSink.write`/`_upsert_embedding` model 列动态化 + `rebuild_embeddings` 维度检测适配（provider 换了自动走 API/ST）；表结构不变（v10 已有 dim+model） | backend-logic | M | T-F-Q-1 | src/saw/write_queue/sinks/embedding_sink.py, src/saw/drivers/cli/commands/search_cmd.py | AC-DIM-1, AC-DIM-2 | embedding-api |
 | T-F-Q-3 | SPEC-F-Q-3 | 本地 ST 可选 fallback：`embed_texts` 三级路由 API→ST→None 补 ST 分支 + `embeddings_available`/`_embeddings_available` OR 逻辑对称；向后兼容 v1.10.0 | backend-logic | M | T-F-Q-1 | src/saw/adapters/embeddings.py, src/saw/config/settings.py | AC-FB-1, AC-FB-2 | embedding-api |
 | T-F-Q-4 | SPEC-F-Q-4 | 测试改 API mock（去 importorskip，7 测试改 mock litellm.embedding）+ 降级 mock 扩 API 不可用（4 测试）+ `test_ci_workflow` 更新 + 新建 `test_embedding_benchmark`（semantic vs BM25 召回+P99） | test | M | T-F-Q-1 | tests/unit/test_embedding_index.py, tests/unit/test_semantic_search.py, tests/unit/test_related_pages_embedding.py, tests/unit/test_embedding_degradation.py, tests/unit/test_ci_workflow.py, tests/unit/test_embedding_benchmark.py | AC-TEST-1, AC-TEST-2, AC-TEST-3 | embedding-api |
+| T-F-S-1 | SPEC-F-S-1 | `engine.py` cache.get/set 条件分支（`SAW_SEMANTIC_CACHE_ENABLED`/`SAW_SEMANTIC_CACHE_THRESHOLD_MS`）+ `settings.py` 新增配置项 + `benchmark_semantic.py` 阈值读 env + `CHANGELOG.md` 追加 v1.14.0 条目 + 新建 `test_semantic_cache_config.py`（5 用例） | backend-logic | M | — | src/saw/engines/query/engine.py, src/saw/config/settings.py, scripts/benchmark_semantic.py, CHANGELOG.md, tests/unit/test_semantic_cache_config.py | AC-A-1, AC-A-2, AC-A-3, AC-A-4, AC-A-5 | semantic-perf |
+| T-F-S-2 | SPEC-F-S-2 | `engine.py` `_semantic_search` 规模驱动切 ANN（hnswlib + numpy cosine fallback）+ `embeddings.py` 新增 `batch_cosine_similarity()` + `related_pages.py` 复用 ANN 路径 + `pyproject.toml` 新增 hnswlib + 新建 `test_ann_search.py` + `test_related_pages_ann.py` | backend-logic | L | — | src/saw/engines/query/engine.py, src/saw/adapters/embeddings.py, src/saw/engines/query/related_pages.py, pyproject.toml, tests/unit/test_ann_search.py, tests/unit/test_related_pages_ann.py | AC-B-1, AC-B-2, AC-B-3, AC-B-4, AC-B-5 | semantic-perf |
+| T-F-S-3 | SPEC-F-S-3 | `benchmark_semantic.py` 更新（cache.stats() 真实度量 + ANN vs cosine P99 + 规模延迟曲线 100/500/1000/5000）+ 扩 `test_embedding_benchmark.py`（AC-C-1/4/5 CI 跑 + AC-C-2/3 marker skip） | infra | M | T-F-S-2 | scripts/benchmark_semantic.py, tests/unit/test_embedding_benchmark.py | AC-C-1, AC-C-2, AC-C-3, AC-C-4, AC-C-5 | semantic-perf |
 
 ## 汇总
 - Task：20（1:1 Spec）；类型：backend-cli×1 / test×4 / infra-ci×4 / infra-script×2 / doc×1 / test-security×3 / backend-security×2 / backend×3
@@ -133,3 +136,9 @@
 - 2 Wave：Wave 1 T-F-Q-1（provider 重构前置）→ Wave 2 T-F-Q-2/Q-3/Q-4（全并行）
 - DAG Q-1→{Q-2,Q-3,Q-4} 无环，与 decomposition 一致
 - 详见 `.csp/tasks/TASKS-DELTA-v1.12.0.md`
+
+## v1.14.0 任务拆解（semantic 性能优化，2026-09-06）
+- 3 Task（1:1 Spec）：T-F-S-1（backend-logic cache 阈值可配）/ T-F-S-2（backend-logic ANN 索引）/ T-F-S-3（infra benchmark 更新）
+- 2 Wave：Wave 1 T-F-S-1 / T-F-S-2（并行，engine.py 不同 section）→ Wave 2 T-F-S-3（依赖 S-2）
+- DAG S-2→S-3 单向边，S-1 独立，无环，与 decomposition 一致
+- 详见 `.csp/tasks/TASKS-DELTA-v1.14.0.md`

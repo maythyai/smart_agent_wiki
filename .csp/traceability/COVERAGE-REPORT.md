@@ -108,3 +108,65 @@
 - PRD AC 总数：11（v1.0）+ 12（v1.10.0）+ 12（v1.11.0）+ 9（v1.12.0）= 44
 - 已覆盖：11（v1.0 covered）+ 12（v1.10.0 [TBD-impl]）+ 12（v1.11.0 [TBD-impl]）+ 9（v1.12.0 [TBD-impl]）= 44
 - 缺口：0
+
+## v1.13.0 delta（E2E 收尾轮，16 AC）
+
+| AC | 描述 | 映射 Feature | 用例 | 状态 |
+|---|---|---|---|---|
+| AC-A-1 | 目录递归 ingest | F-R-1 | test_ingest_directory.py | covered |
+| AC-A-2 | 空目录 | F-R-1 | test_ingest_directory.py | covered |
+| AC-A-3 | 部分失败 | F-R-1 | test_ingest_directory.py | covered |
+| AC-A-4 | 子目录递归 | F-R-1 | test_ingest_directory.py | covered |
+| AC-A-5 | 排除 SAW 内部目录 | F-R-1 | test_ingest_directory.py | covered |
+| AC-B-1 | 真实 API 召回 | F-R-2 | test_embedding_benchmark.py（@benchmark_e2e） | covered |
+| AC-B-2 | P99 延迟 | F-R-2 | test_embedding_benchmark.py（@benchmark_e2e） | covered |
+| AC-B-3 | cache 命中率 | F-R-2 | test_embedding_benchmark.py（@benchmark_e2e） | covered |
+| AC-B-4 | vLLM 不可达报错 | F-R-2 | test_embedding_benchmark.py | covered |
+| AC-C-1 | 别名兼容 | F-R-3 | test_workflow_rest_db.py | covered |
+| AC-C-2 | CHANGELOG 存在 | F-R-3 | test_changelog.py | covered |
+| AC-C-3 | CHANGELOG 回溯 | F-R-3 | test_changelog.py | covered |
+| AC-D-1 | fail_under 提升 | F-R-4 | test_coverage_config.py | covered |
+| AC-D-2 | 实际覆盖率达标 | F-R-4 | CI pytest --cov 67% | covered |
+| AC-E-1 | Q1 闭合标注 | F-R-5 | test_retrospective_closure.py | covered |
+| AC-E-2 | Q3 闭合标注 | F-R-5 | test_retrospective_closure.py | covered |
+
+### v1.13.0 汇总
+- PRD AC 总数（本轮）：16
+- 已覆盖：16（100%）
+- 缺口：0
+
+### 全局汇总（v1.0 + v1.10.0 + v1.11.0 + v1.12.0 + v1.13.0）
+- PRD AC 总数：44 + 16 = 60
+- 已覆盖：44 + 16 = 60
+- 缺口：0
+
+## v1.14.0 delta（semantic 性能优化，15 AC）
+
+| AC | 描述 | 映射 Feature | 用例 | 状态 |
+|---|---|---|---|---|
+| AC-A-1 | cache 禁用（hits 不增加） | F-S-1 | test_semantic_cache_config.py（mock） | [TBD-impl] |
+| AC-A-2 | cache 启用默认（hits 增加） | F-S-1 | test_semantic_cache_config.py（mock） | [TBD-impl] |
+| AC-A-3 | 阈值跳过写入 | F-S-1 | test_semantic_cache_config.py（mock） | [TBD-impl] |
+| AC-A-4 | 向后兼容 | F-S-1 | test_semantic_cache_config.py（mock） | [TBD-impl] |
+| AC-A-5 | keyword cache 不受影响 | F-S-1 | test_semantic_cache_config.py（mock） | [TBD-impl] |
+| AC-B-1 | ANN 自动切换 | F-S-2 | test_ann_search.py（mock） | [TBD-impl] |
+| AC-B-2 | 小规模 cosine | F-S-2 | test_ann_search.py（mock） | [TBD-impl] |
+| AC-B-3 | ANN 降级 | F-S-2 | test_ann_search.py（mock） | [TBD-impl] |
+| AC-B-4 | 召回一致性 ≥95% [TBD] | F-S-2 | test_ann_search.py（marker） | [TBD-impl] |
+| AC-B-5 | related_pages 复用 ANN | F-S-2 | test_related_pages_ann.py（mock） | [TBD-impl] |
+| AC-C-1 | cache 命中真实度量 | F-S-3 | test_embedding_benchmark.py（mock） | [TBD-impl] |
+| AC-C-2 | ANN vs cosine 对比 | F-S-3 | test_embedding_benchmark.py（@benchmark_e2e） | [TBD-impl] |
+| AC-C-3 | 规模延迟曲线 | F-S-3 | test_embedding_benchmark.py（@benchmark_e2e） | [TBD-impl] |
+| AC-C-4 | vLLM 不可达报错退出 | F-S-3 | test_embedding_benchmark.py | [TBD-impl] |
+| AC-C-5 | cache 单元测试 CI 可跑 | F-S-3 | test_embedding_benchmark.py（mock） | [TBD-impl] |
+
+### v1.14.0 汇总
+- PRD AC 总数（本轮）：15
+- 已映射：15（100%）
+- 缺口：0
+- 全部 [TBD-impl]：05 实施后落定
+
+### 全局汇总（v1.0 + v1.10.0 + v1.11.0 + v1.12.0 + v1.13.0 + v1.14.0）
+- PRD AC 总数：60 + 15 = 75
+- 已覆盖：60 + 15（[TBD-impl]）= 75
+- 缺口：0

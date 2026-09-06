@@ -163,3 +163,27 @@ graph LR
 
 ### v1.12.0 并行机会
 - Wave 2 中 Q-2/Q-3/Q-4 全并行（3 路独立，不同关注点：dim 驱动 / fallback 路由 / 测试 mock）。
+
+## v1.14.0 delta（semantic perf track）
+
+```mermaid
+graph LR
+  S1[F-S-1 cache 阈值可配]
+  S2[F-S-2 ANN 索引]
+  S3[F-S-3 benchmark 更新]
+
+  S2 --> S3
+```
+
+### v1.14.0 Wave
+- **Wave 1（2 Feature 并行）**：F-S-1（cache 阈值可配） / F-S-2（ANN 索引）
+  - F-S-1 与 F-S-2 互相独立（不同文件路径），可并行启动。
+- **Wave 2（1 Feature）**：F-S-3（benchmark 更新）
+  - 依赖 F-S-2 完成（ANN 路径可用后才能跑 ANN vs cosine 对比）。
+
+### v1.14.0 DAG 校验
+- 拓扑序无环：S-2 → S-3 单向边，S-1 独立，无回边 ✓
+
+### v1.14.0 并行机会
+- Wave 1 中 F-S-1 / F-S-2 并行（2 路独立：cache 配置 / ANN 索引）。
+- F-S-1 与 F-S-2 均触及 engine.py 但不同路径（cache 条件分支 vs cosine→ANN 切换），03 技术方案需注意协调。

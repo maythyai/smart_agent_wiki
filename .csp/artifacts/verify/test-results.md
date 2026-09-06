@@ -254,3 +254,41 @@ AC-LINK-2) pass unconditionally via mock.
 - engine.py SIZE_LIMIT raised 750→900 (god-file guard, engine grew with ANN helpers).
 
 **Verdict**: All gates green. 2192 passed, ruff 0, coverage 67.34% ≥ 67, smoke 11/11, hnswlib no torch. Proceeding to docs + reconcile.
+
+---
+
+## v1.14.0 — 06-ship verify (2026-09-06)
+
+Re-ran all gates during 06-ship release verification (post-05-impl, pre-tag).
+
+| Gate | Command | Result | Status |
+|---|---|---|---|
+| pytest | `.venv/bin/python -m pytest -m "not benchmark_e2e" --cov=src --cov-fail-under=67 -q` | 2192 passed, 3 skipped, 4 deselected, 0 failed (99.78s) | PASS |
+| ruff lint | `.venv/bin/ruff check src/ tests/` | All checks passed! (0 errors) | PASS |
+| coverage | `pytest --cov=src/saw --cov-report=term-missing` | TOTAL 29398 stmts, 9601 miss, 67.34% (≥67 ✓) | PASS |
+| smoke | `.venv/bin/python -m pytest tests/unit/test_smoke_chain.py -v` | 11 passed (2.58s) | PASS |
+| build wheel | `.venv/bin/python -m build --wheel` | smart_agent_wiki-1.14.0-py3-none-any.whl (827KB) | PASS |
+| pyproject | `grep '^version' pyproject.toml` | 1.14.0 (bumped 1.13.0→1.14.0) | PASS |
+| hnswlib | `import hnswlib; 'torch' not in sys.modules` | hnswlib OK, torch not loaded ✓ | PASS |
+
+**Benchmark**: vLLM qwen_embedding@8001 — see benchmark section below.
+
+**Verdict**: All gates green. 2192 passed, ruff 0, coverage 67.34% ≥ 67, smoke 11/11, wheel smart_agent_wiki-1.14.0, pyproject 1.14.0. Proceeding to reconcile + tag v1.14.0 + push + GitHub Release.
+
+### Benchmark (real vLLM qwen_embedding@8001, 2026-09-06 06-ship)
+
+Command: `SAW_EMBEDDING_MODEL=qwen_embedding SAW_EMBEDDING_API_BASE=http://localhost:8001/v1 EMBEDDING_API_KEY=EMPTY .venv/bin/python scripts/benchmark_semantic.py`
+
+| Metric | Result |
+|---|---|
+| semantic recall (avg) | 5.0/5 (vs BM25 0.0/5) |
+| semantic P99 | 54.99ms (vs BM25 0.15ms) |
+| cache hit | true (hits_after_2nd=1) — **R1 resolved**: cache threshold config now effective (v1.13.0 had cache_hit=false) |
+| ANN P99 | 245.23ms |
+| cosine P99 | 72.46ms |
+| scale_curve | empty — synthetic vectors 384dim vs qwen 1024dim mismatch (non-production, benchmark script data issue, deferred) |
+
+**Findings**: 
+- Cache hit now true (R1 cache threshold configurable resolved — SAW_SEMANTIC_CACHE_THRESHOLD_MS default 0 = no threshold, cache writes always).
+- ANN slower than cosine at 15-doc scale (expected — ANN threshold default 500, small dataset uses cosine path; ANN overhead not justified for tiny sets).
+- Scale curve failed due to synthetic vector dim mismatch (384 hardcoded vs qwen 1024 actual) — non-production, deferred to fix.

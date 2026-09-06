@@ -108,3 +108,29 @@ T-F-Q-1 → T-F-Q-2（2 步，最长链，与 Q-1→Q-3/Q-1→Q-4 等长）
 ### v1.12.0 并行机会
 - Wave 1：T-F-Q-1 独占（provider 重构前置）。
 - Wave 2：T-F-Q-2 / T-F-Q-3 / T-F-Q-4 全并行（3 路独立，无共享文件冲突；`embeddings.py`/`settings.py` 由 Q-3 续写 Wave 1 Q-1 成果，串行 Wave 1→2 不构成 Wave 2 内冲突）。
+
+---
+
+## v1.14.0 delta（semantic 性能优化 track）
+
+```mermaid
+graph LR
+  S1[T-F-S-1 cache 阈值可配]
+  S2[T-F-S-2 ANN 索引]
+  S3[T-F-S-3 benchmark 更新]
+
+  S2 --> S3
+```
+
+### v1.14.0 DAG 校验
+- 拓扑序无环：S-1 独立（无入边无出边）；S-2→S-3 单向边；无回边 ✓
+- 与 decomposition DEPENDENCY-GRAPH v1.14.0 delta 一致（F-S-2→F-S-3，F-S-1 独立）✓
+- 无自环、无环。若 05 重构致环 → 报错停步。
+
+### v1.14.0 关键路径
+T-F-S-2 → T-F-S-3（2 步，最长链）
+- S-1 独立，与 S-2 可 Wave 1 并行。
+
+### v1.14.0 并行机会
+- Wave 1：T-F-S-1 / T-F-S-2 全并行（engine.py 不同 section：cache 条件分支 vs cosine→ANN 切换，worktree 隔离 + 合并协调）。
+- Wave 2：T-F-S-3 独占（依赖 S-2 ANN 路径完成）。

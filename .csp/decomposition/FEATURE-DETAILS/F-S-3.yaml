@@ -1,0 +1,106 @@
+feature:
+  id: "F-S-3"
+  name: "benchmark 更新（cache 真实度量 + ANN vs cosine 对比 + 规模延迟曲线）"
+  domain: "semantic-perf"
+  prd_ref: "docs/prd/PRD-semantic-perf-v1.14.0.md#3.3"
+  pms_module: "semantic-perf"
+
+  # 用户视角
+  user_story: "作为 OPS，我想 benchmark 准确度量 cache 真实命中率和 ANN vs cosine 延迟曲线，以便性能调优和成本优化。"
+
+  acceptance_criteria:
+    - "Given benchmark 通过 QueryEngine._semantic_search 跑查询, when 检查 cache.stats(), then 第 2 次查询后 hits 增加（非延迟比较）（AC-C-1）"
+    - "Given benchmark 构建规模 ≥1k 数据集, when 分别跑 ANN 和 cosine 路径, then JSON 输出含 ann_p99_ms 和 cosine_p99_ms（AC-C-2）"
+    - "Given benchmark 生成 100/500/1000/5000 文档数据集, when 分别跑 semantic 检索, then JSON 输出含 scale_curve: [{doc_count, p99_ms}, ...]（AC-C-3）"
+    - "Given vLLM endpoint 不可达, when python scripts/benchmark_semantic.py, then stderr 报错退出（exit code 1），不 mock（AC-C-4）"
+    - "Given 不依赖 vLLM，用 mock embedding, when CI 跑 cache 命中测试, then 测试 pass（不 skip）（AC-C-5）"
+
+  # 边界
+  scope:
+    includes:
+      - "benchmark 脚本 cache 命中测量改为直接调用 QueryEngine._semantic_search（经过生产 cache 路径），而非独立 _semantic_search 函数"
+      - "cache 命中判定：第 1 次查询后检查 cache.stats() 的 hits 计数是否增加，第 2 次查询后检查 hits 是否再增加——而非延迟比较 50% 阈值"
+      - "ANN vs cosine 对比：同一数据集分别跑 ANN 路径和 cosine 路径，输出 P99 延迟对比"
+      - "规模延迟曲线：生成 100/500/1000/5000 文档的合成数据集，分别跑 semantic 检索，输出延迟 vs 规模曲线（JSON 格式）"
+      - "benchmark 脚本保持 vLLM 可达检查（AC-C-4），不可达报错退出"
+      - "cache 命中测量的单元测试（不依赖 vLLM，用 mock embedding）可在 CI 跑"
+      - "输出结构化结果（JSON: cache_hit/miss + ann_p99_ms + cosine_p99_ms + scale_curve）"
+      - "异常处理：vLLM 不可达报错退出；ANN 库未装 cosine-only 结果（ann: null）；合成数据集生成失败跳过该规模继续"
+    excludes:
+      - "cache 阈值可配（F-S-1）"
+      - "ANN 索引实现（F-S-2）"
+      - "benchmark 测试数据集具体内容（03 任务拆解定）"
+      - "P99 目标值（跑完填实际值，PRD 标 [TBD]）"
+
+  # 前后端边界
+  frontend: {pages: [], components: [], interactions: []}
+  backend:
+    endpoints:
+      - "CLI/脚本 scripts/benchmark_semantic.py（更新，既有脚本）"
+    business_logic:
+      - "health check vLLM 可达 → 不可达报错退出（exit code 1）"
+      - "构建 DB + embedding 索引（复用 QueryEngine._semantic_search 生产路径）"
+      - "cache 命中率：通过 QueryEngine._semantic_search 跑查询，检查 cache.stats().hits 计数（非延迟比较）"
+      - "ANN vs cosine P99：同一数据集分别跑 ANN 路径和 cosine 路径，统计 P99"
+      - "规模延迟曲线：生成 100/500/1000/5000 合成数据集，分别跑 semantic 检索，输出延迟 vs 规模曲线"
+      - "输出结构化 JSON（cache_hit/miss + ann_p99_ms + cosine_p99_ms + scale_curve）"
+      - "ANN 库未装 → cosine-only 结果，ann 字段标 null"
+      - "合成数据集生成失败 → 跳过该规模，继续其他"
+    integrations:
+      - "scripts/benchmark_semantic.py（更新既有脚本）"
+      - "QueryEngine._semantic_search（生产 cache 路径，非独立函数）"
+      - "cache.stats()（hits 计数，真实 cache 度量）"
+      - "ANN 路径 + cosine 路径（F-S-2 提供）"
+      - "vLLM qwen_embedding@8001（真实 API）"
+
+  # 数据维度
+  data_entities:
+    - "benchmark 结果（cache_hit/miss + ann_p99_ms + cosine_p99_ms + scale_curve）"
+    - "合成数据集（100/500/1000/5000 文档）"
+    - "查询集（含同义查询）"
+  data_operations:
+    - "benchmark run（执行 benchmark 脚本）"
+    - "cache hit measure（检查 cache.stats().hits 计数）"
+    - "ANN vs cosine P99 measure（分别跑两条路径统计 P99）"
+    - "scale latency curve（不同规模延迟曲线）"
+
+  # 技术维度预标记
+  tech_dimensions:
+    needs_database: false
+    needs_cache: true
+    needs_queue: false
+    needs_ai: true
+    needs_vector_store: true
+    needs_realtime: false
+    needs_file_storage: true
+    needs_search: true
+    needs_scheduler: false
+    needs_notification: false
+
+  # 非功能性需求
+  nfr:
+    performance: "benchmark 脚本在 vLLM 可达时跑完不超时（单次 < 5 min）"
+    security: "benchmark 走 API 路径，不依赖本地 torch"
+    scalability: "合成数据集用随机向量（不需真实 embedding），仅 P99 测量用真实 vLLM"
+    availability: "vLLM 不可达 → 报错退出；ANN 库未装 → cosine-only 结果；合成数据集失败 → 跳过该规模继续"
+
+  # 依赖与优先级
+  priority: "P1"
+  complexity: "M"
+  depends_on:
+    - "F-S-2"
+  blocked_by: []
+
+  # 风险与假设
+  risks:
+    - "benchmark 规模数据集生成慢——合成数据集用随机向量（不需真实 embedding），仅 P99 测量用真实 vLLM"
+    - "ANN 库未装时 benchmark 须输出 cosine-only 结果——ann 字段标 null"
+    - "P99 目标值 [TBD]——跑完填实际值"
+    - "cache 命中测量依赖生产 cache 路径——须确保 benchmark 调 QueryEngine._semantic_search 而非独立函数"
+  assumptions:
+    - "vLLM qwen_embedding@8001 已由用户启动，benchmark 运行时可达"
+    - "benchmark 走 API 路径（v1.12.0 已 pivot），不依赖本地 torch"
+    - "benchmark_e2e 测试仍 CI skip（无 vLLM），但 cache 命中测量的单元测试用 mock embedding 可在 CI 跑"
+    - "合成数据集用随机向量（不需真实 embedding），仅 P99 测量用真实 vLLM"
+    - "ANN vs cosine 对比依赖 F-S-2 ANN 索引实现完成"
+    - "P99 目标值 [TBD] ms——跑完填实际值，PRD §1.3 标 [TBD]"

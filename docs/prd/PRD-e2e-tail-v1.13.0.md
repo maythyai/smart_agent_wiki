@@ -2,7 +2,7 @@
 id: PRD-e2e-tail-v1.13.0
 title: E2E 收尾轮
 version: 1.0
-status: Approved
+status: Released
 author: [TBD]
 date: 2026-09-06
 product_type: platform

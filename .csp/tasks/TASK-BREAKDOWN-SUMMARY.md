@@ -169,3 +169,48 @@
 - 具体模型名 [TBD]（默认 `text-embedding-3-small` 或 config 驱动，dim=1536）
 - 向量索引存储开销 [TBD]（API dim 如 1536 > 本地 384，须磁盘测量）
 - 全量重建延迟 [TBD]（取决于 claim/wiki 总量 × API embedding 单次延迟）
+
+---
+
+# v1.14.0 delta（semantic 性能优化，2026-09-06）
+
+## 项目概览（v1.14.0）
+- 上游：3 Spec（1:1 decomposition 3 Feature F-S-1..3），1 PMS 模块（semantic-perf）
+- Task：3（1:1 Spec，M×2 / L×1），2 Wave，DAG 无环
+- 关键路径：T-F-S-2 → T-F-S-3（2 步，最长链）
+- 估时：M/L 粒度，人日 [TBD]（无团队速率）
+
+## Task 类型分派矩阵（v1.14.0）
+| 类型 | Task | 推荐分派 |
+|---|---|---|
+| backend-logic | T-F-S-1 | 后端（engine.py cache 条件分支 + settings.py env + CHANGELOG） |
+| backend-logic | T-F-S-2 | 后端（engine.py ANN 切换 + embeddings.py batch cosine + related_pages.py 复用 + pyproject.toml hnswlib） |
+| infra | T-F-S-3 | DevOps（benchmark 脚本更新 + test marker） |
+
+## 拆解门控（v1.14.0）
+- [x] Spec 完整性：3 Task == 3 Spec（03 穷尽门控通过，3 Spec == 3 原子 Feature F-S-1..3）
+- [x] 每个 Feature 有 ≥1 Task（3/3）
+- [x] Task 粒度 ≤4h（M×2 / L×1，L=接近 4h 上限但不超）
+- [x] DAG 无环（S-2→S-3 单向边，S-1 独立，拓扑序无回边）
+- [x] Task 依赖与 decomposition Feature 依赖一致（F-S-2→F-S-3，F-S-1 独立）
+- [x] Wave 划分合理（Wave 1 S-1/S-2 并行；Wave 2 S-3 依赖 S-2；`benchmark_semantic.py` 跨 Wave 串行）
+- [x] 每 Task acceptance 非空（指向 AC，共 15 AC 全映射）
+- [x] 不越 PMS 边界（semantic-perf 模块）
+- [x] 并行检测通过（Wave 1 两 Task 文件集无重叠，engine.py 同文件不同 section 需合并协调）
+
+## 05 实施指引（v1.14.0）
+- Lead 按 `WAVE-PLAN.md` 组建子 Agent 团队；Wave 1 两路并行（worktree 隔离）。
+- Wave 1 T-F-S-1 / T-F-S-2 并行，但均写 `engine.py` 不同 section（cache 条件分支 vs cosine→ANN），须合并协调。
+- Wave 2 T-F-S-3 独占（依赖 S-2 ANN 路径完成）。
+- 每 Task 一个 commit；完成后续写 commit + 追溯矩阵。
+- 共享文件 `engine.py`：T-F-S-1 + T-F-S-2 同时 Wave 1 写不同 section，worktree 隔离 + 合并。
+- 共享文件 `scripts/benchmark_semantic.py`：T-F-S-1（Wave 1 阈值读 env）→ T-F-S-3（Wave 2 大规模更新），Wave 1→2 串行。
+- 详见 `.csp/tasks/TASKS-DELTA-v1.14.0.md`。
+
+## assumptions / [TBD]（v1.14.0）
+- `SAW_ANN_THRESHOLD` 默认值 500 [TBD]（须 05 实施后 benchmark 实测确认拐点）
+- ANN 召回率 ≥95% [TBD]（须 benchmark 验证）
+- ANN 索引增量更新策略 [TBD]（05 实施时决定增量 vs 全量重建）
+- ANN P99 / cosine P99 实际值 [TBD]（benchmark 跑完填）
+- 规模延迟曲线实际值 [TBD]（benchmark 跑完填）
+- `SAW_SEMANTIC_CACHE_THRESHOLD_MS` 实际效果 [TBD]（须 benchmark 验证）
