@@ -100,6 +100,9 @@ ignore = [
 # project; that .pth has been corrected and the workaround removed.
 asyncio_mode = "auto"
 testpaths = ["tests"]
+markers = [
+    "benchmark_e2e: real vLLM API E2E benchmark (skipped in CI without vLLM)",
+]
 
 [tool.coverage.run]
 # T-F-E-2: coverage source. CI runs `pytest --cov` to enforce the gate.

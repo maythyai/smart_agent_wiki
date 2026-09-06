@@ -8,11 +8,13 @@ Real E2E benchmark requires the user to configure a real API key and run:
 """
 from __future__ import annotations
 
+import os
 import sqlite3
 import struct
 import time
 from unittest.mock import MagicMock
 
+import pytest
 _DIM = 1536
 _MOCK_MODEL = "text-embedding-3-small"
 
@@ -231,3 +233,98 @@ def test_benchmark_p99_latency_mock(monkeypatch):
 
     # Record baseline [TBD] for real API comparison
     # Real API P99 will be dominated by network RTT + model inference
+
+
+# ── T-F-R-2 (v1.13.0): real vLLM benchmark script + AC-B-4 ──────────
+
+def test_benchmark_script_importable():
+    """scripts/benchmark_semantic.py can be imported (AC-B-1..3 infra)."""
+    import importlib.util
+    from pathlib import Path
+
+    script = Path(__file__).resolve().parents[2] / "scripts" / "benchmark_semantic.py"
+    assert script.exists(), "scripts/benchmark_semantic.py must exist"
+    spec = importlib.util.spec_from_file_location("benchmark_semantic", script)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    # Verify key functions exist
+    assert hasattr(mod, "run_benchmark")
+    assert hasattr(mod, "_health_check")
+    assert hasattr(mod, "_DATASET")
+    assert len(mod._DATASET) <= 15, "dataset must be ≤15 docs"
+
+
+def test_ac_b_4_vllm_unreachable_exits_without_mock(monkeypatch, capsys):
+    """AC-B-4: when vLLM is unreachable, benchmark exits with error, no mock."""
+    import importlib.util
+    from pathlib import Path
+
+    script = Path(__file__).resolve().parents[2] / "scripts" / "benchmark_semantic.py"
+    spec = importlib.util.spec_from_file_location("benchmark_semantic", script)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+
+    # Mock httpx to simulate unreachable endpoint
+    import httpx
+    def _raise(*a, **kw):
+        raise httpx.ConnectError("connection refused")
+    monkeypatch.setattr(httpx, "post", _raise)
+
+    assert not mod._health_check("http://localhost:8001"), (
+        "health_check must return False when endpoint is unreachable"
+    )
+
+
+@pytest.mark.benchmark_e2e
+def test_ac_b_1_real_api_recall(monkeypatch):
+    """AC-B-1: semantic recall >= BM25 on synonym query set (real vLLM).
+
+    Skipped in CI without vLLM. Run with:
+        pytest tests/unit/test_embedding_benchmark.py -m benchmark_e2e
+    """
+    import importlib.util
+    from pathlib import Path
+
+    script = Path(__file__).resolve().parents[2] / "scripts" / "benchmark_semantic.py"
+    spec = importlib.util.spec_from_file_location("benchmark_semantic", script)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+
+    vllm_base = os.environ.get("SAW_EMBEDDING_API_BASE", "http://localhost:8001")
+    if not mod._health_check(vllm_base):
+        pytest.skip("vLLM endpoint unreachable — skipping real API benchmark")
+
+    import tempfile
+    results = mod.run_benchmark(vllm_base, Path(tempfile.mkdtemp()))
+    avg_sem = results["recall"]["semantic"]["avg"]
+    avg_bm25 = results["recall"]["bm25"]["avg"]
+    assert avg_sem >= avg_bm25, (
+        f"semantic recall ({avg_sem}) should be >= BM25 ({avg_bm25})"
+    )
+
+
+@pytest.mark.benchmark_e2e
+def test_ac_b_3_cache_hit_rate(monkeypatch):
+    """AC-B-3: 2nd identical query hits cache (lower latency).
+
+    Skipped in CI without vLLM.
+    """
+    import importlib.util
+    from pathlib import Path
+
+    script = Path(__file__).resolve().parents[2] / "scripts" / "benchmark_semantic.py"
+    spec = importlib.util.spec_from_file_location("benchmark_semantic", script)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+
+    vllm_base = os.environ.get("SAW_EMBEDDING_API_BASE", "http://localhost:8001")
+    if not mod._health_check(vllm_base):
+        pytest.skip("vLLM endpoint unreachable — skipping cache hit benchmark")
+
+    import tempfile
+    results = mod.run_benchmark(vllm_base, Path(tempfile.mkdtemp()))
+    cache = results["cache"]
+    assert cache["hit"], (
+        f"2nd query should be faster (cache hit): "
+        f"first={cache['first_ms']}ms second={cache['second_ms']}ms"
+    )
