@@ -1,123 +1,124 @@
 {
-  "pipeline_version": 2,
-  "milestone": "v4.2",
-  "current_stage": "next-cycle-pending",
-  "next_cycle": "v1.13.0",
-  "stages": [
-    {
-      "stage": "00-hub",
-      "title": "知识中枢初始化 + 棕地 CMS 蒸馏",
-      "status": "done",
-      "owner": "S0-base",
-      "artifacts": [
-        ".csp/AGENTS.md",
-        ".csp/manifest.json",
-        ".csp/lifecycle-state.json",
-        ".csp/sources.tsv",
-        "scripts/hub_manifest.sh",
-        ".csp/artifacts/reconcile-log.md",
-        ".csp/code-spec/saw/CODE-MODULE-SPEC.md",
-        ".csp/code-spec/saw/entry-points.jsonl",
-        ".csp/code-spec/saw/knowledge-graph.json"
-      ]
-    },
-    {
-      "stage": "01-prd",
-      "title": "PRD / PMS 生成",
-      "status": "done",
-      "owner": "S1-prd",
-      "artifacts": [
-        "docs/prd/PRD-product-hardening-v1.md",
-        "docs/prd/PRD-INDEX.md",
-        ".csp/product-spec/PMS-*.md",
-        ".csp/product-spec/PMS-INDEX.md",
-        "docs/prd/PRD-embedding-v1.10.0.md",
-        ".csp/product-spec/PMS-embedding.md",
-        "docs/prd/PRD-debt-closure-v1.11.0.md",
-        ".csp/product-spec/PMS-debt-closure.md",
-        "docs/prd/PRD-embedding-api-v1.12.0.md",
-        ".csp/product-spec/PMS-embedding-api.md"
-      ]
-    },
-    {
-      "stage": "02-decomposition",
-      "title": "需求拆解",
-      "status": "done",
-      "owner": "S2-decomp",
-      "artifacts": [
-        ".csp/decomposition/REQUIREMENT-INPUT.md",
-        ".csp/decomposition/FEATURE-MAP.md",
-        ".csp/decomposition/FEATURE-DETAILS/",
-        ".csp/decomposition/DEPENDENCY-GRAPH.md",
-        ".csp/decomposition/NFR.md",
-        ".csp/decomposition/DECOMPOSITION-SUMMARY.md"
-      ]
-    },
-    {
-      "stage": "03-tech",
-      "title": "技术方案 / Spec / TMS / 选型",
-      "status": "done",
-      "owner": "S3-tech",
-      "artifacts": [
-        ".csp/tech-decisions/",
-        ".csp/tech-design/",
-        ".csp/specs/",
-        ".csp/test-spec/",
-        ".csp/traceability/"
-      ],
-      "progress_v1_12_0": "03-tech DONE v1.12.0: ADR-012(embedding provider litellm API 为主 + 本地 ST 可选 fallback, 复用 LLMSettings/_MODEL_ENV_KEYS/_endpoint_kwargs 范式, 3 候选对比), 4 SPEC 1:1 (SPEC-F-Q-1..4), TMS-DELTA-v1.12.0(9 用例), traceability +9 AC 全映射. 穷尽门控通过(4 Spec == 4 原子 Feature F-Q-1..4). ground 自源码(embeddings.py:19-29,41-57 / router.py:16,98-110,133,187-194 / settings.py:19-26,79,92-93,116-120 / engine.py:461,474-477,498,505,520 / migrations.py:337-358 / search_cmd.py:217-227 / embedding_sink.py:73 / related_pages.py:25,61-66,70,75,110-129,165-166 / test_embedding_index.py:6 / test_semantic_search.py:6 / test_related_pages_embedding.py:6 / test_embedding_degradation.py)."
-    },
-    {
-      "stage": "04-tasks",
-      "title": "任务拆解",
-      "status": "done",
-      "owner": "S4-tasks",
-      "artifacts": [
-        ".csp/tasks/WBS.md",
-        ".csp/tasks/DEPENDENCY-DAG.md",
-        ".csp/tasks/WAVE-PLAN.md",
-        ".csp/tasks/TASK-BREAKDOWN-SUMMARY.md"
-      ],
-      "progress_v1_12_0": "04-tasks DONE v1.12.0: TASKS-DELTA-v1.12.0 (4 Task 1:1 Spec F-Q-1..4, 2 Wave, DAG Q-1→{Q-2,Q-3,Q-4} 无环) + WBS 追加 4 行 + WAVE-PLAN/DEPENDENCY-DAG/TASK-BREAKDOWN-SUMMARY 增量更新 + 4 Spec related_tasks 回填 + manifest 回写. current_stage=05-impl."
-    },
-    {
-      "stage": "05-impl",
-      "title": "实施 / codegen / CMS 增量对齐",
-      "status": "done",
-      "owner": "S5-impl",
-      "artifacts": [
-        ".csp/code-spec/{app}/",
-        "src/",
-        "web/",
-        ".csp/artifacts/implement.md"
-      ],
-      "progress": "05-impl DONE: 4 Task (embedding 索引+语义检索+smart-linking+测试), 1993 passed, 6 skipped (3 原有+3 embedding importorskip), ruff 0, smoke 6/6. commits: ecbdb75/9660ecc/3b2039e/e7fb6c6. sentence_transformers 未装→importorskip 测试 skip, 降级测试 mock pass. current_stage=06-ship.",
-      "progress_v1_11_0": "05-impl DONE v1.11.0: 4 Task (F-O-1 semantic cache + F-O-2 compile deep coverage + F-O-3 workflow REST unify + F-O-4 spec/hash), 2064 passed, 6 skipped, ruff 0, coverage 65.36% (fail_under=65), smoke 6/6. commits: 209c294/42b9399/e3869d3/0f0e82e. current_stage=06-ship.",
-      "progress_v1_12_0": "05-impl DONE v1.12.0: 4 Task (F-Q-1 provider refactor litellm API + F-Q-2 configurable dim + F-Q-3 ST fallback + F-Q-4 API mock tests), 2074 passed, 3 skipped, ruff 0, smoke 6/6. commits: f4f4869/f4e9f04/4818926/65f036f. embedding tests mock litellm.embedding (no importorskip, no torch loaded). current_stage=06-ship."
-    },
-    {
-      "stage": "06-ship",
-      "title": "发布 / 里程碑归档",
-      "status": "done",
-      "owner": "S6-ship",
-      "artifacts": [
-        ".csp/ship/",
-        ".csp/milestones/{m}/"
-      ],
-      "progress": "v1.11.0 tagged (annotated @5fca85b). wheel smart_agent_wiki-1.11.0. 2064 passed/6 skipped, ruff 0, coverage 65.36%, smoke 6/6. reconcile commit 5fca85b (.csp delta + pyproject bump, .planning/benchmarks stashed). ship artifacts (RELEASE-NOTES+ROLLBACK-PLAN+VERSION-REGISTRY). milestones/v1.11.0 archived (B-class cp). ROADMAP v1.11.0->released. pending remote push (待用户确认).",
-      "progress_v1_12_0": "06-ship DONE v1.12.0: verify 全绿 (2076 passed/3 skipped, ruff 0, coverage 66%, smoke 6/6, wheel smart_agent_wiki-1.12.0). pyproject bump 1.11.0→1.12.0. reconcile commit 50fc8e8 (.csp delta + pyproject bump, .planning/benchmarks stashed). local annotated tag v1.12.0 @50fc8e8. ship/ (RELEASE-NOTES+ROLLBACK-PLAN+VERSION-REGISTRY v1.12.0 row). milestones/v1.12.0 archived (B-class cp). ROADMAP v1.12.0->released (2026-09-05). manifest writeback (+3 ship/milestone items build_status=built, ROADMAP/VERSION-REGISTRY content_hash updated). pending remote push (待用户确认). current_stage=next-cycle-pending (v1.12.0 周期 local done, pending push + 07-retro)."
-    },
-    {
-      "stage": "07-retro",
-      "title": "复盘 / 闭环校验 + findings 回流",
-      "status": "done",
-      "owner": "S7-retro",
-      "artifacts": [
-        ".csp/artifacts/retrospective-v1.10.0.md",
-        ".csp/artifacts/retrospective-v1.11.0.md"
-      ],
-      "progress": "v1.11.0 07-retro DONE: 闭环校验通过 (PRD→Spec→Task→commit→tag 全链, 4 SPEC/4 Task/12 AC 全映射, tag v1.11.0@5fca85b 本地). 2064 passed/6 skipped, ruff 0, coverage 65.36%, smoke 6/6, wheel 1.11.0. Findings O1-O4 + 续留 N1/N3/N4/M2/L2 回流下一轮 (O1 cache 命中率未 benchmark P2 / O2 coverage 65.36% 余量薄 P3 / O3 REST 行为变更无 CHANGELOG P3 / O4 tag 指向 reconcile 非 release P3; N1 embedding E2E P1 / N3 K2 per-request ws P2 / N4 P99 benchmark P2 / M2 agent 活动聚合 P2 / L2 链接自动 apply P3). 本轮清掉 N7/N2-K1/M3/N5/N6 共 5 项. K1 北极星 coverage 65 达成. 下一版本候选列 retrospective-v1.11.0.md. current_stage=next-cycle-pending (v1.11.0 周期闭环, 待下一轮 01)."
-    }
-  ],
-  "note": "v1.4.0 周期闭环 2026-09-03: 00-07 done. platform+debt 6 Task, 1898 passed, smoke 6/6, ruff 0 (F401 启用), v1.4.0 tagged. 复盘见 retrospective-v1.4.0.md (findings H1-H5). v1.5.0 智能自适应周期启动: 01-prd DONE (PRD-intelligence-adaptation-v1.5.0 Approved + PMS-intelligence-adaptation.md ready; 4 新能力 F-I-1..4 + 携带 H1/H2/H4/H5 债; PRD claims ground 自源码全 TRUE). current_stage=02-decomposition. 决策: 开新能力同时清债. 02-decomposition DONE: DECOMPOSITION-DELTA-v1.5.0.md (8 原子 Feature F-I-1..4+F-Z-6..9, 3 Wave, Z-6/Z-7 串行). current_stage=03-tech. 03-tech DONE: ADR-006(resume)+ADR-007(workspace scope), 8 SPEC 1:1, TMS-DELTA-v1.5.0(10 用例), traceability +8. current_stage=04-tasks. 04-tasks DONE: TASKS-DELTA-v1.5.0 (8 Task 1:1 Spec, 3 Wave, DAG I-4→I-1, Z-6 serial末位, Z-7 serial Wave2) + WBS 追加 8 行. current_stage=05-impl. 05-impl DONE: 8 Task (4 新能力 + 4 债), 1929 passed, ruff 0 (F841 启用), coverage 63%, smoke 6/6, wheel 1.5.0. 06-ship DONE: v1.5.0 tagged @89b284e. 07-retro DONE: retrospective-v1.5.0.md (findings I1-I5). **v1.5.0 周期闭环**. 新周期 v1.6.0, current_stage=01-prd. 待下一轮 01 决策: 开新能力 OR 先清 I1(workspace全路径II)/I2(coverage65)债. **v1.6.0 周期启动**: 决策=债务收口(workspace 全路径 II + 深覆盖 65 + policy web 端点, 清 I1/I2/I4). 01-prd DONE: PRD-debt-closure-v1.6.0 Approved + PMS-debt-closure ready; ground 自源码(insert 丢 workspace_id / tree_mode+compiler 未传 ws / query engine.py 14%). PRD-v1.5.0 标 Released. current_stage=02-decomposition. 02-decomposition DONE: DECOMPOSITION-DELTA-v1.6.0 (4 Feature F-J-1..4, 2 Wave, J-1→J-3). current_stage=03-tech. 03-tech DONE: ADR-008(workspace 写入), 4 SPEC 1:1, TMS-DELTA-v1.6.0(4 用例), traceability +4. current_stage=04-tasks. 04-tasks DONE: TASKS-DELTA-v1.6.0 (4 Task 1:1 Spec, 2 Wave, DAG J-1→J-3) + WBS 追加 4 行. current_stage=05-impl. 05-impl DONE: 4 Task (workspace 读全路径+写+深覆盖+policy web), 1959 passed, ruff 0, coverage 63.7%, smoke 6/6, wheel 1.6.0. 06-ship DONE: v1.6.0 tagged @62f36cc. 07-retro DONE: retrospective-v1.6.0.md (findings J1-J3). **v1.6.0 周期闭环** (workspace 读写双闭环). 新周期 v1.7.0, current_stage=01-prd. 待下一轮 01 决策: coverage 65(J1) / graph workspace(J2) / 新能力. **v1.7.0 周期启动**: 决策=债务收口III(graph workspace 隔离 J2 + scope 清理 J3 + coverage→65 J1). 01-prd DONE: PRD-graph-workspace-v1.7.0 Approved + PMS-graph-workspace ready; ground(entity 表无 ws 列 / graph_traverse 全量载 / GraphSink INSERT 无 ws / Entity domain 无 ws 字段). PRD-v1.6.0 标 Released. **远端已 push: master + v1.0.1..v1.6.0 tags + v1.5.0/v1.6.0 GitHub releases**. current_stage=02-decomposition. 02-decomposition DONE: DECOMPOSITION-DELTA-v1.7.0 (3 Feature F-K-1..3, 2 Wave, K-1→K-2/K-3). current_stage=03-tech. 03-tech DONE: ADR-009(entity workspace), 3 SPEC 1:1, TMS-DELTA-v1.7.0(3 用例), traceability +3. current_stage=04-tasks. 04-tasks DONE: TASKS-DELTA-v1.7.0 (3 Task 1:1 Spec, 2 Wave, DAG K-1→K-2/K-3) + WBS 追加 3 行. current_stage=05-impl. 05-impl DONE: 3 Task (graph 隔离 + scope 清理 + 覆盖), 1977 passed, ruff 0, coverage 64.2%, smoke 6/6, wheel 1.7.0. 06-ship DONE: v1.7.0 tagged @2c4a9d7. 07-retro DONE: retrospective-v1.7.0.md (findings K1-K3). **v1.7.0 周期闭环** (workspace 三闭环完成: 读+写+graph). 新周期 v1.8.0, current_stage=01-prd. 待下一轮 01 决策: coverage 65(K1) / per-request workspace(K2) / 新能力. **v1.8.0 周期启动**: 决策=转新能力(Smart Linking + AI Summarization, roadmap v4.2 非 embedding 项). K1/K2/K3 均 defer(review: K1 低ROI+3轮债够 / K2 local-first不需请求级ws / K3 纯性能无问题). 01-prd DONE: PRD-smart-linking-v1.8.0 Approved + PMS-smart-linking ready; ground(related_pages/wiki_links/backlinks 既有 / LLMRouter.answer_query). PRD-v1.7.0 标 Released. current_stage=02-decomposition. 02-decomposition DONE: DECOMPOSITION-DELTA-v1.9.0 (3 Feature F-M-1..3, 1 Wave, 无依赖). current_stage=03-tech. 03-tech DONE: 3 SPEC 1:1 (无 ADR), TMS-DELTA-v1.9.0(3 用例), traceability +3. current_stage=04-tasks. 04-tasks DONE: TASKS-DELTA-v1.9.0 (3 Task 1:1 Spec, 1 Wave, 独立). WBS 追加 3 行. current_stage=05-impl. 05-impl DONE: 3 Feature (workflow list + agents CLI + agents REST), 1987 passed, ruff 0, smoke 6/6, wheel 1.9.0. 06-ship DONE: v1.9.0 tagged @246f3d4. 07-retro DONE: retrospective-v1.9.0.md (findings M1-M3). **v1.9.0 周期闭环** (续新能力: agent & workflow 可视化). 新周期 v2.0.0 (major 节点), current_stage=01-prd. 待下一轮 01 决策: embedding(须用户确认装SDK) / realtime仪表盘(v4.3) / desktop(v4.4) / 自定义agent角色 / K1/K2/L债. **v1.9.0 周期启动**: 决策=agent 可视化(workflow list durable + agents roster CLI + REST, roadmap v4.3 非realtime项). embedding defer(heavy SDK, 硬约定#12须用户确认). L1-L3/K1/K2 defer. 01-prd DONE: PRD-agent-viz-v1.9.0 Approved + PMS-agent-viz ready; ground(workflow_executions v4 表 / build_default_agents / collaborate router 已有 GET /workflows in-memory). PRD-v1.8.0 标 Released. current_stage=02-decomposition. **v1.10.0 周期启动**: 决策=embedding 语义搜索(roadmap v4.2 候选采纳, additive MINOR). 01-prd DONE: PRD-embedding-v1.10.0 Approved + PMS-embedding ready; ground 自源码(embeddings.py embed_texts/cluster 既有但未接 Query 检索 / FTS5Search bm25 既有 / compute_related_pages 3-signal 无 embedding / QueryEngine 无 semantic 模式 / importorskip fsrs 先例 / detect_tier FULL 检测 / workspace_id migrations v8+ADR-009 / FTS5Sink Write Queue 范式). PRD-v1.9.0 标 Released. v1.10.0 PRD 完成（embedding 语义搜索，ground 自源码）. current_stage=02-decomposition. 02-decomposition DONE: DECOMPOSITION-DELTA-v1.10.0 (4 原子 Feature F-N-1..4, 2 Wave, DAG N-1→{N-2,N-3,N-4} 无环). current_stage=03-tech. 03-tech DONE: ADR-010(embedding_store BLOB+numpy cosine, --mode 并行不融合, all-MiniLM-L6-v2 384 维), 4 SPEC 1:1 (SPEC-F-N-1..4), TMS-DELTA-v1.10.0(12 用例), traceability +12 AC 全映射. 穷尽门控通过(4 Spec == 4 原子 Feature). current_stage=04-tasks. 04-tasks DONE: TASKS-DELTA-v1.10.0 (4 Task 1:1 Spec, 2 Wave, DAG N-1→{N-2,N-3,N-4} 无环) + WBS 追加 4 行. current_stage=05-impl. 05-impl DONE: 4 Task (embedding 索引+语义检索+smart-linking+测试), 1993 passed, 6 skipped (3 原有+3 embedding importorskip), ruff 0, smoke 6/6. commits: ecbdb75/9660ecc/3b2039e/e7fb6c6. sentence_transformers 未装→importorskip 测试 skip, 降级测试 mock pass. 实际 embedding E2E 须用户装 [learn] extra. current_stage=06-ship. 06-ship DONE (v1.10.0): verify 全绿 (1993 passed/6 skipped, ruff 0, smoke 6/6, wheel 1.10.0). reconcile commit 15bb5fe (.csp delta, .planning/benchmarks stashed). local annotated tag v1.10.0 @15bb5fe. ship/ (RELEASE-NOTES+ROLLBACK-PLAN+VERSION-REGISTRY). milestones/v1.10.0 archived (B-class cp). ROADMAP v1.10.0→released. **pending remote push (待用户确认)**. current_stage=06-ship (local done, pending push). **v1.10.0 周期闭环** (07-retro DONE: 闭环校验通过, findings N1-N7 回流, 下一版本候选列 retrospective-v1.10.0.md). current_stage=next-cycle-pending. 待下一轮 01 决策. v1.11.0 PRD 完成（债务收口 IV/bug fix，5 修项：N7 semantic cache + N2/K1 compile 深覆盖 + M3 workflow REST 统一读 DB + N5 Spec 命名回更 + N6 hash 复核。ground 自源码全 TRUE，5 claim 有 file:line。PRD-debt-closure-v1.11.0 Approved + PMS-debt-closure delta 更新。PRD-embedding-v1.10.0 标 Released。不引入新能力、不需 SDK。current_stage=02-decomposition。）02-decomposition DONE: DECOMPOSITION-DELTA-v1.11.0（4 原子 Feature F-O-1..4，1 Wave 全并行，DAG 无环）。current_stage=03-tech。03-tech DONE: ADR-011(semantic cache 复用 F-QS-07 单例 mode=semantic key 隔离 TTL 300s ingest/rebuild clear)，4 SPEC 1:1 (SPEC-F-O-1..4)，TMS-DELTA-v1.11.0(12 用例)，traceability +12 AC 全映射。穷尽门控通过(4 Spec == 4 原子 Feature)。current_stage=04-tasks。 04-tasks DONE: TASKS-DELTA-v1.11.0 (4 Task 1:1 Spec, 1 Wave 全并行, DAG 无环 O1/O2/O3/O4 独立无依赖边) + WBS 追加 4 行. current_stage=05-impl. 05-impl DONE v1.11.0: 4 Task (F-O-1 semantic cache + F-O-2 compile deep coverage + F-O-3 workflow REST unify + F-O-4 spec/hash), 2064 passed, 6 skipped, ruff 0, coverage 65.36% (fail_under=65), smoke 6/6. commits: 209c294/42b9399/e3869d3/0f0e82e. current_stage=06-ship. 06-ship DONE v1.11.0: verify 全绿 (2064 passed/6 skipped, ruff 0, coverage 65.36%, smoke 6/6, wheel 1.11.0). reconcile commit 5fca85b (.csp delta + pyproject bump, .planning/benchmarks stashed). local annotated tag v1.11.0 @5fca85b. ship/ (RELEASE-NOTES+ROLLBACK-PLAN+VERSION-REGISTRY). milestones/v1.11.0 archived (B-class cp). ROADMAP v1.11.0->released. pending remote push (待用户确认). current_stage=06-ship (local done, pending push). v1.11.0 07-retro DONE: 复盘完成 (retrospective-v1.11.0.md), 闭环校验通过, 5 项 findings 清掉 (N7/N2-K1/M3/N5/N6), 4 项新 findings 回流 (O1-O4) + 5 项续留 (N1/N3/N4/M2/L2), findings 回流 ROADMAP 下一版本候选段. K1 北极星 coverage 65 达成. current_stage=next-cycle-pending (v1.11.0 周期闭环, 待下一轮 01). v1.12.0 PRD 完成（embedding pivot 到 API，ground 自源码全 TRUE，13 claim 有 file:line。4 模块 F-EA-1..4：provider 重构 litellm API / 维度可配+dim 驱动 / 本地 ST 可选 fallback / 测试改 API mock+benchmark。PRD-embedding-api-v1.12.0 Approved + PMS-embedding-api ready。PRD-debt-closure-v1.11.0 标 Released。不要求本地 ST，API 为默认路径。current_stage=02-decomposition。）02-decomposition DONE v1.12.0: DECOMPOSITION-DELTA-v1.12.0（4 原子 Feature F-Q-1..4，2 Wave，DAG Q-1→{Q-2,Q-3,Q-4} 无环）。current_stage=03-tech。 03-tech DONE v1.12.0: ADR-012(embedding provider litellm API 为主 + 本地 ST 可选 fallback) + 4 SPEC 1:1 (SPEC-F-Q-1..4) + TMS-DELTA-v1.12.0(9 用例) + traceability +9 AC 全映射。穷尽门控通过(4 Spec == 4 原子 Feature)。ground 自源码全标注 file:line。current_stage=04-tasks。 04-tasks DONE v1.12.0: TASKS-DELTA-v1.12.0 (4 Task 1:1 Spec F-Q-1..4, 2 Wave, DAG Q-1→{Q-2,Q-3,Q-4} 无环) + WBS 追加 4 行 + WAVE-PLAN/DEPENDENCY-DAG/TASK-BREAKDOWN-SUMMARY 增量更新 + 4 Spec related_tasks 回填 + manifest 回写. current_stage=05-impl。 v1.12.0 05-impl DONE: 4 Task, 2074 passed, 3 skipped, ruff 0, smoke 6/6. embedding tests改 mock litellm.embedding (无 importorskip, 无 torch 加载). tag v1.10.0@3865c75 参见 07-retro v1.10.0 progress (retrospective-v1.10.0.md). current_stage=06-ship. v1.12.0 06-ship DONE: verify 全绿 (2076 passed/3 skipped, ruff 0, coverage 66%, smoke 6/6, wheel smart_agent_wiki-1.12.0). pyproject bump 1.11.0→1.12.0. reconcile commit 50fc8e8 (.csp delta + pyproject bump, .planning/benchmarks stashed). local annotated tag v1.12.0 @50fc8e8. ship/ (RELEASE-NOTES+ROLLBACK-PLAN+VERSION-REGISTRY v1.12.0 row tagged-local/pending-push). milestones/v1.12.0 archived (B-class cp). ROADMAP v1.12.0→released (2026-09-05). manifest writeback (+3 ship/milestone items, ROADMAP/VERSION-REGISTRY content_hash). current_stage=next-cycle-pending (v1.12.0 周期 local done, pending remote push 待用户确认 + 07-retro)."
+    "pipeline_version": 2,
+    "milestone": "v4.2",
+    "current_stage": "06-ship",
+    "next_cycle": "v1.13.0",
+    "stages": [
+        {
+            "stage": "00-hub",
+            "title": "知识中枢初始化 + 棕地 CMS 蒸馏",
+            "status": "done",
+            "owner": "S0-base",
+            "artifacts": [
+                ".csp/AGENTS.md",
+                ".csp/manifest.json",
+                ".csp/lifecycle-state.json",
+                ".csp/sources.tsv",
+                "scripts/hub_manifest.sh",
+                ".csp/artifacts/reconcile-log.md",
+                ".csp/code-spec/saw/CODE-MODULE-SPEC.md",
+                ".csp/code-spec/saw/entry-points.jsonl",
+                ".csp/code-spec/saw/knowledge-graph.json"
+            ]
+        },
+        {
+            "stage": "01-prd",
+            "title": "PRD / PMS 生成",
+            "status": "done",
+            "owner": "S1-prd",
+            "artifacts": [
+                "docs/prd/PRD-product-hardening-v1.md",
+                "docs/prd/PRD-INDEX.md",
+                ".csp/product-spec/PMS-*.md",
+                ".csp/product-spec/PMS-INDEX.md",
+                "docs/prd/PRD-embedding-v1.10.0.md",
+                ".csp/product-spec/PMS-embedding.md",
+                "docs/prd/PRD-debt-closure-v1.11.0.md",
+                ".csp/product-spec/PMS-debt-closure.md",
+                "docs/prd/PRD-embedding-api-v1.12.0.md",
+                ".csp/product-spec/PMS-embedding-api.md"
+            ]
+        },
+        {
+            "stage": "02-decomposition",
+            "title": "需求拆解",
+            "status": "done",
+            "owner": "S2-decomp",
+            "artifacts": [
+                ".csp/decomposition/REQUIREMENT-INPUT.md",
+                ".csp/decomposition/FEATURE-MAP.md",
+                ".csp/decomposition/FEATURE-DETAILS/",
+                ".csp/decomposition/DEPENDENCY-GRAPH.md",
+                ".csp/decomposition/NFR.md",
+                ".csp/decomposition/DECOMPOSITION-SUMMARY.md"
+            ]
+        },
+        {
+            "stage": "03-tech",
+            "title": "技术方案 / Spec / TMS / 选型",
+            "status": "done",
+            "owner": "S3-tech",
+            "artifacts": [
+                ".csp/tech-decisions/",
+                ".csp/tech-design/",
+                ".csp/specs/",
+                ".csp/test-spec/",
+                ".csp/traceability/"
+            ],
+            "progress_v1_12_0": "03-tech DONE v1.12.0: ADR-012(embedding provider litellm API 为主 + 本地 ST 可选 fallback, 复用 LLMSettings/_MODEL_ENV_KEYS/_endpoint_kwargs 范式, 3 候选对比), 4 SPEC 1:1 (SPEC-F-Q-1..4), TMS-DELTA-v1.12.0(9 用例), traceability +9 AC 全映射. 穷尽门控通过(4 Spec == 4 原子 Feature F-Q-1..4). ground 自源码(embeddings.py:19-29,41-57 / router.py:16,98-110,133,187-194 / settings.py:19-26,79,92-93,116-120 / engine.py:461,474-477,498,505,520 / migrations.py:337-358 / search_cmd.py:217-227 / embedding_sink.py:73 / related_pages.py:25,61-66,70,75,110-129,165-166 / test_embedding_index.py:6 / test_semantic_search.py:6 / test_related_pages_embedding.py:6 / test_embedding_degradation.py)."
+        },
+        {
+            "stage": "04-tasks",
+            "title": "任务拆解",
+            "status": "done",
+            "owner": "S4-tasks",
+            "artifacts": [
+                ".csp/tasks/WBS.md",
+                ".csp/tasks/DEPENDENCY-DAG.md",
+                ".csp/tasks/WAVE-PLAN.md",
+                ".csp/tasks/TASK-BREAKDOWN-SUMMARY.md"
+            ],
+            "progress_v1_12_0": "04-tasks DONE v1.12.0: TASKS-DELTA-v1.12.0 (4 Task 1:1 Spec F-Q-1..4, 2 Wave, DAG Q-1→{Q-2,Q-3,Q-4} 无环) + WBS 追加 4 行 + WAVE-PLAN/DEPENDENCY-DAG/TASK-BREAKDOWN-SUMMARY 增量更新 + 4 Spec related_tasks 回填 + manifest 回写. current_stage=05-impl."
+        },
+        {
+            "stage": "05-impl",
+            "title": "实施 / codegen / CMS 增量对齐",
+            "status": "done",
+            "owner": "S5-impl",
+            "artifacts": [
+                ".csp/code-spec/{app}/",
+                "src/",
+                "web/",
+                ".csp/artifacts/implement.md"
+            ],
+            "progress": "05-impl DONE: 4 Task (embedding 索引+语义检索+smart-linking+测试), 1993 passed, 6 skipped (3 原有+3 embedding importorskip), ruff 0, smoke 6/6. commits: ecbdb75/9660ecc/3b2039e/e7fb6c6. sentence_transformers 未装→importorskip 测试 skip, 降级测试 mock pass. current_stage=06-ship.",
+            "progress_v1_11_0": "05-impl DONE v1.11.0: 4 Task (F-O-1 semantic cache + F-O-2 compile deep coverage + F-O-3 workflow REST unify + F-O-4 spec/hash), 2064 passed, 6 skipped, ruff 0, coverage 65.36% (fail_under=65), smoke 6/6. commits: 209c294/42b9399/e3869d3/0f0e82e. current_stage=06-ship.",
+            "progress_v1_12_0": "05-impl DONE v1.12.0: 4 Task (F-Q-1 provider refactor litellm API + F-Q-2 configurable dim + F-Q-3 ST fallback + F-Q-4 API mock tests), 2074 passed, 3 skipped, ruff 0, smoke 6/6. commits: f4f4869/f4e9f04/4818926/65f036f. embedding tests mock litellm.embedding (no importorskip, no torch loaded). current_stage=06-ship.",
+            "progress_v1_13_0": "05-impl DONE v1.13.0: 5 Task (F-R-1 ingest dir recursion + F-R-2 real vLLM benchmark script + F-R-3 REST alias+CHANGELOG + F-R-4 coverage 67 + F-R-5 Q1/Q3 closure), 2179 passed, 3 skipped, 2 deselected (benchmark_e2e), ruff 0, coverage 67% (fail_under=67), smoke 6/6. commits: 0669d98/dc6d299/3284262/8d9ccca/895c8bf/218c398. No local torch loaded. benchmark_e2e tests skip in CI without vLLM. current_stage=06-ship."
+        },
+        {
+            "stage": "06-ship",
+            "title": "发布 / 里程碑归档",
+            "status": "done",
+            "owner": "S6-ship",
+            "artifacts": [
+                ".csp/ship/",
+                ".csp/milestones/{m}/"
+            ],
+            "progress": "v1.11.0 tagged (annotated @5fca85b). wheel smart_agent_wiki-1.11.0. 2064 passed/6 skipped, ruff 0, coverage 65.36%, smoke 6/6. reconcile commit 5fca85b (.csp delta + pyproject bump, .planning/benchmarks stashed). ship artifacts (RELEASE-NOTES+ROLLBACK-PLAN+VERSION-REGISTRY). milestones/v1.11.0 archived (B-class cp). ROADMAP v1.11.0->released. pending remote push (待用户确认).",
+            "progress_v1_12_0": "06-ship DONE v1.12.0: verify 全绿 (2076 passed/3 skipped, ruff 0, coverage 66%, smoke 6/6, wheel smart_agent_wiki-1.12.0). pyproject bump 1.11.0→1.12.0. reconcile commit 50fc8e8 (.csp delta + pyproject bump, .planning/benchmarks stashed). local annotated tag v1.12.0 @50fc8e8. ship/ (RELEASE-NOTES+ROLLBACK-PLAN+VERSION-REGISTRY v1.12.0 row). milestones/v1.12.0 archived (B-class cp). ROADMAP v1.12.0->released (2026-09-05). manifest writeback (+3 ship/milestone items build_status=built, ROADMAP/VERSION-REGISTRY content_hash updated). pending remote push (待用户确认). current_stage=next-cycle-pending (v1.12.0 周期 local done, pending push + 07-retro)."
+        },
+        {
+            "stage": "07-retro",
+            "title": "复盘 / 闭环校验 + findings 回流",
+            "status": "done",
+            "owner": "S7-retro",
+            "artifacts": [
+                ".csp/artifacts/retrospective-v1.10.0.md",
+                ".csp/artifacts/retrospective-v1.11.0.md"
+            ],
+            "progress": "v1.11.0 07-retro DONE: 闭环校验通过 (PRD→Spec→Task→commit→tag 全链, 4 SPEC/4 Task/12 AC 全映射, tag v1.11.0@5fca85b 本地). 2064 passed/6 skipped, ruff 0, coverage 65.36%, smoke 6/6, wheel 1.11.0. Findings O1-O4 + 续留 N1/N3/N4/M2/L2 回流下一轮 (O1 cache 命中率未 benchmark P2 / O2 coverage 65.36% 余量薄 P3 / O3 REST 行为变更无 CHANGELOG P3 / O4 tag 指向 reconcile 非 release P3; N1 embedding E2E P1 / N3 K2 per-request ws P2 / N4 P99 benchmark P2 / M2 agent 活动聚合 P2 / L2 链接自动 apply P3). 本轮清掉 N7/N2-K1/M3/N5/N6 共 5 项. K1 北极星 coverage 65 达成. 下一版本候选列 retrospective-v1.11.0.md. current_stage=next-cycle-pending (v1.11.0 周期闭环, 待下一轮 01)."
+        }
+    ],
+    "note": "v1.4.0 周期闭环 2026-09-03: 00-07 done. platform+debt 6 Task, 1898 passed, smoke 6/6, ruff 0 (F401 启用), v1.4.0 tagged. 复盘见 retrospective-v1.4.0.md (findings H1-H5). v1.5.0 智能自适应周期启动: 01-prd DONE (PRD-intelligence-adaptation-v1.5.0 Approved + PMS-intelligence-adaptation.md ready; 4 新能力 F-I-1..4 + 携带 H1/H2/H4/H5 债; PRD claims ground 自源码全 TRUE). current_stage=02-decomposition. 决策: 开新能力同时清债. 02-decomposition DONE: DECOMPOSITION-DELTA-v1.5.0.md (8 原子 Feature F-I-1..4+F-Z-6..9, 3 Wave, Z-6/Z-7 串行). current_stage=03-tech. 03-tech DONE: ADR-006(resume)+ADR-007(workspace scope), 8 SPEC 1:1, TMS-DELTA-v1.5.0(10 用例), traceability +8. current_stage=04-tasks. 04-tasks DONE: TASKS-DELTA-v1.5.0 (8 Task 1:1 Spec, 3 Wave, DAG I-4→I-1, Z-6 serial末位, Z-7 serial Wave2) + WBS 追加 8 行. current_stage=05-impl. 05-impl DONE: 8 Task (4 新能力 + 4 债), 1929 passed, ruff 0 (F841 启用), coverage 63%, smoke 6/6, wheel 1.5.0. 06-ship DONE: v1.5.0 tagged @89b284e. 07-retro DONE: retrospective-v1.5.0.md (findings I1-I5). **v1.5.0 周期闭环**. 新周期 v1.6.0, current_stage=01-prd. 待下一轮 01 决策: 开新能力 OR 先清 I1(workspace全路径II)/I2(coverage65)债. **v1.6.0 周期启动**: 决策=债务收口(workspace 全路径 II + 深覆盖 65 + policy web 端点, 清 I1/I2/I4). 01-prd DONE: PRD-debt-closure-v1.6.0 Approved + PMS-debt-closure ready; ground 自源码(insert 丢 workspace_id / tree_mode+compiler 未传 ws / query engine.py 14%). PRD-v1.5.0 标 Released. current_stage=02-decomposition. 02-decomposition DONE: DECOMPOSITION-DELTA-v1.6.0 (4 Feature F-J-1..4, 2 Wave, J-1→J-3). current_stage=03-tech. 03-tech DONE: ADR-008(workspace 写入), 4 SPEC 1:1, TMS-DELTA-v1.6.0(4 用例), traceability +4. current_stage=04-tasks. 04-tasks DONE: TASKS-DELTA-v1.6.0 (4 Task 1:1 Spec, 2 Wave, DAG J-1→J-3) + WBS 追加 4 行. current_stage=05-impl. 05-impl DONE: 4 Task (workspace 读全路径+写+深覆盖+policy web), 1959 passed, ruff 0, coverage 63.7%, smoke 6/6, wheel 1.6.0. 06-ship DONE: v1.6.0 tagged @62f36cc. 07-retro DONE: retrospective-v1.6.0.md (findings J1-J3). **v1.6.0 周期闭环** (workspace 读写双闭环). 新周期 v1.7.0, current_stage=01-prd. 待下一轮 01 决策: coverage 65(J1) / graph workspace(J2) / 新能力. **v1.7.0 周期启动**: 决策=债务收口III(graph workspace 隔离 J2 + scope 清理 J3 + coverage→65 J1). 01-prd DONE: PRD-graph-workspace-v1.7.0 Approved + PMS-graph-workspace ready; ground(entity 表无 ws 列 / graph_traverse 全量载 / GraphSink INSERT 无 ws / Entity domain 无 ws 字段). PRD-v1.6.0 标 Released. **远端已 push: master + v1.0.1..v1.6.0 tags + v1.5.0/v1.6.0 GitHub releases**. current_stage=02-decomposition. 02-decomposition DONE: DECOMPOSITION-DELTA-v1.7.0 (3 Feature F-K-1..3, 2 Wave, K-1→K-2/K-3). current_stage=03-tech. 03-tech DONE: ADR-009(entity workspace), 3 SPEC 1:1, TMS-DELTA-v1.7.0(3 用例), traceability +3. current_stage=04-tasks. 04-tasks DONE: TASKS-DELTA-v1.7.0 (3 Task 1:1 Spec, 2 Wave, DAG K-1→K-2/K-3) + WBS 追加 3 行. current_stage=05-impl. 05-impl DONE: 3 Task (graph 隔离 + scope 清理 + 覆盖), 1977 passed, ruff 0, coverage 64.2%, smoke 6/6, wheel 1.7.0. 06-ship DONE: v1.7.0 tagged @2c4a9d7. 07-retro DONE: retrospective-v1.7.0.md (findings K1-K3). **v1.7.0 周期闭环** (workspace 三闭环完成: 读+写+graph). 新周期 v1.8.0, current_stage=01-prd. 待下一轮 01 决策: coverage 65(K1) / per-request workspace(K2) / 新能力. **v1.8.0 周期启动**: 决策=转新能力(Smart Linking + AI Summarization, roadmap v4.2 非 embedding 项). K1/K2/K3 均 defer(review: K1 低ROI+3轮债够 / K2 local-first不需请求级ws / K3 纯性能无问题). 01-prd DONE: PRD-smart-linking-v1.8.0 Approved + PMS-smart-linking ready; ground(related_pages/wiki_links/backlinks 既有 / LLMRouter.answer_query). PRD-v1.7.0 标 Released. current_stage=02-decomposition. 02-decomposition DONE: DECOMPOSITION-DELTA-v1.9.0 (3 Feature F-M-1..3, 1 Wave, 无依赖). current_stage=03-tech. 03-tech DONE: 3 SPEC 1:1 (无 ADR), TMS-DELTA-v1.9.0(3 用例), traceability +3. current_stage=04-tasks. 04-tasks DONE: TASKS-DELTA-v1.9.0 (3 Task 1:1 Spec, 1 Wave, 独立). WBS 追加 3 行. current_stage=05-impl. 05-impl DONE: 3 Feature (workflow list + agents CLI + agents REST), 1987 passed, ruff 0, smoke 6/6, wheel 1.9.0. 06-ship DONE: v1.9.0 tagged @246f3d4. 07-retro DONE: retrospective-v1.9.0.md (findings M1-M3). **v1.9.0 周期闭环** (续新能力: agent & workflow 可视化). 新周期 v2.0.0 (major 节点), current_stage=01-prd. 待下一轮 01 决策: embedding(须用户确认装SDK) / realtime仪表盘(v4.3) / desktop(v4.4) / 自定义agent角色 / K1/K2/L债. **v1.9.0 周期启动**: 决策=agent 可视化(workflow list durable + agents roster CLI + REST, roadmap v4.3 非realtime项). embedding defer(heavy SDK, 硬约定#12须用户确认). L1-L3/K1/K2 defer. 01-prd DONE: PRD-agent-viz-v1.9.0 Approved + PMS-agent-viz ready; ground(workflow_executions v4 表 / build_default_agents / collaborate router 已有 GET /workflows in-memory). PRD-v1.8.0 标 Released. current_stage=02-decomposition. **v1.10.0 周期启动**: 决策=embedding 语义搜索(roadmap v4.2 候选采纳, additive MINOR). 01-prd DONE: PRD-embedding-v1.10.0 Approved + PMS-embedding ready; ground 自源码(embeddings.py embed_texts/cluster 既有但未接 Query 检索 / FTS5Search bm25 既有 / compute_related_pages 3-signal 无 embedding / QueryEngine 无 semantic 模式 / importorskip fsrs 先例 / detect_tier FULL 检测 / workspace_id migrations v8+ADR-009 / FTS5Sink Write Queue 范式). PRD-v1.9.0 标 Released. v1.10.0 PRD 完成（embedding 语义搜索，ground 自源码）. current_stage=02-decomposition. 02-decomposition DONE: DECOMPOSITION-DELTA-v1.10.0 (4 原子 Feature F-N-1..4, 2 Wave, DAG N-1→{N-2,N-3,N-4} 无环). current_stage=03-tech. 03-tech DONE: ADR-010(embedding_store BLOB+numpy cosine, --mode 并行不融合, all-MiniLM-L6-v2 384 维), 4 SPEC 1:1 (SPEC-F-N-1..4), TMS-DELTA-v1.10.0(12 用例), traceability +12 AC 全映射. 穷尽门控通过(4 Spec == 4 原子 Feature). current_stage=04-tasks. 04-tasks DONE: TASKS-DELTA-v1.10.0 (4 Task 1:1 Spec, 2 Wave, DAG N-1→{N-2,N-3,N-4} 无环) + WBS 追加 4 行. current_stage=05-impl. 05-impl DONE: 4 Task (embedding 索引+语义检索+smart-linking+测试), 1993 passed, 6 skipped (3 原有+3 embedding importorskip), ruff 0, smoke 6/6. commits: ecbdb75/9660ecc/3b2039e/e7fb6c6. sentence_transformers 未装→importorskip 测试 skip, 降级测试 mock pass. 实际 embedding E2E 须用户装 [learn] extra. current_stage=06-ship. 06-ship DONE (v1.10.0): verify 全绿 (1993 passed/6 skipped, ruff 0, smoke 6/6, wheel 1.10.0). reconcile commit 15bb5fe (.csp delta, .planning/benchmarks stashed). local annotated tag v1.10.0 @15bb5fe. ship/ (RELEASE-NOTES+ROLLBACK-PLAN+VERSION-REGISTRY). milestones/v1.10.0 archived (B-class cp). ROADMAP v1.10.0→released. **pending remote push (待用户确认)**. current_stage=06-ship (local done, pending push). **v1.10.0 周期闭环** (07-retro DONE: 闭环校验通过, findings N1-N7 回流, 下一版本候选列 retrospective-v1.10.0.md). current_stage=next-cycle-pending. 待下一轮 01 决策. v1.11.0 PRD 完成（债务收口 IV/bug fix，5 修项：N7 semantic cache + N2/K1 compile 深覆盖 + M3 workflow REST 统一读 DB + N5 Spec 命名回更 + N6 hash 复核。ground 自源码全 TRUE，5 claim 有 file:line。PRD-debt-closure-v1.11.0 Approved + PMS-debt-closure delta 更新。PRD-embedding-v1.10.0 标 Released。不引入新能力、不需 SDK。current_stage=02-decomposition。）02-decomposition DONE: DECOMPOSITION-DELTA-v1.11.0（4 原子 Feature F-O-1..4，1 Wave 全并行，DAG 无环）。current_stage=03-tech。03-tech DONE: ADR-011(semantic cache 复用 F-QS-07 单例 mode=semantic key 隔离 TTL 300s ingest/rebuild clear)，4 SPEC 1:1 (SPEC-F-O-1..4)，TMS-DELTA-v1.11.0(12 用例)，traceability +12 AC 全映射。穷尽门控通过(4 Spec == 4 原子 Feature)。current_stage=04-tasks。 04-tasks DONE: TASKS-DELTA-v1.11.0 (4 Task 1:1 Spec, 1 Wave 全并行, DAG 无环 O1/O2/O3/O4 独立无依赖边) + WBS 追加 4 行. current_stage=05-impl. 05-impl DONE v1.11.0: 4 Task (F-O-1 semantic cache + F-O-2 compile deep coverage + F-O-3 workflow REST unify + F-O-4 spec/hash), 2064 passed, 6 skipped, ruff 0, coverage 65.36% (fail_under=65), smoke 6/6. commits: 209c294/42b9399/e3869d3/0f0e82e. current_stage=06-ship. 06-ship DONE v1.11.0: verify 全绿 (2064 passed/6 skipped, ruff 0, coverage 65.36%, smoke 6/6, wheel 1.11.0). reconcile commit 5fca85b (.csp delta + pyproject bump, .planning/benchmarks stashed). local annotated tag v1.11.0 @5fca85b. ship/ (RELEASE-NOTES+ROLLBACK-PLAN+VERSION-REGISTRY). milestones/v1.11.0 archived (B-class cp). ROADMAP v1.11.0->released. pending remote push (待用户确认). current_stage=06-ship (local done, pending push). v1.11.0 07-retro DONE: 复盘完成 (retrospective-v1.11.0.md), 闭环校验通过, 5 项 findings 清掉 (N7/N2-K1/M3/N5/N6), 4 项新 findings 回流 (O1-O4) + 5 项续留 (N1/N3/N4/M2/L2), findings 回流 ROADMAP 下一版本候选段. K1 北极星 coverage 65 达成. current_stage=next-cycle-pending (v1.11.0 周期闭环, 待下一轮 01). v1.12.0 PRD 完成（embedding pivot 到 API，ground 自源码全 TRUE，13 claim 有 file:line。4 模块 F-EA-1..4：provider 重构 litellm API / 维度可配+dim 驱动 / 本地 ST 可选 fallback / 测试改 API mock+benchmark。PRD-embedding-api-v1.12.0 Approved + PMS-embedding-api ready。PRD-debt-closure-v1.11.0 标 Released。不要求本地 ST，API 为默认路径。current_stage=02-decomposition。）02-decomposition DONE v1.12.0: DECOMPOSITION-DELTA-v1.12.0（4 原子 Feature F-Q-1..4，2 Wave，DAG Q-1→{Q-2,Q-3,Q-4} 无环）。current_stage=03-tech。 03-tech DONE v1.12.0: ADR-012(embedding provider litellm API 为主 + 本地 ST 可选 fallback) + 4 SPEC 1:1 (SPEC-F-Q-1..4) + TMS-DELTA-v1.12.0(9 用例) + traceability +9 AC 全映射。穷尽门控通过(4 Spec == 4 原子 Feature)。ground 自源码全标注 file:line。current_stage=04-tasks。 04-tasks DONE v1.12.0: TASKS-DELTA-v1.12.0 (4 Task 1:1 Spec F-Q-1..4, 2 Wave, DAG Q-1→{Q-2,Q-3,Q-4} 无环) + WBS 追加 4 行 + WAVE-PLAN/DEPENDENCY-DAG/TASK-BREAKDOWN-SUMMARY 增量更新 + 4 Spec related_tasks 回填 + manifest 回写. current_stage=05-impl。 v1.12.0 05-impl DONE: 4 Task, 2074 passed, 3 skipped, ruff 0, smoke 6/6. embedding tests改 mock litellm.embedding (无 importorskip, 无 torch 加载). tag v1.10.0@3865c75 参见 07-retro v1.10.0 progress (retrospective-v1.10.0.md). current_stage=06-ship. v1.12.0 06-ship DONE: verify 全绿 (2076 passed/3 skipped, ruff 0, coverage 66%, smoke 6/6, wheel smart_agent_wiki-1.12.0). pyproject bump 1.11.0→1.12.0. reconcile commit 50fc8e8 (.csp delta + pyproject bump, .planning/benchmarks stashed). local annotated tag v1.12.0 @50fc8e8. ship/ (RELEASE-NOTES+ROLLBACK-PLAN+VERSION-REGISTRY v1.12.0 row tagged-local/pending-push). milestones/v1.12.0 archived (B-class cp). ROADMAP v1.12.0→released (2026-09-05). manifest writeback (+3 ship/milestone items, ROADMAP/VERSION-REGISTRY content_hash). current_stage=next-cycle-pending (v1.12.0 周期 local done, pending remote push 待用户确认 + 07-retro). v1.13.0 05-impl done: 5 Task, 2179 passed, ruff 0, coverage 67%≥67, smoke 6/6. current_stage=06-ship."
 }

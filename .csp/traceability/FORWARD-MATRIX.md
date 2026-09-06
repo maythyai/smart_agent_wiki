@@ -148,3 +148,15 @@ PRD feature_count=5（模块）→ decomposition 5 域 → 20 原子 Feature →
 | PRD-EA-2 | F-Q-2 | SPEC-F-Q-2 | T-F-Q-2 | f4e9f04 | AC-DIM-1, AC-DIM-2 | test_embedding_index::test_dim_change_triggers_rebuild, test_emb_ac1 (model 列) |
 | PRD-EA-3 | F-Q-3 | SPEC-F-Q-3 | T-F-Q-3 | 4818926 | AC-FB-1, AC-FB-2 | test_semantic_search::test_sem_fb1_st_fallback, test_sem_fb2_no_st_api |
 | PRD-EA-4 | F-Q-4 | SPEC-F-Q-4 | T-F-Q-4 | 65f036f | AC-TEST-1, AC-TEST-2, AC-TEST-3 | test_embedding_index/semantic/related (no importorskip), test_ci_workflow::test_embedding_tests_no_importorskip, test_embedding_benchmark |
+
+### v1.13.0 — E2E 收尾轮
+
+| PRD Item | Feature | Spec | Task | Commit | AC | Test |
+|---|---|---|---|---|---|---|
+| PRD-R-1 | F-R-1 | SPEC-F-R-1 | T-F-R-1 | 0669d98 | AC-A-1..5 | test_ingest_directory (5) |
+| PRD-R-2 | F-R-2 | SPEC-F-R-2 | T-F-R-2 | dc6d299 | AC-B-1..4 | test_embedding_benchmark (4, @benchmark_e2e) |
+| PRD-R-3 | F-R-3 | SPEC-F-R-3 | T-F-R-3 | 3284262 | AC-C-1..3 | test_workflow_rest_db (2), test_changelog (2) |
+| PRD-R-4 | F-R-4 | SPEC-F-R-4 | T-F-R-4 | 8d9ccca+218c398 | AC-D-1..2 | test_coverage_config (1), test_coverage_gate (1), coverage 67% |
+| PRD-R-5 | F-R-5 | SPEC-F-R-5 | T-F-R-5 | 895c8bf | AC-E-1..2 | test_retrospective_closure (2) |
+
+链：PRD AC → Feature → Spec → Task → Commit → Test，16 AC 全映射。

@@ -249,3 +249,26 @@ updated: "2026-09-01"
 - `QueryEngine._semantic_search()` → `embed_texts()` + `embeddings_available()` (lazy import in function)
 - `compute_related_pages()` → `embeddings_available()` + `cosine_similarity()` (lazy import in function)
 - `rebuild_embeddings()` → `embed_texts()` (probe dim) + `_upsert_embedding()`
+
+## v1.13.0 Delta — E2E 收尾轮（ingest 递归 + REST 别名）
+
+### 新增/改动点（ground 自源码，file:line）
+
+| 改动 | file:line | 说明 |
+|---|---|---|
+| `ingest()` 入口加目录递归分支 | `src/saw/engines/ingest/pipeline.py:108-130` | `Path(source).is_dir()` → `_ingest_directory()` 用 `os.walk` 递归枚举子文件 |
+| `_ingest_directory()` | `src/saw/engines/ingest/pipeline.py:144-192` | os.walk prune noise dirs → 逐文件 `_ingest_single_file()` → 聚合 `IngestResult(parser="directory-batch")` |
+| `_ingest_single_file()` | `src/saw/engines/ingest/pipeline.py:204+` | 原 `ingest()` 单文件逻辑提取为内部方法（classify→extract→fuse→validate→enqueue） |
+| `_NOISE_DIRS` 常量 | `src/saw/engines/ingest/pipeline.py:103-107` | frozenset: `.git/.saw/node_modules/.venv/venv/__pycache__/.mypy_cache/.ruff_cache/.pytest_cache` |
+| `classifier.py` is_dir→UNKNOWN | `src/saw/engines/ingest/classifier.py:149-155` | 目录返回 `DocumentFormat.UNKNOWN`（不再猜格式），pipeline 入口拦截 |
+| REST durable item 加 `name`/`workflow` 别名 | `src/saw/api/routes/collaborate.py:373-374` | `"name": name` + `"workflow": name`（= `definition_name` 镜像） |
+| REST live item 加 `name`/`workflow` 别名 | `src/saw/api/routes/collaborate.py:401-402` | 同上，live merge 分支 |
+| benchmark 脚本 | `scripts/benchmark_semantic.py:1-260` | 独立可执行：vLLM health check → 数据集 → BM25/semantic recall → P99 → cache hit → JSON |
+| CHANGELOG.md | `CHANGELOG.md:1-80` | 项目根，Keep a Changelog 格式，回溯 v1.10.0–v1.13.0 |
+| coverage fail_under 65→67 | `pyproject.toml:127` | ratchet gate |
+| benchmark_e2e marker | `pyproject.toml:99-100` | CI 无 vLLM skip |
+
+### 调用链（增量）
+- `ingest()` → `Path(source).is_dir()` → `_ingest_directory()` → `os.walk` → `_ingest_single_file()` → classify→extract→fuse→validate→enqueue
+- `list_workflows()` → DB rows → `items.append({..., "name": name, "workflow": name})` → merge live → sort → return
+- `scripts/benchmark_semantic.py` → `embed_texts()` (API path) → `_semantic_search`/`_keyword_search` → P99 + cache hit

@@ -60,3 +60,20 @@
 | f4e9f04 | T-F-Q-2 | SPEC-F-Q-2 | F-Q-2 | PRD-EA-2 | AC-DIM-1, AC-DIM-2 | test_embedding_index::test_dim_change, test_emb_ac1 |
 | 4818926 | T-F-Q-3 | SPEC-F-Q-3 | F-Q-3 | PRD-EA-3 | AC-FB-1, AC-FB-2 | test_semantic_search::test_sem_fb1, test_sem_fb2 |
 | 65f036f | T-F-Q-4 | SPEC-F-Q-4 | F-Q-4 | PRD-EA-4 | AC-TEST-1/2/3 | test_embedding_* (mock), test_ci_workflow, test_embedding_benchmark |
+
+### v1.13.0 — E2E 收尾轮（backward: Test → Commit → Task → Spec → Feature → PRD AC）
+
+| Test | Commit | Task | Spec | Feature | PRD AC |
+|---|---|---|---|---|---|
+| test_ingest_directory.py (5 tests) | 0669d98 | T-F-R-1 | SPEC-F-R-1 | F-R-1 | AC-A-1..5 |
+| test_embedding_benchmark.py (4 new tests) | dc6d299 | T-F-R-2 | SPEC-F-R-2 | F-R-2 | AC-B-1..4 |
+| test_workflow_rest_db.py alias tests (2) | 3284262 | T-F-R-3 | SPEC-F-R-3 | F-R-3 | AC-C-1 |
+| test_changelog.py (2 tests) | 3284262 | T-F-R-3 | SPEC-F-R-3 | F-R-3 | AC-C-2..3 |
+| test_coverage_config.py (1 test) | 8d9ccca | T-F-R-4 | SPEC-F-R-4 | F-R-4 | AC-D-1 |
+| CI pytest --cov (67%) | 8d9ccca+218c398 | T-F-R-4 | SPEC-F-R-4 | F-R-4 | AC-D-2 |
+| test_retrospective_closure.py (2 tests) | 895c8bf | T-F-R-5 | SPEC-F-R-5 | F-R-5 | AC-E-1..2 |
+| test_linter_coverage.py (25) | 8d9ccca | T-F-R-4 | SPEC-F-R-4 | F-R-4 | AC-D-2 (coverage) |
+| test_code_wiki_coverage.py (15) | 8d9ccca | T-F-R-4 | SPEC-F-R-4 | F-R-4 | AC-D-2 (coverage) |
+| test_concept_graph_coverage.py (22) | 8d9ccca | T-F-R-4 | SPEC-F-R-4 | F-R-4 | AC-D-2 (coverage) |
+| test_archiver_coverage.py (12) | 218c398 | T-F-R-4 | SPEC-F-R-4 | F-R-4 | AC-D-2 (coverage) |
+| test_feedback_coverage.py (16) | 218c398 | T-F-R-4 | SPEC-F-R-4 | F-R-4 | AC-D-2 (coverage) |
