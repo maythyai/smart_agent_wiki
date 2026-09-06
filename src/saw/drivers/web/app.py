@@ -543,13 +543,13 @@ def create_app_from_config(
 
     collaborate_engine = None
     try:
-        from saw.engines.collaborate.agents import build_default_agents
+        from saw.engines.collaborate.agents import build_agent_roster
         from saw.engines.collaborate.a2a_protocol import A2AAdapter
         from saw.engines.collaborate.dispatcher import AgentDispatcher
         from saw.engines.collaborate.orchestrator import CollaborateEngine
         from saw.engines.collaborate.workflow_executor import WorkflowExecutor
 
-        _collab_agents = build_default_agents(llm_router=None)
+        _collab_agents = build_agent_roster(llm_router=None)
         _dispatcher = AgentDispatcher(llm_router=None, agents=_collab_agents)
         _a2a = A2AAdapter(
             agents=_collab_agents,

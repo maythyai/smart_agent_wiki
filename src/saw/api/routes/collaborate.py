@@ -418,14 +418,16 @@ async def list_workflows(
 
 @router.get("/agents")
 async def list_agents() -> dict[str, Any]:
-    """List the 6-agent roster (T-F-M-3, AC-API-1).
+    """List the agent roster (T-F-M-3, AC-API-1, F-T-1 custom roles).
 
-    Returns each role's name, model tier, allowed tools, and whether it is
-    a zero-cost rule agent (Guardian). Frontend-dashboard prep (roadmap v4.3).
+    Returns each role's name, model tier, allowed tools, whether it is
+    a zero-cost rule agent (Guardian), and whether it is a custom role
+    loaded from ``.saw/agents/*.yaml``. Frontend-dashboard prep (roadmap v4.3).
     """
-    from saw.engines.collaborate.agents import build_default_agents
+    from saw.engines.collaborate.agents import build_agent_roster
 
-    roster = build_default_agents(llm_router=None)
+    BUILTIN_NAMES = {"Librarian", "Writer", "Critic", "Linker", "Scholar", "Guardian"}
+    roster = build_agent_roster(llm_router=None)
     agents = []
     for name in sorted(roster):
         a = roster[name]
@@ -434,6 +436,7 @@ async def list_agents() -> dict[str, Any]:
             "model_tier": a.model_tier,
             "tools_allowed": list(getattr(a, "_tools_allowed", []) or []),
             "rule": a.model_tier == "rule",
+            "custom": name not in BUILTIN_NAMES,
         })
     return {"agents": agents, "total": len(agents)}
 

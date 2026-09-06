@@ -162,17 +162,25 @@ class WorkflowParser:
         )
 
     def validate(
-        self, workflow: WorkflowDefinition, available_agents: set[str]
+        self, workflow: WorkflowDefinition, available_agents: set[str] | None = None
     ) -> list[str]:
         """Validate a workflow definition.
 
         Args:
             workflow: The workflow to validate
-            available_agents: Set of valid agent names
+            available_agents: Set of valid agent names. When ``None``
+                (default), the full roster from :func:`build_agent_roster`
+                is used — this includes custom roles loaded from
+                ``.saw/agents/*.yaml`` (F-T-1).
 
         Returns:
             List of error messages (empty if valid)
         """
+        if available_agents is None:
+            from saw.engines.collaborate.agents import build_agent_roster
+
+            available_agents = set(build_agent_roster(llm_router=None).keys())
+
         errors = []
 
         for i, step in enumerate(workflow.steps):

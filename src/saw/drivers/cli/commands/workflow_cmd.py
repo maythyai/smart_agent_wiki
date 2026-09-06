@@ -160,9 +160,10 @@ def lint(
     # Registered agents come from the dispatcher roster; for CLI lint we
     # build the default roster (no LLM) and read its keys — same source of
     # truth the runtime uses (orchestrator.get_available_agents).
-    from saw.engines.collaborate.agents import build_default_agents
+    # F-T-1: use build_agent_roster to include custom roles from .saw/agents/.
+    from saw.engines.collaborate.agents import build_agent_roster
 
-    available = set(build_default_agents(llm_router=None).keys())
+    available = set(build_agent_roster(llm_router=None).keys())
     errors = parser.validate(wf, available)
     if errors:
         console.print(f"[red]{len(errors)} issue(s):[/red]")
