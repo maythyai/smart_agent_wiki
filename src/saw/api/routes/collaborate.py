@@ -418,27 +418,78 @@ async def list_workflows(
 
 @router.get("/agents")
 async def list_agents() -> dict[str, Any]:
-    """List the agent roster (T-F-M-3, AC-API-1, F-T-1 custom roles).
+    """List the agent roster (T-F-M-3, AC-API-1, F-T-1 custom, F-T-3 activity).
 
     Returns each role's name, model tier, allowed tools, whether it is
-    a zero-cost rule agent (Guardian), and whether it is a custom role
-    loaded from ``.saw/agents/*.yaml``. Frontend-dashboard prep (roadmap v4.3).
+    a zero-cost rule agent (Guardian), whether it is a custom role
+    loaded from ``.saw/agents/*.yaml``, and a compact ``activity_summary``
+    (calls + last_active_at) when the activity tracker is initialized.
+    Frontend-dashboard prep (roadmap v4.3).
     """
     from saw.engines.collaborate.agents import build_agent_roster
 
     BUILTIN_NAMES = {"Librarian", "Writer", "Critic", "Linker", "Scholar", "Guardian"}
     roster = build_agent_roster(llm_router=None)
+
+    # F-T-3: attach activity summary if tracker is available
+    tracker = None
+    try:
+        from saw.drivers.web.app import get_activity_tracker
+
+        tracker = get_activity_tracker()
+    except Exception:
+        pass
+
     agents = []
     for name in sorted(roster):
         a = roster[name]
+        activity_summary = None
+        if tracker is not None:
+            activity_summary = tracker.get_summary(name)
         agents.append({
             "name": a.name,
             "model_tier": a.model_tier,
             "tools_allowed": list(getattr(a, "_tools_allowed", []) or []),
             "rule": a.model_tier == "rule",
             "custom": name not in BUILTIN_NAMES,
+            "activity_summary": activity_summary,
         })
     return {"agents": agents, "total": len(agents)}
+
+
+@router.get("/agents/{agent_name}/activity")
+async def get_agent_activity(agent_name: str = Path(
+    ..., description="Agent name"
+)) -> dict[str, Any]:
+    """Get agent activity aggregation (F-T-3, AC-C-1..3).
+
+    Returns calls/failures/last_action/last_active_at.
+    Agent not in roster → 404. No activity → 200 + empty (calls=0).
+    """
+    from saw.engines.collaborate.agents import build_agent_roster
+
+    roster = build_agent_roster(llm_router=None)
+    if agent_name not in roster:
+        raise HTTPException(404, f"Agent '{agent_name}' not found in roster")
+
+    tracker = None
+    try:
+        from saw.drivers.web.app import get_activity_tracker
+
+        tracker = get_activity_tracker()
+    except Exception:
+        pass
+
+    if tracker is None:
+        return {
+            "agent": agent_name,
+            "calls": 0,
+            "failures": 0,
+            "last_action": None,
+            "last_active_at": None,
+        }
+
+    return tracker.get_activity(agent_name)
 
 
 @router.get("/workflows/{workflow_id}/status")

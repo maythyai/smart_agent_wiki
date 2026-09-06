@@ -62,6 +62,23 @@ async def lifespan(app: FastAPI):
         manager.set_event_bus(app.state.event_bus)
         await manager.start_broadcaster()
 
+    # F-T-3: initialize agent activity tracker and subscribe to event bus
+    # so WorkflowStep events are aggregated in-memory (ADR-015 决策二).
+    try:
+        from saw.engines.collaborate.activity_tracker import AgentActivityTracker
+
+        _activity_tracker_inst = AgentActivityTracker()
+        _eb = getattr(app.state, "event_bus", None)
+        if _eb is not None:
+            _activity_tracker_inst.subscribe(_eb)
+        app.state.activity_tracker = _activity_tracker_inst
+        set_activity_tracker(_activity_tracker_inst)
+    except Exception:  # pragma: no cover — never block `saw web`
+        import logging as _act_logging
+        _act_logging.getLogger(__name__).warning(
+            "Activity tracker init failed", exc_info=True
+        )
+
     # CR-3 / HI-7: recover stranded 'processing' ops and drain pending so
     # writes are not lost across restarts. HI-7: a recurring background task
     # also re-runs recover() every 60s to reset ops stranded by a mid-flight
@@ -413,6 +430,24 @@ def create_app(
     app.include_router(admin_router, dependencies=admin_auth_dep)
 
     return app
+
+
+# ── F-T-3: Agent activity tracker singleton ────────────────────────
+# Set in lifespan; accessible from REST routes that don't have a Request
+# object (e.g. list_agents). Returns None when tracker isn't initialized
+# (tests, CLI-only mode) — routes degrade to empty activity.
+_activity_tracker: "Any | None" = None
+
+
+def get_activity_tracker() -> "Any | None":
+    """Return the module-level activity tracker (or None if not set)."""
+    return _activity_tracker
+
+
+def set_activity_tracker(tracker: "Any | None") -> None:
+    """Set the module-level activity tracker (called in lifespan)."""
+    global _activity_tracker  # noqa: PLW0603
+    _activity_tracker = tracker
 
 
 def create_app_from_config(
