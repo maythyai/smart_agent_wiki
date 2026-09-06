@@ -6,6 +6,8 @@ Per D-23: WIP file structure.
 """
 from __future__ import annotations
 
+import logging
+import os
 from pathlib import Path
 
 import yaml
@@ -13,6 +15,8 @@ from pydantic import BaseModel, ConfigDict
 
 from saw.domain.exceptions import ConfigError
 from saw.domain.value_objects import CapabilityTier
+
+logger = logging.getLogger(__name__)
 
 
 class LLMSettings(BaseModel):
@@ -169,6 +173,39 @@ def _api_embedding_configured() -> bool:
     if api_key:
         return True
     return False
+
+
+def _semantic_cache_enabled() -> bool:
+    """True if semantic cache is enabled (default: true).
+
+    Reads SAW_SEMANTIC_CACHE_ENABLED env var (T-F-S-1, ADR-014).
+    - "false" → False (disable cache)
+    - "true"/unset/invalid → True (enable cache, default)
+    """
+    val = os.environ.get("SAW_SEMANTIC_CACHE_ENABLED", "true").lower()
+    if val == "false":
+        return False
+    if val not in ("true", ""):
+        logger.warning(
+            "Invalid SAW_SEMANTIC_CACHE_ENABLED=%r, defaulting to true", val
+        )
+    return True
+
+
+def _semantic_cache_threshold_ms() -> int:
+    """Cache write threshold in milliseconds (default: 0 = no threshold).
+
+    Reads SAW_SEMANTIC_CACHE_THRESHOLD_MS env var (T-F-S-1, ADR-014).
+    When > 0, cache.set is skipped if embedding API response latency
+    is below this threshold (cache.get still executes).
+    """
+    try:
+        return int(os.environ.get("SAW_SEMANTIC_CACHE_THRESHOLD_MS", "0"))
+    except ValueError:
+        logger.warning(
+            "Invalid SAW_SEMANTIC_CACHE_THRESHOLD_MS, defaulting to 0"
+        )
+        return 0
 
 
 def load_config(config_path: Path) -> WikiSettings:

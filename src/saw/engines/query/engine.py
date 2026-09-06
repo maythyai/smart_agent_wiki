@@ -468,7 +468,36 @@ class QueryEngine:
         Per SPEC-F-O-1 / ADR-011: reuses the F-QS-07 ``QueryCache`` singleton
         with ``mode="semantic"`` key isolation (TTL 300s, cleared on ingest /
         rebuild). Fallback and empty-index results are NOT cached.
+        Per SPEC-F-S-1 / ADR-014: cache.get/set conditional on
+        ``SAW_SEMANTIC_CACHE_ENABLED``; cache.set skipped below
+        ``SAW_SEMANTIC_CACHE_THRESHOLD_MS`` latency threshold.
         """
+        import time
+
+        from saw.config.settings import (
+            _semantic_cache_enabled,
+            _semantic_cache_threshold_ms,
+        )
+        from saw.engines.query.cache import get_cache
+
+        _cache_enabled = _semantic_cache_enabled()
+        _threshold_ms = _semantic_cache_threshold_ms()
+
+        # F-O-1: serve from the query cache before doing any embedding work.
+        # T-F-S-1: cache.get is conditional on SAW_SEMANTIC_CACHE_ENABLED.
+        _cache = get_cache()
+        _cache_params = {
+            "limit": limit,
+            "offset": offset,
+            "mode": "semantic",
+            "workspace_id": self._workspace_id,
+        }
+        if _cache_enabled:
+            _cached = _cache.get(question, _cache_params)
+            if _cached is not None:
+                return _cached
+
+        # 1. Tier check: degrade to BM25 if embeddings unavailable
         import struct
 
         from saw.adapters.embeddings import (
@@ -477,32 +506,16 @@ class QueryEngine:
             embeddings_available,
         )
 
-        # F-O-1: serve from the query cache before doing any embedding work.
-        # Reuses the same ``get_cache()`` singleton as ``_keyword_search``
-        # (F-QS-07); ``mode="semantic"`` in params ensures the SHA256 key
-        # is distinct from the ``mode="search"`` keyspace.
-        from saw.engines.query.cache import get_cache
-
-        _cache = get_cache()
-        _cache_params = {
-            "limit": limit,
-            "offset": offset,
-            "mode": "semantic",
-            "workspace_id": self._workspace_id,
-        }
-        _cached = _cache.get(question, _cache_params)
-        if _cached is not None:
-            return _cached
-
-        # 1. Tier check: degrade to BM25 if embeddings unavailable
         if not embeddings_available():
             result = self._keyword_search(question, limit=limit, offset=offset)
             result.mode = "semantic_fallback"
             result.meta = {**(result.meta or {}), "semantic_fallback": True}
             return result
 
-        # 2. Embed query text
+        # 2. Embed query text (timed for threshold check, T-F-S-1)
+        _embed_t0 = time.perf_counter()
         vecs = embed_texts([question])
+        _embed_latency_ms = (time.perf_counter() - _embed_t0) * 1000
         if vecs is None:
             # Embedding failed (model error) → degrade to BM25
             result = self._keyword_search(question, limit=limit, offset=offset)
@@ -584,9 +597,16 @@ class QueryEngine:
             },
         )
         # F-O-1: cache the result (TTL-bounded; cleared on ingest / rebuild).
-        # Mirrors the ``_keyword_search`` cache.set pattern (L299-300).
+        # T-F-S-1: cache.set conditional on SAW_SEMANTIC_CACHE_ENABLED and
+        # SAW_SEMANTIC_CACHE_THRESHOLD_MS (skip write when API latency
+        # below threshold; cache.get still executes for existing entries).
         try:
-            _cache.set(question, _cache_params, _qr)
+            if _cache_enabled and _threshold_ms == 0:
+                _cache.set(question, _cache_params, _qr)
+            elif _cache_enabled and _threshold_ms > 0:
+                if _embed_latency_ms >= _threshold_ms:
+                    _cache.set(question, _cache_params, _qr)
+            # else: cache disabled → skip set
         except Exception as cache_exc:  # pragma: no cover — best-effort
             logger.warning("semantic cache write failed: %s", cache_exc)
         return _qr

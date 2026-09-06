@@ -3,6 +3,42 @@
 All notable changes to this project are documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [v1.14.0] - 2026-09-06
+### Added
+- `SAW_SEMANTIC_CACHE_ENABLED` env var to enable/disable semantic
+  query cache (default: `true`, backward compatible). Local vLLM
+  deployments can disable cache to avoid ineffective writes (T-F-S-1).
+- `SAW_SEMANTIC_CACHE_THRESHOLD_MS` env var to skip cache writes when
+  embedding API response is below a latency threshold (default: `0`
+  = no threshold). `cache.get` still executes for existing entries (T-F-S-1).
+- ANN vector index via `hnswlib` (HNSW, MIT, pip-installable) replacing
+  full-scan cosine for large-scale semantic search. Auto-switches at
+  `SAW_ANN_THRESHOLD` (default 500 [TBD]); falls back to numpy batch
+  cosine on failure with `meta.ann_fallback: true` (T-F-S-2, ADR-014).
+- `batch_cosine_similarity()` using numpy matrix multiply for small-scale
+  / fallback cosine path (constant optimization, no new dependency) (T-F-S-2).
+- Benchmark script updated: cache hit measured via `cache.stats().hits`
+  counter (not latency comparison); ANN vs cosine P99 comparison;
+  100/500/1000/5000 doc scale latency curve (T-F-S-3).
+- `related_pages.py` reuses ANN path for embedding similarity (no duplicate
+  cosine scan) (T-F-S-2, AC-B-5).
+
+### Changed
+- `_semantic_search` cache.get/set now conditional on
+  `SAW_SEMANTIC_CACHE_ENABLED` (default unchanged = enabled).
+- `_semantic_search` cosine path uses numpy batch matrix multiply instead
+  of per-element Python dot product.
+- Benchmark `_measure_cache_hit` uses `cache.stats().hits` instead of
+  `lat2 < lat1 * 0.5` latency threshold.
+
+### Notes
+- `hnswlib` added to `[semantic]` optional dependency (MIT, ~lightweight,
+  no faiss/torch).
+- No localhost auto-adaptive for cache (explicit env control preferred,
+  ADR-014 decision).
+- Default behavior unchanged when no `SAW_SEMANTIC_CACHE_*` or
+  `SAW_ANN_THRESHOLD` env vars are set.
+
 ## [v1.13.0] - 2026-09-06
 ### Fixed
 - `saw ingest <dir>` now recursively ingests all supported files in a
