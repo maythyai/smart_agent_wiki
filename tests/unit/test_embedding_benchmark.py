@@ -294,8 +294,25 @@ def test_ac_b_1_real_api_recall(monkeypatch):
     if not mod._health_check(vllm_base):
         pytest.skip("vLLM endpoint unreachable — skipping real API benchmark")
 
+    # Save and restore env + settings to avoid leaking state into other tests
+    from saw.adapters import embeddings as emb_mod
+    saved_settings = emb_mod._embedding_settings
+    saved_env = {k: os.environ.get(k) for k in (
+        "SAW_EMBEDDING_MODEL", "EMBEDDING_API_KEY", "SAW_EMBEDDING_API_BASE"
+    )}
+    monkeypatch.setattr(emb_mod, "_embedding_settings", None)
+
     import tempfile
-    results = mod.run_benchmark(vllm_base, Path(tempfile.mkdtemp()))
+    try:
+        results = mod.run_benchmark(vllm_base, Path(tempfile.mkdtemp()))
+    finally:
+        emb_mod._embedding_settings = saved_settings
+        for k, v in saved_env.items():
+            if v is not None:
+                os.environ[k] = v
+            else:
+                os.environ.pop(k, None)
+
     avg_sem = results["recall"]["semantic"]["avg"]
     avg_bm25 = results["recall"]["bm25"]["avg"]
     assert avg_sem >= avg_bm25, (
@@ -321,8 +338,25 @@ def test_ac_b_3_cache_hit_rate(monkeypatch):
     if not mod._health_check(vllm_base):
         pytest.skip("vLLM endpoint unreachable — skipping cache hit benchmark")
 
+    # Save and restore env + settings to avoid leaking state into other tests
+    from saw.adapters import embeddings as emb_mod
+    saved_settings = emb_mod._embedding_settings
+    saved_env = {k: os.environ.get(k) for k in (
+        "SAW_EMBEDDING_MODEL", "EMBEDDING_API_KEY", "SAW_EMBEDDING_API_BASE"
+    )}
+    monkeypatch.setattr(emb_mod, "_embedding_settings", None)
+
     import tempfile
-    results = mod.run_benchmark(vllm_base, Path(tempfile.mkdtemp()))
+    try:
+        results = mod.run_benchmark(vllm_base, Path(tempfile.mkdtemp()))
+    finally:
+        emb_mod._embedding_settings = saved_settings
+        for k, v in saved_env.items():
+            if v is not None:
+                os.environ[k] = v
+            else:
+                os.environ.pop(k, None)
+
     cache = results["cache"]
     assert cache["hit"], (
         f"2nd query should be faster (cache hit): "

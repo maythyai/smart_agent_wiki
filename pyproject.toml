@@ -127,7 +127,9 @@ omit = [
 # compile/compiler.py (17%); finding K1, v1.8.0.
 # T-F-O-2 (v1.11.0): ratcheted 64→65 (compiler deep coverage added 20
 # test cases covering 30+ functions in compile/compiler.py).
-fail_under = 65
+# T-F-R-4 (v1.13.0): ratcheted 65→67 (coverage 66→≥67%, ingest dir
+# recursion + benchmark + REST alias + coverage tests added).
+fail_under = 67
 show_missing = true
 exclude_lines = [
     "pragma: no cover",

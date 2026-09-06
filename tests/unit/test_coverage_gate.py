@@ -29,7 +29,7 @@ def test_coverage_gate_configured() -> None:
     floor = report["fail_under"]
     # Floor must be at/below the measured baseline (62%) so it is a
     # regression ratchet, not a day-one-blocker. Target = 80% (raise over time).
-    assert 50 <= floor <= 65, f"fail_under {floor} outside the ratchet band [50,65]"
+    assert 50 <= floor <= 80, f"fail_under {floor} outside the ratchet band [50,80]"
     run_cfg = cfg["tool"]["coverage"]["run"]
     assert "src/saw" in run_cfg.get("source", []), "coverage source not src/saw"
 

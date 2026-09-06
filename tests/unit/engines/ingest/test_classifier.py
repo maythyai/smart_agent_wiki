@@ -114,10 +114,14 @@ class TestClassifier:
         assert result.format == DocumentFormat.UNKNOWN
 
     def test_classify_directory(self, tmp_path: Path) -> None:
-        """Directory classification uses first supported file."""
+        """Directory classification returns UNKNOWN (T-F-R-1, ADR-013).
+
+        Directories no longer guess format from children — the pipeline
+        entry point intercepts directories and walks files itself.
+        """
         # Create directory with a Python file
         py_file = tmp_path / "module.py"
         py_file.write_text("def test(): pass")
         result = classify(str(tmp_path))
-        assert result.format == DocumentFormat.CODE
-        assert result.language == "python"
+        assert result.format == DocumentFormat.UNKNOWN
+        assert result.path == tmp_path
