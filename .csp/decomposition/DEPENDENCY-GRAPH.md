@@ -187,3 +187,23 @@ graph LR
 ### v1.14.0 并行机会
 - Wave 1 中 F-S-1 / F-S-2 并行（2 路独立：cache 配置 / ANN 索引）。
 - F-S-1 与 F-S-2 均触及 engine.py 但不同路径（cache 条件分支 vs cosine→ANN 切换），03 技术方案需注意协调。
+
+## v1.15.0 delta（agent/link track）
+
+```mermaid
+graph LR
+  T1[F-T-1 自定义角色注册]
+  T2[F-T-2 links auto-apply]
+  T3[F-T-3 agent 活动聚合]
+```
+
+### v1.15.0 Wave
+- **Wave 1（3 Feature 全并行）**：F-T-1（自定义角色注册） / F-T-2（links auto-apply） / F-T-3（agent 活动聚合）
+  - 3 Feature 互相独立（不同文件/关注点），可全并行启动。无 Wave 2 — 无依赖边。
+
+### v1.15.0 DAG 校验
+- 拓扑序无环：3 个独立节点，无边，无回边 ✓
+
+### v1.15.0 并行机会
+- 3 Feature 全并行（3 路独立：角色注册 / 链接写回 / 活动聚合）。
+- F-T-1 与 F-T-3 均触及 collaborate.py REST 但不同端点（F-T-1 = GET /agents 扩展 custom 标记；F-T-3 = GET /agents/{name}/activity 新增 + activity_summary 扩展），03 技术方案需注意协调。

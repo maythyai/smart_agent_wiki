@@ -134,3 +134,25 @@ T-F-S-2 → T-F-S-3（2 步，最长链）
 ### v1.14.0 并行机会
 - Wave 1：T-F-S-1 / T-F-S-2 全并行（engine.py 不同 section：cache 条件分支 vs cosine→ANN 切换，worktree 隔离 + 合并协调）。
 - Wave 2：T-F-S-3 独占（依赖 S-2 ANN 路径完成）。
+
+---
+
+## v1.15.0 delta（agent/link 能力 track）
+
+```mermaid
+graph LR
+  T1[T-F-T-1 自定义角色注册]
+  T2[T-F-T-2 links auto-apply]
+  T3[T-F-T-3 agent 活动聚合]
+```
+
+### v1.15.0 DAG 校验
+- 拓扑序无环：T-1 / T-2 / T-3 互相独立，无依赖边 → 无回边 ✓
+- 与 decomposition DEPENDENCY-GRAPH v1.15.0 delta 一致（F-T-1 / F-T-2 / F-T-3 全独立，无边）✓
+- 无自环、无环。若 05 重构致环 → 报错停步。
+
+### v1.15.0 关键路径
+- 无关键路径（3 Task 无依赖，全并行 1 步完成）。
+
+### v1.15.0 并行机会
+- Wave 1：T-F-T-1 / T-F-T-2 / T-F-T-3 全并行（3 路独立，不同关注点：角色注册 / 链接写回 / 活动聚合；`collaborate.py`/`agents_cmd.py`/`test_agents_rest.py` 同文件不同 section，worktree 隔离 + 合并协调）。

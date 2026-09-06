@@ -14,6 +14,7 @@
 | ADR-012 | embedding provider | litellm.embedding API 为主 + 本地 ST 可选 fallback；EmbeddingSettings 复用 LLMSettings 范式；API > ST > BM25 三级路由 | Accepted | F-Q-1, F-Q-2, F-Q-3, F-Q-4 |
 | ADR-013 | ingest 递归 + benchmark | pipeline 入口递归 + 独立 scripts/benchmark_semantic.py 真实 vLLM | Accepted | F-R-1, F-R-2 |
 | ADR-014 | ANN 向量索引 | hnswlib（HNSW, MIT, pip）+ numpy 批量矩阵乘 cosine 改进；SAW_ANN_THRESHOLD 默认 500 [TBD]；不引 faiss/torch；不实现 localhost 自适应 | Accepted | F-S-1, F-S-2, F-S-3 |
+| ADR-015 | agent 角色注册+活动聚合 | YAML 配置文件 + build_default_agents 合并（候选①>②DB表）；event_bus subscriber 写内存计数器（候选①>②DB聚合）；复用 BaseAgent/InMemoryEventBus/WikiRepository；不持久化 | Accepted | F-T-1, F-T-2, F-T-3 |
 
 ## 复用原则
 - 全栈既有（六角架构/write_queue/observability/RBAC/receipt/FTS5），硬化只补"有模块→全链路闭环"。

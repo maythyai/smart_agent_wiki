@@ -248,3 +248,30 @@
 ## v1.14.0 里程碑
 - M-SEM-PERF-1（Wave 1）：cache 阈值可配 + ANN 索引就绪（cosine→ANN 规模驱动切换 + numpy fallback）。
 - M-SEM-PERF-2（Wave 2）：benchmark 更新就绪（cache 真实度量 + ANN vs cosine + 规模曲线）→ v1.14.0 可交付。
+
+---
+
+# v1.15.0 波次（agent/link 能力，2026-09-06）
+
+> 源自 PRD-agent-link-v1.15.0 + 02 delta + ADR-015。3 Task，1 Wave 全并行。DAG 无环（3 Task 互相独立，无边）。
+
+## v1.15.0 Wave 1 — 全并行（3 Task，无依赖）
+| task_id | 描述 | 类型 | 并行性 |
+|---|---|---|---|
+| T-F-T-1 | 自定义 agent 角色注册（YAML 加载 + additive 合并 + CLI/REST 可见 + workflow validate） | backend-logic | 独立（agents 模块 + workflow_parser + REST list_agents） |
+| T-F-T-2 | L2 links auto-apply（saw links apply + dry-run/confirm + ## Related 写回 + 去重） | backend-logic | 独立（links_cmd + WikiRepository 复用） |
+| T-F-T-3 | M2 agent 活动聚合（event_bus subscriber + 内存计数器 + REST activity 端点 + CLI） | backend-logic | 独立（activity_tracker 新建 + app lifespan + REST activity 端点） |
+
+## v1.15.0 共享资源串行
+- 无共享资源串行约束。3 Task 全独立，Wave 1 全并行。
+
+## v1.15.0 Wave 1 文件冲突分析
+| 文件 | Wave 1 写入方 | 冲突? |
+|---|---|
+| src/saw/api/routes/collaborate.py | T-F-T-1 + T-F-T-3 | 同文件不同端点（T-1: list_agents custom 标记 / T-3: activity 端点 + activity_summary），需合并协调 |
+| src/saw/drivers/cli/commands/agents_cmd.py | T-F-T-1 + T-F-T-3 | 同文件不同子命令（T-1: custom 标注 / T-3: activity 子命令），需合并协调 |
+| tests/unit/test_agents_rest.py | T-F-T-1 + T-F-T-3 | 同测试文件不同用例（T-1: AC-A-4 / T-3: AC-C-3/4），需合并协调 |
+| 其余文件 | 各 Task 独占 | 否 |
+
+## v1.15.0 里程碑
+- M-AGENT-LINK（Wave 1）：自定义角色注册 + links auto-apply + 活动聚合就绪 → v1.15.0 可交付。

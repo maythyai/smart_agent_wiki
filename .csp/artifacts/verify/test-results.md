@@ -315,3 +315,24 @@ Command: `SAW_EMBEDDING_MODEL=qwen_embedding SAW_EMBEDDING_API_BASE=http://local
 **Commits**: 53cd582 (F-T-1) / 8f6ad2b (F-T-2) / 59f9552 (F-T-3)
 
 **Verdict**: All gates green. 2220 passed, ruff 0, coverage 67.42% ≥ 67, smoke 6/6. Proceeding to 06-ship.
+
+---
+
+## v1.15.0 — 06-ship verify (2026-09-06)
+
+Re-ran all gates during 06-ship release verification (post-05-impl, pre-tag).
+
+| Gate | Command | Result | Status |
+|---|---|---|---|
+| pytest | `.venv/bin/python -m pytest --deselect tests/unit/test_embedding_benchmark.py::test_ac_c_3_scale_curve --tb=short -q` | 2220 passed, 3 skipped, 1 deselected, 0 failed (142.54s) | PASS |
+| ruff lint | `.venv/bin/python -m ruff check .` | All checks passed! (0 errors) | PASS |
+| coverage | `.venv/bin/python -m pytest --deselect ...::test_ac_c_3_scale_curve --cov=saw --cov-report=term-missing -q` | TOTAL 29634 stmts, 9655 miss, 67.42% (≥67 ✓) | PASS |
+| smoke | `.venv/bin/python -m pytest tests/test_smoke_cmd.py tests/unit/test_smoke_chain.py -v` | 16 passed (3.02s) | PASS |
+| build wheel | `.venv/bin/python -m build --wheel --sdist` | smart_agent_wiki-1.15.0-py3-none-any.whl (832KB) + sdist (3.1MB) | PASS |
+| pyproject | `grep '^version' pyproject.toml` | 1.15.0 (bumped 1.14.0→1.15.0) | PASS |
+
+**No vLLM benchmark this round** — agent/link is non-embedding capability (F-T-1..3: custom agent role registry + links auto-apply + agent activity aggregation). Pre-existing `test_ac_c_3_scale_curve` deselected (v1.14.0 S2 finding: synthetic 384dim vs qwen 1024dim mismatch, vLLM-env-dependent).
+
+**Lint fix**: `examples/demo/sample-documents/utils.py:42` — removed unused `manager` variable assignment (F841, pre-existing demo file, ruff 0.16.5 caught it).
+
+**Verdict**: All gates green. 2220 passed, ruff 0, coverage 67.42% ≥ 67, smoke 6/6, wheel smart_agent_wiki-1.15.0, pyproject 1.15.0. Proceeding to reconcile + tag v1.15.0 + push + GitHub Release.

@@ -39,7 +39,7 @@ class DataManager:
 
 def main():
     """Main entry point."""
-    manager = DataManager()
+    DataManager()
     print("Data manager initialized")
 
 

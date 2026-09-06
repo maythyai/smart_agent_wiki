@@ -64,3 +64,11 @@
 - 用例总数：[TBD-impl] 实施后落定（基线 2179 passed）。
 - 新覆盖 AC：AC-A-1..5, AC-B-1..5, AC-C-1..5（15 条全映射）。
 - TMS delta 见 `TMS-DELTA-v1.14.0.md`。
+
+## v1.15.0 delta（agent/link 能力）
+- 模块：agent-link（PMS-agent-link），ADR-015 agent 角色注册表 + 活动聚合机制。
+- 新增 12 AC（AC-A-1..4, AC-B-1..4, AC-C-1..4），全映射。
+- 测试文件：test_custom_agents.py（新建 3）、test_agents_rest.py（新建/扩 3）、test_links_apply.py（新建 4）、test_agent_activity.py（新建 2）。
+- 用例总数：[TBD-impl] 实施后落定（基线 2192 passed）。
+- 新覆盖 AC：AC-A-1..4, AC-B-1..4, AC-C-1..4（12 条全映射）。
+- TMS delta 见 `TMS-DELTA-v1.15.0.md`。

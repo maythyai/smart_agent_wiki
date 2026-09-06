@@ -107,7 +107,14 @@
 | SPEC-F-S-2 | F-S-2 | ANN 索引替代全量 cosine（hnswlib + numpy 批量） | L | semantic-perf | 5/5 | SPEC-F-S-2.md |
 | SPEC-F-S-3 | F-S-3 | benchmark 更新（cache 真实度量 + ANN vs cosine + 规模曲线） | M | semantic-perf | 5/5 | SPEC-F-S-3.md |
 
+## v1.15.0 delta（+3）
+| spec_id | feature_id | title | complexity | pms_module | ac_coverage | file |
+|---|---|---|---|---|---|---|
+| SPEC-F-T-1 | F-T-1 | 自定义 agent 角色注册（.saw/agents/*.yaml 加载 + build_default_agents 合并 + CLI/REST 可见） | M | agent-link | 4/4 | SPEC-F-T-1.md |
+| SPEC-F-T-2 | F-T-2 | L2 links auto-apply（saw links apply --suggestion 写回 WikiRepository + dry-run/confirm + 去重） | M | agent-link | 4/4 | SPEC-F-T-2.md |
+| SPEC-F-T-3 | F-T-3 | M2 agent 活动聚合（event bus 订阅 WorkflowStep + GET /api/v1/agents/{name}/activity 端点） | M | agent-link | 4/4 | SPEC-F-T-3.md |
+
 ## 校验
-- Spec 数 == 20 + 8(v1.5.0) + 4(v1.6.0) + 3(v1.7.0) + 3(v1.8.0) + 3(v1.9.0) + 4(v1.10.0) + 4(v1.11.0) + 4(v1.12.0) + 5(v1.13.0) + 3(v1.14.0) == 61 == decomposition 原子 Feature 数 ✓（1:1）
+- Spec 数 == 20 + 8(v1.5.0) + 4(v1.6.0) + 3(v1.7.0) + 3(v1.8.0) + 3(v1.9.0) + 4(v1.10.0) + 4(v1.11.0) + 4(v1.12.0) + 5(v1.13.0) + 3(v1.14.0) + 3(v1.15.0) == 64 == decomposition 原子 Feature 数 ✓（1:1）
 - 每个 feature_id 在 decomposition FEATURE-DETAILS 存在 ✓
 - 每份 Spec ac_coverage 自检无未覆盖 AC ✓

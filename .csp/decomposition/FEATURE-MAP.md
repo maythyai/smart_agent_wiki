@@ -48,10 +48,13 @@
 | F-S-1 | semantic cache 阈值可配（env 驱动启用/禁用 + 触发阈值）+ 文档标注 | semantic-perf | P0 | M | — | 1 | §3.1 |
 | F-S-2 | ANN 索引替代全量 cosine 扫描（规模驱动自动切换 + cosine 降级兜底） | semantic-perf | P0 | L | — | 1 | §3.2 |
 | F-S-3 | benchmark 更新（cache 真实度量 + ANN vs cosine 对比 + 规模延迟曲线） | semantic-perf | P1 | M | F-S-2 | 2 | §3.3 |
+| F-T-1 | 自定义 agent 角色注册（.saw/agents/*.yaml 加载 + build_default_agents 合并 + CLI/REST 可见） | agent-link | P0 | M | — | 1 | §3.1 |
+| F-T-2 | L2 links auto-apply（saw links apply --suggestion 写回 WikiRepository + dry-run/confirm + 去重） | agent-link | P0 | M | — | 1 | §3.2 |
+| F-T-3 | M2 agent 活动聚合（event bus 订阅 WorkflowStep + GET /api/v1/agents/{name}/activity 端点） | agent-link | P0 | M | — | 1 | §3.3 |
 
 ## 汇总
-- 域：10（A e2e-usability / B claim-alignment / C security-hardening / D observability / E test-gate / Z tech-debt / P platform-team / N embedding / O debt-closure / Q embedding-api）+ S semantic-perf
-- Feature：44（P0=27，P1=15，P2=3）— v1.4.0 新增 F-P-1..4 + F-Z-4/5；v1.5.0 +F-I-1..4+F-Z-6..9；v1.6.0 +F-J-1..4；v1.7.0 +F-K-1..3；v1.8.0 +F-L-1..3；v1.9.0 +F-M-1..3；v1.10.0 +F-N-1..4（源自 PRD-embedding-v1.10.0 + retro M1/L1）；v1.11.0 +F-O-1..4（源自 PRD-debt-closure-v1.11.0 + retro N7/N2·K1/M3/N5/N6）；**v1.12.0 +F-Q-1..4（源自 PRD-embedding-api-v1.12.0 + retro N1/N4 + 用户决策 pivot to API）**；**v1.14.0 +F-S-1..3（源自 PRD-semantic-perf-v1.14.0 + retro R1/R2）**
-- 复杂度：S=10，M=19，L=2（v1.14.0 增量：M=2，L=1）
-- Wave：v1.14.0 新增 Wave 1=2（F-S-1, F-S-2 并行），Wave 2=1（F-S-3）
-- 关键路径：F-A-1 → F-A-2 → F-A-5 → F-A-6 → F-E-3（5 步）；v1.10.0 次路径：F-N-1 → F-N-2（2 步）；v1.11.0：无依赖链（4 Feature 全并行 Wave 1）；v1.12.0 次路径：F-Q-1 → {F-Q-2, F-Q-3, F-Q-4}（2 步）；**v1.14.0 次路径：F-S-2 → F-S-3（2 步），F-S-1 独立 Wave 1**
+- 域：10（A e2e-usability / B claim-alignment / C security-hardening / D observability / E test-gate / Z tech-debt / P platform-team / N embedding / O debt-closure / Q embedding-api）+ S semantic-perf + T agent-link
+- Feature：47（P0=30，P1=15，P2=3）— v1.4.0 新增 F-P-1..4 + F-Z-4/5；v1.5.0 +F-I-1..4+F-Z-6..9；v1.6.0 +F-J-1..4；v1.7.0 +F-K-1..3；v1.8.0 +F-L-1..3；v1.9.0 +F-M-1..3；v1.10.0 +F-N-1..4（源自 PRD-embedding-v1.10.0 + retro M1/L1）；v1.11.0 +F-O-1..4（源自 PRD-debt-closure-v1.11.0 + retro N7/N2·K1/M3/N5/N6）；v1.12.0 +F-Q-1..4（源自 PRD-embedding-api-v1.12.0 + retro N1/N4 + 用户决策 pivot to API）；v1.14.0 +F-S-1..3（源自 PRD-semantic-perf-v1.14.0 + retro R1/R2）；**v1.15.0 +F-T-1..3（源自 PRD-agent-link-v1.15.0 + retro M2/L2 + v1.5.0 自定义 agent 角色候选）**
+- 复杂度：S=10，M=22，L=2（v1.15.0 增量：M=3）
+- Wave：v1.15.0 新增 Wave 1=3（F-T-1, F-T-2, F-T-3 全并行，无 Wave 2）
+- 关键路径：F-A-1 → F-A-2 → F-A-5 → F-A-6 → F-E-3（5 步）；v1.10.0 次路径：F-N-1 → F-N-2（2 步）；v1.11.0：无依赖链（4 Feature 全并行 Wave 1）；v1.12.0 次路径：F-Q-1 → {F-Q-2, F-Q-3, F-Q-4}（2 步）；v1.14.0 次路径：F-S-2 → F-S-3（2 步），F-S-1 独立 Wave 1；**v1.15.0：无依赖链（3 Feature 全并行 Wave 1，无依赖边）**

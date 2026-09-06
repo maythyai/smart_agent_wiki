@@ -1,0 +1,100 @@
+feature:
+  id: "F-T-1"
+  name: "自定义 agent 角色注册（.saw/agents/*.yaml 加载 + build_default_agents 合并 + CLI/REST 可见）"
+  domain: "agent-link"
+  prd_ref: "docs/prd/PRD-agent-link-v1.15.0.md#3.1"
+  pms_module: "agent-link"
+
+  # 用户视角
+  user_story: "作为 DEV，我想注册自定义 agent 角色（如 MedicalExpert / LegalAnalyst），以便 workflow 可以调度领域专家 agent 完成通用 6 角色无法覆盖的任务。"
+
+  acceptance_criteria:
+    - "Given .saw/agents/expert.yaml 定义 name=MedicalExpert, model_tier=sonnet, system_prompt 非空, when 执行 saw agents, then 输出列表包含 MedicalExpert 行，标注 custom（AC-A-1）"
+    - "Given 自定义角色 MedicalExpert 已注册, when workflow YAML 中 step.agent=MedicalExpert, then WorkflowParser.validate() 返回无错误（AC-A-2）"
+    - "Given 自定义角色 name=Librarian（与内置重名）, when 系统加载时, then 该角色被跳过，日志输出 conflict warning（AC-A-3）"
+    - "Given 自定义角色已注册, when GET /api/v1/agents, then 响应包含自定义角色，custom: true 标记（AC-A-4）"
+
+  # 边界
+  scope:
+    includes:
+      - "扫描 .saw/agents/*.yaml 角色定义文件，解析 name/model_tier/system_prompt/tools_allowed 字段"
+      - "校验 name 唯一性（不与内置 6 角色 Librarian/Writer/Critic/Linker/Scholar/Guardian 重名）"
+      - "校验 model_tier 合法性（仅允许 haiku/sonnet/opus/rule，复用 BaseAgent.__init__ Literal 约束）"
+      - "校验 system_prompt 非空（为空则跳过注册 + 日志 warning）"
+      - "校验 tools_allowed 为列表格式（可为空列表）"
+      - "自定义角色合并到 build_default_agents() 返回的 roster 中（additive，不修改 build_default_agents 源码/签名/返回结构）"
+      - "saw agents CLI 输出内置 + 自定义角色列表（自定义角色标注 custom）"
+      - "GET /api/v1/agents REST 返回含自定义角色，标记 custom: true"
+      - "workflow YAML validate() 校验 step.agent 时，自定义角色名也在 available_agents 集合中"
+      - "自定义角色未配置 llm_router 时，行为与内置角色一致（fallback 到 heuristic）"
+      - "YAML 格式错误时跳过该文件，日志 error，不阻断启动"
+      - "AgentRoleRegistered 事件发布（自定义角色注册成功时）"
+    excludes:
+      - "自定义角色动态热加载/运行时重载（PRD 明确不做，启动时扫描加载）"
+      - "自定义角色撤销/删除机制"
+      - "build_default_agents() 签名和返回结构修改（additive 合并，不改源码）"
+      - "自定义角色 YAML schema 的最终字段定义（留 03 技术方案）"
+
+  # 前后端边界
+  frontend: {pages: [], components: [], interactions: []}
+  backend:
+    endpoints:
+      - "GET /api/v1/agents（既有端点扩展返回自定义角色 + custom 标记）"
+    business_logic:
+      - "启动时扫描 .saw/agents/*.yaml，解析角色定义"
+      - "校验 name 唯一性 + model_tier 合法性 + system_prompt 非空 + tools_allowed 格式"
+      - "校验通过的角色合并到 build_default_agents() 返回的 roster（additive 合并）"
+      - "WorkflowParser.validate() 校验 step.agent 时 available_agents 集合含自定义角色"
+      - "异常处理：重名跳过 + model_tier 非法跳过 + YAML 格式错误跳过该文件 + system_prompt 空跳过，均不阻断启动"
+    integrations:
+      - "src/saw/engines/collaborate/agents/__init__.py（build_default_agents，合并自定义角色，不改签名）"
+      - "src/saw/engines/collaborate/agents/base.py:23（BaseAgent.__init__ 复用 name/model_tier/system_prompt/tools_allowed）"
+      - "src/saw/drivers/cli/commands/（saw agents CLI 输出含自定义角色）"
+      - "src/saw/api/routes/collaborate.py:426（GET /api/v1/agents 扩展返回自定义角色）"
+
+  # 数据维度
+  data_entities:
+    - ".saw/agents/*.yaml（角色定义文件：name/model_tier/system_prompt/tools_allowed）"
+    - "AgentRoleRegistered 事件（name/model_tier/source）"
+  data_operations:
+    - "read（启动时扫描加载 .saw/agents/*.yaml）"
+    - "validate（name 唯一性 + model_tier 合法性 + system_prompt 非空）"
+    - "merge（自定义角色合并到 roster，additive）"
+
+  # 技术维度预标记
+  tech_dimensions:
+    needs_database: false
+    needs_cache: false
+    needs_queue: false
+    needs_ai: true
+    needs_vector_store: false
+    needs_realtime: false
+    needs_file_storage: true
+    needs_search: false
+    needs_scheduler: false
+    needs_notification: false
+
+  # 非功能性需求
+  nfr:
+    performance: "角色定义文件加载在启动时完成，不阻塞运行时 workflow 执行"
+    security: "角色定义文件来自 .saw/agents/ 本地目录，无远程输入注入风险；model_tier 受 Literal 约束"
+    scalability: "自定义角色数量预期有限（[TBD] 上界），启动时全量加载不影响规模"
+    availability: "角色定义文件格式错误 → 跳过该文件不阻断启动；无 .saw/agents/ 目录 → 仅返回内置角色"
+
+  # 依赖与优先级
+  priority: "P0"
+  complexity: "M"
+  depends_on: []
+  blocked_by: []
+
+  # 风险与假设
+  risks:
+    - "自定义角色 YAML schema 字段定义多样性——严格 schema 校验 + 跳过无效定义不阻断启动"
+    - "build_default_agents() 合并方式——不改签名/返回结构，additive 合并（PMS 明确约束）"
+    - "自定义角色未配置 llm_router 时行为——假设与内置角色一致（fallback 到 heuristic），03 技术方案确认"
+  assumptions:
+    - ".saw/agents/ 目录为角色定义文件标准位置（PRD §3.1 交互流程步骤 1）"
+    - "自定义角色 YAML schema 具体字段定义留 03 技术方案（PRD 附录 下一步建议明确）"
+    - "不实现动态热加载/运行时重载（PMS 明确不做）"
+    - "不修改 build_default_agents() 签名和返回结构（PMS 明确约束，additive 合并）"
+    - "自定义角色数量上界 [TBD]（PRD 未声明，预期有限）"

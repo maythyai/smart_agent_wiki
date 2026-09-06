@@ -214,3 +214,45 @@
 - ANN P99 / cosine P99 实际值 [TBD]（benchmark 跑完填）
 - 规模延迟曲线实际值 [TBD]（benchmark 跑完填）
 - `SAW_SEMANTIC_CACHE_THRESHOLD_MS` 实际效果 [TBD]（须 benchmark 验证）
+
+---
+
+# v1.15.0 delta（agent/link 能力，2026-09-06）
+
+## 项目概览（v1.15.0）
+- 上游：3 Spec（1:1 decomposition 3 Feature F-T-1..3），1 PMS 模块（agent-link）
+- Task：3（1:1 Spec，M×3），1 Wave 全并行，DAG 无环
+- 关键路径：无（3 Task 无依赖，全并行 1 步）
+- 估时：M 粒度，人日 [TBD]（无团队速率）
+
+## Task 类型分派矩阵（v1.15.0）
+| 类型 | Task | 推荐分派 |
+|---|---|---|
+| backend-logic | T-F-T-1 | 后端（YAML 加载 + additive 合并 + CLI/REST 可见 + workflow validate） |
+| backend-logic | T-F-T-2 | 后端（links apply CLI 逻辑 + WikiRepository.write 复用 + 去重） |
+| backend-logic | T-F-T-3 | 后端（event_bus subscriber + 内存计数器 + REST activity 端点 + CLI） |
+
+## 拆解门控（v1.15.0）
+- [x] Spec 完整性：3 Task == 3 Spec（03 穷尽门控通过，3 Spec == 3 原子 Feature F-T-1..3）
+- [x] 每个 Feature 有 ≥1 Task（3/3）
+- [x] Task 粒度 ≤4h（M×3）
+- [x] DAG 无环（T-1/T-2/T-3 互相独立，无依赖边，实机校验 cycle=none）
+- [x] Task 依赖与 decomposition Feature 依赖一致（F-T-1/F-T-2/F-T-3 全独立无边）
+- [x] Wave 划分合理（全 Wave 1 并行，无共享资源串行约束）
+- [x] 每 Task acceptance 非空（指向 AC，共 12 AC 全映射）
+- [x] 不越 PMS 边界（agent-link 模块）
+- [x] 并行检测通过（`collaborate.py`/`agents_cmd.py`/`test_agents_rest.py` 同文件不同 section，需合并协调）
+
+## 05 实施指引（v1.15.0）
+- Lead 按 `WAVE-PLAN.md` 组建子 Agent 团队；Wave 1 三路并行（worktree 隔离）。
+- 每 Task 一个 commit；完成后续写 commit + 追溯矩阵。
+- 共享文件 `collaborate.py`：T-F-T-1 + T-F-T-3 同时写不同端点（list_agents custom 标记 vs activity 端点），worktree 隔离 + 合并。
+- 共享文件 `agents_cmd.py`：T-F-T-1 + T-F-T-3 同时写不同子命令（custom 标注 vs activity 子命令），worktree 隔离 + 合并。
+- 共享文件 `test_agents_rest.py`：T-F-T-1 + T-F-T-3 同时写不同用例（AC-A-4 vs AC-C-3/4），worktree 隔离 + 合并。
+- 详见 `.csp/tasks/TASKS-DELTA-v1.15.0.md`。
+
+## assumptions / [TBD]（v1.15.0）
+- 自定义角色 YAML schema 实际用户使用场景 [TBD]（05 实施后 CI 验证）
+- links apply 实际建议质量 [TBD]（取决于 compute_related_pages 既有算法质量）
+- activity 聚合实际事件频率 [TBD]（取决于 workflow 执行频率，内存态不持久化）
+- `collaborate.py` / `agents_cmd.py` / `test_agents_rest.py` 合并冲突解决方案 [TBD]（05 实施时 worktree 隔离 + 合并协调）

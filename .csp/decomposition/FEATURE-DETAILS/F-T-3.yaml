@@ -1,0 +1,98 @@
+feature:
+  id: "F-T-3"
+  name: "M2 agent 活动聚合（event bus 订阅 WorkflowStep + GET /api/v1/agents/{name}/activity 端点）"
+  domain: "agent-link"
+  prd_ref: "docs/prd/PRD-agent-link-v1.15.0.md#3.3"
+  pms_module: "agent-link"
+
+  # 用户视角
+  user_story: "作为 OPS，我想查看某个 agent 的最近活动和调用次数，以便排查 agent 是否活跃、workflow 是否正常调度。"
+
+  acceptance_criteria:
+    - "Given Scholar agent 在某次 workflow 中执行了 synthesize 步骤, when GET /api/v1/agents/Scholar/activity, then 返回 calls≥1, last_action='synthesize', last_active_at 非空（AC-C-1）"
+    - "Given Guardian agent 注册后从未被 workflow 调用, when GET /api/v1/agents/Guardian/activity, then 返回 200, calls=0, last_active_at=null（AC-C-2）"
+    - "Given roster 中无 agent 'NonExistent', when GET /api/v1/agents/NonExistent/activity, then 返回 404 'Agent not found'（AC-C-3）"
+    - "Given Scholar 有 3 次调用记录, when GET /api/v1/agents, then Scholar 行含 activity_summary: {calls: 3, last_active_at: '...'}（AC-C-4）"
+
+  # 边界
+  scope:
+    includes:
+      - "活动聚合器通过 InMemoryEventBus.add_subscriber('WorkflowStep', handler) 订阅 WorkflowStep 事件"
+      - "按 agent name 分组，记录：最近活动时间戳、调用次数（completed）、失败次数（failed）、最近 action"
+      - "GET /api/v1/agents/{name}/activity 端点返回该 agent 的活动聚合"
+      - "GET /api/v1/agents 返回的 roster 中每个 agent 增加 activity_summary 字段（最近活动时间 + 调用次数），可为 null"
+      - "agent 无活动记录时返回 200 + 空活动（calls: 0, last_active_at: null），不返回 404"
+      - "agent name 不存在于 roster 时返回 404"
+      - "活动聚合为内存态（进程重启后丢失），不持久化"
+      - "聚合器 handler 不阻塞 workflow 执行（轻量计数器更新，event bus 已有 try/except 不传播异常）"
+    excludes:
+      - "活动聚合持久化（PMS 明确不做，内存态，持久化属 v2.0 候选）"
+      - "event bus 订阅的具体 HOW（handler 数据结构、并发安全，留 03 技术方案）"
+      - "自定义角色注册（F-T-1）"
+      - "links auto-apply（F-T-2）"
+
+  # 前后端边界
+  frontend: {pages: [], components: [], interactions: []}
+  backend:
+    endpoints:
+      - "GET /api/v1/agents/{name}/activity（新增端点，返回活动聚合）"
+      - "GET /api/v1/agents（既有端点扩展 activity_summary 字段）"
+    business_logic:
+      - "活动聚合器初始化时 add_subscriber('WorkflowStep', handler) 订阅事件"
+      - "handler 解析 event['step']（格式 '{agent}.{action}'）+ event['status']（completed/failed）"
+      - "按 agent name 分组更新内存计数器：calls（completed）/failures（failed）/last_action/last_active_at"
+      - "GET /api/v1/agents/{name}/activity：先查 roster 确认 agent 存在，再返回活动聚合"
+      - "GET /api/v1/agents：roster 中每个 agent 附带 activity_summary（calls + last_active_at），无活动时为 null"
+      - "异常处理：agent 不存在返回 404；event bus handler 抛异常由 bus try/except 不传播"
+    integrations:
+      - "src/saw/plugins/event_bus.py:71（InMemoryEventBus.add_subscriber，订阅 WorkflowStep）"
+      - "src/saw/engines/collaborate/workflow_executor.py:389（_execute_step 发布 WorkflowStep 事件，含 step={agent}.{action}）"
+      - "src/saw/api/routes/collaborate.py:426（GET /api/v1/agents 既有端点扩展 activity_summary）"
+
+  # 数据维度
+  data_entities:
+    - "WorkflowStep 事件（既有：workflow_id/step/status/output_key）"
+    - "AgentActivity 聚合（内存态：agent_name/calls/failures/last_action/last_active_at）"
+  data_operations:
+    - "subscribe（event bus add_subscriber WorkflowStep）"
+    - "aggregate（按 agent name 分组计数 + 时间戳更新）"
+    - "read（GET activity 端点返回聚合数据）"
+
+  # 技术维度预标记
+  tech_dimensions:
+    needs_database: false
+    needs_cache: false
+    needs_queue: false
+    needs_ai: false
+    needs_vector_store: false
+    needs_realtime: true
+    needs_file_storage: false
+    needs_search: false
+    needs_scheduler: false
+    needs_notification: false
+
+  # 非功能性需求
+  nfr:
+    performance: "聚合器 handler 轻量（仅计数器更新），不阻塞 workflow 执行（无可感知延迟）"
+    security: "活动数据不含 PII（仅 agent name + action + 时间戳，非用户数据）"
+    scalability: "内存态聚合，agent 数量预期有限（6 内置 + 自定义），不影响规模"
+    availability: "活动聚合为内存态，进程重启后丢失（不持久化）；event bus handler 抛异常由 bus try/except 不传播，不影响 workflow"
+
+  # 依赖与优先级
+  priority: "P0"
+  complexity: "M"
+  depends_on: []
+  blocked_by: []
+
+  # 风险与假设
+  risks:
+    - "活动聚合器阻塞 workflow 执行——handler 轻量（仅计数器更新），event bus 已有 try/except 不传播（PRD §8 风险 Low/Medium）"
+    - "并发安全——handler 在 publisher 线程同步执行，多线程并发更新计数器须考虑线程安全 [TBD]，留 03 技术方案"
+    - "活动聚合内存态进程重启丢失——PRD 明确不持久化（v2.0 候选），不影响功能正确性"
+  assumptions:
+    - "WorkflowStep 事件格式 {step: '{agent}.{action}', status: 'completed'/'failed'}（PRD §3.3 业务规则 2 + Ground claim 6 TRUE）"
+    - "InMemoryEventBus.add_subscriber 支持按事件类型订阅（Ground claim 7 TRUE）"
+    - "活动聚合不持久化（PMS 明确不做，内存态，持久化属 v2.0 候选）"
+    - "handler 数据结构、并发安全留 03 技术方案（PRD 附录 下一步建议明确）"
+    - "GET /api/v1/agents/{name}/activity 路由参数为 agent name（PRD §3.3 交互流程步骤 4）"
+    - "agent 无活动记录返回 200 + 空活动，不返回 404（PRD §3.3 异常处理明确）"

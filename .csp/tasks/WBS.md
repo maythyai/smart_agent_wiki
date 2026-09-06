@@ -142,3 +142,15 @@
 - 2 Wave：Wave 1 T-F-S-1 / T-F-S-2（并行，engine.py 不同 section）→ Wave 2 T-F-S-3（依赖 S-2）
 - DAG S-2→S-3 单向边，S-1 独立，无环，与 decomposition 一致
 - 详见 `.csp/tasks/TASKS-DELTA-v1.14.0.md`
+
+## v1.15.0 任务拆解（agent/link 能力，2026-09-06）
+- 3 Task（1:1 Spec）：T-F-T-1（backend-logic 自定义角色注册）/ T-F-T-2（backend-logic links auto-apply）/ T-F-T-3（backend-logic agent 活动聚合）
+- 1 Wave：Wave 1 T-F-T-1 / T-F-T-2 / T-F-T-3（全并行，3 Feature 互相独立无边）
+- DAG 无环（3 独立节点，无边），与 decomposition 一致
+- 详见 `.csp/tasks/TASKS-DELTA-v1.15.0.md`
+
+| task_id | spec_ref | 描述 | 类型 | 估时 | depends_on | files | acceptance | pms_module |
+|---|---|---|---|---|---|---|---|---|
+| T-F-T-1 | SPEC-F-T-1 | `agents/__init__.py` 新增 `load_custom_agents` + `build_agent_roster` additive 合并 + `collaborate.py` list_agents custom 标记 + `agents_cmd.py` CLI custom 标注 + `workflow_parser.py` validate 含自定义角色 + 新建 `test_custom_agents.py` + 扩 `test_agents_rest.py` | backend-logic | M | — | src/saw/engines/collaborate/agents/__init__.py, src/saw/api/routes/collaborate.py, src/saw/drivers/cli/commands/agents_cmd.py, src/saw/engines/collaborate/workflow_parser.py, tests/unit/test_custom_agents.py, tests/unit/test_agents_rest.py | AC-A-1, AC-A-2, AC-A-3, AC-A-4 | agent-link |
+| T-F-T-2 | SPEC-F-T-2 | `links_cmd.py` 新增 `apply` 子命令（dry-run/confirm + ## Related 段落插入 + frontmatter related 同步 + 去重 + WikiRepository.write 复用）+ 新建 `test_links_apply.py` | backend-logic | M | — | src/saw/drivers/cli/commands/links_cmd.py, tests/unit/test_links_apply.py | AC-B-1, AC-B-2, AC-B-3, AC-B-4 | agent-link |
+| T-F-T-3 | SPEC-F-T-3 | 新建 `activity_tracker.py`（AgentActivityTracker event_bus subscriber + 内存计数器）+ `collaborate.py` GET /agents/{name}/activity + activity_summary + `app.py` lifespan init + `agents_cmd.py` activity 子命令 + 新建 `test_agent_activity.py` + 扩 `test_agents_rest.py` | backend-logic | M | — | src/saw/engines/collaborate/activity_tracker.py, src/saw/api/routes/collaborate.py, src/saw/drivers/web/app.py, src/saw/drivers/cli/commands/agents_cmd.py, tests/unit/test_agent_activity.py, tests/unit/test_agents_rest.py | AC-C-1, AC-C-2, AC-C-3, AC-C-4 | agent-link |

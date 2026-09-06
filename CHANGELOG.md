@@ -3,6 +3,34 @@
 All notable changes to this project are documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [v1.15.0] - 2026-09-06
+### Added
+- Custom agent role registry: users can register custom agent roles
+  via YAML configuration (`agents.yaml`), merged with `build_default_agents`
+  at runtime. CLI `saw agents --custom` and REST `GET /api/v1/agents`
+  list custom + built-in roles (T-F-T-1, ADR-015).
+- `saw links apply <page> --suggestion` auto-inserts `[[link]]` into page
+  content from `saw links suggest` output. Supports `--dry-run` (preview
+  changes) and `--confirm` (interactive confirmation, default on)
+  (T-F-T-2).
+- Agent activity aggregation: `InMemoryEventBus` subscriber tracks
+  `WorkflowStep` events per agent, exposing `GET /api/v1/agents/{name}/activity`
+  and CLI `saw agents <name> --activity` returning recent activity and
+  call counts (T-F-T-3).
+
+### Changed
+- `build_default_agents()` now merges custom roles from `agents.yaml`
+  if present (additive, built-in roles always available).
+- `links_cmd.py` `suggest` output now includes actionable suggestions
+  consumable by `apply` command.
+
+### Notes
+- No new dependencies (reuses yaml/typer/fastapi already in project).
+- Agent activity counters are in-memory (not persisted) — reset on
+  restart by design (ADR-015 candidate ① over ② DB aggregation).
+- `examples/demo/sample-documents/utils.py` F841 lint fix (pre-existing
+  demo file, removed unused variable assignment).
+
 ## [v1.14.0] - 2026-09-06
 ### Added
 - `SAW_SEMANTIC_CACHE_ENABLED` env var to enable/disable semantic

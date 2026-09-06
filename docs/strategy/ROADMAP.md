@@ -33,7 +33,7 @@ see_also: docs/strategy/STRATEGY.md | docs/prd/PRD-INDEX.md | .csp/review/REVIEW
 
 | 载体 | 现状 | 规则 |
 |---|---|---|
-| `pyproject.toml`（Python 包） | `1.14.0` | **canonical 真源**。下一个发布 = `v1.15.0`（TBD，候选见下一版本段，MINOR） |
+| `pyproject.toml`（Python 包） | `1.14.0` | **canonical 真源**。下一个发布 = `v1.15.0`（agent/link 能力：自定义 agent 角色 + L2 links apply + M2 活动聚合，MINOR） |
 | git tags `v1.0.1` … `v1.9.0` | 全部 SemVer annotated，与 pyproject 一致 | 保留，对外发布基线 |
 | git tags `v3.4.0` / `v3.7.0` | 历史 internal sprint 里程碑号 | 重新定性为**内部 milestone label**（见 1.3），不作为对外发布版本；不可变，不移动/删除 |
 | `desktop/`（tauri.conf.json + package.json） | `0.1.0` | 桌面端**未达 1.0**，独立 0.x 跟踪至稳定；达 v1.0 后与 canonical 对齐 |
@@ -56,8 +56,9 @@ see_also: docs/strategy/STRATEGY.md | docs/prd/PRD-INDEX.md | .csp/review/REVIEW
 | `v4.2` | v1.12.0 | released |
 | `v4.3` | v1.13.0 | released |
 | `v4.4` | v1.14.0 | released |
+| `v4.5` | v1.15.0（下一周期） | in-progress（01-prd） |
 
-> lifecycle-state `next_cycle: v1.14.0`。复盘引用的 `v4.2`(embedding) / `v4.3`(realtime 仪表盘) / `v4.4`(desktop) 是**内部候选主题标记**，**不是 SemVer 发布号**——仅作 backlog 索引。v1.13.0 E2E 收尾轮（闭合 Q1-Q3/O3）；v1.14.0 = semantic 性能优化（R1 cache 阈值可配 + R2 ANN 索引）。
+> lifecycle-state `next_cycle: v1.15.0`。v1.14.0 = semantic 性能优化（R1 cache 阈值可配 + R2 ANN 索引，已 released）；v1.15.0 = agent/link 能力（自定义 agent 角色 + L2 links apply + M2 活动聚合）。
 
 ### 1.4 Tag 规则
 
@@ -250,21 +251,36 @@ canonical = `pyproject.toml`。发布时以下必须与之一致，用脚本校�
 
 
 
-> v1.13.0 周期闭环 2026-09-06（07-retro done，retrospective-v1.13.0.md）。以下为候选主题，**不定论**，供下一轮 01 PRD 决策。
+### v1.15.0 — agent/link 能力（status: in-progress, 01-prd 进行中）
+
+> intelligence-adaptation track。承接近续留 findings（M2/L2 + v1.5.0 留候选）。**additive**——新能力，无 breaking → MINOR。
+
+- **目标**：补齐 agent 自定义 + 链接自动化 + 活动可观测，让多代理协作与知识链接更完整。
+- **关键功能（摘要级）**：
+  1. **自定义 agent 角色注册**（v1.5.0 留 v2.0 候选）：用户注册自定义 agent 角色（name/model_tier/tools 配置），`build_default_agents` 之外可扩展
+  2. **L2 links auto-apply**：`saw links apply <page> --suggestion` 自动插入 `[[link]]`（须用户确认，破坏性）
+  3. **M2 agent 活动聚合**：event bus 聚合 workflow_step 事件，`GET /api/v1/agents/{name}/activity` 返回最近活动/调用次数
+- **价值描述**：用户价值——自定义角色适配领域、链接一键应用、agent 活动可观测；业务价值——多代理协作闭环。
+- **成功指标**：自定义角色可注册+调用；links apply 插入正确；agent activity 端点返回聚合；2192+ passed 不回归；ruff 0。
+- **前置依赖**：v1.14.0 基线。
+- **07 回流**：M2(agent 活动聚合) + L2(links apply) + 自定义角色。续留：N3(K2)/O2/R3/S1-S4。
+
+> v1.14.0 周期闭环 2026-09-06（07-retro done，retrospective-v1.14.0.md）。以下为候选主题，**不定论**，供下一轮 01 PRD 决策。
 
 | 候选 | findings 关联 | 说明 |
 |---|---|---|
-| cache 阈值可配 / 远程 API 部署优化 | R1(cache 50% 阈值不适配 vLLM 本地, P2) | vLLM 本地 37ms cache 无收益，远程 API 100-500ms 有收益——阈值可配 or 按部署形态启用 |
-| ANN 索引 semantic 加速 | R2(semantic P99 97ms vs BM25 0.37ms, P3) | 规模增长时需 ANN（faiss/hnswlib）替代 O(n) cosine 扫描——defer 规模驱动 |
+| **v1.15.0 agent/link 能力** | N3/M2/L2 | 自定义 agent 角色注册 + L2 链接自动 apply + M2 agent 活动聚合（roadmap v4.3+v4.4 候选） |
 | realtime 仪表盘（v4.3 完整前端） | M2 续留 | agent/workflow 运行态实时可视化 |
 | desktop 完成（v4.4 Tauri） | — | 桌面端达 v1.0 |
 | K2 per-request workspace 注入 | N3/K2 续留 | web 路径请求级 workspace 隔离（v2.0 架构演进候选） |
+| benchmark scale_curve 修复 + ANN 大规模实证 | S1/S2 | 修复合成向量维度不匹配（384→1024dim）+ 跑 ≥500 规模验证 ANN 优势 |
+| COVERAGE-REPORT 状态更新 | S3 | 将 [TBD-impl] 更新为 covered，更新全局汇总 60→75 AC |
+| engine.py 拆分 | S4 | 提取 semantic_search 子模块，god-file 858/900 行 |
 | 自定义 agent 角色注册 | — | v1.5.0 留 v2.0 候选 |
 | L2 链接自动 apply | L2 续留 | suggest 只输出不自动改文件 |
 | M2 agent 活动聚合 | M2 续留 | roster 静态，agent 最近活动需 event bus 聚合 |
-| COVERAGE-REPORT 补追 v1.13.0 delta | R4(traceability 文件未更新, P3) | 补追 16 AC mapped，更新全局汇总 44→60 AC |
 
-续留 findings（跨迭代 backlog）：N3/K2(per-request ws) / M2(agent 活动聚合) / L2(链接自动 apply) / O2(coverage 余量薄 67.27%, fail_under=67) / O4(tag 指向 reconcile 非 release commit) + R1(cache 阈值不适配 vLLM) / R2(semantic P99 慢) / R3(benchmark CI skip) / R4(COVERAGE-REPORT 未更新)。
+续留 findings（跨迭代 backlog）：N3/K2(per-request ws) / M2(agent 活动聚合) / L2(链接自动 apply) / O2(coverage 余量薄 67.34%, fail_under=67) / O4(tag 指向 reconcile 非 release commit) / R3(benchmark CI skip) + S1(ANN 小规模慢) / S2(scale_curve 维度不匹配) / S3(COVERAGE-REPORT 状态未更新) / S4(engine.py god-file 膨胀)。
 
 ### 版本-主题表（1 年）
 
@@ -285,6 +301,7 @@ canonical = `pyproject.toml`。发布时以下必须与之一致，用脚本校�
 | v1.12.0 | embedding 改用 OpenAI 风格 API + E2E 验证（闭合 N1/N4） | intelligence-adaptation | released (2026-09-05) |
 | v1.13.0 | E2E 收尾轮（ingest recursion + benchmark + REST alias + coverage 67 + Q1/Q3 closure） | core-trust | released (2026-09-06) |
 | v1.14.0 | semantic 性能优化（R1 cache 阈值可配 + R2 ANN 索引） | intelligence-adaptation | released (2026-09-06) |
+| v1.15.0 | agent/link 能力（自定义 agent 角色 + L2 links apply + M2 活动聚合） | intelligence-adaptation | in-progress (01-prd) |
 
 ## 3. 3 年路径（大版本里程碑）
 
@@ -309,7 +326,7 @@ SAW 的终局是**AI agent 与人类共用的、可验证、可溯源、可治�
 
 ## 5. 衔接声明
 
-- **01 PRD** 读本文件定位本版本主题；PRD front-matter 标 `roadmap_ref: ROADMAP` + `target_version`（如 v1.11.0）。v1.11.0 周期已闭环（released 2026-09-05）。v1.12.0 周期已闭环（released 2026-09-05，embedding 改用 OpenAI 风格 API + E2E 验证）。v1.13.0 周期已闭环（released 2026-09-06，E2E 收尾轮）。v1.14.0 周期已闭环（released 2026-09-06，semantic 性能优化：cache 阈值可配 + ANN 索引 hnswlib）。
+- **01 PRD** 读本文件定位本版本主题；PRD front-matter 标 `roadmap_ref: ROADMAP` + `target_version`（如 v1.11.0）。v1.11.0 周期已闭环（released 2026-09-05）。v1.12.0 周期已闭环（released 2026-09-05，embedding 改用 OpenAI 风格 API + E2E 验证）。v1.13.0 周期已闭环（released 2026-09-06，E2E 收尾轮）。v1.14.0 周期已闭环（released 2026-09-06，semantic 性能优化：cache 阈值可配 + ANN 索引 hnswlib + benchmark cache.stats 真实度量）。下一候选 v1.15.0（agent/link 能力：自定义 agent 角色 + L2 links apply + M2 agent 活动聚合）。
 - **06 release** 用「版本号规则」节（SemVer/Tag/预发布/多平台一致性），不另立方案。v1.14.0 为 additive → 发 MINOR，不强行 MAJOR。
-- **07 复盘** findings（status=open/deferred）回流更新本文件下一版本主题与版本-主题表 status（planned→in-progress→shipped→deferred）。v1.12.0 findings（N1/N4）已清掉。v1.13.0 findings（Q1/Q2/Q3 + O3）已清掉，O1 改善→R1。v1.14.0 findings（R1/R2）已清掉。当前回流 findings：N3/M2/L2 + O2/O4 + R3/R4。
+- **07 复盘** findings（status=open/deferred）回流更新本文件下一版本主题与版本-主题表 status（planned→in-progress→shipped→deferred）。v1.12.0 findings（N1/N4）已清掉。v1.13.0 findings（Q1/Q2/Q3 + O3）已清掉，O1 改善→R1。v1.14.0 findings（R1/R2）已清掉，R4 改善→S3。当前回流 findings：N3/M2/L2 + O2/O4 + R3 + S1/S2/S3/S4。
 - **lifecycle**：读 `.csp/lifecycle-state.json` 对齐在跑版本；本文件不写 lifecycle（外环）。

@@ -181,3 +181,34 @@
 - cache 禁用 → 跳过 cache.get/set，直接 embedding + cosine/ANN
 - cache 启用 + 阈值未达 → 正常 cache.get/set
 - cache 启用 + API 响应 < 阈值 → cache.get 可命中已有，cache.set 跳过新写入
+
+## v1.15.0 NFR delta（agent/link track）
+
+> 来源：PRD-agent-link-v1.15.0 §4。Feature 级下沉见 F-T-1..3 各 yaml `nfr`。
+
+### 不回归
+- passed ≥2192（v1.14.0 基线 2192）
+- ruff 0 errors
+- smoke 11/11
+
+### 覆盖率
+- coverage ≥67% 不回归（CI fail_under=67）
+
+### links apply 破坏性确认
+- apply 命令默认 dry-run，须 `--confirm` 方写回（AC-B-1 Given-When-Then）
+- 不绕过 WikiRepository.write() 安全边界
+- 单页写回失败不中断，继续处理其余页面，最后汇总失败列表
+
+### activity 聚合不阻塞 workflow
+- event bus handler 轻量（仅计数器更新），不抛异常不传播
+- workflow 执行时间不因聚合器增加（无可感知延迟）
+- event bus 已有 try/except 不传播 handler 异常
+
+### 自定义角色向后兼容
+- 不修改 build_default_agents() 签名和返回结构
+- 内置 6 角色行为不变，自定义角色是 additive
+- 角色定义文件格式错误 → 跳过该文件不阻断启动
+
+### 无新依赖
+- 复用既有 event_bus / BaseAgent / WikiRepository / compute_related_pages
+- 不引入新库

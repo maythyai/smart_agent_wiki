@@ -166,7 +166,30 @@
 - 缺口：0
 - 全部 [TBD-impl]：05 实施后落定
 
-### 全局汇总（v1.0 + v1.10.0 + v1.11.0 + v1.12.0 + v1.13.0 + v1.14.0）
-- PRD AC 总数：60 + 15 = 75
-- 已覆盖：60 + 15（[TBD-impl]）= 75
+## v1.15.0 delta（agent/link 能力，12 AC）
+
+| AC | 描述 | 映射 Feature | 用例 | 状态 |
+|---|---|---|---|---|
+| AC-A-1 | 自定义角色注册并出现在 roster | F-T-1 | test_custom_agents.py（mock .saw/agents/） | [TBD-impl] |
+| AC-A-2 | 自定义角色被 workflow 引用 | F-T-1 | test_custom_agents.py（workflow YAML validate） | [TBD-impl] |
+| AC-A-3 | 重名角色被拒绝 | F-T-1 | test_custom_agents.py（name=Librarian 重名跳过） | [TBD-impl] |
+| AC-A-4 | REST 端点返回自定义角色 | F-T-1 | test_agents_rest.py（GET /api/v1/agents custom:true） | [TBD-impl] |
+| AC-B-1 | dry-run 预览不写回 | F-T-2 | test_links_apply.py（无 --confirm 文件不变） | [TBD-impl] |
+| AC-B-2 | confirm 写回 | F-T-2 | test_links_apply.py（## Related + frontmatter related） | [TBD-impl] |
+| AC-B-3 | 已有链接不重复 | F-T-2 | test_links_apply.py（[[page-b]] skipped） | [TBD-impl] |
+| AC-B-4 | apply 后 audit 无新断链 | F-T-2 | test_links_apply.py（audit 无 broken） | [TBD-impl] |
+| AC-C-1 | activity 端点返回聚合数据 | F-T-3 | test_agent_activity.py（mock event calls≥1） | [TBD-impl] |
+| AC-C-2 | 无活动的 agent 返回空活动 | F-T-3 | test_agent_activity.py（calls=0, null） | [TBD-impl] |
+| AC-C-3 | 不存在的 agent 返回 404 | F-T-3 | test_agents_rest.py（404 not found） | [TBD-impl] |
+| AC-C-4 | agents 端点含 activity_summary | F-T-3 | test_agents_rest.py（activity_summary calls=3） | [TBD-impl] |
+
+### v1.15.0 汇总
+- PRD AC 总数（本轮）：12
+- 已映射：12（100%）
+- 缺口：0
+- 全部 [TBD-impl]：05 实施后落定
+
+### 全局汇总（v1.0 + v1.10.0 + v1.11.0 + v1.12.0 + v1.13.0 + v1.14.0 + v1.15.0）
+- PRD AC 总数：75 + 12 = 87
+- 已覆盖：75 + 12（[TBD-impl]）= 87
 - 缺口：0

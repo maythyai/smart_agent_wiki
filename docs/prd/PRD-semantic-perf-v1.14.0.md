@@ -2,7 +2,7 @@
 id: PRD-semantic-perf-v1.14.0
 title: semantic 性能优化
 version: 1.0
-status: Approved
+status: Released
 date: 2026-09-06
 product_type: platform
 feature_count: 3

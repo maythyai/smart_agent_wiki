@@ -1,0 +1,101 @@
+feature:
+  id: "F-T-2"
+  name: "L2 links auto-apply（saw links apply --suggestion 写回 WikiRepository + dry-run/confirm + 去重）"
+  domain: "agent-link"
+  prd_ref: "docs/prd/PRD-agent-link-v1.15.0.md#3.2"
+  pms_module: "agent-link"
+
+  # 用户视角
+  user_story: "作为 KW，我想在审阅 saw links suggest 输出后一键应用建议链接，以便不必手动编辑每个页面添加 [[link]]。"
+
+  acceptance_criteria:
+    - "Given 页面 A 有 3 条 suggest 建议, when saw links apply A --path .（无 --confirm）, then 打印 3 条将应用的链接，不修改任何文件（AC-B-1）"
+    - "Given 页面 A 有 3 条 suggest 建议，已 --confirm, when saw links apply A --path . --confirm, then 页面 A 文件新增 ## Related 段落含 3 个 [[link]]，frontmatter related 同步更新（AC-B-2）"
+    - "Given 页面 A 已含 [[page-b]], when saw links apply A --confirm, then [[page-b]] 不重复插入，提示 skipped（AC-B-3）"
+    - "Given apply 已执行, when saw links audit, then 插入的链接目标都存在，无新断链（AC-B-4）"
+
+  # 边界
+  scope:
+    includes:
+      - "saw links apply <page> --suggestion 命令实现（读取 compute_related_pages suggest 输出）"
+      - "默认 dry-run 模式（无 --confirm 时只预览不写回）"
+      - "--confirm 标志确认写回（破坏性操作须用户确认）"
+      - "链接插入位置：页面 content 末尾新增 ## Related 段落，追加 [[slug]] 列表"
+      - "已存在的 [[link]] 不重复插入（去重检查）"
+      - "写回通过 WikiRepository.write() 机制（复用既有 write，不绕过）"
+      - "apply 后页面 frontmatter 的 related 字段同步更新"
+      - "--top N 限制应用数量（默认全部建议）"
+      - "--dry-run 显式预览将插入的链接列表但不写回"
+      - "--suggestion <slug> 只应用单条建议"
+      - "单页写回失败不中断，继续处理其余页面，最后汇总失败列表"
+      - "LinksApplied 事件发布（apply 写回完成时）"
+    excludes:
+      - "links apply 撤销/undo 机制（PMS 明确不做，dry-run + confirm 是安全边界）"
+      - "compute_related_pages suggest 算法改动（复用既有 suggest 逻辑）"
+      - "## Related 段落插入策略的最终决策（追加 vs frontmatter related 字段同步，留 03 技术方案细化）"
+      - "自定义角色注册（F-T-1）"
+      - "agent 活动聚合（F-T-3）"
+
+  # 前后端边界
+  frontend: {pages: [], components: [], interactions: []}
+  backend:
+    endpoints: []
+    business_logic:
+      - "links_cmd.py: 新增 apply 子命令，读取 compute_related_pages suggest 输出"
+      - "过滤已链接的（复用 suggest 的去重逻辑）"
+      - "dry-run：打印将插入的 [[link]] 列表 + 目标页面，提示 'Run with --confirm to apply'"
+      - "confirm：逐页写回 WikiRepository.write()，打印成功/失败汇总"
+      - "## Related 段落：页面 content 末尾追加 [[slug]] 列表"
+      - "frontmatter related 字段同步更新"
+      - "异常处理：页面不存在跳过该链接 + 已有链接跳过不重复 + 磁盘错误记录失败继续其余 + 无 --confirm 仅预览不写"
+    integrations:
+      - "src/saw/drivers/cli/commands/links_cmd.py:51（suggest 命令既有，apply 新增子命令）"
+      - "src/saw/engines/query/related_pages.py（compute_related_pages，复用 suggest 输出）"
+      - "src/saw/adapters/storage/wiki_repository.py:42（WikiRepository.write()，复用既有写回）"
+
+  # 数据维度
+  data_entities:
+    - "WikiPage（写回对象：content + frontmatter related）"
+    - "LinksApplied 事件（page/applied_slugs[]/skipped_slugs[]）"
+  data_operations:
+    - "read（compute_related_pages suggest 输出）"
+    - "write（WikiRepository.write 写回 [[link]] + frontmatter related）"
+    - "dedup（已存在 [[link]] 不重复插入）"
+
+  # 技术维度预标记
+  tech_dimensions:
+    needs_database: false
+    needs_cache: false
+    needs_queue: false
+    needs_ai: true
+    needs_vector_store: false
+    needs_realtime: false
+    needs_file_storage: true
+    needs_search: false
+    needs_scheduler: false
+    needs_notification: false
+
+  # 非功能性需求
+  nfr:
+    performance: "apply 写回延迟取决于页面数量 × WikiRepository.write 单页写入延迟（[TBD] 规模实测）"
+    security: "破坏性操作默认 dry-run，须 --confirm 方写回；不绕过 WikiRepository.write 安全边界"
+    scalability: "N/A（CLI 命令，按需触发，不影响系统规模）"
+    availability: "单页写回失败不中断，继续处理其余页面，最后汇总失败列表"
+
+  # 依赖与优先级
+  priority: "P0"
+  complexity: "M"
+  depends_on: []
+  blocked_by: []
+
+  # 风险与假设
+  risks:
+    - "links apply 破坏性写回用户文件——默认 dry-run + --confirm 标志 + 单页失败不中断（PRD §8 风险 Medium/High）"
+    - "## Related 段落插入策略（追加 vs frontmatter related 字段同步）——留 03 技术方案细化"
+    - "去重逻辑正确性——复用 suggest 的去重逻辑，须保证 apply 后 audit 无新断链"
+  assumptions:
+    - "compute_related_pages suggest 输出格式可被 apply 直接消费（PRD §3.2 业务规则 1）"
+    - "WikiRepository.write() 既有机制可直接复用（PRD §3.2 业务规则 5 + Ground claim 4 TRUE）"
+    - "不实现撤销/undo 机制（PMS 明确不做，dry-run + confirm 是安全边界）"
+    - "--top N 默认全部建议（PRD §3.2 业务规则 7）"
+    - "单页写回失败不中断，继续处理其余页面（PRD §3.2 异常处理 + 交互流程步骤 6）"
