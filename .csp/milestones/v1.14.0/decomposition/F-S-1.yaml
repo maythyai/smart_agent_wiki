@@ -1,0 +1,94 @@
+feature:
+  id: "F-S-1"
+  name: "semantic cache 阈值可配（env 驱动启用/禁用 + 触发阈值）+ 文档标注"
+  domain: "semantic-perf"
+  prd_ref: "docs/prd/PRD-semantic-perf-v1.14.0.md#3.1"
+  pms_module: "semantic-perf"
+
+  # 用户视角
+  user_story: "作为 DEV，我想通过环境变量控制 semantic cache 行为，以便本地 vLLM 部署时禁用 cache（避免无效写入开销），远程 API 部署时启用 cache（省 API 调用）。"
+
+  acceptance_criteria:
+    - "Given SAW_SEMANTIC_CACHE_ENABLED=false, when 连续两次相同 semantic 查询, then cache.stats().hits 不增加（cache 被跳过）（AC-A-1）"
+    - "Given 无 env 或 SAW_SEMANTIC_CACHE_ENABLED=true, when 连续两次相同 semantic 查询, then 第 2 次 cache.stats().hits 增加（cache 命中）（AC-A-2）"
+    - "Given SAW_SEMANTIC_CACHE_THRESHOLD_MS=100 且 API 响应 < 100ms, when semantic 查询, then cache.get 仍可命中已有缓存，但 cache.set 被跳过（新查询不写入）（AC-A-3）"
+    - "Given 无任何 SAW_SEMANTIC_CACHE_* env, when semantic 查询, then 行为与 v1.13.0 一致（cache 始终启用）（AC-A-4）"
+    - "Given SAW_SEMANTIC_CACHE_ENABLED=false, when 连续两次相同 keyword 查询, then keyword cache 正常命中（mode=search 路径不受影响）（AC-A-5）"
+
+  # 边界
+  scope:
+    includes:
+      - "_semantic_search 的 cache.get/cache.set 路径增加 env 配置控制——SAW_SEMANTIC_CACHE_ENABLED（true/false，默认 true）"
+      - "SAW_SEMANTIC_CACHE_THRESHOLD_MS（整数毫秒，默认 0=不设阈值）——API 响应延迟低于此阈值时跳过 cache.set（cache.get 仍可命中已有缓存）"
+      - "环境变量值非法（非 true/false）→ 忽略，回退默认（enabled=true），日志 warning"
+      - "cache 配置读取异常 → 不阻断查询，回退默认行为，日志 warning"
+      - "可选自适应：SAW_EMBEDDING_API_BASE 含 localhost/127.0.0.1 时自动判定本地部署，默认禁用 cache（可被 SAW_SEMANTIC_CACHE_ENABLED=true 覆盖）——[TBD]，03 技术方案决定是否实现"
+      - "cache 禁用不影响 _keyword_search 的 cache 路径（F-QS-07），两个 cache 路径独立控制"
+      - "cache 行为变更不改变 _semantic_search 返回值结构（QueryResult 不变），仅影响内部 cache 命中/写入路径"
+      - "CHANGELOG/retrospective 标注 cache 对远程 API 有收益、本地 vLLM 快时低收益"
+    excludes:
+      - "ANN 索引（F-S-2）"
+      - "benchmark 更新（F-S-3）"
+      - "自适应判定的最终实现决策（03 技术方案 [TBD]）"
+      - "keyword cache 路径改动（独立控制，不涉及）"
+
+  # 前后端边界
+  frontend: {pages: [], components: [], interactions: []}
+  backend:
+    endpoints: []
+    business_logic:
+      - "engine.py _semantic_search: 检查 SAW_SEMANTIC_CACHE_ENABLED → 若 false 跳过 cache.get/set，直接 embedding + cosine"
+      - "engine.py _semantic_search: 检查 SAW_SEMANTIC_CACHE_THRESHOLD_MS → 若 API 响应 < 阈值，跳过 cache.set（cache.get 仍执行）"
+      - "settings.py: 新增 SAW_SEMANTIC_CACHE_ENABLED / SAW_SEMANTIC_CACHE_THRESHOLD_MS 配置项读取"
+      - "cache.py: 无需改动（纯 LRU+TTL，配置控制在调用方）"
+      - "异常处理：env 值非法 → 回退默认 + warning 日志；配置读取异常 → 回退默认 + warning 日志"
+    integrations:
+      - "src/saw/engines/query/engine.py（_semantic_search cache 路径）"
+      - "src/saw/engines/query/cache.py（既有 LRU+TTL cache，不改动）"
+      - "src/saw/core/settings.py（新增 env 配置项）"
+
+  # 数据维度
+  data_entities:
+    - "SAW_SEMANTIC_CACHE_ENABLED（配置项）"
+    - "SAW_SEMANTIC_CACHE_THRESHOLD_MS（配置项）"
+  data_operations:
+    - "cache get（命中即返回，禁用时跳过）"
+    - "cache set（启用时写入，阈值未达时跳过写入）"
+
+  # 技术维度预标记
+  tech_dimensions:
+    needs_database: false
+    needs_cache: true
+    needs_queue: false
+    needs_ai: false
+    needs_vector_store: false
+    needs_realtime: false
+    needs_file_storage: false
+    needs_search: false
+    needs_scheduler: false
+    needs_notification: false
+
+  # 非功能性需求
+  nfr:
+    performance: "env 配置 cache 启用/禁用后行为可验证——SAW_SEMANTIC_CACHE_ENABLED=false 时 cache.stats() 无新增 hit；=true（默认）时行为不变"
+    security: "无新增安全面（env 配置复用既有 settings 读取范式）"
+    scalability: "N/A（配置开关，不影响规模）"
+    availability: "cache 配置读取异常 → 不阻断查询，回退默认行为"
+
+  # 依赖与优先级
+  priority: "P0"
+  complexity: "M"
+  depends_on: []
+  blocked_by: []
+
+  # 风险与假设
+  risks:
+    - "自适应判定（localhost 检测）语义可能混乱——03 技术方案决定是否实现 [TBD]"
+    - "cache 阈值配置语义可能混乱——默认行为不变（向后兼容），文档明确部署形态推荐值"
+    - "环境变量值非法场景需覆盖测试——回退默认行为"
+  assumptions:
+    - "默认行为不变（cache 始终启用，TTL 300s），确保向后兼容"
+    - "SAW_SEMANTIC_CACHE_ENABLED 默认 true；SAW_SEMANTIC_CACHE_THRESHOLD_MS 默认 0（不设阈值）"
+    - "自适应判定（localhost 自动禁用 cache）为 [TBD]，03 技术方案定"
+    - "不影响 _keyword_search 的 cache 路径（F-QS-07），两个 cache 路径独立控制"
+    - "cache 行为变更不改变 QueryResult 返回值结构"

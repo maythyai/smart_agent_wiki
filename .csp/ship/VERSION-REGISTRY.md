@@ -16,9 +16,10 @@
 | v1.11.0 | v1.11.0 | released | 2026-09-05 | null | null | semantic cache+compiler 深覆盖+workflow REST unify DB+Spec 命名回更+hash 复核 | No | Yes (rollback plan ready) | 债务收口 IV / bug fix |
 | v1.12.0 | v1.12.0 | released | 2026-09-05 | null | null | embedding provider 重构 litellm API+维度可配 dim 驱动+本地 ST 可选 fallback+测试改 API mock+benchmark | No | Yes (rollback plan ready) | embedding 改用 OpenAI 风格 API |
 | v1.13.0 | v1.13.0 | released | 2026-09-06 | null | null | ingest dir recursion+benchmark script (semantic vs BM25)+REST alias/CHANGELOG+coverage 67+Q1/Q3 closure | No | Yes (rollback plan ready) | E2E 收尾轮 |
+| v1.14.0 | v1.14.0 | released | 2026-09-06 | null | null | cache threshold configurable (SAW_SEMANTIC_CACHE_ENABLED/THRESHOLD_MS)+ANN index hnswlib scale-driven+numpy batch cosine fallback+benchmark cache.stats ANN vs cosine P99+scale curves | No | Yes (rollback plan ready) | semantic 性能优化 |
 
 **Notes**:
-- v1.10.0–v1.13.0 all status=released (tag pushed + GitHub Release created).
-- v1.13.0 tag @779d6cb, GitHub Release: https://github.com/maythyai/smart_agent_wiki/releases/tag/v1.13.0
+- v1.10.0–v1.14.0 all status=released (tag pushed + GitHub Release created).
+- v1.14.0 tag @136befe, GitHub Release: https://github.com/maythyai/smart_agent_wiki/releases/tag/v1.14.0
 - `Deployed`/`Prod-Verified` remain null — no prod deployment in scope (local-first desktop app, no server deployment).
 - Breaking=No for all versions (additive MINOR bumps, no breaking API changes).

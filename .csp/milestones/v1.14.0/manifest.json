@@ -1244,7 +1244,7 @@
       "raw_path": "docs/strategy/ROADMAP.md",
       "output_path": "",
       "original_ref": "docs/strategy/ROADMAP.md",
-      "content_hash": "2e3a6706014e8205317b7f643bbf6bfad06248c7",
+      "content_hash": "044ed481e408714afe1b2a5ab2b60024d6d0cbcc",
       "source_updated_at": "2026-09-06T15:10:00+08:00",
       "build_status": "built",
       "wiki_pages": [],
@@ -1499,7 +1499,7 @@
       "raw_path": ".csp/ship/VERSION-REGISTRY.md",
       "output_path": "",
       "original_ref": ".csp/ship/VERSION-REGISTRY.md",
-      "content_hash": "4cfdad236a2fff7e344fa3218580ef84b7e7b7f2",
+      "content_hash": "df64886db252b5b85798a26f367745bc58d355df",
       "source_updated_at": "2026-09-06T15:10:00+08:00",
       "build_status": "built",
       "wiki_pages": [],
@@ -2329,40 +2329,6 @@
       "build_status": "built",
       "wiki_pages": [],
       "status": "ready"
-    },
-    {
-      "source_id": "doc:ship:release-notes-v1.14.0",
-      "source_type": "doc",
-      "kind": "ship",
-      "domain": "ship",
-      "title": "Release Notes v1.14.0 (semantic perf: cache threshold + ANN + benchmark)",
-      "raw_path": ".csp/ship/RELEASE-NOTES-v1.14.0.md",
-      "output_path": ".csp/ship/RELEASE-NOTES-v1.14.0.md",
-      "content_hash": "601c52451589555569f5c053662a94a82476a9e6",
-      "build_status": "built"
-    },
-    {
-      "source_id": "doc:milestone:v1.14.0",
-      "source_type": "doc",
-      "kind": "milestone",
-      "domain": "milestones",
-      "title": "Milestone v1.14.0 (semantic perf: cache threshold + ANN + benchmark)",
-      "raw_path": ".csp/milestones/v1.14.0/",
-      "output_path": ".csp/milestones/v1.14.0/",
-      "content_hash": "b542162b0d0a5a5d22735bc07e95468d763d7987",
-      "build_status": "built"
-    },
-    {
-      "source_id": "doc:milestone:v1.14.0:archive-manifest",
-      "source_type": "doc",
-      "kind": "milestone",
-      "domain": "milestones",
-      "title": "Archive Manifest v1.14.0",
-      "raw_path": ".csp/milestones/v1.14.0/ARCHIVE-MANIFEST.md",
-      "output_path": ".csp/milestones/v1.14.0/ARCHIVE-MANIFEST.md",
-      "content_hash": "b542162b0d0a5a5d22735bc07e95468d763d7987",
-      "build_status": "built"
     }
-  ],
-  "last_updated": "2026-09-06"
+  ]
 }
