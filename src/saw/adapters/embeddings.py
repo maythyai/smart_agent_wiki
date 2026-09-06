@@ -127,33 +127,50 @@ def _normalize(vec: list[float]) -> list[float]:
 
 
 def _embed_via_api(texts: list[str]) -> list[list[float]] | None:
-    """Embed texts via litellm.embedding API (primary provider).
+    """Embed texts via OpenAI-style embedding API.
 
-    Calls ``litellm.embedding`` with model/input/api_base/api_key from
-    EmbeddingSettings, following the same call pattern as ``router.py``
-    ``_completion_with_retry`` (litellm.completion).
+    For a custom ``api_base`` (e.g. vLLM, Ollama, LM Studio) use ``httpx``
+    direct — avoids litellm provider-prefix routing + cost-map fetch overhead
+    and never loads local torch. For cloud OpenAI (no ``api_base``) use
+    ``litellm.embedding`` (litellm recognises ``text-embedding-*`` natively).
     """
     cfg = _get_embedding_settings()
     if cfg is None or cfg is False:
         return None
     try:
-        kwargs: dict[str, Any] = {
-            "model": cfg.model,
-            "input": texts,
-            "timeout": cfg.timeout,
-        }
         if cfg.api_base:
-            kwargs["api_base"] = cfg.api_base
-        if cfg.api_key:
-            kwargs["api_key"] = cfg.api_key
+            import httpx
 
-        response = litellm.embedding(**kwargs)
-        # litellm embedding response: response.data[i]["embedding"]
-        vecs = [item["embedding"] for item in response.data]
-        # L2-normalize (SentenceTransformer normalize_embeddings=True equivalent)
+            url = cfg.api_base.rstrip("/") + "/embeddings"
+            headers = {"Content-Type": "application/json"}
+            if cfg.api_key:
+                headers["Authorization"] = f"Bearer {cfg.api_key}"
+            resp = httpx.post(
+                url,
+                json={"model": cfg.model, "input": texts},
+                headers=headers,
+                timeout=cfg.timeout,
+            )
+            resp.raise_for_status()
+            vecs = [item["embedding"] for item in resp.json().get("data", [])]
+        else:
+            kwargs: dict[str, Any] = {
+                "model": cfg.model,
+                "input": texts,
+                "timeout": cfg.timeout,
+            }
+            if cfg.api_key:
+                kwargs["api_key"] = cfg.api_key
+            response = litellm.embedding(**kwargs)
+            vecs = [item["embedding"] for item in response.data]
+        if len(vecs) != len(texts):
+            logger.warning(
+                "Embedding count mismatch: %d vs %d", len(vecs), len(texts)
+            )
+            return None
         return [_normalize(v) for v in vecs]
     except Exception as e:
-        logger.warning("API embedding failed, falling back: %s", e)
+        logger.warning("API embedding failed: %s", e)
         return None
 
 
@@ -171,14 +188,14 @@ def _embed_via_st(texts: list[str]) -> list[list[float]] | None:
 
 
 def embeddings_available() -> bool:
-    """True if any embedding provider is available (API OR local ST).
+    """True if the embedding API is configured (API-only, no local ST).
 
-    Used by detect_tier() to set FULL tier.
-    - API configured (EmbeddingSettings has model + api_key or api_base) → True
-    - Local ST importable ([learn] extra installed) → True
-    - Neither → False (tier=LIGHTWEIGHT, semantic endpoints degrade to BM25)
+    Used by detect_tier() to set FULL tier. Local sentence-transformers is
+    intentionally NOT checked — loading it risks OOM and is not the
+    production shape (ADR-012). Tier=LIGHTWEIGHT (semantic endpoints degrade
+    to BM25) when the API is unconfigured.
     """
-    return _api_embedding_available() or _st_available()
+    return _api_embedding_available()
 
 
 def embed_texts(texts: list[str]) -> list[list[float]] | None:
@@ -193,21 +210,15 @@ def embed_texts(texts: list[str]) -> list[list[float]] | None:
     if not texts:
         return None
 
-    # 1. Try API (primary path, default for v1.12.0)
+    # API-only: no local ST fallback. Loading torch risks OOM on constrained
+    # hosts and is not the production shape (ADR-012 API-primary). On API
+    # failure the caller degrades to BM25 — never loads a local model.
     if _api_embedding_available():
         vecs = _embed_via_api(texts)
         if vecs is not None:
             return vecs
-        logger.warning("API embedding failed, trying local ST fallback")
+        logger.warning("API embedding failed; degrading to BM25 (no local fallback)")
 
-    # 2. Try local ST fallback (v1.10.0 path, preserved for backward compat)
-    if _st_available():
-        logger.info("API unavailable, falling back to local ST")
-        vecs = _embed_via_st(texts)
-        if vecs is not None:
-            return vecs
-
-    # 3. All providers failed
     return None
 
 

@@ -182,61 +182,27 @@ def test_sem_ac3_empty_index(monkeypatch):
     assert result.meta.get("index_empty") is True
 
 
-def test_sem_fb1_st_fallback(monkeypatch):
-    """AC-FB-1: API unavailable + ST available → semantic search works via ST.
-
-    Mocks _api_embedding_available()=False + _st_available()=True to simulate
-    the ST fallback path. No actual ST import — _embed_via_st is mocked.
+def test_sem_no_api_no_st_fallback(monkeypatch):
+    """v1.12.0 fix: API unavailable → embed_texts returns None (NO local ST
+    fallback, NO torch load). Caller degrades to BM25. The ST fallback path
+    was removed (ADR-012 API-primary) because loading torch risks OOM on
+    constrained hosts and is not the production shape.
     """
+    import sys
+
     import saw.adapters.embeddings as emb_mod
 
-    # Don't set up API mock — simulate API unavailable
+    # Block sentence_transformers to prove it is NOT imported (no torch load)
+    monkeypatch.setitem(sys.modules, "sentence_transformers", None)
+
+    # No API configured
     monkeypatch.setattr(emb_mod, "_embedding_settings", False)
-    monkeypatch.setattr(emb_mod, "_ST_available", True)
+    assert emb_mod.embeddings_available() is False
 
-    # Mock _embed_via_st to return fixed vectors
-    def mock_st_embed(texts):
-        return [_topic_vec(t) for t in texts]
-
-    monkeypatch.setattr(emb_mod, "_embed_via_st", mock_st_embed)
-
-    from saw.db.migrations import apply_migrations
-
-    conn = sqlite3.connect(":memory:")
-    apply_migrations(conn)
-
-    claims_data = [
-        ("c1", "Machine learning is a subset of artificial intelligence."),
-        ("c2", "Neural networks are inspired by biological brains."),
-    ]
-    conn.executemany(
-        "INSERT INTO claim (uuid, content, source_uuid, content_hash, workspace_id) "
-        "VALUES (?, ?, 'src', 'hash', 'default')",
-        claims_data,
-    )
-    conn.commit()
-
-    # Store embeddings via mocked ST path
-    vecs = emb_mod.embed_texts([c[1] for c in claims_data])
-    assert vecs is not None
-    for (doc_id, _), vec in zip(claims_data, vecs):
-        dim = len(vec)
-        blob = struct.pack(f"<{dim}f", *vec)
-        conn.execute(
-            "INSERT INTO embedding_store (doc_id, entity_type, model, vector, dim, workspace_id) "
-            "VALUES (?, 'claim', 'all-MiniLM-L6-v2', ?, ?, 'default')",
-            (doc_id, blob, dim),
-        )
-    conn.commit()
-
-    engine = _make_engine(conn)
-    result = engine.query(
-        question="artificial intelligence", mode="semantic", limit=10
-    )
-
-    assert result.mode == "semantic"
-    assert len(result.sources) > 0
-    assert result.meta.get("semantic_fallback") is False
+    # embed_texts must return None — no ST fallback, no torch
+    vecs = emb_mod.embed_texts(["machine learning"])
+    assert vecs is None
+    assert "torch" not in sys.modules
 
 
 def test_sem_fb2_no_st_api(monkeypatch):

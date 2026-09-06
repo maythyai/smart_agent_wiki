@@ -129,20 +129,13 @@ def _llm_available(llm: "LLMSettings | None" = None) -> bool:
 
 
 def _embeddings_available() -> bool:
-    """Check if embeddings are available (API configured OR local ST importable).
+    """Check if the embedding API is configured (API-only, no local ST).
 
-    v1.12.0: API configuration is the primary path; local ST is optional fallback.
+    v1.12.0: API configuration is the only path. Local sentence-transformers
+    is intentionally NOT imported — loading it risks OOM on constrained hosts
+    and is not the production shape.
     """
-    # API: check embedding API configuration via env vars
-    if _api_embedding_configured():
-        return True
-    # Local ST: legacy check (v1.10.0 backward compat)
-    try:
-        import importlib
-        importlib.import_module("sentence_transformers")
-        return True
-    except ImportError:
-        return False
+    return _api_embedding_configured()
 
 
 def _api_embedding_configured() -> bool:
