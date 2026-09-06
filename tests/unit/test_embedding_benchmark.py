@@ -358,7 +358,172 @@ def test_ac_b_3_cache_hit_rate(monkeypatch):
                 os.environ.pop(k, None)
 
     cache = results["cache"]
-    assert cache["hit"], (
-        f"2nd query should be faster (cache hit): "
-        f"first={cache['first_ms']}ms second={cache['second_ms']}ms"
+    assert cache["cache_hit"], (
+        f"2nd query should hit cache: "
+        f"hits_after_1st={cache['hits_after_1st']} "
+        f"hits_after_2nd={cache['hits_after_2nd']}"
     )
+
+
+# ── T-F-S-3 (v1.14.0): cache stats + ANN vs cosine + scale curve ────
+
+def test_ac_c_1_cache_hit_via_stats_mock(monkeypatch):
+    """AC-C-1: cache hit measured via cache.stats().hits (mock, CI-safe).
+
+    Verifies _measure_cache_hit uses cache.stats().hits counter,
+    not latency comparison. Uses mock embedding (no vLLM).
+    """
+    import importlib.util
+    from pathlib import Path
+
+    # Set up mock embedding API
+    monkeypatch.setenv("SAW_EMBEDDING_MODEL", _MOCK_MODEL)
+    monkeypatch.setenv("EMBEDDING_API_KEY", "test-key")
+    monkeypatch.setattr(
+        "saw.adapters.embeddings._embedding_settings", None
+    )
+    import saw.adapters.embeddings as emb_mod
+    monkeypatch.setattr(
+        emb_mod.litellm, "embedding", _mock_embedding_response
+    )
+
+    script = Path(__file__).resolve().parents[2] / "scripts" / "benchmark_semantic.py"
+    spec = importlib.util.spec_from_file_location("benchmark_semantic", script)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+
+    # Build a small DB with mock embeddings
+    from saw.db.migrations import apply_migrations
+    import sqlite3
+    import struct
+
+    conn = sqlite3.connect(":memory:")
+    apply_migrations(conn)
+
+    for i, (doc_id, content, _) in enumerate([
+        ("ml-1", "Machine learning models.", "ML"),
+        ("ml-2", "Neural networks.", "ML"),
+    ]):
+        conn.execute(
+            "INSERT INTO claim (uuid, content, source_uuid, content_hash, workspace_id) "
+            "VALUES (?, ?, 'src', 'hash', 'default')",
+            (doc_id, content),
+        )
+    conn.commit()
+
+    texts = ["Machine learning models.", "Neural networks."]
+    vecs = emb_mod.embed_texts(texts)
+    assert vecs is not None
+    for doc_id, vec in zip(["ml-1", "ml-2"], vecs):
+        dim = len(vec)
+        blob = struct.pack(f"<{dim}f", *vec)
+        conn.execute(
+            "INSERT INTO embedding_store (doc_id, entity_type, model, vector, dim, workspace_id) "
+            "VALUES (?, 'claim', ?, ?, ?, 'default')",
+            (doc_id, _MOCK_MODEL, blob, dim),
+        )
+    conn.commit()
+
+    import tempfile
+    tmp_path = Path(tempfile.mkdtemp())
+    engine = mod._make_query_engine(conn, tmp_path)
+
+    # Clear cache and measure
+    from saw.engines.query.cache import get_cache
+    get_cache().clear()
+
+    result = mod._measure_cache_hit(engine, "machine learning")
+
+    # cache_hit should be True (2nd query hits cache)
+    assert result["cache_hit"] is True, (
+        f"cache_hit should be True via stats: {result}"
+    )
+    assert result["hits_after_2nd"] > result["hits_after_1st"], (
+        f"hits should increase on 2nd query: {result}"
+    )
+
+
+@pytest.mark.benchmark_e2e
+def test_ac_c_2_ann_vs_cosine(monkeypatch):
+    """AC-C-2: ANN vs cosine P99 comparison in benchmark output.
+
+    Skipped in CI without vLLM.
+    """
+    import importlib.util
+    from pathlib import Path
+
+    script = Path(__file__).resolve().parents[2] / "scripts" / "benchmark_semantic.py"
+    spec = importlib.util.spec_from_file_location("benchmark_semantic", script)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+
+    vllm_base = os.environ.get("SAW_EMBEDDING_API_BASE", "http://localhost:8001")
+    if not mod._health_check(vllm_base):
+        pytest.skip("vLLM endpoint unreachable — skipping ANN vs cosine benchmark")
+
+    from saw.adapters import embeddings as emb_mod
+    saved_settings = emb_mod._embedding_settings
+    saved_env = {k: os.environ.get(k) for k in (
+        "SAW_EMBEDDING_MODEL", "EMBEDDING_API_KEY", "SAW_EMBEDDING_API_BASE"
+    )}
+    monkeypatch.setattr(emb_mod, "_embedding_settings", None)
+
+    import tempfile
+    try:
+        results = mod.run_benchmark(vllm_base, Path(tempfile.mkdtemp()))
+    finally:
+        emb_mod._embedding_settings = saved_settings
+        for k, v in saved_env.items():
+            if v is not None:
+                os.environ[k] = v
+            else:
+                os.environ.pop(k, None)
+
+    ann_vs = results["ann_vs_cosine"]
+    assert "ann_p99_ms" in ann_vs, "output must contain ann_p99_ms"
+    assert "cosine_p99_ms" in ann_vs, "output must contain cosine_p99_ms"
+
+
+@pytest.mark.benchmark_e2e
+def test_ac_c_3_scale_curve(monkeypatch):
+    """AC-C-3: 100/500/1000/5000 scale latency curve in benchmark output.
+
+    Skipped in CI without vLLM.
+    """
+    import importlib.util
+    from pathlib import Path
+
+    script = Path(__file__).resolve().parents[2] / "scripts" / "benchmark_semantic.py"
+    spec = importlib.util.spec_from_file_location("benchmark_semantic", script)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+
+    vllm_base = os.environ.get("SAW_EMBEDDING_API_BASE", "http://localhost:8001")
+    if not mod._health_check(vllm_base):
+        pytest.skip("vLLM endpoint unreachable — skipping scale curve benchmark")
+
+    from saw.adapters import embeddings as emb_mod
+    saved_settings = emb_mod._embedding_settings
+    saved_env = {k: os.environ.get(k) for k in (
+        "SAW_EMBEDDING_MODEL", "EMBEDDING_API_KEY", "SAW_EMBEDDING_API_BASE"
+    )}
+    monkeypatch.setattr(emb_mod, "_embedding_settings", None)
+
+    import tempfile
+    try:
+        results = mod.run_benchmark(vllm_base, Path(tempfile.mkdtemp()))
+    finally:
+        emb_mod._embedding_settings = saved_settings
+        for k, v in saved_env.items():
+            if v is not None:
+                os.environ[k] = v
+            else:
+                os.environ.pop(k, None)
+
+    scale_curve = results["scale_curve"]
+    assert len(scale_curve) == 4, (
+        f"scale_curve should have 4 entries: {scale_curve}"
+    )
+    for entry in scale_curve:
+        assert "doc_count" in entry
+        assert "p99_ms" in entry

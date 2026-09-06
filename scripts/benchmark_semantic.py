@@ -123,8 +123,51 @@ def _bm25_search(conn: sqlite3.Connection, query: str, limit: int = 10) -> list[
     return list(result.claim_uuids) if hasattr(result, "claim_uuids") else []
 
 
-def _semantic_search(conn: sqlite3.Connection, query: str, limit: int = 10) -> list[str]:
-    """Semantic (cosine) search — returns doc_ids ranked by similarity."""
+def _make_query_engine(conn: sqlite3.Connection, tmp_path: Path):
+    """Build a QueryEngine for benchmark (production cache path)."""
+    from saw.adapters.storage.claims_repository import SQLiteClaimsRepository
+    from saw.adapters.storage.wiki_repository import WikiRepository
+    from saw.engines.query.compare import CompareEngine
+    from saw.engines.query.compiler import ContextCompiler
+    from saw.engines.query.engine import QueryEngine
+    from saw.engines.query.graph_traverse import GraphTraverse
+    from saw.engines.query.search import FTS5Search
+    from saw.engines.query.tree_mode import TreeModeSearch
+
+    wiki_path = tmp_path / "wiki"
+    wiki_path.mkdir(parents=True, exist_ok=True)
+    claims_repo = SQLiteClaimsRepository(conn)
+    wiki_repo = WikiRepository(wiki_path)
+    search_service = FTS5Search(conn)
+    tree_mode = TreeModeSearch(wiki_repo, claims_repo, conn)
+    graph = GraphTraverse(conn)
+    compare_engine = CompareEngine(claims_repo, wiki_repo)
+    compiler = ContextCompiler(claims_repo, wiki_repo, search_service, conn)
+    return QueryEngine(
+        search=search_service,
+        compiler=compiler,
+        graph=graph,
+        compare_engine=compare_engine,
+        tree_mode=tree_mode,
+        llm=None,
+        claims_repo=claims_repo,
+        wiki_repo=wiki_repo,
+        conn=conn,
+    )
+
+
+def _semantic_search(conn: sqlite3.Connection, query: str, limit: int = 10,
+                     engine=None) -> list[str]:
+    """Semantic search via QueryEngine._semantic_search (production cache path).
+
+    T-F-S-3: routes through the production QueryEngine path (cache, ANN,
+    numpy cosine) instead of an independent cosine function.
+    """
+    if engine is not None:
+        result = engine._semantic_search(query, limit=limit)
+        return [s.get("claim_uuid") or s.get("page_slug", "")
+                for s in result.sources]
+    # Fallback: independent cosine (for backward compat with tests)
     from saw.adapters.embeddings import cosine_similarity, embed_texts
 
     qvecs = embed_texts([query])
@@ -158,23 +201,109 @@ def _measure_p99(fn, query: str, n: int = 100) -> float:
     return latencies[p99_idx]
 
 
-def _measure_cache_hit(fn, query: str) -> dict:
-    """Run same query twice; 2nd should hit cache (lower latency)."""
+def _measure_cache_hit(engine, query: str) -> dict:
+    """Measure real cache hit via QueryEngine._semantic_search + cache.stats().
+
+    T-F-S-3: uses cache.stats().hits counter (not latency comparison).
+    """
     from saw.engines.query.cache import get_cache
 
     cache = get_cache()
     cache.clear()
-    t0 = time.perf_counter()
-    fn(query)
-    lat1 = time.perf_counter() - t0
-    t0 = time.perf_counter()
-    fn(query)
-    lat2 = time.perf_counter() - t0
+
+    # 1st query: miss → writes to cache
+    hits_before = cache.stats()["hits"]
+    engine._semantic_search(query)
+    hits_after_1st = cache.stats()["hits"]
+
+    # 2nd query: should hit cache
+    engine._semantic_search(query)
+    hits_after_2nd = cache.stats()["hits"]
+
     return {
-        "first_ms": round(lat1 * 1000, 2),
-        "second_ms": round(lat2 * 1000, 2),
-        "hit": lat2 < lat1 * 0.5,
+        "hits_before": hits_before,
+        "hits_after_1st": hits_after_1st,
+        "hits_after_2nd": hits_after_2nd,
+        "cache_hit": hits_after_2nd > hits_after_1st,
     }
+
+
+def _measure_ann_vs_cosine(engine, query: str, n: int = 100) -> dict:
+    """Measure ANN vs cosine P99 latency (T-F-S-3).
+
+    Forces ANN path (SAW_ANN_THRESHOLD=0) and cosine path (999999).
+    """
+    # ANN path
+    os.environ["SAW_ANN_THRESHOLD"] = "0"
+    engine._ann_index = None  # reset index cache
+    ann_p99 = _measure_p99(lambda q: engine._semantic_search(q), query, n)
+
+    # Cosine path
+    os.environ["SAW_ANN_THRESHOLD"] = "999999"
+    cosine_p99 = _measure_p99(lambda q: engine._semantic_search(q), query, n)
+
+    return {
+        "ann_p99_ms": round(ann_p99 * 1000, 2),
+        "cosine_p99_ms": round(cosine_p99 * 1000, 2),
+    }
+
+
+def _build_synthetic_db(n_docs: int, dim: int = 384) -> sqlite3.Connection:
+    """Create a DB with n_docs synthetic random vectors (no real embedding)."""
+    import random
+
+    from saw.db.migrations import apply_migrations
+
+    conn = sqlite3.connect(":memory:")
+    apply_migrations(conn)
+
+    random.seed(42)
+    for i in range(n_docs):
+        vec = [random.gauss(0, 1) for _ in range(dim)]
+        norm = sum(x * x for x in vec) ** 0.5
+        vec = [x / (norm + 1e-12) for x in vec]
+        blob = struct.pack(f"<{dim}f", *vec)
+        conn.execute(
+            "INSERT INTO embedding_store (doc_id, entity_type, model, vector, "
+            "dim, workspace_id) VALUES (?, 'claim', 'synthetic', ?, ?, 'default')",
+            (f"doc-{i}", blob, dim),
+        )
+    conn.commit()
+    return conn
+
+
+def _measure_scale_curve(vllm_base: str) -> list[dict]:
+    """Measure semantic P99 at different doc scales (T-F-S-3).
+
+    Generates synthetic datasets with random vectors (no real embedding)
+    at 100/500/1000/5000 docs. Only P99 measurement uses real vLLM.
+    """
+    scales = [100, 500, 1000, 5000]
+    results: list[dict] = []
+
+    for n_docs in scales:
+        try:
+            conn = _build_synthetic_db(n_docs)
+            import tempfile
+            from pathlib import Path
+
+            tmp_path = Path(tempfile.mkdtemp())
+            engine = _make_query_engine(conn, tmp_path)
+
+            # Use real vLLM for query embedding only
+            sample_query = _QUERIES[0][0]
+            p99 = _measure_p99(
+                lambda q: engine._semantic_search(q), sample_query, n=50
+            )
+            results.append({
+                "doc_count": n_docs,
+                "p99_ms": round(p99 * 1000, 2),
+            })
+        except Exception as e:
+            # Skip this scale on failure, continue others
+            print(f"Warning: scale {n_docs} failed: {e}")
+            continue
+    return results
 
 
 def run_benchmark(vllm_base: str, tmp_path: Path | None = None) -> dict:
@@ -193,12 +322,15 @@ def run_benchmark(vllm_base: str, tmp_path: Path | None = None) -> dict:
 
     conn = _build_db(tmp_path)
 
+    # T-F-S-3: build a QueryEngine for production cache + ANN path
+    engine = _make_query_engine(conn, tmp_path)
+
     recall_sem: dict[str, int] = {}
     recall_bm25: dict[str, int] = {}
     query_details: list[dict] = []
 
     for q, expected_topic, desc in _QUERIES:
-        sem_results = _semantic_search(conn, q, limit=10)
+        sem_results = _semantic_search(conn, q, limit=10, engine=engine)
         bm25_results = _bm25_search(conn, q, limit=10)
 
         # Count how many results belong to expected topic
@@ -222,13 +354,17 @@ def run_benchmark(vllm_base: str, tmp_path: Path | None = None) -> dict:
 
     # P99 latency (first query, cache cleared per iteration)
     sample_query = _QUERIES[0][0]
-    p99_sem = _measure_p99(lambda q: _semantic_search(conn, q), sample_query)
+    p99_sem = _measure_p99(lambda q: engine._semantic_search(q), sample_query)
     p99_bm25 = _measure_p99(lambda q: _bm25_search(conn, q), sample_query)
 
-    # Cache hit rate
-    cache_result = _measure_cache_hit(
-        lambda q: _semantic_search(conn, q), sample_query
-    )
+    # T-F-S-3: cache hit via cache.stats().hits (not latency comparison)
+    cache_result = _measure_cache_hit(engine, sample_query)
+
+    # T-F-S-3: ANN vs cosine P99 comparison
+    ann_vs_cosine = _measure_ann_vs_cosine(engine, sample_query)
+
+    # T-F-S-3: scale latency curve
+    scale_curve = _measure_scale_curve(vllm_base)
 
     avg_sem = sum(recall_sem.values()) / len(recall_sem)
     avg_bm25 = sum(recall_bm25.values()) / len(recall_bm25)
@@ -249,6 +385,8 @@ def run_benchmark(vllm_base: str, tmp_path: Path | None = None) -> dict:
             "bm25": round(p99_bm25 * 1000, 2),
         },
         "cache": cache_result,
+        "ann_vs_cosine": ann_vs_cosine,
+        "scale_curve": scale_curve,
         "query_details": query_details,
     }
 
