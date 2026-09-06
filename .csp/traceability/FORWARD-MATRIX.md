@@ -160,3 +160,33 @@ PRD feature_count=5（模块）→ decomposition 5 域 → 20 原子 Feature →
 | PRD-R-5 | F-R-5 | SPEC-F-R-5 | T-F-R-5 | 895c8bf | AC-E-1..2 | test_retrospective_closure (2) |
 
 链：PRD AC → Feature → Spec → Task → Commit → Test，16 AC 全映射。
+
+## v1.14.0 delta（semantic 性能优化）
+
+| PRD 模块(§3) | AC | Feature | Spec |
+|---|---|---|---|
+| §3.1 F-S-1 | AC-A-1 | F-S-1 | SPEC-F-S-1 |
+| §3.1 | AC-A-2 | F-S-1 | SPEC-F-S-1 |
+| §3.1 | AC-A-3 | F-S-1 | SPEC-F-S-1 |
+| §3.1 | AC-A-4 | F-S-1 | SPEC-F-S-1 |
+| §3.1 | AC-A-5 | F-S-1 | SPEC-F-S-1 |
+| §3.2 F-S-2 | AC-B-1 | F-S-2 | SPEC-F-S-2 |
+| §3.2 | AC-B-2 | F-S-2 | SPEC-F-S-2 |
+| §3.2 | AC-B-3 | F-S-2 | SPEC-F-S-2 |
+| §3.2 | AC-B-4 | F-S-2 | SPEC-F-S-2 |
+| §3.2 | AC-B-5 | F-S-2 | SPEC-F-S-2 |
+| §3.3 F-S-3 | AC-C-1 | F-S-3 | SPEC-F-S-3 |
+| §3.3 | AC-C-2 | F-S-3 | SPEC-F-S-3 |
+| §3.3 | AC-C-3 | F-S-3 | SPEC-F-S-3 |
+| §3.3 | AC-C-4 | F-S-3 | SPEC-F-S-3 |
+| §3.3 | AC-C-5 | F-S-3 | SPEC-F-S-3 |
+
+### Task 追溯（Feature → Task，[TBD-04 待拆]）
+
+| Feature | Spec | Task | Wave | Commit |
+|---|---|---|---|---|
+| F-S-1 | SPEC-F-S-1 | T-F-S-1 | 1 | 22d25e6 |
+| F-S-2 | SPEC-F-S-2 | T-F-S-2 | 1 | 9e456df |
+| F-S-3 | SPEC-F-S-3 | T-F-S-3 | 2 | 99bc06c |
+
+链：PRD AC → Feature → Spec → Task，15 AC 全映射。05-impl done (3 commits, 2192 passed, ruff 0, coverage 67.34%, smoke 11/11, hnswlib no torch).

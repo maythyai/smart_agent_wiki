@@ -272,3 +272,32 @@ updated: "2026-09-01"
 - `ingest()` → `Path(source).is_dir()` → `_ingest_directory()` → `os.walk` → `_ingest_single_file()` → classify→extract→fuse→validate→enqueue
 - `list_workflows()` → DB rows → `items.append({..., "name": name, "workflow": name})` → merge live → sort → return
 - `scripts/benchmark_semantic.py` → `embed_texts()` (API path) → `_semantic_search`/`_keyword_search` → P99 + cache hit
+
+## v1.14.0 Delta — semantic 性能优化（cache 可配 + ANN 索引 + benchmark）
+
+### 新增/改动点（ground 自源码，file:line）
+
+| 改动 | file:line | 说明 |
+|---|---|---|
+| `_semantic_cache_enabled()` | `src/saw/config/settings.py:239-251` | 读 `SAW_SEMANTIC_CACHE_ENABLED` env，默认 true；"false"→False，非法值→True+warning |
+| `_semantic_cache_threshold_ms()` | `src/saw/config/settings.py:254-265` | 读 `SAW_SEMANTIC_CACHE_THRESHOLD_MS` env，默认 0=不设阈值；>0 时 API 延迟<阈值跳过 cache.set |
+| `_semantic_search` cache 条件分支 | `src/saw/engines/query/engine.py:487-499` | cache.get/set 受 `_cache_enabled` + `_threshold_ms` 控制（T-F-S-1） |
+| `_semantic_search` embedding 计时 | `src/saw/engines/query/engine.py:521-522` | `time.perf_counter()` 度量 embed_texts 调用，供 threshold 判断 |
+| `_semantic_search` 规模驱动 ANN | `src/saw/engines/query/engine.py:543-558` | `doc_count > SAW_ANN_THRESHOLD` → ANN；≤ → numpy batch cosine；失败→fallback |
+| `_cosine_search_batch()` | `src/saw/engines/query/engine.py:617-638` | numpy batch cosine helper（struct.unpack + `batch_cosine_similarity`） |
+| `_ann_search()` | `src/saw/engines/query/engine.py:640-685` | hnswlib lazy load/build `.saw/ann_index_<ws>.bin` + `knn_query` + distance→sim 转换 |
+| `_ann_index` 类属性 | `src/saw/engines/query/engine.py:614` | class-level None default，per-instance override |
+| `batch_cosine_similarity()` | `src/saw/adapters/embeddings.py:297-318` | numpy 矩阵乘 + L2 normalize，返回 list[float]（T-F-S-2） |
+| `related_pages.py` batch-load | `src/saw/engines/query/related_pages.py:82-98` | 单次 SELECT 加载所有候选 embedding（替代 per-page SELECT+cosine, AC-B-5） |
+| `pyproject.toml` [semantic] extra | `pyproject.toml` | `semantic = ["hnswlib>=0.7"]`（MIT, 无 faiss/torch） |
+| benchmark `_measure_cache_hit` | `scripts/benchmark_semantic.py:171-191` | 改为 `cache.stats().hits` 计数（非 `lat2 < lat1*0.5`） |
+| benchmark `_measure_ann_vs_cosine` | `scripts/benchmark_semantic.py:194-212` | 强制 ANN/cosine 路径，分别 P99 |
+| benchmark `_measure_scale_curve` | `scripts/benchmark_semantic.py:224-253` | 100/500/1000/5000 合成随机向量数据集 P99 曲线 |
+| benchmark `_semantic_search` | `scripts/benchmark_semantic.py:138-160` | 改为通过 `QueryEngine._semantic_search` 生产路径 |
+
+### 调用链（增量）
+- `QueryEngine._semantic_search()` → `_semantic_cache_enabled()` + `_semantic_cache_threshold_ms()` → cache.get (conditional) → `embed_texts()` (timed) → `_ann_search()` or `_cosine_search_batch()` → resolve sources → cache.set (conditional)
+- `_ann_search()` → `hnswlib.Index(space='cosine')` → `load_index`/`init_index`+`add_items` → `knn_query` → (doc_id, sim) pairs
+- `_cosine_search_batch()` → `struct.unpack` → `batch_cosine_similarity()` (numpy matrix multiply) → sorted pairs
+- `compute_related_pages()` → `SELECT ... embedding_store WHERE workspace_id=?` (batch) → `cosine_similarity()` per candidate (from pre-loaded dict)
+- `scripts/benchmark_semantic.py` → `_make_query_engine()` → `engine._semantic_search()` → `cache.stats().hits` (cache hit) + `_measure_ann_vs_cosine` + `_measure_scale_curve`

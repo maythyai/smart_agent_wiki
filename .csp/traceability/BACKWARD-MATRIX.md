@@ -77,3 +77,12 @@
 | test_concept_graph_coverage.py (22) | 8d9ccca | T-F-R-4 | SPEC-F-R-4 | F-R-4 | AC-D-2 (coverage) |
 | test_archiver_coverage.py (12) | 218c398 | T-F-R-4 | SPEC-F-R-4 | F-R-4 | AC-D-2 (coverage) |
 | test_feedback_coverage.py (16) | 218c398 | T-F-R-4 | SPEC-F-R-4 | F-R-4 | AC-D-2 (coverage) |
+
+## v1.14.0 delta（semantic 性能优化，backward: Test → Commit → Task → Spec → Feature → PRD AC）
+
+| Test | Commit | Task | Spec | Feature | PRD AC |
+|---|---|---|---|---|---|
+| test_semantic_cache_config.py (5 tests) | 22d25e6 | T-F-S-1 | SPEC-F-S-1 | F-S-1 | AC-A-1..5 |
+| test_ann_search.py (5 tests) | 9e456df | T-F-S-2 | SPEC-F-S-2 | F-S-2 | AC-B-1..5 |
+| test_related_pages_ann.py (2 tests) | 9e456df | T-F-S-2 | SPEC-F-S-2 | F-S-2 | AC-B-5 |
+| test_embedding_benchmark.py (+1 new, AC-C-2/3 benchmark_e2e) | 99bc06c | T-F-S-3 | SPEC-F-S-3 | F-S-3 | AC-C-1..5 |
