@@ -292,3 +292,26 @@ Command: `SAW_EMBEDDING_MODEL=qwen_embedding SAW_EMBEDDING_API_BASE=http://local
 - Cache hit now true (R1 cache threshold configurable resolved — SAW_SEMANTIC_CACHE_THRESHOLD_MS default 0 = no threshold, cache writes always).
 - ANN slower than cosine at 15-doc scale (expected — ANN threshold default 500, small dataset uses cosine path; ANN overhead not justified for tiny sets).
 - Scale curve failed due to synthetic vector dim mismatch (384 hardcoded vs qwen 1024 actual) — non-production, deferred to fix.
+
+## v1.15.0 verify（agent/link 能力，2026-09-06）
+
+**Command**: `.venv/bin/python -m pytest tests/ -q --deselect tests/integration/test_benchmark_e2e.py --cov=src/saw --cov-report=term-missing`
+
+| Metric | Result |
+|---|---|
+| pytest | 2220 passed, 3 skipped, 1 deselected (pre-existing S2 scale_curve vLLM-env-dependent) |
+| ruff check src/ tests/ | 0 errors |
+| coverage | 67.42% (29634 stmts, 9655 miss, fail_under=67 ✓) |
+| smoke | 6/6 passed |
+
+**New tests (28)**:
+- test_custom_agents.py (7 tests: AC-A-1/2/3)
+- test_links_apply.py (4 tests: AC-B-1/2/3/4)
+- test_agent_activity.py (8 tests: AC-C-1/2)
+- test_agents_api.py (+9 tests: AC-A-4, AC-C-3/4)
+
+**Pre-existing failure**: `test_embedding_benchmark.py::test_ac_c_3_scale_curve` — v1.14.0 S2 finding (synthetic 384dim vs qwen 1024dim mismatch, vLLM not running). Confirmed failing on v1.14.0 baseline (136befe). Not caused by v1.15.0 changes.
+
+**Commits**: 53cd582 (F-T-1) / 8f6ad2b (F-T-2) / 59f9552 (F-T-3)
+
+**Verdict**: All gates green. 2220 passed, ruff 0, coverage 67.42% ≥ 67, smoke 6/6. Proceeding to 06-ship.

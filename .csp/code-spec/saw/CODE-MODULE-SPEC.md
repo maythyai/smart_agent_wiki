@@ -301,3 +301,29 @@ updated: "2026-09-01"
 - `_cosine_search_batch()` → `struct.unpack` → `batch_cosine_similarity()` (numpy matrix multiply) → sorted pairs
 - `compute_related_pages()` → `SELECT ... embedding_store WHERE workspace_id=?` (batch) → `cosine_similarity()` per candidate (from pre-loaded dict)
 - `scripts/benchmark_semantic.py` → `_make_query_engine()` → `engine._semantic_search()` → `cache.stats().hits` (cache hit) + `_measure_ann_vs_cosine` + `_measure_scale_curve`
+
+## v1.15.0 Delta — agent/link 能力（自定义角色注册 + links apply + 活动聚合）
+
+### 新增/改动点（ground 自源码，file:line）
+
+| 改动 | file:line | 说明 |
+|---|---|---|
+| `load_custom_agents()` | `src/saw/engines/collaborate/agents/__init__.py:83-152` | 扫描 `.saw/agents/*.yaml`，`yaml.safe_load` 解析 + 校验 name/model_tier/system_prompt/tools_allowed/constraints，重名/非法 tier/空 prompt/YAML 错误 → 跳过+warning 不阻断（T-F-T-1） |
+| `build_agent_roster()` | `src/saw/engines/collaborate/agents/__init__.py:157-166` | additive 合并 `build_default_agents` + `load_custom_agents`（不改 `build_default_agents` 源码/签名，T-F-T-1） |
+| `list_agents()` REST custom 字段 | `src/saw/api/routes/collaborate.py:446-472` | 改调 `build_agent_roster`，返回 `custom: true/false` + `activity_summary`（T-F-T-1/T-F-T-3） |
+| `GET /agents/{name}/activity` REST | `src/saw/api/routes/collaborate.py:475-502` | 新增端点：200 有活动/200 空活动 calls=0/404 agent 不存在（T-F-T-3） |
+| `AgentActivityTracker` 类 | `src/saw/engines/collaborate/activity_tracker.py:25-110` | `subscribe(event_bus)` → `add_subscriber("WorkflowStep", handler)` + `_handle_event` 解析 `{agent}.{action}` + `status` 更新内存计数器 + `get_activity`/`get_summary`（T-F-T-3） |
+| `app.py` lifespan tracker init | `src/saw/drivers/web/app.py:60-72` | lifespan 初始化 `AgentActivityTracker` + subscribe event_bus + 模块级单例 `get_activity_tracker`/`set_activity_tracker`（T-F-T-3） |
+| `app.py` engine 用 `build_agent_roster` | `src/saw/drivers/web/app.py:~290` | `create_app_from_config` 改调 `build_agent_roster` 替代 `build_default_agents`（T-F-T-1） |
+| `agents_cmd.py` Typer sub-app | `src/saw/drivers/cli/commands/agents_cmd.py:1-91` | 转为 Typer sub-app（`invoke_without_command=True`）+ `custom` 列 + `saw agents activity <name>` 子命令（T-F-T-1/T-F-T-3） |
+| `main.py` agents sub-app 注册 | `src/saw/drivers/cli/main.py:107` | `app.command(name="agents")(agents)` → `app.add_typer(agents_app, name="agents")` |
+| `workflow_parser.py` validate 默认 roster | `src/saw/engines/collaborate/workflow_parser.py:~105-112` | `validate()` 的 `available_agents` 参数默认 `None` → 自动取 `build_agent_roster` keys（含自定义角色，T-F-T-1） |
+| `workflow_cmd.py` lint 用 roster | `src/saw/drivers/cli/commands/workflow_cmd.py:~162-165` | CLI lint 改调 `build_agent_roster`（T-F-T-1） |
+| `links_cmd.py` apply 子命令 | `src/saw/drivers/cli/commands/links_cmd.py:73-214` | `saw links apply <page> [--confirm] [--top N] [--dry-run] [--suggestion <slug>]`：复用 `compute_related_pages` + 去重 + dry-run/confirm + `WikiRepository.write()` 写回 `## Related` + frontmatter `related` 同步（T-F-T-2） |
+
+### 调用链（增量）
+- `build_agent_roster()` → `build_default_agents()` (unchanged) → `load_custom_agents()` → `yaml.safe_load` per `.saw/agents/*.yaml` → `BaseAgent(name, model_tier, system_prompt, tools_allowed)` → `dict.update(custom)`
+- `GET /api/v1/agents` → `build_agent_roster(llm_router=None)` → `get_activity_tracker()` → per-agent `tracker.get_summary(name)` → `activity_summary`
+- `GET /api/v1/agents/{name}/activity` → `build_agent_roster` (404 check) → `get_activity_tracker()` → `tracker.get_activity(name)`
+- `AgentActivityTracker.subscribe(bus)` → `bus.add_subscriber("WorkflowStep", handler)` → `WorkflowExecutor._publish_event({"type":"WorkflowStep",...})` → `bus._dispatch` → `handler._handle_event` → split `{agent}.{action}` → `dict[agent]["calls"] += 1`
+- `saw links apply` → `compute_related_pages()` → `extract_unique_targets` (dedup) → dry-run table or `WikiRepository.write(WikiPage)` (## Related + related sync)

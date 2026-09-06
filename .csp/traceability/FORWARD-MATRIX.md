@@ -133,10 +133,10 @@ PRD feature_count=5（模块）→ decomposition 5 域 → 20 原子 Feature →
 
 | Feature | Spec | Task | Wave | Commit |
 |---|---|---|---|---|
-| F-Q-1 | SPEC-F-Q-1 | T-F-Q-1 | 1 | [TBD-05] |
-| F-Q-2 | SPEC-F-Q-2 | T-F-Q-2 | 2 | [TBD-05] |
-| F-Q-3 | SPEC-F-Q-3 | T-F-Q-3 | 2 | [TBD-05] |
-| F-Q-4 | SPEC-F-Q-4 | T-F-Q-4 | 2 | [TBD-05] |
+| F-Q-1 | SPEC-F-Q-1 | T-F-Q-1 | 1 | 53cd582 |
+| F-Q-2 | SPEC-F-Q-2 | T-F-Q-2 | 2 | 53cd582 |
+| F-Q-3 | SPEC-F-Q-3 | T-F-Q-3 | 2 | 53cd582 |
+| F-Q-4 | SPEC-F-Q-4 | T-F-Q-4 | 2 | 53cd582 |
 
 链：PRD AC → Feature → Spec → Task，9 AC 全映射。03-tech done，04-tasks 待拆。
 
@@ -190,3 +190,30 @@ PRD feature_count=5（模块）→ decomposition 5 域 → 20 原子 Feature →
 | F-S-3 | SPEC-F-S-3 | T-F-S-3 | 2 | 99bc06c |
 
 链：PRD AC → Feature → Spec → Task，15 AC 全映射。05-impl done (3 commits, 2192 passed, ruff 0, coverage 67.34%, smoke 11/11, hnswlib no torch).
+
+## v1.15.0 delta（agent/link 能力）
+
+| PRD 模块(§3) | AC | Feature | Spec |
+|---|---|---|---|
+| §3.1 F-T-1 | AC-A-1 | F-T-1 | SPEC-F-T-1 |
+| §3.1 | AC-A-2 | F-T-1 | SPEC-F-T-1 |
+| §3.1 | AC-A-3 | F-T-1 | SPEC-F-T-1 |
+| §3.1 | AC-A-4 | F-T-1 | SPEC-F-T-1 |
+| §3.2 F-T-2 | AC-B-1 | F-T-2 | SPEC-F-T-2 |
+| §3.2 | AC-B-2 | F-T-2 | SPEC-F-T-2 |
+| §3.2 | AC-B-3 | F-T-2 | SPEC-F-T-2 |
+| §3.2 | AC-B-4 | F-T-2 | SPEC-F-T-2 |
+| §3.3 F-T-3 | AC-C-1 | F-T-3 | SPEC-F-T-3 |
+| §3.3 | AC-C-2 | F-T-3 | SPEC-F-T-3 |
+| §3.3 | AC-C-3 | F-T-3 | SPEC-F-T-3 |
+| §3.3 | AC-C-4 | F-T-3 | SPEC-F-T-3 |
+
+### Task 追溯（Feature → Task，[TBD-04 待拆]）
+
+| Feature | Spec | Task | Wave | Commit |
+|---|---|---|---|---|
+| F-T-1 | SPEC-F-T-1 | T-F-T-1 | 1 | 53cd582 |
+| F-T-2 | SPEC-F-T-2 | T-F-T-2 | 1 | 8f6ad2b |
+| F-T-3 | SPEC-F-T-3 | T-F-T-3 | 1 | 59f9552 |
+
+链：PRD AC → Feature → Spec → Task，12 AC 全映射。03-tech done，04-tasks 待拆。

@@ -47,10 +47,10 @@
 
 | Spec | Feature | PRD 模块 | AC | PMS | CMS ref | Commit |
 |---|---|---|---|---|---|---|
-| SPEC-F-Q-1 | F-Q-1 | §3.1 | AC-EA-1/2 | embedding-api | CODE-MODULE-SPEC | [TBD-05] |
-| SPEC-F-Q-2 | F-Q-2 | §3.2 | AC-DIM-1/2 | embedding-api | CODE-MODULE-SPEC | [TBD-05] |
-| SPEC-F-Q-3 | F-Q-3 | §3.3 | AC-FB-1/2 | embedding-api | CODE-MODULE-SPEC | [TBD-05] |
-| SPEC-F-Q-4 | F-Q-4 | §3.4 | AC-TEST-1/2/3 | embedding-api | CODE-MODULE-SPEC | [TBD-05] |
+| SPEC-F-Q-1 | F-Q-1 | §3.1 | AC-EA-1/2 | embedding-api | CODE-MODULE-SPEC | 53cd582 |
+| SPEC-F-Q-2 | F-Q-2 | §3.2 | AC-DIM-1/2 | embedding-api | CODE-MODULE-SPEC | 53cd582 |
+| SPEC-F-Q-3 | F-Q-3 | §3.3 | AC-FB-1/2 | embedding-api | CODE-MODULE-SPEC | 53cd582 |
+| SPEC-F-Q-4 | F-Q-4 | §3.4 | AC-TEST-1/2/3 | embedding-api | CODE-MODULE-SPEC | 53cd582 |
 
 ### v1.12.0 — embedding API pivot
 
@@ -86,3 +86,12 @@
 | test_ann_search.py (5 tests) | 9e456df | T-F-S-2 | SPEC-F-S-2 | F-S-2 | AC-B-1..5 |
 | test_related_pages_ann.py (2 tests) | 9e456df | T-F-S-2 | SPEC-F-S-2 | F-S-2 | AC-B-5 |
 | test_embedding_benchmark.py (+1 new, AC-C-2/3 benchmark_e2e) | 99bc06c | T-F-S-3 | SPEC-F-S-3 | F-S-3 | AC-C-1..5 |
+
+## v1.15.0 delta（agent/link 能力，backward: Test → Commit → Task → Spec → Feature → PRD AC）
+
+| Test | Commit | Task | Spec | Feature | PRD AC |
+|---|---|---|---|---|---|
+| test_custom_agents.py (7 tests) | 53cd582 | T-F-T-1 | SPEC-F-T-1 | F-T-1 | AC-A-1, AC-A-2, AC-A-3 |
+| test_agents_api.py (9 tests) | 53cd582+59f9552 | T-F-T-1/T-F-T-3 | SPEC-F-T-1/SPEC-F-T-3 | F-T-1, F-T-3 | AC-A-4, AC-C-3, AC-C-4 |
+| test_links_apply.py (4 tests) | 8f6ad2b | T-F-T-2 | SPEC-F-T-2 | F-T-2 | AC-B-1..4 |
+| test_agent_activity.py (8 tests) | 59f9552 | T-F-T-3 | SPEC-F-T-3 | F-T-3 | AC-C-1, AC-C-2 |

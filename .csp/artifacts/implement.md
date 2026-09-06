@@ -420,3 +420,44 @@ Wave 2: T-F-S-3 (benchmark 更新, 依赖 S-2 ANN 路径)
 - smoke: 11/11 passed
 - hnswlib: installed, no torch loaded
 - benchmark_e2e 测试 CI 无 vLLM 时 skip (4 deselected)
+
+## v1.15.0 DEV-LOG（agent/link 能力，2026-09-06）
+
+### T-F-T-1: 自定义 agent 角色注册 (commit 53cd582)
+
+- `agents/__init__.py`: 新增 `load_custom_agents(llm_router, agents_dir)` — 扫描 `.saw/agents/*.yaml`，`yaml.safe_load` 解析 + 校验 name/model_tier/system_prompt/tools_allowed/constraints，重名/非法 tier/空 prompt/YAML 错误 → 跳过+warning 不阻断启动。新增 `build_agent_roster(llm_router, feedback_engine)` — additive 合并 `build_default_agents` + custom（不改 `build_default_agents` 源码/签名）。
+- `collaborate.py` `list_agents()`: 改调 `build_agent_roster`，返回 `custom: true/false` 字段。
+- `agents_cmd.py`: 改调 `build_agent_roster`，输出含 `custom` 列。
+- `workflow_parser.py` `validate()`: `available_agents` 默认 `None` → 自动取 `build_agent_roster` keys（含自定义角色）。
+- `workflow_cmd.py` lint: 改调 `build_agent_roster`。
+- `app.py` `create_app_from_config`: engine agents 改调 `build_agent_roster`。
+- 测试: `test_custom_agents.py` (7 tests: AC-A-1/2/3) + `test_agents_api.py` 扩展 (AC-A-4)。
+- **偏离**: 无。Spec 伪代码完整落地。
+
+### T-F-T-2: links auto-apply (commit 8f6ad2b)
+
+- `links_cmd.py`: 新增 `apply` 子命令 `saw links apply <page> [--confirm] [--top N] [--dry-run] [--suggestion <slug>]`。复用 `compute_related_pages` suggest 逻辑 + `extract_unique_targets` 去重 → 默认 dry-run 打印表格不写回 → `--confirm` 写回 `WikiRepository.write()`（`## Related` 段落追加 `[[link]]` 或新建段落 + frontmatter `related` 字段同步）。
+- 去重: pre-filter (outlinked set) + write-back double-check (`[[slug]]` in content or slug in related → skipped)。
+- 单页写回失败不中断（continue processing）。
+- 测试: `test_links_apply.py` (4 tests: AC-B-1 dry-run 不写 / AC-B-2 confirm 写回 ## Related + related / AC-B-3 去重不重复 / AC-B-4 audit 无新断链)。mock `compute_related_pages`，tmp_path wiki，无 embedding/vLLM。
+- **偏离**: AC-B-3 测试断言调整——pre-filter 在 write-back loop 前已移除已链接页面（非到达 skipped 分支），改为验证 `[[c]]` 在文件中出现 1 次（核心行为正确）。
+
+### T-F-T-3: agent 活动聚合 (commit 59f9552)
+
+- 新建 `activity_tracker.py`: `AgentActivityTracker` 类 — `subscribe(event_bus)` 调 `add_subscriber("WorkflowStep", handler)` + `_handle_event` 解析 `{agent}.{action}` + `status` 更新内存计数器 (calls/failures/last_action/last_active_at) + handler try/except 不传播 + `get_activity(name)` 返回聚合 + `get_summary(name)` 返回紧凑摘要或 None。
+- `collaborate.py`: 新增 `GET /api/v1/agents/{name}/activity` 端点（200 有活动/200 空活动 calls=0/404 agent 不存在）+ `list_agents()` 扩展 `activity_summary` 字段。
+- `app.py`: lifespan 初始化 tracker + subscribe event_bus + 模块级单例 (`get_activity_tracker`/`set_activity_tracker`)。
+- `agents_cmd.py`: 转为 Typer sub-app (`invoke_without_command=True`) — `saw agents` 仍 list roster（向后兼容）+ 新增 `saw agents activity <name>` 子命令。
+- `main.py`: `app.command(name="agents")(agents)` → `app.add_typer(agents_app, name="agents")`。
+- 测试: `test_agent_activity.py` (8 tests: AC-C-1/2) + `test_agents_api.py` 扩展 (AC-C-3/4)。
+- **偏离**: 无。Spec 伪代码完整落地。CLI `saw agents activity` 在无 `saw web` 运行时降级输出空活动（正常行为）。
+
+### 验证结果
+
+- pytest: 2220 passed, 3 skipped, 1 deselected (pre-existing S2 scale_curve)
+- ruff check src/ tests/: 0 errors
+- coverage: 67.42% (29634 stmts, 9655 miss, fail_under=67 ✓)
+- smoke: 6/6 passed
+- 无新依赖（复用 yaml/typer/fastapi）
+- 无 torch/hnswlib 加载
+- 3 commits: 53cd582 / 8f6ad2b / 59f9552
