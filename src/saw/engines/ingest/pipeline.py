@@ -5,8 +5,10 @@ Per D-04: Write Queue single entry point.
 """
 from __future__ import annotations
 
+import os
 import uuid
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Callable
 
 from saw.adapters.llm.router import LLMRouter
@@ -97,6 +99,12 @@ class IngestPipeline:
             self._media_extractor = MediaExtractor(config)
         return self._media_extractor
 
+    # Directories pruned during recursive ingest (T-F-R-1, ADR-013).
+    _NOISE_DIRS = frozenset({
+        ".git", ".saw", "node_modules", ".venv", "venv",
+        "__pycache__", ".mypy_cache", ".ruff_cache", ".pytest_cache",
+    })
+
     def ingest(
         self,
         source: str,
@@ -104,7 +112,13 @@ class IngestPipeline:
         progress_callback: Callable[[str, float], None] | None = None,
         workspace_id: str = "default",
     ) -> IngestResult:
-        """Ingest a document source.
+        """Ingest a source (file path, URL, or directory).
+
+        When ``source`` is a directory, recursively ingest all supported
+        files (pruning noise dirs like ``.git``/``.saw``/``node_modules``)
+        via :meth:`_ingest_directory`. Single-file/URL sources use the
+        existing classify->extract->fuse->validate->enqueue path
+        (:meth:`_ingest_single_file`).
 
         Args:
             source: File path, URL, or directory to ingest.
@@ -117,6 +131,87 @@ class IngestPipeline:
 
         Returns:
             IngestResult with session ID, counts, and any errors/warnings.
+        """
+        source_path = Path(source)
+        if source_path.is_dir():
+            return self._ingest_directory(
+                source, source_path, options, progress_callback, workspace_id
+            )
+        return self._ingest_single_file(
+            source, options, progress_callback, workspace_id
+        )
+
+    def _ingest_directory(
+        self,
+        source: str,
+        source_path: Path,
+        options: dict | None,
+        progress_callback: Callable[[str, float], None] | None,
+        workspace_id: str,
+    ) -> IngestResult:
+        """Recursively ingest all supported files in a directory (T-F-R-1).
+
+        Uses ``os.walk`` (topdown) to enumerate files, pruning noise
+        directories in-place. Each file is ingested best-effort via
+        ``_ingest_single_file``; per-file failures are recorded in
+        ``errors`` but do not abort the batch. The aggregate result uses
+        ``parser="directory-batch"`` and a single shared ``session_id``.
+        """
+        session_id = str(uuid.uuid4())
+        errors: list[str] = []
+        warnings: list[str] = []
+
+        files: list[Path] = []
+        for root, dirnames, filenames in os.walk(source_path, topdown=True):
+            dirnames[:] = [d for d in dirnames if d not in self._NOISE_DIRS]
+            for fn in filenames:
+                files.append(Path(root) / fn)
+
+        if not files:
+            errors.append(f"No ingestible files found in directory: {source}")
+            return IngestResult(
+                session_id=session_id,
+                claim_count=0,
+                entity_count=0,
+                relation_count=0,
+                errors=errors,
+                parser="directory-batch",
+            )
+
+        total_claims = 0
+        total_entities = 0
+        total_relations = 0
+        for fp in files:
+            single = self._ingest_single_file(
+                str(fp), options, progress_callback, workspace_id
+            )
+            total_claims += single.claim_count
+            total_entities += single.entity_count
+            total_relations += single.relation_count
+            errors.extend(single.errors)
+            warnings.extend(single.warnings)
+
+        return IngestResult(
+            session_id=session_id,
+            claim_count=total_claims,
+            entity_count=total_entities,
+            relation_count=total_relations,
+            errors=errors,
+            warnings=warnings,
+            parser="directory-batch",
+        )
+
+    def _ingest_single_file(
+        self,
+        source: str,
+        options: dict | None = None,
+        progress_callback: Callable[[str, float], None] | None = None,
+        workspace_id: str = "default",
+    ) -> IngestResult:
+        """Ingest a single file or URL source.
+
+        Existing ``ingest()`` logic, extracted verbatim (classify->extract
+        ->fuse->validate->enqueue).
         """
         session_id = str(uuid.uuid4())
         options = options or {}

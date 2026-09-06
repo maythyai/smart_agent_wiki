@@ -145,17 +145,14 @@ def classify(source: str) -> ClassifiedSource:
             media_type="audio",
         )
 
-    # Directory - detect from first supported file
+    # Directory — no longer guess format from children; pipeline handles
+    # recursion (T-F-R-1, ADR-013). Return UNKNOWN so the pipeline entry
+    # point can intercept directories and walk files itself.
     if source_path.is_dir():
-        for child in source_path.iterdir():
-            if child.is_file():
-                child_class = classify(str(child))
-                if child_class.format != DocumentFormat.UNKNOWN:
-                    return ClassifiedSource(
-                        format=child_class.format,
-                        path=source_path,
-                        language=child_class.language,
-                    )
+        return ClassifiedSource(
+            format=DocumentFormat.UNKNOWN,
+            path=source_path,
+        )
 
     # Unknown format
     return ClassifiedSource(
