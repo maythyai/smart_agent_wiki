@@ -253,3 +253,39 @@
 ### 无新依赖
 - 复用既有 useWebSocket / dashboardStore / react-query / tailwind
 - 不引入新库
+
+## v1.17.0 NFR delta（desktop completion track）
+
+> 来源：PRD-desktop-v1.17.0 §4。Feature 级下沉见 F-V-1..4 各 yaml `nfr`。
+
+### 构建成功
+- `tauri build` 无错误完成，构建退出码 0
+- `target/release/bundle/` 下产出至少 1 个原生包
+
+### 后端不回归
+- pytest ≥ 2217 passed（v1.16.0 基线 2217）
+- ruff 0 errors
+- coverage ≥ 67% 不回归（CI fail_under=67）
+- smoke 6/6
+
+### 前端不回归
+- vitest 64 passed（13 files），0 failed
+- tsc -b + vite build success
+
+### 包大小 [TBD]
+- 桌面包产物大小合理——原生包大小 [TBD] MB（首次基线，无回归阈值）
+
+### 启动时间
+- desktop 窗口首次渲染 < 3 秒（从应用启动到窗口可见，本地环境）
+
+### 版本一致性
+- 4 文件版本号一致：package.json / tauri.conf.json / Cargo.toml / web/package.json 均为 1.0.0
+
+### 降级策略
+- saw 后端未启动 → 前端 API 请求失败，仪表盘显示空态/错误条
+- CORS 未配 → 请求被拒
+- WS 连接失败 → 降级 polling 模式（v1.16.0 已有降级逻辑）
+
+### 无新依赖
+- 复用既有 Tauri v2 + vite proxy + saw 后端 WS/CORS
+- 不引入新库

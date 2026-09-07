@@ -121,7 +121,15 @@
 | SPEC-F-U-2 | F-U-2 | workflow 运行态视图（新组件拉 GET /api/v1/workflows durable+live + /workflows/{id}/status） | M | dashboard | 3/3 | SPEC-F-U-2.md |
 | SPEC-F-U-3 | F-U-3 | 实时更新（复用 useWebSocket/dashboardStore + react-query invalidateQueries polling 15s 刷新） | M | dashboard | 1/1 | SPEC-F-U-3.md |
 
+## v1.17.0 delta（+4）
+| spec_id | feature_id | title | complexity | pms_module | ac_coverage | file |
+|---|---|---|---|---|---|---|
+| SPEC-F-V-1 | F-V-1 | desktop 1.0 版本 bump + 配置收敛（4 文件 0.1.0→1.0.0 + tauri.conf.json 字段一致性审查） | S | desktop | 2/2 | SPEC-F-V-1.md |
+| SPEC-F-V-2 | F-V-2 | web 仪表盘集成验证（frontendDist→web/dist 已 wired，验证 desktop 加载 v1.16.0 仪表盘构建产出） | M | desktop | 2/2 | SPEC-F-V-2.md |
+| SPEC-F-V-3 | F-V-3 | tauri build 验证（cargo build --release + bundle 产出原生包，至少 .app/.deb/.appimage） | L | desktop | 2/2 | SPEC-F-V-3.md |
+| SPEC-F-V-4 | F-V-4 | 后端协同 + 端口收敛（vite proxy 8080 vs saw web 8000 错配统一 + CORS 扩展 + prod 模式连接） | M | desktop | 3/3 | SPEC-F-V-4.md |
+
 ## 校验
-- Spec 数 == 20 + 8(v1.5.0) + 4(v1.6.0) + 3(v1.7.0) + 3(v1.8.0) + 3(v1.9.0) + 4(v1.10.0) + 4(v1.11.0) + 4(v1.12.0) + 5(v1.13.0) + 3(v1.14.0) + 3(v1.15.0) + 3(v1.16.0) == 67 == decomposition 原子 Feature 数 ✓（1:1）
+- Spec 数 == 20 + 8(v1.5.0) + 4(v1.6.0) + 3(v1.7.0) + 3(v1.8.0) + 3(v1.9.0) + 4(v1.10.0) + 4(v1.11.0) + 4(v1.12.0) + 5(v1.13.0) + 3(v1.14.0) + 3(v1.15.0) + 3(v1.16.0) + 4(v1.17.0) == 71 == decomposition 原子 Feature 数 ✓（1:1）
 - 每个 feature_id 在 decomposition FEATURE-DETAILS 存在 ✓
 - 每份 Spec ac_coverage 自检无未覆盖 AC ✓

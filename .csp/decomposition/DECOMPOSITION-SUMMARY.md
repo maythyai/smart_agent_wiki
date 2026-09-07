@@ -2,7 +2,7 @@
 
 ## 项目概览
 - 上游 PRD：`docs/prd/PRD-product-hardening-v1.md`（v1.0, 5 模块）
-- 域数：7（A e2e-usability / B claim-alignment / C security-hardening / D observability / E test-gate / Z tech-debt / P platform-team），对齐 PMS + v1.4.0 platform delta。**v1.10.0 +N embedding / v1.11.0 +O debt-closure / v1.12.0 +Q embedding-api / v1.14.0 +S semantic-perf / v1.15.0 +T agent-link / v1.16.0 +U dashboard**
+- 域数：7（A e2e-usability / B claim-alignment / C security-hardening / D observability / E test-gate / Z tech-debt / P platform-team），对齐 PMS + v1.4.0 platform delta。**v1.10.0 +N embedding / v1.11.0 +O debt-closure / v1.12.0 +Q embedding-api / v1.14.0 +S semantic-perf / v1.15.0 +T agent-link / v1.16.0 +U dashboard / v1.17.0 +V desktop**
 - 原子 Feature 数：29（P0=16 / P1=10 / P2=3；S=13 / M=16）— v1.4.0 增 F-P-1..4 + F-Z-4/5，见 DECOMPOSITION-DELTA-v1.4.0.md；**v1.5.0 增 F-I-1..4 + F-Z-6..9（+8），见 DECOMPOSITION-DELTA-v1.5.0.md；v1.6.0 增 F-J-1..4（+4），见 DECOMPOSITION-DELTA-v1.6.0.md；v1.7.0 增 F-K-1..3（+3），见 DECOMPOSITION-DELTA-v1.7.0.md；v1.8.0 增 F-L-1..3（+3），见 DECOMPOSITION-DELTA-v1.8.0.md；v1.9.0 增 F-M-1..3（+3），见 DECOMPOSITION-DELTA-v1.9.0.md；v1.10.0 增 F-N-1..4（+4），见 DECOMPOSITION-DELTA-v1.10.0.md；v1.11.0 增 F-O-1..4（+4），见 DECOMPOSITION-DELTA-v1.11.0.md；v1.12.0 增 F-Q-1..4（+4），见 DECOMPOSITION-DELTA-v1.12.0.md；v1.14.0 增 F-S-1..3（+3），见 DECOMPOSITION-DELTA-v1.14.0.md；v1.15.0 增 F-T-1..3（+3），见 DECOMPOSITION-DELTA-v1.15.0.md**
 - 预估复杂度：以 S/M/L 表达；人日 `[TBD]`（团队规模/速率未提供，见 `assumptions`）
 - 关键路径：F-A-1 → F-A-2 → F-A-5 → F-A-6 → F-E-3
@@ -54,7 +54,7 @@
 - **AC 归属**：PRD §6 共 11 条 AC，全部分配到对应 Feature（见各 yaml `acceptance_criteria`）→ 无丢失 ✓
 - **DAG 无环**：拓扑序通过 ✓
 - **thin 传递**：PRD §7 thin → 全部 Feature `assumptions` 标注估时 [TBD]；F-C-5 标 token 同源 [TBD]；F-E-1 标覆盖率基线 [TBD] ✓
-- **Spec 数预期**：下游 03 Spec 数 = 原子 Feature 数 = 20（每 Feature → 一份 SPEC-F-*-n）。v1.5.0 delta +8 Spec（F-I-1..4 + F-Z-6..9），见 DECOMPOSITION-DELTA-v1.5.0.md。v1.6.0 delta +4 Spec（F-J-1..4），见 DECOMPOSITION-DELTA-v1.6.0.md。v1.7.0 delta +3 Spec（F-K-1..3），见 DECOMPOSITION-DELTA-v1.7.0.md。v1.8.0 delta +3 Spec（F-L-1..3），见 DECOMPOSITION-DELTA-v1.8.0.md。v1.9.0 delta +3 Spec（F-M-1..3），见 DECOMPOSITION-DELTA-v1.9.0.md。v1.10.0 delta +4 Spec（F-N-1..4），见 DECOMPOSITION-DELTA-v1.10.0.md。**v1.11.0 delta +4 Spec（F-O-1..4），见 DECOMPOSITION-DELTA-v1.11.0.md**。**v1.12.0 delta +4 Spec（F-Q-1..4），见 DECOMPOSITION-DELTA-v1.12.0.md**。**v1.14.0 delta +3 Spec（F-S-1..3），见 DECOMPOSITION-DELTA-v1.14.0.md**。**v1.15.0 delta +3 Spec（F-T-1..3），见 DECOMPOSITION-DELTA-v1.15.0.md**。**v1.16.0 delta +3 Spec（F-U-1..3），见 DECOMPOSITION-DELTA-v1.16.0.md**。
+- **Spec 数预期**：下游 03 Spec 数 = 原子 Feature 数 = 20（每 Feature → 一份 SPEC-F-*-n）。v1.5.0 delta +8 Spec（F-I-1..4 + F-Z-6..9），见 DECOMPOSITION-DELTA-v1.5.0.md。v1.6.0 delta +4 Spec（F-J-1..4），见 DECOMPOSITION-DELTA-v1.6.0.md。v1.7.0 delta +3 Spec（F-K-1..3），见 DECOMPOSITION-DELTA-v1.7.0.md。v1.8.0 delta +3 Spec（F-L-1..3），见 DECOMPOSITION-DELTA-v1.8.0.md。v1.9.0 delta +3 Spec（F-M-1..3），见 DECOMPOSITION-DELTA-v1.9.0.md。v1.10.0 delta +4 Spec（F-N-1..4），见 DECOMPOSITION-DELTA-v1.10.0.md。**v1.11.0 delta +4 Spec（F-O-1..4），见 DECOMPOSITION-DELTA-v1.11.0.md**。**v1.12.0 delta +4 Spec（F-Q-1..4），见 DECOMPOSITION-DELTA-v1.12.0.md**。**v1.14.0 delta +3 Spec（F-S-1..3），见 DECOMPOSITION-DELTA-v1.14.0.md**。**v1.15.0 delta +3 Spec（F-T-1..3），见 DECOMPOSITION-DELTA-v1.15.0.md**。**v1.16.0 delta +3 Spec（F-U-1..3），见 DECOMPOSITION-DELTA-v1.16.0.md**。**v1.17.0 delta +4 Spec（F-V-1..4），见 DECOMPOSITION-DELTA-v1.17.0.md**。
 
 ## v1.10.0 delta 摘要
 - 上游：PRD-embedding-v1.10.0（4 产品级 Feature F-EMB-1..4）+ retrospective-v1.9.0.md（M1 embedding defer 解除 + L1 smart-linking 噪声）
@@ -115,6 +115,16 @@
 - 技术维度：needs_realtime（F-U-1 WS agent_status live status / F-U-2 WS workflow_progress 增量 / F-U-3 WS 连接 + polling 刷新）、needs_scheduler（F-U-3 polling interval）
 - AC 归属：PRD §6 共 9 条 AC，8 条分配到对应 Feature（AC-D-1..4→F-U-1, AC-D-5..7→F-U-2, AC-D-8→F-U-3），AC-D-9 为系统级 NFR（不归属单一 Feature），无丢失
 - 累计原子 Feature 数：50（v1.0=20 + v1.4=6 + v1.5=8 + v1.6=4 + v1.7=3 + v1.8=3 + v1.9=3 + v1.10=4 + v1.11=4 + v1.12=4 + v1.14=3 + v1.15=3 + v1.16=3）
+
+## v1.17.0 delta 摘要
+- 上游：PRD-desktop-v1.17.0（4 模块：desktop 1.0 bump+配置收敛 / web 仪表盘集成验证 / tauri build 验证 / 后端协同+端口收敛 bug）+ retrospective-v1.16.0.md（finding U4 desktop 仍 0.1.0）
+- 新增域：V desktop（对齐 PMS-desktop 模块边界）
+- 新增原子 Feature：4（F-V-1..4），P0=3 / P1=1，S=1 / M=2 / L=1
+- DAG：F-V-1 → {F-V-2, F-V-3, F-V-4}，无环（V-1 先行后 V-2/V-3/V-4 全并行）
+- Wave：2（Wave 1: F-V-1 版本 bump+配置收敛先行；Wave 2: F-V-2 + F-V-3 + F-V-4 全并行）
+- 技术维度：needs_file_storage（F-V-2 web/dist 嵌入 + F-V-3 原生包产出）、needs_realtime（F-V-4 WS 连接 + prod 模式实时更新/降级 polling）
+- AC 归属：PRD §6 共 9 条 AC 全部分配（AC-V-1/2→F-V-1, AC-W-1/2→F-V-2, AC-B-1/2→F-V-3, AC-C-1/2/3→F-V-4），无丢失
+- 累计原子 Feature 数：54（v1.0=20 + v1.4=6 + v1.5=8 + v1.6=4 + v1.7=3 + v1.8=3 + v1.9=3 + v1.10=4 + v1.11=4 + v1.12=4 + v1.14=3 + v1.15=3 + v1.16=3 + v1.17=4）
 
 ## manifest 回写
 - decomposition 索引 item：`.csp/decomposition/DECOMPOSITION-SUMMARY.md`（source_type=doc, kind=feature, build_status=built）

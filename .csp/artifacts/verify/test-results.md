@@ -434,3 +434,32 @@ Re-ran all gates during 06-ship release verification (post-05-impl, pre-tag).
 **Note**: v1.17.0 adds 50 new pytest tests (21 version/config + 10 web integration + 4 bundle targets + 15 port/CORS/prod). Tauri build smoke test (2 tests, 87s) run separately. No regression — 2267 passed = 2217 (v1.16.0 baseline) + 50 new. Backend changes limited to 4 lines (vite.config.ts 2 + web_cmd.py 1 + app.py 1).
 
 **Verdict**: All gates green. 4 commits: f922a99 / 19578ef / 6bb6949 / 1ca63a1. Tauri build produced .app + .dmg (unsigned, per ADR-017 defer). Proceeding to reconcile + tag.
+
+---
+
+## 06-Ship Verification v1.17.0 (2026-09-07)
+
+| Gate | Command | Result | Status |
+|---|---|---|---|
+| pytest | `.venv/bin/python -m pytest tests/ -q --ignore=tests/unit/test_tauri_build_smoke.py` | 2267 passed, 7 skipped, 0 failed (91.84s) | PASS |
+| ruff | `.venv/bin/ruff check src/ tests/` | All checks passed! (0 errors) | PASS |
+| smoke | `.venv/bin/python -m pytest tests/test_smoke_cmd.py tests/unit/test_smoke_chain.py -v` | 16 passed (3.54s) | PASS |
+| vitest | `cd web && npm test` | 64 passed (13 files), 0 failed (2.86s) | PASS |
+| vite build | `cd web && npm run build` | 1029 modules, built in 1.68s | PASS |
+| tauri build | `cd desktop && npm run tauri:build` (05-impl) | cargo build --release 1m39s → .app + .dmg produced | PASS |
+| .dmg asset | `ls desktop/src-tauri/target/release/bundle/dmg/*.dmg` | Smart Agent Wiki_1.0.0_aarch64.dmg (2,848,791 bytes) | PASS |
+| pyproject bump | `grep '^version' pyproject.toml` | 1.17.0 (bumped 1.16.0→1.17.0) | PASS |
+| desktop version | `grep '"version"' desktop/package.json` | 1.0.0 (bumped 0.1.0→1.0.0 by 05-impl) | PASS |
+| tauri.conf | `grep '"version"' desktop/src-tauri/tauri.conf.json` | 1.0.0 | PASS |
+| Cargo.toml | `grep '^version' desktop/src-tauri/Cargo.toml` | 1.0.0 | PASS |
+| web version | `grep '"version"' web/package.json` | 1.0.0 (bumped 0.1.0→1.0.0 by 05-impl) | PASS |
+| .gitignore target | `grep 'target' .gitignore` | `desktop/src-tauri/target/` excluded | PASS |
+
+### pytest skip details (7 skipped, same as v1.16.0)
+
+| Test | Skip reason | Type |
+|---|---|---|
+| test_embedding_benchmark.py ×4 | vLLM endpoint unreachable | env |
+| test_team_deployment.py ×3 | @pytest.mark.skip "Requires FastAPI" | hardcoded skip |
+
+**Verdict**: All gates green. 2267 passed, ruff 0, smoke 16/16, vitest 64, vite build OK, tauri build .dmg produced. pyproject 1.17.0, desktop 1.0.0, web 1.0.0. Proceeding to reconcile + tag v1.17.0 + push + GitHub Release (+.dmg asset).

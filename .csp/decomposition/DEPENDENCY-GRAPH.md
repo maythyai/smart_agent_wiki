@@ -233,3 +233,32 @@ graph LR
 - Wave 1 中 F-U-1 / F-U-2 全并行（2 路独立：roster 表 / workflow 列表）。
 - F-U-1 与 F-U-2 均触及 web/src/pages/Dashboard.tsx 但不同区域（roster 表 vs workflow 列表），03 技术方案需注意布局协调。
 - F-U-1 与 F-U-3 均触及 useWebSocket/dashboardStore 但 F-U-1 只读 WS agent_status，F-U-3 管理 WS 连接 + polling 编排，03 技术方案需注意协调。
+
+## v1.17.0 delta（desktop completion track）
+
+```mermaid
+graph LR
+  V1[F-V-1 版本 bump + 配置收敛]
+  V2[F-V-2 web 仪表盘集成验证]
+  V3[F-V-3 tauri build 验证]
+  V4[F-V-4 后端协同 + 端口收敛]
+
+  V1 --> V2
+  V1 --> V3
+  V1 --> V4
+```
+
+### v1.17.0 Wave
+- **Wave 1（1 Feature）**：F-V-1（版本 bump + 配置收敛）
+  - 无依赖，先行启动。版本号 4 文件 0.1.0→1.0.0 + tauri.conf.json 配置一致性审查。
+- **Wave 2（3 Feature 全并行）**：F-V-2（web 仪表盘集成验证） / F-V-3（tauri build 验证） / F-V-4（后端协同 + 端口收敛）
+  - 均依赖 F-V-1（版本 bump + 配置收敛先行），互相独立（验证 / 构建 / 端口配置，不同操作），可全并行启动。
+
+### v1.17.0 DAG 校验
+- 拓扑序无环：V-1 → {V-2, V-3, V-4}，无回边 ✓
+
+### v1.17.0 并行机会
+- Wave 2 中 F-V-2 / F-V-3 / F-V-4 全并行（3 路独立：仪表盘加载验证 / tauri build / 端口收敛+CORS）。
+- F-V-2 与 F-V-3 均触及 tauri.conf.json 但 F-V-2 只读验证（frontendDist/beforeBuildCommand），F-V-3 执行构建，03 技术方案需注意构建链顺序。
+- F-V-2 与 F-V-4 均触及 web/vite.config.ts 但 F-V-2 只读验证（devUrl/proxy），F-V-4 修改 proxy target 端口，03 技术方案需注意 F-V-4 端口收敛后 F-V-2 验证用新端口。
+- F-V-3 与 F-V-4 均涉及后端协同但 F-V-3 关注构建产物，F-V-4 关注运行时连接，无冲突。

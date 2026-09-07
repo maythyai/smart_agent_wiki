@@ -80,3 +80,11 @@
 - 用例总数：[TBD-impl] 实施后落定（基线 2220 passed，前端 vitest 新增 8 用例）。
 - 新覆盖 AC：AC-D-1..8（8 条全映射，vitest + @testing-library/react mock）。
 - TMS delta 见 `TMS-DELTA-v1.16.0.md`。
+
+## v1.17.0 delta（desktop 完成 v4.4）
+- 模块：desktop（PMS-desktop），ADR-017 desktop 嵌入策略 + 端口收敛。
+- 新增 9 AC（AC-V-1/2, AC-W-1/2, AC-B-1/2, AC-C-1/2/3），全映射。
+- 测试文件：test_version_consistency.py（新建，版本一致性校验）、test_tauri_config_consistency.py（新建，tauri.conf.json 配置审查）、test_web_dist_integration.py（新建，web/dist 集成验证）、test_web_dev_integration.py（新建，dev 模式验证）、test_tauri_build_smoke.py（新建，tauri build 冒烟，skipif no cargo）、test_bundle_targets_config.py（新建，bundle.targets 配置）、test_port_convergence.py（新建，端口收敛 8080→8000）、test_prod_backend_connection.py（新建，prod 连接配置）、test_cors_expansion.py（新建，CORS localhost:5173）。
+- 用例总数：[TBD-impl] 实施后落定（基线 2217 passed + 8 配置测试 + 1 skipif smoke）。
+- 新覆盖 AC：AC-V-1/2, AC-W-1/2, AC-B-1/2, AC-C-1/2/3（9 条全映射，pytest + json/re 文件检查）。
+- TMS delta 见 `TMS-DELTA-v1.17.0.md`。

@@ -20,6 +20,7 @@
 | semantic-perf | semantic cache 阈值可配 + ANN 索引替代全量 cosine + benchmark 更新 | P0 | PRD-semantic-perf-v1.14.0 §2 | [待回填] | ready | PMS-semantic-perf.md |
 | agent-link | 自定义 agent 角色注册 + L2 links auto-apply + M2 agent 活动聚合 | P0 | PRD-agent-link-v1.15.0 §2 | [待回填] | ready | PMS-agent-link.md |
 | dashboard | realtime 仪表盘：agent roster + activity + workflow 运行态 + 实时更新（WS + polling） | P0 | PRD-dashboard-v1.16.0 §2 | [待回填] | ready | PMS-dashboard.md |
+| desktop | 桌面端 Tauri v2 0.1.0→1.0.0 + web 仪表盘集成 + tauri build 验证 + 后端协同 | P0 | PRD-desktop-v1.17.0 §2 | [待回填] | ready | PMS-desktop.md |
 
 ## 状态约定
 - ready（边界已定）/ built（spec 已产出）/ degraded（source 变更待 re-align）/ blocked

@@ -218,3 +218,28 @@
 - PRD AC 总数：87 + 9 = 96
 - 已覆盖：87 + 9（[TBD-impl]）= 96
 - 缺口：0
+
+## v1.17.0 delta（desktop 完成 v4.4，9 AC）
+
+| AC | 描述 | 映射 Feature | 用例 | 状态 |
+|---|---|---|---|---|
+| AC-V-1 | 4 文件 version=1.0.0 一致 | F-V-1 | test_version_consistency.py（json + re） | [TBD-impl] |
+| AC-V-2 | tauri.conf.json 配置一致性 | F-V-1 | test_tauri_config_consistency.py（json.load） | [TBD-impl] |
+| AC-W-1 | web/dist prod 集成 | F-V-2 | test_web_dist_integration.py（文件检查 + json） | [TBD-impl] |
+| AC-W-2 | dev 模式 localhost:5173 | F-V-2 | test_web_dev_integration.py（json.load） | [TBD-impl] |
+| AC-B-1 | tauri build 退出码 0 + 产出原生包 | F-V-3 | test_tauri_build_smoke.py（subprocess，skipif no cargo） | [TBD-impl] |
+| AC-B-2 | bundle.targets 含 app/dmg | F-V-3 | test_bundle_targets_config.py（json.load） | [TBD-impl] |
+| AC-C-1 | vite proxy 端口收敛 8080→8000 | F-V-4 | test_port_convergence.py（re 文本匹配） | [TBD-impl] |
+| AC-C-2 | prod 后端连接配置 | F-V-4 | test_prod_backend_connection.py（文件检查） | [TBD-impl] |
+| AC-C-3 | CORS 含 localhost:5173 | F-V-4 | test_cors_expansion.py（re 文本匹配） | [TBD-impl] |
+
+### v1.17.0 汇总
+- PRD AC 总数（本轮）：9
+- 已映射：9（100%）
+- 缺口：0
+- 全部 [TBD-impl]：05 实施后落定
+
+### 全局汇总（v1.0 + v1.10.0 + v1.11.0 + v1.12.0 + v1.13.0 + v1.14.0 + v1.15.0 + v1.16.0 + v1.17.0）
+- PRD AC 总数：96 + 9 = 105
+- 已覆盖：96 + 9（[TBD-impl]）= 105
+- 缺口：0

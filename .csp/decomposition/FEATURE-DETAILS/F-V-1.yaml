@@ -1,0 +1,84 @@
+feature:
+  id: "F-V-1"
+  name: "desktop 1.0 版本 bump + 配置收敛（4 文件 0.1.0→1.0.0 + tauri.conf.json 字段一致性审查）"
+  domain: "desktop"
+  prd_ref: "docs/prd/PRD-desktop-v1.17.0.md#3.1"
+  pms_module: "desktop"
+
+  # 用户视角
+  user_story: "作为发布工程师，我想桌面端版本号达到 1.0.0，以便与 canonical pyproject 版本对齐，标记桌面端为稳定产品。"
+
+  acceptance_criteria:
+    - "Given desktop/package.json version=0.1.0, tauri.conf.json version=0.1.0, Cargo.toml version=0.1.0, web/package.json version=0.1.0, when 版本号提升到 1.0.0, then 4 文件 version 均为 1.0.0，版本一致性校验通过（AC-V-1）"
+    - "Given tauri.conf.json 有 frontendDist/devUrl/beforeDevCommand/beforeBuildCommand/bundle 配置, when 审查配置一致性, then frontendDist=../../web/dist, devUrl=http://localhost:5173, bundle.active=true, 无废弃字段（AC-V-2）"
+
+  # 边界
+  scope:
+    includes:
+      - "desktop/package.json version 0.1.0→1.0.0"
+      - "desktop/src-tauri/tauri.conf.json version 0.1.0→1.0.0"
+      - "desktop/src-tauri/Cargo.toml version 0.1.0→1.0.0"
+      - "web/package.json version 0.1.0→1.0.0"
+      - "审查 tauri.conf.json 全字段一致性：frontendDist=../../web/dist, devUrl=http://localhost:5173, beforeDevCommand=npm run dev --prefix ../web, beforeBuildCommand=npm run build --prefix ../web, bundle.active=true, bundle.targets 不缩减"
+      - "确认 $schema 保持 https://schema.tauri.app/config/2（Tauri v2 schema）"
+      - "确认 Cargo.toml rust-version=1.77.2, edition=2021 不变"
+      - "确认 release profile 已优化：panic=abort, codegen-units=1, lto=true, opt-level=s, strip=true"
+    excludes:
+      - "tauri build 执行验证（属 F-V-3）"
+      - "web 仪表盘集成验证（属 F-V-2）"
+      - "端口收敛 / CORS 扩展（属 F-V-4）"
+      - "代码签名 / 公证（defer 后续版本）"
+      - "新增 IPC 命令或 Tauri 插件（复用既有 8 插件 + 16 命令）"
+
+  # 前后端边界
+  frontend:
+    pages: []
+    components: []
+    interactions: []
+  backend:
+    endpoints: []
+    business_logic: []
+    integrations: []
+
+  # 数据维度
+  data_entities:
+    - "VersionManifest（desktop/package.json + tauri.conf.json + Cargo.toml + web/package.json 四文件版本号一致性）"
+  data_operations:
+    - "update（4 文件版本号 0.1.0→1.0.0）"
+    - "read（审查 tauri.conf.json 全字段一致性）"
+
+  # 技术维度预标记
+  tech_dimensions:
+    needs_database: false
+    needs_cache: false
+    needs_queue: false
+    needs_ai: false
+    needs_vector_store: false
+    needs_realtime: false
+    needs_file_storage: false
+    needs_search: false
+    needs_scheduler: false
+    needs_notification: false
+
+  # 非功能性需求
+  nfr:
+    performance: "版本 bump 为静态文件修改，无运行时性能影响"
+    security: "版本号变更不引入安全风险；Cargo.toml 依赖不盲目 update（使用 Cargo.lock 锁定版本）"
+    scalability: "不适用（版本号修改无扩展性影响）"
+    availability: "不适用（配置审查不改运行时行为）"
+
+  # 依赖与优先级
+  priority: "P0"
+  complexity: "S"
+  depends_on: []
+  blocked_by: []
+
+  # 风险与假设
+  risks:
+    - "4 文件版本号不一致 → Tauri 构建时报错（PRD §3.1 异常处理：Cargo.toml version must match tauri.conf.json version）"
+    - "Cargo.lock 依赖漂移——使用 Cargo.lock 锁定版本，不盲目 cargo update（PRD §8 风险 6）"
+  assumptions:
+    - "4 文件版本号当前均为 0.1.0（PRD ground G1-G4 确认 TRUE）"
+    - "tauri.conf.json 现有配置项不变更，仅审查确认一致性（PRD §3.1 规则 5：已有配置不变更）"
+    - "bundle.targets 保持现有列表不缩减——跨平台覆盖是 1.0 基线（PRD §3.1 规则 6）"
+    - "canonical pyproject 当前版本 1.16.0（PRD ground G16），desktop 1.0.0 后语义对齐（不要求数字完全一致）"

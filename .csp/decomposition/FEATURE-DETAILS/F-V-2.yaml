@@ -1,0 +1,92 @@
+feature:
+  id: "F-V-2"
+  name: "web 仪表盘集成验证（frontendDist→web/dist 已 wired，验证 desktop 加载 v1.16.0 仪表盘构建产出）"
+  domain: "desktop"
+  prd_ref: "docs/prd/PRD-desktop-v1.17.0.md#3.2"
+  pms_module: "desktop"
+
+  # 用户视角
+  user_story: "作为 OPS 运维人员，我想在桌面应用内直接看到 agent roster + activity + workflow 运行态仪表盘，以便无需浏览器即可监控多代理系统。"
+
+  acceptance_criteria:
+    - "Given web/dist 包含 v1.16.0 仪表盘构建产出（index.html + assets/）, when tauri build 执行，desktop 加载 web/dist, then desktop 窗口打开后仪表盘页可访问，agent roster + workflow 列表渲染（AC-W-1）"
+    - "Given vite dev server 运行在 5173，saw 后端运行, when tauri dev 执行, then desktop 窗口加载 localhost:5173，仪表盘渲染，前端热更新生效（AC-W-2）"
+
+  # 边界
+  scope:
+    includes:
+      - "验证 tauri.conf.json frontendDist=../../web/dist 正确指向项目根 web/dist/"
+      - "验证 beforeBuildCommand=npm run build --prefix ../web 在 tauri build 前自动构建 web 前端到 web/dist"
+      - "验证 beforeDevCommand=npm run dev --prefix ../web 在 tauri dev 前自动启动 vite dev server（5173）"
+      - "验证 prod 模式：desktop 窗口加载 web/dist 静态产物，仪表盘页可访问"
+      - "验证 dev 模式：desktop 窗口加载 localhost:5173，仪表盘渲染，前端热更新生效"
+      - "验证 web 前端已集成 @tauri-apps/api（^2.0.0），可在 desktop 内调用原生 IPC 命令"
+      - "验证 web/dist/ 当前已有 v1.16.0 构建产出（index.html + assets/），构建命令幂等覆盖"
+    excludes:
+      - "版本号 bump（属 F-V-1）"
+      - "tauri build 完整原生包产出验证（属 F-V-3）"
+      - "dev proxy 端口收敛 / CORS 扩展（属 F-V-4）"
+      - "前端仪表盘功能变更（消费 v1.16.0 既有产物，不改前端代码）"
+      - "新增 IPC 命令或 Tauri 插件"
+
+  # 前后端边界
+  frontend:
+    pages:
+      - "web/dist/index.html（v1.16.0 构建产出，desktop 窗口加载）"
+    components:
+      - "web/dist/assets/（v1.16.0 构建产出，含 Dashboard 仪表盘组件）"
+    interactions:
+      - "prod 模式：tauri build → beforeBuildCommand 执行 → web build → web/dist → Tauri 打包嵌入 → desktop 窗口加载 → 仪表盘页可访问"
+      - "dev 模式：tauri dev → beforeDevCommand 执行 → vite dev server 5173 → desktop 窗口加载 localhost:5173 → 仪表盘渲染 → 热更新生效"
+  backend:
+    endpoints: []
+    business_logic: []
+    integrations:
+      - "web 前端已集成 @tauri-apps/api ^2.0.0（web/package.json:11），可在 desktop 内调用原生 IPC 命令"
+
+  # 数据维度
+  data_entities:
+    - "WebDistArtifact（index.html + assets/，v1.16.0 构建产出）"
+  data_operations:
+    - "read（desktop 窗口加载 web/dist 静态产物或 localhost:5173 dev server）"
+
+  # 技术维度预标记
+  tech_dimensions:
+    needs_database: false
+    needs_cache: false
+    needs_queue: false
+    needs_ai: false
+    needs_vector_store: false
+    needs_realtime: false
+    needs_file_storage: true
+    needs_search: false
+    needs_scheduler: false
+    needs_notification: false
+
+  # 非功能性需求
+  nfr:
+    performance: "desktop 窗口首次渲染 < 3 秒（PRD §4 启动时间）"
+    security: "web/dist 为本地构建产物，无外部加载；@tauri-apps/api IPC 调用受 capabilities/default.json 权限控制"
+    scalability: "不适用（消费既有 v1.16.0 构建产出，无扩展性影响）"
+    availability: "web/dist 不存在或为空 → beforeBuildCommand 先执行 web 构建；若构建失败则 tauri build 中止（PRD §3.2 异常处理）"
+
+  # 依赖与优先级
+  priority: "P0"
+  complexity: "M"
+  depends_on:
+    - "F-V-1"
+  blocked_by:
+    - "F-V-1"
+
+  # 风险与假设
+  risks:
+    - "web/dist 不存在或为空 → beforeBuildCommand 须先执行 web 构建；若构建失败则 tauri build 中止（PRD §3.2 异常处理）"
+    - "vite build 类型错误 → tsc -b 报类型错误，web build 失败（PRD §3.2 异常处理）"
+    - "仪表盘页在 desktop 内空白 → 检查 frontendDist 路径 + web/dist/index.html 存在性（PRD §3.2 异常处理）"
+  assumptions:
+    - "frontendDist=../../web/dist 相对于 desktop/src-tauri/，解析为项目根 web/dist/（PRD §3.2 规则 1，已有配置不变更）"
+    - "beforeBuildCommand 在 tauri build 前自动执行 npm run build --prefix ../web 构建 web 前端（PRD §3.2 规则 2）"
+    - "beforeDevCommand 在 tauri dev 前自动启动 vite dev server 端口 5173（PRD §3.2 规则 3）"
+    - "web 前端已集成 @tauri-apps/api ^2.0.0（PRD ground G15），可在 desktop 内调用原生 IPC 命令"
+    - "web/dist/ 当前已有 v1.16.0 构建产出（PRD ground G10），构建命令幂等覆盖"
+    - "本 Feature 为验证性 Feature——frontendDist 路径已 wired（PRD ground G5），本轮验证为主不改动配置"

@@ -3,6 +3,42 @@
 All notable changes to this project are documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [v1.17.0] - 2026-09-07
+### Added
+- Desktop version bumped 0.1.0 → 1.0.0 (desktop/package.json +
+  desktop/src-tauri/tauri.conf.json + desktop/src-tauri/Cargo.toml +
+  web/package.json). Desktop reaches 1.0 milestone, aligned to canonical
+  (T-F-V-1, AC-V-1..4, ADR-017).
+- Tauri config convergence: 15-item audit of tauri.conf.json (version,
+  frontendDist → `../../web/dist`, devUrl, beforeBuildCommand, bundle
+  targets, plugins, IPC commands, release profile) (T-F-V-1).
+- Web dashboard integration verified: desktop loads `web/dist` as
+  frontendDist, `@tauri-apps/api` ^2.0.0 dependency confirmed,
+  dev/prod build chain tested (T-F-V-2).
+- Tauri build verification: `tauri build` produces native macOS
+  `.app` + `.dmg` bundles (unsigned, per ADR-017 defer) (T-F-V-3).
+- Port convergence: vite proxy `8080→8000` for `/api` + `/ws`,
+  CORS expanded to `localhost:5173`, prod mode uses external saw
+  web server (T-F-V-4, ADR-017).
+
+### Changed
+- `web/vite.config.ts` proxy target `8080→8000` (aligns with
+  `web_cmd.py` default port 8000).
+- `src/saw/web_cmd.py` CORS origins includes `localhost:5173`
+  (desktop dev port).
+- `src/saw/app.py` CORS fallback list includes `localhost:5173`.
+- `pyproject.toml` version `1.16.0 → 1.17.0`.
+
+### Notes
+- 50 new pytest tests (version consistency + tauri config +
+  web dist/dev integration + bundle targets + port convergence +
+  CORS expansion + prod backend + tauri build smoke).
+- Tauri build produces unsigned `.dmg` (2.8MB). Code signing
+  deferred per ADR-017 (v2.0 candidate).
+- Backend changes minimal (4 lines: vite.config.ts 2 +
+  web_cmd.py 1 + app.py 1). No backend logic changes.
+- No new dependencies. No torch loaded.
+
 ## [v1.16.0] - 2026-09-07
 ### Added
 - Realtime dashboard page (`web/src` new route): agent roster table +

@@ -300,3 +300,48 @@
 - WS 断连后 polling 降级横幅实际触发频率 [TBD]（取决于网络稳定性）
 - `Dashboard.tsx`/`types/api.ts` 合并冲突解决方案 [TBD]（05 实施时 worktree 隔离 + 合并协调）
 - live workflow 标记判定逻辑（`finished_at === null && status === 'running'` vs 后端 live merge 标记）[TBD]（05 实施时确认后端 list_workflows 返回结构）
+
+---
+
+# v1.17.0 delta（desktop 完成 v4.4，2026-09-07）
+
+## 项目概览（v1.17.0）
+- 上游：4 Spec（1:1 decomposition 4 Feature F-V-1..4），1 PMS 模块（desktop）
+- Task：4（1:1 Spec，S×1 / M×2 / L×1），2 Wave，DAG 无环
+- 关键路径：T-F-V-1 → T-F-V-2（2 步，最长链，与 V-1→V-3 / V-1→V-4 等长）
+- 估时：S/M/L 粒度，人日 [TBD]（无团队速率）
+
+## Task 类型分派矩阵（v1.17.0）
+| 类型 | Task | 推荐分派 |
+|---|---|---|
+| infra | T-F-V-1 | DevOps（版本 bump 4 文件 + 配置审查 15 项 + 版本一致性/配置测试） |
+| frontend | T-F-V-2 | 前端（仪表盘集成验证：frontendDist 路径 + web/dist 产出 + beforeBuildCommand/devUrl 配置验证测试） |
+| infra | T-F-V-3 | DevOps（tauri build smoke + bundle.targets 配置验证） |
+| backend-logic | T-F-V-4 | 后端（vite proxy 端口收敛 + CORS 扩展 + prod 模式连接验证测试） |
+
+## 拆解门控（v1.17.0）
+- [x] Spec 完整性：4 Task == 4 Spec（03 穷尽门控通过，4 Spec == 4 原子 Feature F-V-1..4）
+- [x] 每个 Feature 有 ≥1 Task（4/4）
+- [x] Task 粒度 ≤4h（S×1 / M×2 / L×1，L=接近 4h 上限但不超）
+- [x] DAG 无环（V-1→{V-2,V-3,V-4}，拓扑序无回边）
+- [x] Task 依赖与 decomposition Feature 依赖一致（F-V-1→{F-V-2,F-V-3,F-V-4}）
+- [x] Wave 划分合理（Wave 1 V-1 先行；Wave 2 V-2/V-3/V-4 全并行，不同文件集无冲突）
+- [x] 每 Task acceptance 非空（指向 AC，共 9 AC 全映射）
+- [x] 不越 PMS 边界（desktop 模块）
+- [x] 并行检测通过（Wave 2 三 Task 文件集完全无重叠）
+
+## 05 实施指引（v1.17.0）
+- Lead 按 `WAVE-PLAN.md` 组建子 Agent 团队；Wave 1 T-F-V-1 独占（版本 bump + 配置收敛先行）。
+- Wave 2 三路并行（worktree 隔离）：T-F-V-2（仪表盘集成验证）/ T-F-V-3（tauri build）/ T-F-V-4（端口收敛+CORS）。
+- 每 Task 一个 commit；完成后续写 commit + 追溯矩阵。
+- 共享文件 `tauri.conf.json`：T-F-V-1（Wave 1 bump version）→ T-F-V-2/V-3（Wave 2 只读验证），Wave 1→2 串行。
+- 共享文件 `Cargo.toml`：T-F-V-1（Wave 1 bump version）→ T-F-V-3（Wave 2 build 依赖），Wave 1→2 串行。
+- 详见 `.csp/tasks/TASKS-DELTA-v1.17.0.md`。
+
+## assumptions / [TBD]（v1.17.0）
+- `tauri build` 首次编译时间 [TBD]（预计 2-4h，PRD §7）
+- 构建产物大小 [TBD] MB（首次基线，无回归阈值）
+- macOS `.app`/`.dmg` 为声明性目标（实际产出依赖构建环境）
+- 签名/公证 defer 到后续版本（需 Apple Developer ID + notarytool）
+- 自动更新（tauri updater）defer 到后续版本
+- `app.security.csp = null` 后续可加固（defer）

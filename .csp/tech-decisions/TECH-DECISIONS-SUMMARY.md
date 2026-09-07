@@ -16,6 +16,7 @@
 | ADR-014 | ANN 向量索引 | hnswlib（HNSW, MIT, pip）+ numpy 批量矩阵乘 cosine 改进；SAW_ANN_THRESHOLD 默认 500 [TBD]；不引 faiss/torch；不实现 localhost 自适应 | Accepted | F-S-1, F-S-2, F-S-3 |
 | ADR-015 | agent 角色注册+活动聚合 | YAML 配置文件 + build_default_agents 合并（候选①>②DB表）；event_bus subscriber 写内存计数器（候选①>②DB聚合）；复用 BaseAgent/InMemoryEventBus/WikiRepository；不持久化 | Accepted | F-T-1, F-T-2, F-T-3 |
 | ADR-016 | realtime 仪表盘更新策略 | react-query refetchInterval polling 15s + 复用既有 WebSocket（候选②>①SSE>③纯WS）；无新后端端点；useWebSocket 已有 invalidateQueries；polling interval 15s（≥10s 下限） | Accepted | F-U-1, F-U-2, F-U-3 |
+| ADR-017 | desktop 嵌入策略 + 端口收敛 | Hybrid（dev proxy + prod external，sidecar defer）；vite proxy 8080→8000 收敛；CORS 添加 localhost:5173；prod external saw web + VITE_API_BASE_URL 配置；sidecar defer v2.0 候选（候选③>①sidecar>②external-only） | Accepted | F-V-1, F-V-2, F-V-3, F-V-4 |
 
 ## 复用原则
 - 全栈既有（六角架构/write_queue/observability/RBAC/receipt/FTS5），硬化只补"有模块→全链路闭环"。

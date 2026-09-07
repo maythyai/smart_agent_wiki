@@ -317,3 +317,38 @@
 ## v1.16.0 里程碑
 - M-DASHBOARD-1（Wave 1）：agent roster + activity 仪表盘 + workflow 运行态列表就绪（REST 消费 + react-query polling 15s）。
 - M-DASHBOARD-2（Wave 2）：实时更新编排就绪（WS invalidateQueries 扩展 + polling 降级横幅 + 重连恢复）→ v1.16.0 可交付。
+
+---
+
+# v1.17.0 波次（desktop 完成 v4.4，2026-09-07）
+
+> 源自 PRD-desktop-v1.17.0 + 02 delta + ADR-017。4 Task，2 Wave。DAG V-1→{V-2,V-3,V-4} 无环。desktop 0.1.0→1.0.0 版本对齐 + tauri build 验证 + 后端端口收敛。
+
+## v1.17.0 Wave 1 — 版本 bump + 配置收敛（串行先行）
+| task_id | 描述 | 类型 | 里程碑 |
+|---|---|---|---|
+| T-F-V-1 | 4 文件版本号 0.1.0→1.0.0 + tauri.conf.json 15 项配置一致性审查 | infra | 1.0.0 版本基线就绪 |
+
+## v1.17.0 Wave 2 — 验证 + 构建 + 端口（3 路全并行）
+| task_id | 描述 | 依赖 | 可并行性 |
+|---|---|---|---|
+| T-F-V-2 | web 仪表盘集成验证（frontendDist + web/dist 产出 + devUrl + @tauri-apps/api） | T-F-V-1 | 独立（只读 tauri.conf.json + web/dist） |
+| T-F-V-3 | tauri build 验证（cargo build --release + bundle 原生包） | T-F-V-1 | 独立（只读 Cargo.toml + 执行 build） |
+| T-F-V-4 | 后端协同 + 端口收敛（vite proxy 8080→8000 + CORS +5173 + prod 连接） | T-F-V-1 | 独立（写 vite.config.ts + web_cmd.py + app.py） |
+
+## v1.17.0 共享资源串行
+- `desktop/src-tauri/tauri.conf.json`：T-F-V-1（Wave 1，bump version）→ T-F-V-2/V-3（Wave 2，只读验证）。Wave 1→2 串行。
+- `desktop/src-tauri/Cargo.toml`：T-F-V-1（Wave 1，bump version）→ T-F-V-3（Wave 2，build 依赖 1.0.0）。Wave 1→2 串行。
+
+## v1.17.0 Wave 2 文件冲突分析
+| 文件 | Wave 2 写入方 | 冲突? |
+|---|---|---|
+| desktop/src-tauri/tauri.conf.json | T-F-V-2（只读）+ T-F-V-3（只读） | 否（V-1 Wave 1 已 bump） |
+| web/vite.config.ts | T-F-V-4 | 否（V-2 只读不写） |
+| src/saw/drivers/cli/commands/web_cmd.py | T-F-V-4 | 否 |
+| src/saw/drivers/web/app.py | T-F-V-4 | 否 |
+| tests/unit/test_*.py | 各 Task 独占 | 否（新建文件各独占） |
+
+## v1.17.0 里程碑
+- M-DESKTOP-1（Wave 1）：1.0.0 版本基线就绪（4 文件版本一致 + 配置审查通过）。
+- M-DESKTOP-2（Wave 2）：仪表盘集成验证 + tauri build 原生包产出 + 端口收敛 CORS 扩展就绪 → v1.17.0 可交付。

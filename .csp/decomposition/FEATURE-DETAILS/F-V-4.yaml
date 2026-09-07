@@ -1,0 +1,98 @@
+feature:
+  id: "F-V-4"
+  name: "后端协同 + 端口收敛 bug（vite proxy 8080 vs saw web 8000 错配统一 + CORS 扩展 + prod 模式连接）"
+  domain: "desktop"
+  prd_ref: "docs/prd/PRD-desktop-v1.17.0.md#3.4"
+  pms_module: "desktop"
+
+  # 用户视角
+  user_story: "作为开发者，我想 dev 模式下 desktop 前端自动代理到 saw 后端，prod 模式下用户可配置后端地址，以便开发时无缝协同、生产时灵活部署。"
+
+  acceptance_criteria:
+    - "Given vite proxy target=8080, saw web default port=8000, when 端口一致性审查, then proxy target 与 saw web 端口对齐（proxy→8000 或文档约定 saw web --port 8080）（AC-C-1）"
+    - "Given prod 模式 desktop 加载 web/dist，无 dev proxy, when 用户配置或默认 saw 后端地址, then 前端可连接 saw 后端，仪表盘数据加载，WS 实时更新生效（或降级为 polling）（AC-C-2）"
+    - "Given saw web CORS origins 默认 localhost:3000, when desktop dev 模式使用 5173, then CORS 允许列表包含 localhost:5173，API 请求不被 CORS 拒绝（AC-C-3）"
+
+  # 边界
+  scope:
+    includes:
+      - "vite proxy 端口收敛：当前 proxy target=8080，saw web 默认端口 8000——统一为 8000 或文档约定 saw web --port 8080（具体 HOW 留 03 技术方案）"
+      - "CORS 扩展：saw web 默认 CORS origins 为 localhost:3000,127.0.0.1:3000——dev 模式使用 5173，需在 CORS 允许列表添加 localhost:5173"
+      - "验证 WebSocket 路由 /ws prefix 一致（saw 后端 WS 路由挂载在 /ws prefix，vite proxy /ws 代理到后端——路径一致，仅端口需收敛）"
+      - "明确 prod 模式：desktop 加载 web/dist 静态产物，无 vite dev server 代理——前端直连 saw 后端"
+      - "明确 prod 模式 saw 后端可独立运行（用户手动 saw web）或 desktop 内嵌启动（sidecar 模式）——具体实现方案留 03 技术方案"
+    excludes:
+      - "版本号 bump（属 F-V-1）"
+      - "tauri build 验证（属 F-V-3）"
+      - "web 仪表盘集成验证（属 F-V-2）"
+      - "sidecar 模式实现细节（留 03 技术方案，本轮明确模式选择）"
+      - "新增后端 REST 端点（复用 v1.15.0/v1.16.0 既有端点）"
+
+  # 前后端边界
+  frontend:
+    pages: []
+    components: []
+    interactions:
+      - "dev 模式：tauri dev → vite 5173 → proxy /api + /ws → saw 后端 8000（收敛后）"
+      - "prod 模式：desktop → web/dist → saw 后端独立/内嵌 → 仪表盘数据加载 + WS 实时更新（或降级 polling）"
+  backend:
+    endpoints:
+      - "GET /api/v1/*（dev: vite proxy；prod: 直连，复用既有 REST 端点）"
+      - "WS /ws（dev: vite proxy ws:true；prod: 直连，复用既有 WS 路由）"
+    business_logic:
+      - "CORS origins 扩展：添加 localhost:5173 到默认允许列表（web_cmd.py:33）"
+      - "端口收敛：vite proxy target 8080→8000 或文档约定 saw web --port 8080（具体 HOW 留 03）"
+    integrations:
+      - "saw web CLI（src/saw/drivers/cli/commands/web_cmd.py:25 默认端口 8000, :33 CORS origins）"
+      - "vite proxy（web/vite.config.ts:18 target 8080）"
+      - "saw 后端 WS 路由（src/saw/drivers/web/app.py:306 /ws prefix）"
+
+  # 数据维度
+  data_entities:
+    - "ProxyConfig（vite proxy target + saw web port + CORS origins 一致性）"
+    - "BackendConnection（dev: proxy→saw 8000；prod: 直连 saw 独立/内嵌）"
+  data_operations:
+    - "update（vite proxy target 端口收敛 + CORS origins 扩展）"
+    - "read（验证 prod 模式 frontend 可连接 saw 后端）"
+
+  # 技术维度预标记
+  tech_dimensions:
+    needs_database: false
+    needs_cache: false
+    needs_queue: false
+    needs_ai: false
+    needs_vector_store: false
+    needs_realtime: true
+    needs_file_storage: false
+    needs_search: false
+    needs_scheduler: false
+    needs_notification: false
+
+  # 非功能性需求
+  nfr:
+    performance: "dev proxy 延迟可忽略（localhost）；prod 直连延迟取决于网络（本地 [TBD]）"
+    security: "CORS 扩展仅添加 localhost:5173（dev 模式），不放宽到 0.0.0.0；prod 模式后端地址用户配置"
+    scalability: "不适用（配置收敛，无扩展性影响）"
+    availability: "saw 后端未启动 → 前端 API 请求失败，仪表盘显示空态/错误条（PRD §3.4 异常处理）；CORS 未配 → 请求被拒（PRD §3.4 异常处理）；WS 连接失败 → 降级 polling 模式（v1.16.0 已有降级逻辑）"
+
+  # 依赖与优先级
+  priority: "P1"
+  complexity: "M"
+  depends_on:
+    - "F-V-1"
+  blocked_by:
+    - "F-V-1"
+
+  # 风险与假设
+  risks:
+    - "端口不一致（vite proxy 8080 vs saw web 8000）→ dev 模式 API 502（PRD §8 风险 3，概率高/影响中）——本轮收敛"
+    - "prod 模式后端连接方式未定 → prod 模式仪表盘不可用（PRD §8 风险 4，概率中/影响中）——本轮明确独立运行或 sidecar，具体实现留 03"
+    - "CORS 未允许 5173 → 浏览器控制台 CORS 错误，API 请求被拒（PRD §3.4 异常处理）"
+    - "WS 连接失败 → 仪表盘降级为 polling 模式（v1.16.0 已有降级逻辑，PRD §3.4 异常处理）"
+  assumptions:
+    - "vite proxy 当前 target=8080（PRD ground G8），saw web 默认端口 8000（PRD ground G9）——端口不一致确认"
+    - "saw web 默认 CORS origins 为 localhost:3000,127.0.0.1:3000（PRD ground G17）——需添加 localhost:5173"
+    - "saw 后端 WS 路由挂载在 /ws prefix（PRD ground G18）——路径与 vite proxy /ws 一致，仅端口需收敛"
+    - "端口收敛方案（proxy→8000 或文档约定 saw web --port 8080）的具体 HOW 留 03 技术方案（PRD §3.4 规则 2）"
+    - "prod 模式 saw 后端独立运行或 sidecar 内嵌的具体实现方案留 03 技术方案（PRD §3.4 规则 4）"
+    - "CORS 扩展的具体 HOW（默认值修改 vs 文档约定 --cors-origins 参数）留 03 技术方案（PRD §3.4 规则 5）"

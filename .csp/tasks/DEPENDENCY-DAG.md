@@ -183,3 +183,32 @@ T-F-U-1 → T-F-U-3（2 步，最长链，与 U-2→U-3 等长）
 ### v1.16.0 并行机会
 - Wave 1：T-F-U-1 / T-F-U-2 全并行（2 路独立，不同数据源 + 不同组件；`Dashboard.tsx`/`types/api.ts` 同文件不同 section/类型，worktree 隔离 + 合并协调）。
 - Wave 2：T-F-U-3 独占（依赖 U-1 useAgents + U-2 useWorkflows 已建好 react-query 查询）。
+
+---
+
+## v1.17.0 delta（desktop 完成 v4.4 track）
+
+```mermaid
+graph LR
+  V1[T-F-V-1 版本 bump + 配置收敛]
+  V2[T-F-V-2 web 仪表盘集成验证]
+  V3[T-F-V-3 tauri build 验证]
+  V4[T-F-V-4 后端协同 + 端口收敛]
+
+  V1 --> V2
+  V1 --> V3
+  V1 --> V4
+```
+
+### v1.17.0 DAG 校验
+- 拓扑序无环：V-1 独立（无入边），V-1→{V-2, V-3, V-4}，无回边 ✓
+- 与 decomposition DEPENDENCY-GRAPH v1.17.0 delta 一致（F-V-1→{F-V-2, F-V-3, F-V-4}）✓
+- 无自环、无环。若 05 重构致环 → 报错停步。
+
+### v1.17.0 关键路径
+T-F-V-1 → T-F-V-2（2 步，最长链，与 V-1→V-3 / V-1→V-4 等长）
+- V-2/V-3/V-4 并行可压缩 Wave 2 段，V-1 Wave 1 先行。
+
+### v1.17.0 并行机会
+- Wave 1：T-F-V-1 独占（版本 bump + 配置收敛先行）。
+- Wave 2：T-F-V-2 / T-F-V-3 / T-F-V-4 全并行（3 路独立，不同文件集无重叠：只读验证 / 构建 / 端口配置）。

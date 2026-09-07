@@ -2,7 +2,7 @@
 id: PRD-dashboard-v1.16.0
 title: realtime 仪表盘 v4.3
 version: 1.0
-status: Approved
+status: Released
 date: 2026-09-06
 product_type: platform
 feature_count: 3

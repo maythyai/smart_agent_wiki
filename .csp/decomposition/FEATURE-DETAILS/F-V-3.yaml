@@ -1,0 +1,95 @@
+feature:
+  id: "F-V-3"
+  name: "tauri build 验证（cargo build --release + bundle 产出原生包，至少 .app/.deb/.appimage）"
+  domain: "desktop"
+  prd_ref: "docs/prd/PRD-desktop-v1.17.0.md#3.3"
+  pms_module: "desktop"
+
+  # 用户视角
+  user_story: "作为发布工程师，我想 tauri build 成功产出原生包，以便用户安装桌面应用而非通过命令行运行。"
+
+  acceptance_criteria:
+    - "Given Rust 工具链已装，Cargo.lock 存在，web 前端可构建, when tauri build 执行, then 构建退出码 0，target/release/bundle/ 下产出至少 1 个原生包（AC-B-1）"
+    - "Given tauri.conf.json bundle.targets 包含 app 和 dmg, when 构建在 macOS 环境执行, then 产出 .app bundle（至少）；.dmg 为声明性目标，实际产出依赖构建环境（AC-B-2）"
+
+  # 边界
+  scope:
+    includes:
+      - "执行 tauri build 验证桌面端可产出原生包"
+      - "验证构建流程：beforeBuildCommand（web 构建）→ Rust 编译（cargo build --release）→ 原生打包（bundle targets）"
+      - "验证构建产物输出到 desktop/src-tauri/target/release/bundle/ 目录"
+      - "验证 bundle.active=true，打包启用"
+      - "验证 release profile 已优化：panic=abort, codegen-units=1, lto=true, opt-level=s, strip=true"
+      - "当前运行环境为 Linux → 验证 .deb 或 .appimage 产出；macOS .app 为声明性目标"
+      - "bundle.targets 覆盖 macOS（.app/.dmg）、Windows（.msi/.nsis）、Linux（.deb/.rpm/.appimage）"
+    excludes:
+      - "代码签名 / 公证（defer 后续版本，需 Apple Developer ID + notarytool）"
+      - "自动更新（tauri updater，defer 后续版本）"
+      - "版本号 bump（属 F-V-1，本 Feature 依赖 F-V-1 完成）"
+      - "web 仪表盘集成验证（属 F-V-2，本 Feature 依赖 F-V-2 的 web 构建链路）"
+      - "端口收敛 / CORS（属 F-V-4）"
+
+  # 前后端边界
+  frontend:
+    pages: []
+    components: []
+    interactions: []
+  backend:
+    endpoints: []
+    business_logic: []
+    integrations:
+      - "Rust 工具链（cargo/rustc 已装）"
+      - "Cargo.lock 依赖锁定（PRD ground G13）"
+      - "系统依赖：Linux libwebkit2gtk-4.1-dev（deb 打包依赖）"
+
+  # 数据维度
+  data_entities:
+    - "NativeBundle（target/release/bundle/ 下的原生包产物：.app/.dmg/.msi/.nsis/.deb/.rpm/.appimage）"
+  data_operations:
+    - "create（tauri build 产出原生包到 target/release/bundle/）"
+
+  # 技术维度预标记
+  tech_dimensions:
+    needs_database: false
+    needs_cache: false
+    needs_queue: false
+    needs_ai: false
+    needs_vector_store: false
+    needs_realtime: false
+    needs_file_storage: true
+    needs_search: false
+    needs_scheduler: false
+    needs_notification: false
+
+  # 非功能性需求
+  nfr:
+    performance: "tauri build 完成时间 [TBD]（首次构建含 Rust 编译，预计 2-4h，PRD §7）"
+    security: "签名/公证明确非本轮目标——产出 unsigned 包（PRD §3.3 规则 8 + §8 defer 清单）；用户安装时 macOS Gatekeeper 警告预期"
+    scalability: "不适用（构建验证，无运行时扩展性影响）"
+    availability: "Rust 编译错误 → cargo 报错中止；系统缺少 webkit2gtk → 链接失败（PRD §3.3 异常处理）"
+
+  # 依赖与优先级
+  priority: "P0"
+  complexity: "L"
+  depends_on:
+    - "F-V-1"
+  blocked_by:
+    - "F-V-1"
+
+  # 风险与假设
+  risks:
+    - "Rust 系统依赖缺失（webkit2gtk）→ tauri build 失败（PRD §8 风险 1，概率中/影响高）——提前检查 libwebkit2gtk-4.1-dev 已装"
+    - "签名/公证缺失 → macOS .dmg 未签名，用户安装时 Gatekeeper 警告（PRD §8 风险 2，概率高/影响中）——明确 defer"
+    - "Cargo.lock 依赖漂移 → 使用 Cargo.lock 锁定版本不盲目 update（PRD §8 风险 5）"
+    - "磁盘空间不足 → 打包阶段失败（PRD §3.3 异常处理）"
+  assumptions:
+    - "Rust 工具链已安装（cargo/rustc 可用）（PRD §3.3 规则 2）"
+    - "Cargo.lock 存在且依赖已锁定（PRD ground G13）"
+    - "bundle.active=true，打包启用（PRD §3.3 规则 3）"
+    - "macOS 配置：minimumSystemVersion=10.13, entitlements=null（未签名）（PRD §3.3 规则 4）"
+    - "Windows 配置：webviewInstallMode=downloadBootstrapper, digestAlgorithm=sha256（PRD §3.3 规则 5）"
+    - "Linux 配置：deb.depends=[libwebkit2gtk-4.1-0]（PRD §3.3 规则 6）"
+    - "release profile 已优化（PRD ground G19 + §3.3 规则 9）"
+    - "当前运行环境为 Linux → 实际验证 .deb/.appimage 产出；macOS .app/.dmg 为声明性目标"
+    - "构建产物大小 [TBD] MB（PRD §4 首次基线，无回归阈值）"
+    - "tauri build 完成时间 [TBD]（预计 2-4h，PRD §7）"
