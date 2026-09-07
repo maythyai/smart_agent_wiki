@@ -254,6 +254,17 @@ def create_app(
     init_observability(auth_mode)
     app.add_middleware(RequestContextMiddleware)
 
+    # ADR-018: per-request workspace contextvar injection (must run before
+    # AuditLogMiddleware so audit entries carry the workspace scope).
+    # Reads ``X-Workspace-Id`` header / ``workspace_id`` query param;
+    # QueryEngine.effective_workspace_id falls back to instance _workspace_id
+    # when the contextvar is unset (CLI/scripts/tests without middleware).
+    from saw.drivers.web.middleware.workspace import (
+        WorkspaceContextMiddleware,
+    )
+
+    app.add_middleware(WorkspaceContextMiddleware)
+
     # SEC-07: Audit logging middleware
     from saw.drivers.web.middleware.security import AuditLogMiddleware
 

@@ -96,6 +96,29 @@ class QueryEngine:
                 except Exception:  # pragma: no cover — Mocks/foreign impls
                     pass
 
+    @property
+    def effective_workspace_id(self) -> str:
+        """Workspace scope for the current operation.
+
+        Reads ``workspace_id_var`` (set by ``WorkspaceContextMiddleware``
+        on web requests) first; falls back to the instance-level
+        ``_workspace_id`` for CLI/scripts/tests without middleware.
+
+        Additive, backward-compatible: pre-v1.18.0 callers that never set
+        the contextvar see the same ``_workspace_id`` they configured.
+        """
+        try:
+            from saw.drivers.web.middleware.workspace import (
+                get_current_workspace_id,
+            )
+
+            ctx = get_current_workspace_id()
+            if ctx is not None:
+                return ctx
+        except Exception:  # pragma: no cover — web middleware not importable
+            pass
+        return self._workspace_id
+
     def query(
         self,
         question: str,
@@ -231,7 +254,7 @@ class QueryEngine:
             "limit": limit,
             "offset": offset,
             "mode": "search",
-            "workspace_id": self._workspace_id,
+            "workspace_id": self.effective_workspace_id,
         }
         _cached = _cache.get(question, _cache_params)
         if _cached is not None:
@@ -248,7 +271,7 @@ class QueryEngine:
         for i, (doc_id, content, score) in enumerate(
             zip(result.claim_uuids, result.contents, result.scores), 1
         ):
-            claim = self._claims_repo.get_by_id(doc_id, workspace_id=self._workspace_id)
+            claim = self._claims_repo.get_by_id(doc_id, workspace_id=self.effective_workspace_id)
             if claim:
                 answer_lines.append(f"{i}. {claim.content[:100]}...")
                 sources.append({
@@ -491,7 +514,7 @@ class QueryEngine:
             "limit": limit,
             "offset": offset,
             "mode": "semantic",
-            "workspace_id": self._workspace_id,
+            "workspace_id": self.effective_workspace_id,
         }
         if _cache_enabled:
             _cached = _cache.get(question, _cache_params)
@@ -526,7 +549,7 @@ class QueryEngine:
         # 3. Load all vectors for this workspace from embedding_store
         rows = self._conn.execute(
             "SELECT doc_id, vector, dim FROM embedding_store WHERE workspace_id = ?",
-            (self._workspace_id,),
+            (self.effective_workspace_id,),
         ).fetchall()
 
         if not rows:
@@ -563,7 +586,7 @@ class QueryEngine:
         sources: list[dict] = []
         for doc_id, sim in top_k:
             claim = self._claims_repo.get_by_id(
-                doc_id, workspace_id=self._workspace_id
+                doc_id, workspace_id=self.effective_workspace_id
             )
             if claim:
                 sources.append({
@@ -670,7 +693,7 @@ class QueryEngine:
         import hnswlib
 
         index_path = os.path.join(
-            ".saw", f"ann_index_{self._workspace_id}.bin"
+            ".saw", f"ann_index_{self.effective_workspace_id}.bin"
         )
 
         # Determine vector dimension from first row
@@ -845,7 +868,7 @@ Rules:
 
             # If not found, look up directly
             if not any(s.get("claim_uuid") == uuid for s in sources):
-                claim = self._claims_repo.get_by_id(uuid, workspace_id=self._workspace_id)
+                claim = self._claims_repo.get_by_id(uuid, workspace_id=self.effective_workspace_id)
                 if claim:
                     sources.append({
                         "claim_uuid": uuid,
