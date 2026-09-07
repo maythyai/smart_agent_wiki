@@ -18,9 +18,11 @@
 | v1.13.0 | v1.13.0 | released | 2026-09-06 | null | null | ingest dir recursion+benchmark script (semantic vs BM25)+REST alias/CHANGELOG+coverage 67+Q1/Q3 closure | No | Yes (rollback plan ready) | E2E 收尾轮 |
 | v1.14.0 | v1.14.0 | released | 2026-09-06 | null | null | cache threshold configurable (SAW_SEMANTIC_CACHE_ENABLED/THRESHOLD_MS)+ANN index hnswlib scale-driven+numpy batch cosine fallback+benchmark cache.stats ANN vs cosine P99+scale curves | No | Yes (rollback plan ready) | semantic 性能优化 |
 | v1.15.0 | v1.15.0 | released | 2026-09-06 | null | null | custom agent role registry YAML+CLI+REST+links auto-apply confirm/dry-run+agent activity aggregation event_bus subscriber+REST/CLI | No | Yes (additive MINOR, no breaking) | agent/link 能力 |
+| v1.16.0 | v1.16.0 | released | 2026-09-07 | null | null | agent roster+activity dashboard (react-query)+workflow runtime view+realtime polling 15s+WS invalidate+disconnect degraded | No | Yes (additive MINOR, frontend-only) | realtime 仪表盘 v4.3 |
 
 **Notes**:
-- v1.10.0–v1.15.0 all status=released (tag pushed + GitHub Release created).
+- v1.10.0–v1.16.0 all status=released (tag pushed + GitHub Release created).
+- v1.16.0 tag @57b9550, GitHub Release: https://github.com/maythyai/smart_agent_wiki/releases/tag/v1.16.0
 - v1.15.0 tag @d5b644f, GitHub Release: https://github.com/maythyai/smart_agent_wiki/releases/tag/v1.15.0
 - v1.14.0 tag @136befe, GitHub Release: https://github.com/maythyai/smart_agent_wiki/releases/tag/v1.14.0
 - `Deployed`/`Prod-Verified` remain null — no prod deployment in scope (local-first desktop app, no server deployment).
