@@ -2,7 +2,7 @@
 id: PRD-agent-link-v1.15.0
 title: agent/link 能力
 version: 1.0
-status: Approved
+status: Released
 author: S1-prd
 date: 2026-09-06
 product_type: platform

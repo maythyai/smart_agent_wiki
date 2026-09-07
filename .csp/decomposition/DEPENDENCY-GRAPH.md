@@ -207,3 +207,29 @@ graph LR
 ### v1.15.0 并行机会
 - 3 Feature 全并行（3 路独立：角色注册 / 链接写回 / 活动聚合）。
 - F-T-1 与 F-T-3 均触及 collaborate.py REST 但不同端点（F-T-1 = GET /agents 扩展 custom 标记；F-T-3 = GET /agents/{name}/activity 新增 + activity_summary 扩展），03 技术方案需注意协调。
+
+## v1.16.0 delta（realtime dashboard track）
+
+```mermaid
+graph LR
+  U1[F-U-1 roster+activity 仪表盘]
+  U2[F-U-2 workflow 运行态视图]
+  U3[F-U-3 实时更新]
+
+  U1 --> U3
+  U2 --> U3
+```
+
+### v1.16.0 Wave
+- **Wave 1（2 Feature 全并行）**：F-U-1（roster + activity 仪表盘） / F-U-2（workflow 运行态视图）
+  - 2 Feature 互相独立（不同数据源 + 不同组件），可全并行启动。
+- **Wave 2（1 Feature）**：F-U-3（实时更新）
+  - 依赖 F-U-1 + F-U-2 完成（polling 刷新 + WS 增量更新接 roster + workflow 数据）。
+
+### v1.16.0 DAG 校验
+- 拓扑序无环：U-1 → U-3, U-2 → U-3，无回边 ✓
+
+### v1.16.0 并行机会
+- Wave 1 中 F-U-1 / F-U-2 全并行（2 路独立：roster 表 / workflow 列表）。
+- F-U-1 与 F-U-2 均触及 web/src/pages/Dashboard.tsx 但不同区域（roster 表 vs workflow 列表），03 技术方案需注意布局协调。
+- F-U-1 与 F-U-3 均触及 useWebSocket/dashboardStore 但 F-U-1 只读 WS agent_status，F-U-3 管理 WS 连接 + polling 编排，03 技术方案需注意协调。

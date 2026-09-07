@@ -212,3 +212,44 @@
 ### 无新依赖
 - 复用既有 event_bus / BaseAgent / WikiRepository / compute_related_pages
 - 不引入新库
+
+## v1.16.0 NFR delta（realtime dashboard track）
+
+> 来源：PRD-dashboard-v1.16.0 §4。Feature 级下沉见 F-U-1..3 各 yaml `nfr`。
+
+### 前端测试
+- web vitest 全 pass（`cd web && npm test` 0 fail）
+
+### 后端不回归
+- pytest ≥ 2220 passed（v1.15.0 基线 2220）
+- ruff 0 errors
+- coverage ≥ 67% 不回归（CI fail_under=67）
+- smoke 6/6
+
+### 实时延迟
+- WS 推送 → UI 更新 < 1s
+- polling interval [TBD]（默认不低于 10s 避免打满后端，03 技术方案锁定）
+
+### 兼容性
+- 复用现有前端栈（react-router 7 / zustand 5 / react-query 5 / tailwind 4 / vite 8），不引入新框架，依赖 diff 为空
+- 纯前端消费 v1.15.0 后端 REST 端点，不新增后端端点
+
+### 可访问性
+- 状态色标同时有文字标签（不只是颜色）
+
+### 暗色模式
+- 新增组件支持 dark: 前缀（沿用现有 Tailwind dark mode 范式）
+
+### 降级策略
+- WS 断连 → polling 继续工作（降级模式），重连后立即 invalidate 一次拉最新
+- WS 断连 + polling 也失败 → 降级横幅 "Live updates paused. Data may be stale."
+- polling 连续 3 次失败 → 错误横幅 + 手动刷新按钮
+- polling 失败（5xx）不阻塞页面，下次 interval 自动重试
+
+### WS + polling 双源数据冲突
+- WS 推送为实时增量，polling 为全量刷新
+- polling 刷新后 WS 增量覆盖最新值，时间戳优先（PRD §8 风险 2）
+
+### 无新依赖
+- 复用既有 useWebSocket / dashboardStore / react-query / tailwind
+- 不引入新库

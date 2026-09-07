@@ -33,7 +33,7 @@ see_also: docs/strategy/STRATEGY.md | docs/prd/PRD-INDEX.md | .csp/review/REVIEW
 
 | 载体 | 现状 | 规则 |
 |---|---|---|
-| `pyproject.toml`（Python 包） | `1.15.0` | **canonical 真源**。下一个发布 = `v1.16.0`（TBD 下一轮 01 PRD 决策），MINOR |
+| `pyproject.toml`（Python 包） | `1.15.0` | **canonical 真源**。下一个发布 = `v1.16.0`（realtime 仪表盘 v4.3：agent/workflow 运行态实时前端可视化，MINOR） |
 | git tags `v1.0.1` … `v1.9.0` | 全部 SemVer annotated，与 pyproject 一致 | 保留，对外发布基线 |
 | git tags `v3.4.0` / `v3.7.0` | 历史 internal sprint 里程碑号 | 重新定性为**内部 milestone label**（见 1.3），不作为对外发布版本；不可变，不移动/删除 |
 | `desktop/`（tauri.conf.json + package.json） | `0.1.0` | 桌面端**未达 1.0**，独立 0.x 跟踪至稳定；达 v1.0 后与 canonical 对齐 |
@@ -57,8 +57,9 @@ see_also: docs/strategy/STRATEGY.md | docs/prd/PRD-INDEX.md | .csp/review/REVIEW
 | `v4.3` | v1.13.0 | released |
 | `v4.4` | v1.14.0 | released |
 | `v4.5` | v1.15.0 | released |
+| `v4.6` | v1.16.0（下一周期） | in-progress（01-prd） |
 
-> lifecycle-state `next_cycle: v1.16.0`。v1.14.0 = semantic 性能优化（R1 cache 阈值可配 + R2 ANN 索引，已 released）；v1.15.0 = agent/link 能力（自定义 agent 角色 + L2 links apply + M2 活动聚合，已 released）。
+> lifecycle-state `next_cycle: v1.16.0`。v1.15.0 = agent/link 能力（已 released，后端 activity 聚合就绪）；v1.16.0 = realtime 仪表盘 v4.3（前端可视化，承接 v1.15.0 后端）。
 
 ### 1.4 Tag 规则
 
@@ -265,22 +266,35 @@ canonical = `pyproject.toml`。发布时以下必须与之一致，用脚本校�
 - **前置依赖**：v1.14.0 基线。
 - **07 回流**：M2(agent 活动聚合) + L2(links apply) + 自定义角色。续留：N3(K2)/O2/R3/S1-S4。
 
-> v1.14.0 周期闭环 2026-09-06（07-retro done，retrospective-v1.14.0.md）。以下为候选主题，**不定论**，供下一轮 01 PRD 决策。
+### v1.16.0 — realtime 仪表盘 v4.3（status: in-progress, 01-prd 进行中）
+
+> ecosystem-integration track。前端可视化，承接 v1.15.0 后端 activity 聚合。**additive**——新前端能力，无 breaking → MINOR。
+
+- **目标**：agent/workflow 运行态实时可视化——前端仪表盘展示 agent roster + activity + workflow 执行状态，实时更新。
+- **关键功能（摘要级）**：
+  1. 仪表盘页（web/src 新路由）：agent roster 表 + 每 agent 活动计数/最近调用（接 `GET /api/v1/agents` + `/api/v1/agents/{name}/activity`）
+  2. workflow 运行态视图（接 `/workflows` durable + live merge）：最近执行列表 + 状态（running/done/failed）+ 步骤进度
+  3. 实时更新（SSE 或 polling）：agent activity + workflow 状态变化实时推送/刷新
+- **价值描述**：用户价值——运维可观测 agent/workflow 运行态；业务价值——从 CLI 静态查到前端实时看板。
+- **成功指标**：仪表盘页可访问 + 显示 roster/activity/workflows；实时更新生效；web vitest 通过；2220+ 后端测试不回归。
+- **前置依赖**：v1.15.0 基线（后端 activity + workflow REST 就绪）。
+- **07 回流**：M3(CLI vs REST 语义双重，v1.11.0 已清 REST 读 DB) + realtime 可视化。续留：N3/S1-S4/T1-T4。
+
+> v1.14.0 周期闭环 2026-09-06（07-retro done，retrospective-v1.14.0.md）。v1.15.0 周期闭环 2026-09-06（07-retro done，retrospective-v1.15.0.md）。以下为候选主题，**不定论**，供下一轮 01 PRD 决策。
 
 | 候选 | findings 关联 | 说明 |
 |---|---|---|
-| **v1.15.0 agent/link 能力** | N3/M2/L2 | 自定义 agent 角色注册 + L2 链接自动 apply + M2 agent 活动聚合（roadmap v4.3+v4.4 候选） |
-| realtime 仪表盘（v4.3 完整前端） | M2 续留 | agent/workflow 运行态实时可视化 |
-| desktop 完成（v4.4 Tauri） | — | 桌面端达 v1.0 |
-| K2 per-request workspace 注入 | N3/K2 续留 | web 路径请求级 workspace 隔离（v2.0 架构演进候选） |
+| **v1.16.0 realtime 仪表盘（v4.3 完整前端）** | M2（已闭合后端） | agent/workflow 运行态实时可视化（WebSocket + 前端组件），后端活动聚合已就绪 |
+| v1.17 desktop 完成（v4.4 Tauri） | — | 桌面端达 v1.0 |
+| v2.0 per-request workspace 注入 | N3/K2 续留 | web 路径请求级 workspace 隔离（v2.0 架构演进候选） |
+| agent activity 持久化 | T1 | DB 持久化 agent 活动日志（v2.0 候选，当前内存态满足 PRD） |
+| links apply undo/rollback | T2 | git stash 提示或 `--rollback` 标志 |
+| 自定义角色分享/导入 | T3 | `saw agents export/import` 命令或角色仓库 |
 | benchmark scale_curve 修复 + ANN 大规模实证 | S1/S2 | 修复合成向量维度不匹配（384→1024dim）+ 跑 ≥500 规模验证 ANN 优势 |
-| COVERAGE-REPORT 状态更新 | S3 | 将 [TBD-impl] 更新为 covered，更新全局汇总 60→75 AC |
+| COVERAGE-REPORT 状态更新 | S3 | 将 [TBD-impl] 更新为 covered，更新全局汇总 60→87 AC |
 | engine.py 拆分 | S4 | 提取 semantic_search 子模块，god-file 858/900 行 |
-| 自定义 agent 角色注册 | — | v1.5.0 留 v2.0 候选 |
-| L2 链接自动 apply | L2 续留 | suggest 只输出不自动改文件 |
-| M2 agent 活动聚合 | M2 续留 | roster 静态，agent 最近活动需 event bus 聚合 |
 
-续留 findings（跨迭代 backlog）：N3/K2(per-request ws) / M2(agent 活动聚合) / L2(链接自动 apply) / O2(coverage 余量薄 67.34%, fail_under=67) / O4(tag 指向 reconcile 非 release commit) / R3(benchmark CI skip) + S1(ANN 小规模慢) / S2(scale_curve 维度不匹配) / S3(COVERAGE-REPORT 状态未更新) / S4(engine.py god-file 膨胀)。
+续留 findings（跨迭代 backlog）：N3/K2(per-request ws) / O2(coverage 余量薄 67.42%, fail_under=67) / O4(tag 指向 reconcile 非 release commit) / R3(benchmark CI skip) + S1(ANN 小规模慢) / S2(scale_curve 维度不匹配) / S3(COVERAGE-REPORT 状态未更新) / S4(engine.py god-file 膨胀) + T1(agent activity 不持久化) / T2(links apply 无 undo) / T3(自定义角色无分享机制) / T4(agents_cmd CLI 结构变更)。
 
 ### 版本-主题表（1 年）
 
@@ -302,6 +316,7 @@ canonical = `pyproject.toml`。发布时以下必须与之一致，用脚本校�
 | v1.13.0 | E2E 收尾轮（ingest recursion + benchmark + REST alias + coverage 67 + Q1/Q3 closure） | core-trust | released (2026-09-06) |
 | v1.14.0 | semantic 性能优化（R1 cache 阈值可配 + R2 ANN 索引） | intelligence-adaptation | released (2026-09-06) |
 | v1.15.0 | agent/link 能力（自定义 agent 角色 + L2 links apply + M2 活动聚合） | intelligence-adaptation | released (2026-09-06) |
+| v1.16.0 | realtime 仪表盘 v4.3（agent/workflow 运行态前端可视化） | ecosystem-integration | in-progress (01-prd) |
 
 ## 3. 3 年路径（大版本里程碑）
 
@@ -326,7 +341,7 @@ SAW 的终局是**AI agent 与人类共用的、可验证、可溯源、可治�
 
 ## 5. 衔接声明
 
-- **01 PRD** 读本文件定位本版本主题；PRD front-matter 标 `roadmap_ref: ROADMAP` + `target_version`（如 v1.11.0）。v1.11.0 周期已闭环（released 2026-09-05）。v1.12.0 周期已闭环（released 2026-09-05，embedding 改用 OpenAI 风格 API + E2E 验证）。v1.13.0 周期已闭环（released 2026-09-06，E2E 收尾轮）。v1.14.0 周期已闭环（released 2026-09-06，semantic 性能优化：cache 阈值可配 + ANN 索引 hnswlib + benchmark cache.stats 真实度量）。v1.15.0 周期已闭环（released 2026-09-06，agent/link 能力：自定义 agent 角色 + L2 links apply + M2 agent 活动聚合）。下一候选 v1.16.0（TBD，待下一轮 01 PRD 决策）。
+- **01 PRD** 读本文件定位本版本主题；PRD front-matter 标 `roadmap_ref: ROADMAP` + `target_version`（如 v1.11.0）。v1.11.0 周期已闭环（released 2026-09-05）。v1.12.0 周期已闭环（released 2026-09-05，embedding 改用 OpenAI 风格 API + E2E 验证）。v1.13.0 周期已闭环（released 2026-09-06，E2E 收尾轮）。v1.14.0 周期已闭环（released 2026-09-06，semantic 性能优化：cache 阈值可配 + ANN 索引 hnswlib + benchmark cache.stats 真实度量）。v1.15.0 周期已闭环（released 2026-09-06，agent/link 能力：自定义 agent 角色 + L2 links apply + M2 agent 活动聚合）。下一候选 v1.16.0（realtime 仪表盘 v4.3 前端，待下一轮 01 PRD 决策）。
 - **06 release** 用「版本号规则」节（SemVer/Tag/预发布/多平台一致性），不另立方案。v1.15.0 为 additive → 发 MINOR，不强行 MAJOR。
-- **07 复盘** findings（status=open/deferred）回流更新本文件下一版本主题与版本-主题表 status（planned→in-progress→shipped→deferred）。v1.12.0 findings（N1/N4）已清掉。v1.13.0 findings（Q1/Q2/Q3 + O3）已清掉，O1 改善→R1。v1.14.0 findings（R1/R2）已清掉，R4 改善→S3。v1.15.0 findings（M2/L2 + 自定义角色）已清掉。当前回流 findings：N3/K2/O2/O4 + R3 + S1/S2/S3/S4。
+- **07 复盘** findings（status=open/deferred）回流更新本文件下一版本主题与版本-主题表 status（planned→in-progress→shipped→deferred）。v1.12.0 findings（N1/N4）已清掉。v1.13.0 findings（Q1/Q2/Q3 + O3）已清掉，O1 改善→R1。v1.14.0 findings（R1/R2）已清掉，R4 改善→S3。v1.15.0 findings（M2/L2 + 自定义角色）已清掉，O2 改善（67.34→67.42%）。当前回流 findings：N3/K2/O2/O4 + R3 + S1/S2/S3/S4 + T1/T2/T3/T4。
 - **lifecycle**：读 `.csp/lifecycle-state.json` 对齐在跑版本；本文件不写 lifecycle（外环）。

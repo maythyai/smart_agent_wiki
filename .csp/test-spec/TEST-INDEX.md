@@ -72,3 +72,11 @@
 - 用例总数：[TBD-impl] 实施后落定（基线 2192 passed）。
 - 新覆盖 AC：AC-A-1..4, AC-B-1..4, AC-C-1..4（12 条全映射）。
 - TMS delta 见 `TMS-DELTA-v1.15.0.md`。
+
+## v1.16.0 delta（realtime 仪表盘 v4.3）
+- 模块：dashboard（PMS-dashboard），ADR-016 realtime 仪表盘更新策略 polling + WS 双源。
+- 新增 8 AC（AC-D-1..8），全映射。AC-D-9（后端不回归）为系统级 NFR。
+- 测试文件：test_agent_roster_render.test.tsx（新建 1）、test_agent_activity_detail.test.tsx（新建 1）、test_agent_activity_null.test.tsx（新建 1）、test_agent_activity_404.test.tsx（新建 1）、test_workflow_list_render.test.tsx（新建 1）、test_workflow_running_top.test.tsx（新建 1）、test_workflow_ws_update.test.tsx（新建 1）、test_ws_disconnect_polling_degraded.test.tsx（新建 1）。
+- 用例总数：[TBD-impl] 实施后落定（基线 2220 passed，前端 vitest 新增 8 用例）。
+- 新覆盖 AC：AC-D-1..8（8 条全映射，vitest + @testing-library/react mock）。
+- TMS delta 见 `TMS-DELTA-v1.16.0.md`。

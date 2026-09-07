@@ -1,0 +1,109 @@
+feature:
+  id: "F-U-3"
+  name: "实时更新（复用既有 useWebSocket/dashboardStore + react-query invalidateQueries polling 刷新，agent activity + workflow 状态变化实时刷新）"
+  domain: "dashboard"
+  prd_ref: "docs/prd/PRD-dashboard-v1.16.0.md#3.3"
+  pms_module: "dashboard"
+
+  # 用户视角
+  user_story: "作为 OPS，我想仪表盘的 agent activity 计数和 workflow 状态自动刷新，而不必手动 F5。"
+
+  acceptance_criteria:
+    - "Given WS 断连，polling 正常, when 断连发生, then 顶部显示 'Reconnecting...'，roster/workflow 仍周期刷新（AC-D-8）"
+
+  # 边界
+  scope:
+    includes:
+      - "复用既有 useWebSocket hook（autoConnect + heartbeat + exponential backoff reconnect）"
+      - "WS agent_status 消息 → 更新 dashboardStore.agents（现有行为，保留）"
+      - "WS workflow_progress 消息 → 更新 dashboardStore.activeWorkflow + 刷新 workflow 列表对应行（F-U-2 规则 6）"
+      - "WS page_updated 消息 → 沿用既有行为"
+      - "REST polling：对 GET /api/v1/agents + GET /api/v1/workflows 周期性刷新（interval [TBD]，默认不低于 10s 避免打满后端）"
+      - "polling 刷新通过 @tanstack/react-query invalidateQueries 实现"
+      - "WS 断连时 polling 继续工作（降级模式）"
+      - "WS 重连后立即 invalidate 一次拉最新"
+      - "polling 失败（5xx）不阻塞页面，下次 interval 自动重试"
+      - "polling 连续 3 次失败显示降级提示横幅 + 手动刷新按钮"
+      - "WS 断连 + polling 也失败时显示降级横幅 'Live updates paused. Data may be stale.'"
+      - "WS 状态变化时触发 dashboard_ws_status_changed 事件埋点"
+      - "polling 连续 3 次失败时触发 dashboard_polling_degraded 事件埋点"
+    excludes:
+      - "后端新增 WebSocket 消息类型（复用既有 agent_status/workflow_progress/page_updated）"
+      - "后端新增 SSE 端点（PRD §3.3 描述 SSE/polling，PMS 明确前端框架选型 HOW 留 03，本 Feature 实现 polling 方案）"
+      - "后端 WebSocket 路由（v1.4.0 已挂载 ws_router）"
+      - "roster 表渲染本身（属 F-U-1）"
+      - "workflow 列表渲染本身（属 F-U-2）"
+
+  # 前后端边界
+  frontend:
+    pages:
+      - "web/src/pages/Dashboard.tsx（polling + WS 连接编排）"
+    components:
+      - "web/src/components/dashboard/ConnectionStatus.tsx（复用，WS 断连 'Reconnecting...' + 降级横幅）"
+    interactions:
+      - "页面挂载 → WS 连接 + 首次 REST 拉取 → WS 推送实时更新 + polling 周期刷新 → 断连降级 → 重连恢复"
+      - "WS 断连 + polling 正常 → 顶部 'Reconnecting...'，roster/workflow 仍周期刷新"
+      - "WS 断连 + polling 也失败 → 降级横幅 'Live updates paused. Data may be stale.'"
+      - "polling 连续 3 次失败 → 错误横幅 + 手动刷新按钮"
+  backend:
+    endpoints:
+      - "GET /api/v1/agents（v1.15.0 既有，复用，polling 刷新目标）"
+      - "GET /api/v1/workflows（v1.15.0 既有，复用，polling 刷新目标）"
+      - "/ws WebSocket（v1.4.0 既有，复用，agent_status/workflow_progress/page_updated 推送）"
+    business_logic: []
+    integrations:
+      - "web/src/hooks/useWebSocket.ts（复用，heartbeat + reconnect + agent_status/workflow_progress/page_updated）"
+      - "web/src/stores/dashboardStore.ts（复用，agents/activeWorkflow/lastUpdate）"
+      - "@tanstack/react-query invalidateQueries（polling 刷新机制）"
+
+  # 数据维度
+  data_entities:
+    - "WS 消息（agent_status/workflow_progress/page_updated）"
+    - "Polling 刷新触发器（invalidateQueries 事件）"
+  data_operations:
+    - "read（polling 周期 GET /api/v1/agents + GET /api/v1/workflows）"
+    - "subscribe（WS agent_status/workflow_progress/page_updated 消息订阅）"
+
+  # 技术维度预标记
+  tech_dimensions:
+    needs_database: false
+    needs_cache: false
+    needs_queue: false
+    needs_ai: false
+    needs_vector_store: false
+    needs_realtime: true
+    needs_file_storage: false
+    needs_search: false
+    needs_scheduler: true
+    needs_notification: false
+
+  # 非功能性需求
+  nfr:
+    performance: "WS 推送 → UI 更新 < 1s（PRD §4）；polling interval [TBD]（默认不低于 10s 避免打满后端，03 锁定）"
+    security: "WS 连接 + polling 均复用既有认证/CORS，无新增攻击面"
+    scalability: "polling 频率受 interval 下限 10s 约束，单客户端不会打满后端"
+    availability: "WS 断连 → polling 降级继续工作；重连后立即 invalidate 拉最新；polling 连续 3 次失败 → 降级横幅 + 手动刷新"
+
+  # 依赖与优先级
+  priority: "P0"
+  complexity: "M"
+  depends_on:
+    - "F-U-1"
+    - "F-U-2"
+  blocked_by:
+    - "F-U-1"
+    - "F-U-2"
+
+  # 风险与假设
+  risks:
+    - "WS + polling 双源数据冲突（同一字段被两路更新）——WS 推送为实时增量，polling 为全量刷新；polling 刷新后 WS 增量覆盖最新值，时间戳优先（PRD §8 风险 2，中概率中影响）"
+    - "polling interval 选型延后——PRD §3.3 规则 4 标 [TBD]，03 技术方案锁定具体 interval 值"
+    - "SSE vs polling 选型——PRD §3.3 描述 SSE/polling，PMS 明确前端框架选型 HOW 留 03；本 Feature 按 polling 方案拆解，03 可改 SSE 但 Feature 边界不变"
+  assumptions:
+    - "polling interval [TBD]（PRD §3.3 规则 4 标 [TBD]，默认不低于 10s，03 技术方案锁定）"
+    - "复用既有 useWebSocket hook + dashboardStore，不新增 WS 基建（PRD §3.3 规则 1）"
+    - "polling 通过 @tanstack/react-query invalidateQueries 实现（PRD §3.3 规则 4）"
+    - "WS 重连后立即 invalidate 一次拉最新（PRD §3.3 规则 5）"
+    - "polling 连续 3 次失败显示降级提示（PRD §3.3 异常处理）"
+    - "前端框架选型 HOW（polling interval / SSE vs polling / 组件拆分）留 03 技术方案（PRD 附录 下一步建议）"
+    - "F-U-3 依赖 F-U-1（roster 数据）+ F-U-2（workflow 数据），实时更新接它们的数据（DAG：U-3 → U-1/U-2 依赖边）"

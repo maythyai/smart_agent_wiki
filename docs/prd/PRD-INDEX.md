@@ -17,7 +17,8 @@
 | PRD-embedding-api-v1.12.0 | embedding 改用 OpenAI 风格 API + E2E 验证 | 1.0 | Released | 2026-09-05 | embedding-api-v1.12.0 | embedding-provider-api, embedding-dim-configurable, local-st-optional-fallback, test-api-mock-e2e | docs/prd/PRD-embedding-api-v1.12.0.md |
 | PRD-e2e-tail-v1.13.0 | E2E 收尾轮（ingest recursion + benchmark + REST alias + coverage 67 + Q1/Q3 closure） | 1.0 | Released | 2026-09-06 | e2e-tail-v1.13.0 | ingest-dir-recursion, real-vllm-benchmark, rest-alias-changelog, coverage-67, retrospective-closure | docs/prd/PRD-e2e-tail-v1.13.0.md |
 | PRD-semantic-perf-v1.14.0 | semantic 性能优化 | 1.0 | Released | 2026-09-06 | semantic-perf-v1.14.0 | cache-threshold-config, ann-index, benchmark-update | docs/prd/PRD-semantic-perf-v1.14.0.md |
-| PRD-agent-link-v1.15.0 | agent/link 能力（自定义 agent 角色 + L2 links apply + M2 活动聚合） | 1.0 | Approved | 2026-09-06 | agent-link-v1.15.0 | custom-agent-roles, links-auto-apply, agent-activity-aggregation | docs/prd/PRD-agent-link-v1.15.0.md |
+| PRD-agent-link-v1.15.0 | agent/link 能力（自定义 agent 角色 + L2 links apply + M2 活动聚合） | 1.0 | Released | 2026-09-06 | agent-link-v1.15.0 | custom-agent-roles, links-auto-apply, agent-activity-aggregation | docs/prd/PRD-agent-link-v1.15.0.md |
+| PRD-dashboard-v1.16.0 | realtime 仪表盘 v4.3（agent roster + activity + workflow 运行态 + 实时更新） | 1.0 | Approved | 2026-09-06 | dashboard-v1.16.0 | agent-roster-dashboard, workflow-runtime-view, realtime-update | docs/prd/PRD-dashboard-v1.16.0.md |
 
 ## 状态约定
 - Draft → Reviewing → Approved → Released → Deprecated

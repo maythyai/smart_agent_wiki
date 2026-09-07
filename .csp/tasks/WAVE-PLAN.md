@@ -275,3 +275,45 @@
 
 ## v1.15.0 里程碑
 - M-AGENT-LINK（Wave 1）：自定义角色注册 + links auto-apply + 活动聚合就绪 → v1.15.0 可交付。
+
+---
+
+# v1.16.0 波次（realtime 仪表盘 v4.3，2026-09-07）
+
+> 源自 PRD-dashboard-v1.16.0 + 02 delta + ADR-016。3 Task，2 Wave。DAG U-1+U-2→U-3 无环。纯前端消费 v1.15.0 后端 REST 端点。
+
+## v1.16.0 Wave 1 — agent roster + workflow 列表（2 路并行）
+| task_id | 描述 | 类型 | 并行性 |
+|---|---|---|---|
+| T-F-U-1 | agent roster+activity 仪表盘（Dashboard.tsx 接 react-query 拉 GET /api/v1/agents + /agents/{name}/activity + AgentList/AgentCard 扩展） | frontend | 独立（AgentRosterSection + agents hooks） |
+| T-F-U-2 | workflow 运行态视图（新建 WorkflowList/WorkflowRow + useWorkflows/useWorkflowStatus 拉 GET /api/v1/workflows + /workflows/{id}/status） | frontend | 独立（WorkflowRuntimeSection + workflow hooks） |
+
+## v1.16.0 Wave 2 — 实时更新编排（依赖 U-1+U-2）
+| task_id | 描述 | 依赖 | 里程碑 |
+|---|---|---|---|
+| T-F-U-3 | 实时更新（useWebSocket 扩展 invalidateQueries(['workflows']) + polling 15s 降级横幅 + 重连恢复 + 手动刷新） | T-F-U-1, T-F-U-2 | 实时更新 + 降级横幅就绪 → v1.16.0 可交付 |
+
+## v1.16.0 共享资源串行
+- `web/src/pages/Dashboard.tsx`：T-F-U-1（AgentRosterSection）+ T-F-U-2（WorkflowRuntimeSection）Wave 1 同文件不同区域 → worktree 隔离 + 合并协调。
+- `web/src/types/api.ts`：T-F-U-1（AgentRosterEntry 等）+ T-F-U-2（WorkflowExecution 等）Wave 1 同文件不同类型 → 合并协调。
+- `web/src/hooks/useWebSocket.ts`：T-F-U-3（Wave 2）扩展追加 invalidateQueries(['workflows']）。Wave 1→2 串行。
+
+## v1.16.0 Wave 1 文件冲突分析
+| 文件 | Wave 1 写入方 | 冲突? |
+|---|---|---|
+| web/src/pages/Dashboard.tsx | T-F-U-1 + T-F-U-2 | 同文件不同区域（AgentRosterSection vs WorkflowRuntimeSection），需合并协调 |
+| web/src/types/api.ts | T-F-U-1 + T-F-U-2 | 同文件不同类型定义，需合并协调 |
+| web/src/components/dashboard/AgentList.tsx | T-F-U-1 | 否 |
+| web/src/components/dashboard/AgentCard.tsx | T-F-U-1 | 否 |
+| web/src/components/dashboard/WorkflowList.tsx | T-F-U-2 | 否（新建） |
+| web/src/components/dashboard/WorkflowRow.tsx | T-F-U-2 | 否（新建） |
+| web/src/hooks/useAgents.ts | T-F-U-1 | 否（新建） |
+| web/src/hooks/useAgentActivity.ts | T-F-U-1 | 否（新建） |
+| web/src/hooks/useWorkflows.ts | T-F-U-2 | 否（新建） |
+| web/src/hooks/useWorkflowStatus.ts | T-F-U-2 | 否（新建） |
+| web/tests/test_agent_*.test.tsx | T-F-U-1 | 否（4 文件独占） |
+| web/tests/test_workflow_*.test.tsx | T-F-U-2 | 否（3 文件独占） |
+
+## v1.16.0 里程碑
+- M-DASHBOARD-1（Wave 1）：agent roster + activity 仪表盘 + workflow 运行态列表就绪（REST 消费 + react-query polling 15s）。
+- M-DASHBOARD-2（Wave 2）：实时更新编排就绪（WS invalidateQueries 扩展 + polling 降级横幅 + 重连恢复）→ v1.16.0 可交付。

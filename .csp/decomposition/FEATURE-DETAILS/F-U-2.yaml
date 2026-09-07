@@ -1,0 +1,100 @@
+feature:
+  id: "F-U-2"
+  name: "Workflow 运行态视图（新组件拉 GET /api/v1/workflows durable+live 列表 + /workflows/{id}/status 步骤进度）"
+  domain: "dashboard"
+  prd_ref: "docs/prd/PRD-dashboard-v1.16.0.md#3.2"
+  pms_module: "dashboard"
+
+  # 用户视角
+  user_story: "作为 DEV，我想在仪表盘看到最近 workflow 执行列表 + 状态 + 步骤进度，以便调试 workflow 编排时快速定位失败步骤。"
+
+  acceptance_criteria:
+    - "Given 后端 GET /api/v1/workflows 返回 ≥1 workflow, when 打开仪表盘页, then workflow 列表显示所有行，含 id/status/step/progress/created_at（AC-D-5）"
+    - "Given 列表含 running + completed, when 渲染, then running 行在 completed 行之前（AC-D-6）"
+    - "Given 列表已渲染，WS 推送 workflow_progress, when WS 消息到达, then 对应 running 行的 current_step/step/status 实时更新，不替换整个列表（AC-D-7）"
+
+  # 边界
+  scope:
+    includes:
+      - "Dashboard.tsx 新增 workflow 运行态视图组件，接 @tanstack/react-query 拉取 GET /api/v1/workflows"
+      - "每行显示：workflow_id / status / workflow name（若返回）/ current_step / total_steps / created_at / completed_at"
+      - "status 映射：running=蓝 / completed=绿 / failed=红 / pending/queued=灰"
+      - "running 状态行置顶，其余按 created_at 降序"
+      - "live in-memory merge 的 workflow（尚未落 DB）也展示，标记 'live' 以区分 durable"
+      - "WebSocket workflow_progress 消息到达时更新对应 running 行的 current_step/step/status（不替换整个列表，只更新匹配行）"
+      - "GET /api/v1/workflows 返回 5xx 时显示错误状态条 + 重试按钮"
+      - "workflow 列表为空时显示空状态 'No workflows executed yet'"
+      - "WS workflow_progress 对应的 workflow_id 不在列表时忽略（可能已过期或来自其他会话）"
+      - "点击行展开步骤详情（若返回含 steps）"
+      - "新增组件支持 dark: 前缀（沿用现有 Tailwind dark mode 范式）"
+      - "状态色标同时有文字标签（不只是颜色，可访问性）"
+    excludes:
+      - "后端新增 REST 端点（v1.15.0 已就绪 GET /api/v1/workflows，本轮纯前端消费）"
+      - "后端 workflow live merge 逻辑（v1.15.0 已实现 durable + live merge，前端只消费）"
+      - "polling 周期刷新逻辑（属 F-U-3 实时更新 Feature）"
+      - "WebSocket 连接管理本身（属 F-U-3 复用既有 useWebSocket）"
+
+  # 前后端边界
+  frontend:
+    pages:
+      - "web/src/pages/Dashboard.tsx（workflow 运行态视图组件渲染）"
+    components:
+      - "web/src/components/dashboard/WorkflowList.tsx（新增，workflow 列表表格）"
+      - "web/src/components/dashboard/WorkflowRow.tsx（新增，单行 + 步骤进度 + live 标记）"
+      - "web/src/components/dashboard/ConnectionStatus.tsx（复用，错误/重试状态条）"
+    interactions:
+      - "进入仪表盘 → 拉取 workflow 列表 → 渲染表格 → running 行实时更新（WS 推送）→ 点击行展开步骤详情"
+      - "GET /api/v1/workflows 5xx → 错误状态条 + 重试"
+      - "列表为空 → 空状态 'No workflows executed yet'"
+      - "WS workflow_progress 不匹配 → 忽略"
+  backend:
+    endpoints:
+      - "GET /api/v1/workflows（v1.15.0 既有，复用，durable DB + live in-memory merge）"
+      - "GET /api/v1/workflows/{id}/status（v1.15.0 既有，复用，步骤进度详情）"
+    business_logic: []
+    integrations: []
+
+  # 数据维度
+  data_entities:
+    - "WorkflowExecution（workflow_id/status/workflow_name/current_step/total_steps/created_at/completed_at/live）"
+    - "WorkflowStep（step/current_step/total_steps/status）"
+  data_operations:
+    - "read（GET /api/v1/workflows 拉 durable+live 列表 + GET /api/v1/workflows/{id}/status 拉步骤详情）"
+
+  # 技术维度预标记
+  tech_dimensions:
+    needs_database: false
+    needs_cache: false
+    needs_queue: false
+    needs_ai: false
+    needs_vector_store: false
+    needs_realtime: true
+    needs_file_storage: false
+    needs_search: false
+    needs_scheduler: false
+    needs_notification: false
+
+  # 非功能性需求
+  nfr:
+    performance: "workflow 列表首屏渲染 P99 [TBD]（依赖 GET /api/v1/workflows 响应，后端 v1.15.0 已实现）"
+    security: "纯前端消费既有 REST 端点，认证沿用既有 JWT/CORS（app.py:229），无新增攻击面"
+    scalability: "workflow 列表默认 limit=20 最近执行，量级有限 [TBD]"
+    availability: "GET /api/v1/workflows 5xx → 错误状态条 + 重试；列表为空 → 空状态；WS 不匹配 → 忽略，不阻塞页面"
+
+  # 依赖与优先级
+  priority: "P0"
+  complexity: "M"
+  depends_on: []
+  blocked_by: []
+
+  # 风险与假设
+  risks:
+    - "WS workflow_progress 与 REST workflow 列表双源数据——WS 推送为实时增量，只更新匹配行不替换整个列表（PRD §3.2 规则 6），polling 全量刷新后 WS 增量覆盖最新值（PRD §8 风险 2）"
+    - "live in-memory merge 的 workflow 与 durable DB 同 id 冲突——后端 v1.15.0 已实现 merge 逻辑，前端只消费并标记 'live' 区分（PRD §3.2 规则 5）"
+    - "WorkflowProgress WS 类型与 REST 返回结构不同——web/src/types/api.ts:153-159 WS 推送用，REST 返回结构不同，03 技术方案须定义 REST 返回类型"
+  assumptions:
+    - "列表数据源 = GET /api/v1/workflows（durable + live merge），默认 limit=20 最近执行（PRD §3.2 规则 1）"
+    - "polling 周期刷新逻辑属 F-U-3 实时更新 Feature，本 Feature 只负责首屏拉取 + 渲染 + WS 增量更新"
+    - "polling interval [TBD]（PRD §3.3 规则 4 标 [TBD]，03 技术方案锁定）"
+    - "前端框架选型 HOW（组件拆分粒度 / 状态管理细节）留 03 技术方案（PRD 附录 下一步建议）"
+    - "REST workflow 返回结构（WorkflowExecution 类型）须 03 技术方案定义（PRD 附录 ground 标 WS WorkflowProgress 类型已存但 REST 结构不同）"

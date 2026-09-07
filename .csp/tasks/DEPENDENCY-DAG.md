@@ -156,3 +156,30 @@ graph LR
 
 ### v1.15.0 并行机会
 - Wave 1：T-F-T-1 / T-F-T-2 / T-F-T-3 全并行（3 路独立，不同关注点：角色注册 / 链接写回 / 活动聚合；`collaborate.py`/`agents_cmd.py`/`test_agents_rest.py` 同文件不同 section，worktree 隔离 + 合并协调）。
+
+---
+
+## v1.16.0 delta（realtime 仪表盘 track）
+
+```mermaid
+graph LR
+  U1[T-F-U-1 agent roster+activity 仪表盘]
+  U2[T-F-U-2 workflow 运行态视图]
+  U3[T-F-U-3 实时更新]
+
+  U1 --> U3
+  U2 --> U3
+```
+
+### v1.16.0 DAG 校验
+- 拓扑序无环：U-1 / U-2 独立（无入边无出边至彼此），U-1→U-3 + U-2→U-3，无回边 ✓
+- 与 decomposition DEPENDENCY-GRAPH v1.16.0 delta 一致（F-U-1→F-U-3 + F-U-2→F-U-3，F-U-1/F-U-2 独立）✓
+- 无自环、无环。若 05 重构致环 → 报错停步。
+
+### v1.16.0 关键路径
+T-F-U-1 → T-F-U-3（2 步，最长链，与 U-2→U-3 等长）
+- U-1/U-2 并行可压缩 Wave 1 段，U-3 Wave 2 依赖两者完成。
+
+### v1.16.0 并行机会
+- Wave 1：T-F-U-1 / T-F-U-2 全并行（2 路独立，不同数据源 + 不同组件；`Dashboard.tsx`/`types/api.ts` 同文件不同 section/类型，worktree 隔离 + 合并协调）。
+- Wave 2：T-F-U-3 独占（依赖 U-1 useAgents + U-2 useWorkflows 已建好 react-query 查询）。

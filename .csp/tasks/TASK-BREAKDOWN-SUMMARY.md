@@ -256,3 +256,47 @@
 - links apply 实际建议质量 [TBD]（取决于 compute_related_pages 既有算法质量）
 - activity 聚合实际事件频率 [TBD]（取决于 workflow 执行频率，内存态不持久化）
 - `collaborate.py` / `agents_cmd.py` / `test_agents_rest.py` 合并冲突解决方案 [TBD]（05 实施时 worktree 隔离 + 合并协调）
+
+---
+
+# v1.16.0 delta（realtime 仪表盘 v4.3，2026-09-07）
+
+## 项目概览（v1.16.0）
+- 上游：3 Spec（1:1 decomposition 3 Feature F-U-1..3），1 PMS 模块（dashboard）
+- Task：3（1:1 Spec，M×3），2 Wave，DAG 无环
+- 关键路径：T-F-U-1 → T-F-U-3（2 步，最长链，与 U-2→U-3 等长）
+- 估时：M 粒度，人日 [TBD]（无团队速率）
+
+## Task 类型分派矩阵（v1.16.0）
+| 类型 | Task | 推荐分派 |
+|---|---|---|
+| frontend | T-F-U-1 | 前端（react-query hooks + AgentList/AgentCard 扩展 + types + vitest） |
+| frontend | T-F-U-2 | 前端（WorkflowList/WorkflowRow 新建 + react-query hooks + types + vitest） |
+| frontend | T-F-U-3 | 前端（useWebSocket 扩展 + polling 降级编排 + 降级横幅 + vitest） |
+
+## 拆解门控（v1.16.0）
+- [x] Spec 完整性：3 Task == 3 Spec（03 穷尽门控通过，3 Spec == 3 原子 Feature F-U-1..3）
+- [x] 每个 Feature 有 ≥1 Task（3/3）
+- [x] Task 粒度 ≤4h（M×3）
+- [x] DAG 无环（U-1/U-2 独立，U-1→U-3 + U-2→U-3，拓扑序无回边）
+- [x] Task 依赖与 decomposition Feature 依赖一致（F-U-1→F-U-3 + F-U-2→F-U-3，F-U-1/F-U-2 独立）
+- [x] Wave 划分合理（Wave 1 U-1/U-2 并行；Wave 2 U-3 依赖 U-1+U-2；`Dashboard.tsx`/`types/api.ts` 同文件不同 section 需合并协调）
+- [x] 每 Task acceptance 非空（指向 AC，共 8 AC 全映射 + AC-D-9 系统级 NFR）
+- [x] 不越 PMS 边界（dashboard 模块）
+- [x] 并行检测通过（Wave 1 两 Task `Dashboard.tsx`/`types/api.ts` 同文件不同 section/类型，需合并协调）
+
+## 05 实施指引（v1.16.0）
+- Lead 按 `WAVE-PLAN.md` 组建子 Agent 团队；Wave 1 两路并行（worktree 隔离）。
+- Wave 1 T-F-U-1 / T-F-U-2 并行，但均写 `Dashboard.tsx`/`types/api.ts` 不同 section/类型，须合并协调。
+- Wave 2 T-F-U-3 独占（依赖 U-1 useAgents + U-2 useWorkflows 已建好 react-query 查询）。
+- 每 Task 一个 commit；完成后续写 commit + 追溯矩阵。
+- 共享文件 `Dashboard.tsx`：T-F-U-1 + T-F-U-2 同时 Wave 1 写不同区域，worktree 隔离 + 合并。
+- 共享文件 `types/api.ts`：T-F-U-1 + T-F-U-2 同时 Wave 1 写不同类型，worktree 隔离 + 合并。
+- 共享文件 `useWebSocket.ts`：T-F-U-3 Wave 2 扩展（U-1/U-2 不改此文件），Wave 1→2 串行。
+- 详见 `.csp/tasks/TASKS-DELTA-v1.16.0.md`。
+
+## assumptions / [TBD]（v1.16.0）
+- polling interval 15s 实际体感延迟 [TBD]（05 实施后用户测试）
+- WS 断连后 polling 降级横幅实际触发频率 [TBD]（取决于网络稳定性）
+- `Dashboard.tsx`/`types/api.ts` 合并冲突解决方案 [TBD]（05 实施时 worktree 隔离 + 合并协调）
+- live workflow 标记判定逻辑（`finished_at === null && status === 'running'` vs 后端 live merge 标记）[TBD]（05 实施时确认后端 list_workflows 返回结构）

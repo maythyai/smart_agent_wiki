@@ -1,0 +1,100 @@
+feature:
+  id: "F-U-1"
+  name: "Agent roster + activity 仪表盘（Dashboard.tsx 接 react-query 拉 GET /api/v1/agents + /agents/{name}/activity，展示 roster + activity_summary + 最近活动）"
+  domain: "dashboard"
+  prd_ref: "docs/prd/PRD-dashboard-v1.16.0.md#3.1"
+  pms_module: "dashboard"
+
+  # 用户视角
+  user_story: "作为 OPS，我想在仪表盘看到所有 agent 的 roster + 活动计数，以便一屏判断哪个 agent 调用频繁、哪个频繁失败。"
+
+  acceptance_criteria:
+    - "Given 后端 GET /api/v1/agents 返回 ≥1 agent, when 打开仪表盘页, then roster 表显示所有 agent，含 name/status/custom 标记/activity_summary.calls（AC-D-1）"
+    - "Given roster 表已渲染, when 点击某 agent 行, then 调用 GET /api/v1/agents/{name}/activity，展示 calls/failures/last_action/last_active_at（AC-D-2）"
+    - "Given 某 agent activity_summary=null, when roster 渲染, then 该行计数列显示 '—'，不报错（AC-D-3）"
+    - "Given 点击不存在的 agent, when GET activity 返回 404, then 详情区显示 'Agent not found'（AC-D-4）"
+
+  # 边界
+  scope:
+    includes:
+      - "Dashboard.tsx 接 @tanstack/react-query 拉取 GET /api/v1/agents，渲染 roster 表格"
+      - "每行显示：agent name / status（idle/running/completed/error）/ custom 标记 / activity_summary.calls / activity_summary.failures / activity_summary.last_active_at"
+      - "activity_summary 为 null 时计数列显示 '—'，不报错（静默降级）"
+      - "点击某 agent 行 → 拉取 GET /api/v1/agents/{name}/activity，展开/侧栏展示活动聚合详情"
+      - "activity 详情端点返回 404 时，详情区显示 'Agent not found'"
+      - "activity 详情端点返回 200 + calls=0 时，详情显示 'no activity recorded'"
+      - "roster 按 status 优先级排序：running > error > completed > idle（沿用现有 AgentList 排序逻辑）"
+      - "GET /api/v1/agents 返回 5xx 时显示错误状态条 + 重试按钮"
+      - "WebSocket agent_status 消息仍保留用于 live status 覆盖（roster 数据源为 REST，WS 为实时状态覆盖）"
+      - "新增组件支持 dark: 前缀（沿用现有 Tailwind dark mode 范式）"
+      - "状态色标同时有文字标签（不只是颜色，可访问性）"
+    excludes:
+      - "后端新增 REST 端点（v1.15.0 已就绪 GET /api/v1/agents + /agents/{name}/activity，本轮纯前端消费）"
+      - "agent activity DB 持久化层（T1 finding，defer v2.0）"
+      - "polling 周期刷新逻辑（属 F-U-3 实时更新 Feature）"
+      - "WebSocket 连接管理本身（属 F-U-3 复用既有 useWebSocket）"
+
+  # 前后端边界
+  frontend:
+    pages:
+      - "web/src/pages/Dashboard.tsx（roster 表渲染 + activity 详情展开）"
+    components:
+      - "web/src/components/dashboard/AgentList.tsx（复用，扩展渲染 activity_summary 列）"
+      - "web/src/components/dashboard/AgentCard.tsx（复用，展示 activity 详情）"
+      - "web/src/components/dashboard/ConnectionStatus.tsx（复用，错误/重试状态条）"
+    interactions:
+      - "进入仪表盘页 → 自动拉取 roster → 表格渲染 → 点击某行 → 拉取 activity 详情 → 展开/侧栏显示 → 关闭返回表格"
+      - "GET /api/v1/agents 5xx → 显示错误状态条 + 重试按钮"
+      - "activity 404 → 详情区显示 'Agent not found'"
+      - "activity_summary null → 计数列 '—'"
+  backend:
+    endpoints:
+      - "GET /api/v1/agents（v1.15.0 既有，复用，返回 roster + activity_summary + custom 标记）"
+      - "GET /api/v1/agents/{name}/activity（v1.15.0 既有，复用，返回 calls/failures/last_action/last_active_at）"
+    business_logic: []
+    integrations: []
+
+  # 数据维度
+  data_entities:
+    - "AgentRoster（name/status/custom/activity_summary{calls,failures,last_action,last_active_at}）"
+    - "AgentActivity（calls/failures/last_action/last_active_at）"
+  data_operations:
+    - "read（GET /api/v1/agents 拉 roster + GET /api/v1/agents/{name}/activity 拉详情）"
+
+  # 技术维度预标记
+  tech_dimensions:
+    needs_database: false
+    needs_cache: false
+    needs_queue: false
+    needs_ai: false
+    needs_vector_store: false
+    needs_realtime: true
+    needs_file_storage: false
+    needs_search: false
+    needs_scheduler: false
+    needs_notification: false
+
+  # 非功能性需求
+  nfr:
+    performance: "roster 首屏渲染 P99 [TBD]（依赖 GET /api/v1/agents 响应，后端 v1.15.0 已实现）"
+    security: "纯前端消费既有 REST 端点，认证沿用既有 JWT/CORS（app.py:229），无新增攻击面"
+    scalability: "roster 规模 = agent 数量（内置 6 + 自定义），量级有限 [TBD]"
+    availability: "GET /api/v1/agents 5xx → 错误状态条 + 重试按钮；activity 404 → 'Agent not found'；activity null → '—' 静默降级，不阻塞页面"
+
+  # 依赖与优先级
+  priority: "P0"
+  complexity: "M"
+  depends_on: []
+  blocked_by: []
+
+  # 风险与假设
+  risks:
+    - "WS agent_status 与 REST roster 双源数据——roster 数据源为 REST（PRD §3.1 规则 1），WS 推送的实时状态仅作 live status 覆盖，时间戳优先（PRD §8 风险 2）"
+    - "AgentList 排序逻辑复用——假设现有 status 优先级排序（running > error > completed > idle）可直接复用，03 技术方案确认"
+    - "activity_summary 为 null 场景——tracker 未初始化时（PRD §3.1 规则 3），前端须静默降级显示 '—'"
+  assumptions:
+    - "roster 数据源 = GET /api/v1/agents（非 WebSocket agent_status）；WS 推送保留用于 live status 覆盖（PRD §3.1 规则 1）"
+    - "polling 周期刷新逻辑属 F-U-3 实时更新 Feature，本 Feature 只负责首屏拉取 + 渲染 + 点击详情"
+    - "polling interval [TBD]（PRD §3.3 规则 4 标 [TBD]，03 技术方案锁定）"
+    - "前端框架选型 HOW（组件拆分粒度 / 状态管理细节）留 03 技术方案（PRD 附录 下一步建议）"
+    - "roster 规模上界 [TBD]（agent 数量预期有限，内置 6 + 自定义角色）"

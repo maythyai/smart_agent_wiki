@@ -193,3 +193,28 @@
 - PRD AC 总数：75 + 12 = 87
 - 已覆盖：75 + 12（[TBD-impl]）= 87
 - 缺口：0
+
+## v1.16.0 delta（realtime 仪表盘 v4.3，8 AC + 1 NFR）
+
+| AC | 描述 | 映射 Feature | 用例 | 状态 |
+|---|---|---|---|---|
+| AC-D-1 | roster 表渲染 | F-U-1 | test_agent_roster_render.test.tsx（vitest mock） | [TBD-impl] |
+| AC-D-2 | activity 详情展开 | F-U-1 | test_agent_activity_detail.test.tsx（vitest mock） | [TBD-impl] |
+| AC-D-3 | activity null 降级 | F-U-1 | test_agent_activity_null.test.tsx（vitest mock） | [TBD-impl] |
+| AC-D-4 | activity 404 处理 | F-U-1 | test_agent_activity_404.test.tsx（vitest mock） | [TBD-impl] |
+| AC-D-5 | workflow 列表渲染 | F-U-2 | test_workflow_list_render.test.tsx（vitest mock） | [TBD-impl] |
+| AC-D-6 | workflow running 置顶 | F-U-2 | test_workflow_running_top.test.tsx（vitest mock） | [TBD-impl] |
+| AC-D-7 | WS workflow_progress 更新行 | F-U-2 | test_workflow_ws_update.test.tsx（vitest mock） | [TBD-impl] |
+| AC-D-8 | WS 断连降级 | F-U-3 | test_ws_disconnect_polling_degraded.test.tsx（vitest mock） | [TBD-impl] |
+| AC-D-9 | 后端不回归 | 系统级 NFR | pytest ≥ 2220 + ruff 0 + coverage ≥ 67% + smoke 6/6 | [TBD-impl] |
+
+### v1.16.0 汇总
+- PRD AC 总数（本轮）：8 + 1（NFR）= 9
+- 已映射：8 + 1 = 9（100%）
+- 缺口：0
+- 全部 [TBD-impl]：05 实施后落定
+
+### 全局汇总（v1.0 + v1.10.0 + v1.11.0 + v1.12.0 + v1.13.0 + v1.14.0 + v1.15.0 + v1.16.0）
+- PRD AC 总数：87 + 9 = 96
+- 已覆盖：87 + 9（[TBD-impl]）= 96
+- 缺口：0

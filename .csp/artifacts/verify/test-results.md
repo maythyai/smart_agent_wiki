@@ -372,3 +372,34 @@ Re-ran all gates during 06-ship release verification (post-05-impl, pre-tag).
 | T-F-U-3 (realtime update) | 0704e5a | AC-D-8 | 1 test file, 1 test |
 
 **Verdict**: All gates green. vitest 64 passed, build success, backend 2220 passed (no regression), ruff 0, smoke 16/16. Proceeding to docs + reconcile.
+
+---
+
+## 06-Ship Verification v1.16.0 (2026-09-07)
+
+| Gate | Command | Result | Status |
+|---|---|---|---|
+| vitest | `cd web && npm test` | 64 passed (13 files), 0 failed (2.68s) | PASS |
+| frontend build | `cd web && npm run build` | tsc -b + vite build success (1029 modules, 1.63s) | PASS |
+| pytest | `.venv/bin/python -m pytest tests/ -q` | 2217 passed, 7 skipped, 0 failed (93.19s) | PASS |
+| ruff | `.venv/bin/ruff check src/ tests/` | All checks passed (0 errors) | PASS |
+| smoke | `.venv/bin/saw smoke` | 6/6 passed, 0 failed | PASS |
+| wheel | `.venv/bin/python -m build --wheel` | smart_agent_wiki-1.16.0-py3-none-any.whl (832694 bytes) | PASS |
+| sdist | `.venv/bin/python -m build --sdist` | smart_agent_wiki-1.16.0.tar.gz (3225235 bytes) | PASS |
+| pyproject bump | `version = "1.16.0"` | 1.15.0 → 1.16.0 | PASS |
+
+### pytest skip details (7 skipped, all environment-dependent)
+
+| Test | Skip reason | Type |
+|---|---|---|
+| test_embedding_benchmark.py:295 | vLLM endpoint unreachable | env (vLLM not running) |
+| test_embedding_benchmark.py:339 | vLLM endpoint unreachable | env (vLLM not running) |
+| test_embedding_benchmark.py:462 | vLLM endpoint unreachable | env (vLLM not running) |
+| test_embedding_benchmark.py:503 | vLLM endpoint unreachable | env (vLLM not running, scale_curve) |
+| test_team_deployment.py:392 | @pytest.mark.skip "Requires FastAPI" | hardcoded skip |
+| test_team_deployment.py:396 | @pytest.mark.skip "Requires FastAPI" | hardcoded skip |
+| test_team_deployment.py:400 | @pytest.mark.skip "Requires FastAPI and database" | hardcoded skip |
+
+**Note**: v1.16.0 is frontend-only (no backend changes). The pytest count differs from v1.15.0 (2220 passed/3 skipped/1 deselected) because vLLM was running during v1.15.0 verify but is not running now — 3 benchmark tests that passed + 1 deselected are now 4 skipped. 0 failures, 0 errors. No regression.
+
+**Verdict**: All gates green. Proceeding to reconcile + tag + push + GitHub Release.

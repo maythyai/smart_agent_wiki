@@ -114,7 +114,14 @@
 | SPEC-F-T-2 | F-T-2 | L2 links auto-apply（saw links apply --suggestion 写回 WikiRepository + dry-run/confirm + 去重） | M | agent-link | 4/4 | SPEC-F-T-2.md |
 | SPEC-F-T-3 | F-T-3 | M2 agent 活动聚合（event bus 订阅 WorkflowStep + GET /api/v1/agents/{name}/activity 端点） | M | agent-link | 4/4 | SPEC-F-T-3.md |
 
+## v1.16.0 delta（+3）
+| spec_id | feature_id | title | complexity | pms_module | ac_coverage | file |
+|---|---|---|---|---|---|---|
+| SPEC-F-U-1 | F-U-1 | agent roster + activity 仪表盘（Dashboard.tsx 接 react-query 拉 GET /api/v1/agents + /agents/{name}/activity） | M | dashboard | 4/4 | SPEC-F-U-1.md |
+| SPEC-F-U-2 | F-U-2 | workflow 运行态视图（新组件拉 GET /api/v1/workflows durable+live + /workflows/{id}/status） | M | dashboard | 3/3 | SPEC-F-U-2.md |
+| SPEC-F-U-3 | F-U-3 | 实时更新（复用 useWebSocket/dashboardStore + react-query invalidateQueries polling 15s 刷新） | M | dashboard | 1/1 | SPEC-F-U-3.md |
+
 ## 校验
-- Spec 数 == 20 + 8(v1.5.0) + 4(v1.6.0) + 3(v1.7.0) + 3(v1.8.0) + 3(v1.9.0) + 4(v1.10.0) + 4(v1.11.0) + 4(v1.12.0) + 5(v1.13.0) + 3(v1.14.0) + 3(v1.15.0) == 64 == decomposition 原子 Feature 数 ✓（1:1）
+- Spec 数 == 20 + 8(v1.5.0) + 4(v1.6.0) + 3(v1.7.0) + 3(v1.8.0) + 3(v1.9.0) + 4(v1.10.0) + 4(v1.11.0) + 4(v1.12.0) + 5(v1.13.0) + 3(v1.14.0) + 3(v1.15.0) + 3(v1.16.0) == 67 == decomposition 原子 Feature 数 ✓（1:1）
 - 每个 feature_id 在 decomposition FEATURE-DETAILS 存在 ✓
 - 每份 Spec ac_coverage 自检无未覆盖 AC ✓

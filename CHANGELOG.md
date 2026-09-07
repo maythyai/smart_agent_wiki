@@ -3,6 +3,36 @@
 All notable changes to this project are documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [v1.16.0] - 2026-09-07
+### Added
+- Realtime dashboard page (`web/src` new route): agent roster table +
+  per-agent activity count/recent calls, consuming existing
+  `GET /api/v1/agents` + `GET /api/v1/agents/{name}/activity` via
+  `@tanstack/react-query` (T-F-U-1, AC-D-1..4, ADR-016).
+- Workflow runtime view: recent execution list with status
+  (running/done/failed) + step progress, consuming existing
+  `GET /api/v1/workflows` (durable + live merge) +
+  `GET /api/v1/workflows/{id}/status` (T-F-U-2, AC-D-5..7).
+- Realtime update: `react-query` `refetchInterval` polling (15s) +
+  existing WebSocket `invalidateQueries` on message. WS disconnect
+  triggers polling degraded mode with "Reconnecting..." banner;
+  reconnect invalidates cache + 3-failure polling degradation banner
+  (T-F-U-3, AC-D-8, ADR-016).
+
+### Changed
+- `Dashboard.tsx` migrated from pure WebSocket-driven rendering to
+  `react-query` REST data fetching with WS-driven invalidation
+  (additive, existing WS path preserved).
+
+### Notes
+- Frontend-only release (no backend changes). Consumes v1.15.0 REST
+  endpoints (agent roster + activity + workflow status).
+- No new dependencies (reuses `@tanstack/react-query` 5.100.6 +
+  `zustand` 5.0.12 + `tailwindcss` 4.2.4).
+- vitest 64 passed (13 files), 0 failed. tsc + vite build success.
+- Backend 2217 passed, 7 skipped (env: vLLM not running + hardcoded
+  skips), 0 failed — no regression (frontend-only).
+
 ## [v1.15.0] - 2026-09-06
 ### Added
 - Custom agent role registry: users can register custom agent roles
