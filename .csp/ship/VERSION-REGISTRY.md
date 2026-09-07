@@ -20,9 +20,11 @@
 | v1.15.0 | v1.15.0 | released | 2026-09-06 | null | null | custom agent role registry YAML+CLI+REST+links auto-apply confirm/dry-run+agent activity aggregation event_bus subscriber+REST/CLI | No | Yes (additive MINOR, no breaking) | agent/link 能力 |
 | v1.16.0 | v1.16.0 | released | 2026-09-07 | null | null | agent roster+activity dashboard (react-query)+workflow runtime view+realtime polling 15s+WS invalidate+disconnect degraded | No | Yes (additive MINOR, frontend-only) | realtime 仪表盘 v4.3 |
 | v1.17.0 | v1.17.0 | released | 2026-09-07 | null | null | desktop 1.0 bump 0.1.0→1.0.0+config convergence 15项+web dashboard integration frontendDist→web/dist+tauri build .app/.dmg (unsigned ADR-017 defer)+port convergence 8080→8000+CORS localhost:5173 | No | Yes (additive MINOR, desktop 0.x→1.0) | desktop 完成 v4.4 |
+| v1.18.0 | v1.18.0 | released | 2026-09-07 | null | null | per-request workspace contextvar injection (N3/K2 closure)+O4 tag flow convention docs (§7.3.5)+middleware per-request workspace_id+QueryEngine contextvar read fallback | No | Yes (additive MINOR, no breaking) | per-request workspace 注入 + O4 tag 流程 |
 
 **Notes**:
-- v1.10.0–v1.17.0 all status=released (tag pushed + GitHub Release created).
+- v1.10.0–v1.18.0 all status=released (tag pushed + GitHub Release created).
+- v1.18.0 tag @TAG_HASH_PENDING, GitHub Release: https://github.com/maythyai/smart_agent_wiki/releases/tag/v1.18.0
 - v1.17.0 tag @e391611, GitHub Release: https://github.com/maythyai/smart_agent_wiki/releases/tag/v1.17.0 (assets: wheel+sdist+.dmg)
 - v1.16.0 tag @57b9550, GitHub Release: https://github.com/maythyai/smart_agent_wiki/releases/tag/v1.16.0
 - v1.15.0 tag @d5b644f, GitHub Release: https://github.com/maythyai/smart_agent_wiki/releases/tag/v1.15.0

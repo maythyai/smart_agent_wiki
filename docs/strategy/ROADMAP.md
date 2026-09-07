@@ -33,7 +33,7 @@ see_also: docs/strategy/STRATEGY.md | docs/prd/PRD-INDEX.md | .csp/review/REVIEW
 
 | 载体 | 现状 | 规则 |
 |---|---|---|
-| `pyproject.toml`（Python 包） | `1.17.0` | **canonical 真源**。下一个发布 = `v1.18.0`（per-request workspace 注入 via contextvar + O4 tag 流程修复，MINOR） |
+| `pyproject.toml`（Python 包） | `1.18.0` | **canonical 真源**。最新已发布 = `v1.18.0`（per-request workspace 注入 via contextvar + O4 tag 流程修复，MINOR）。下一个发布 = `v1.19.0`（TBD） |
 | git tags `v1.0.1` … `v1.9.0` | 全部 SemVer annotated，与 pyproject 一致 | 保留，对外发布基线 |
 | git tags `v3.4.0` / `v3.7.0` | 历史 internal sprint 里程碑号 | 重新定性为**内部 milestone label**（见 1.3），不作为对外发布版本；不可变，不移动/删除 |
 | `desktop/`（tauri.conf.json + package.json） | `1.0.0` | 桌面端达 1.0，与 canonical 版本对齐 |
@@ -59,7 +59,7 @@ see_also: docs/strategy/STRATEGY.md | docs/prd/PRD-INDEX.md | .csp/review/REVIEW
 | `v4.5` | v1.15.0 | released |
 | `v4.6` | v1.16.0 | released |
 | `v4.7` | v1.17.0 | released |
-| `v4.8` | v1.18.0（下一周期） | in-progress（01-prd） |
+| `v4.8` | v1.18.0 | released (2026-09-07) |
 
 > lifecycle-state `next_cycle: v1.18.0`。v1.17.0 = desktop 完成 v4.4（已 released）；v1.18.0 = per-request workspace 注入 via contextvar + O4 tag 流程修复（additive MINOR，非 MAJOR）。v2.0.0 MAJOR 推迟到真实 breaking。
 
@@ -339,9 +339,9 @@ canonical = `pyproject.toml`。发布时以下必须与之一致，用脚本校�
 | v1.15.0 | agent/link 能力（自定义 agent 角色 + L2 links apply + M2 活动聚合） | intelligence-adaptation | released (2026-09-06) |
 | v1.16.0 | realtime 仪表盘 v4.3（agent/workflow 运行态前端可视化） | ecosystem-integration | released (2026-09-07) |
 | v1.17.0 | desktop 完成 v4.4（Tauri→1.0 + 集成 web 仪表盘） | ecosystem-integration | released (2026-09-07, @e391611) |
-| v1.18.0 | per-request workspace 注入 + O4 tag 流程 | platform-team | in-progress (01-prd) |
+| v1.18.0 | per-request workspace 注入 + O4 tag 流程 | platform-team | released (2026-09-07, @TAG_PENDING) |
 
-### v1.18.0 — per-request workspace 注入 + O4 tag 流程（status: in-progress, 01-prd 进行中）
+### v1.18.0 — per-request workspace 注入 + O4 tag 流程（status: released, 2026-09-07, @TAG_PENDING）
 
 > platform-team track。闭合 N3/K2 + O4（最后的 backlog 项）。**additive**——contextvar 注入不改公开 API 契约，MINOR（非 MAJOR）。
 
@@ -377,7 +377,7 @@ SAW 的终局是**AI agent 与人类共用的、可验证、可溯源、可治�
 
 ## 5. 衔接声明
 
-- **01 PRD** 读本文件定位本版本主题；PRD front-matter 标 `roadmap_ref: ROADMAP` + `target_version`（如 v1.11.0）。v1.11.0 周期已闭环（released 2026-09-05）。v1.12.0 周期已闭环（released 2026-09-05，embedding 改用 OpenAI 风格 API + E2E 验证）。v1.13.0 周期已闭环（released 2026-09-06，E2E 收尾轮）。v1.14.0 周期已闭环（released 2026-09-06，semantic 性能优化：cache 阈值可配 + ANN 索引 hnswlib + benchmark cache.stats 真实度量）。v1.15.0 周期已闭环（released 2026-09-06，agent/link 能力：自定义 agent 角色 + L2 links apply + M2 agent 活动聚合）。v1.16.0 周期已闭环（released 2026-09-07，realtime 仪表盘 v4.3：agent roster+activity dashboard + workflow runtime view + realtime polling/WS）。v1.17.0 周期已闭环（released 2026-09-07，desktop 完成 v4.4：Tauri→1.0 + 集成 web 仪表盘 + .app/.dmg build + port convergence）。下一候选 v1.18.0（per-request workspace 或 agent persistence 或 engine.py refactor 或 Playwright E2E，待下一轮 01 PRD 决策）。
+- **01 PRD** 读本文件定位本版本主题；PRD front-matter 标 `roadmap_ref: ROADMAP` + `target_version`（如 v1.11.0）。v1.11.0 周期已闭环（released 2026-09-05）。v1.12.0 周期已闭环（released 2026-09-05，embedding 改用 OpenAI 风格 API + E2E 验证）。v1.13.0 周期已闭环（released 2026-09-06，E2E 收尾轮）。v1.14.0 周期已闭环（released 2026-09-06，semantic 性能优化：cache 阈值可配 + ANN 索引 hnswlib + benchmark cache.stats 真实度量）。v1.15.0 周期已闭环（released 2026-09-06，agent/link 能力：自定义 agent 角色 + L2 links apply + M2 agent 活动聚合）。v1.16.0 周期已闭环（released 2026-09-07，realtime 仪表盘 v4.3：agent roster+activity dashboard + workflow runtime view + realtime polling/WS）。v1.17.0 周期已闭环（released 2026-09-07，desktop 完成 v4.4：Tauri→1.0 + 集成 web 仪表盘 + .app/.dmg build + port convergence）。v1.18.0 周期已闭环（released 2026-09-07，per-request workspace contextvar injection + O4 tag flow convention）。下一候选 v1.19.0（agent persistence 或 engine.py refactor 或 Playwright E2E 或 coverage 深覆盖，待下一轮 01 PRD 决策）。
 - **06 release** 用「版本号规则」节（SemVer/Tag/预发布/多平台一致性），不另立方案。v1.17.0 为 additive → 发 MINOR，不强行 MAJOR。
-- **07 复盘** findings（status=open/deferred）回流更新本文件下一版本主题与版本-主题表 status（planned→in-progress→shipped→deferred）。v1.12.0 findings（N1/N4）已清掉。v1.13.0 findings（Q1/Q2/Q3 + O3）已清掉，O1 改善→R1。v1.14.0 findings（R1/R2）已清掉，R4 改善→S3。v1.15.0 findings（M2/L2 + 自定义角色）已清掉，O2 改善（67.34→67.42%）。v1.16.0 findings（realtime 仪表盘）已清掉，O2 持平（67.42%）。v1.17.0 findings：U4（desktop 0.1.0）已清掉。当前回流 findings：N3/K2/O2/O4 + R3 + S1/S2/S3/S4 + T1/T2/T3/T4 + U1/U2/U3/U5/U6。
-- **lifecycle**：读 `.csp/lifecycle-state.json` 对齐在跑版本；本文件不写 lifecycle（外环）。
+- **07 复盘** findings（status=open/deferred）回流更新本文件下一版本主题与版本-主题表 status（planned→in-progress→shipped→deferred）。v1.12.0 findings（N1/N4）已清掉。v1.13.0 findings（Q1/Q2/Q3 + O3）已清掉，O1 改善→R1。v1.14.0 findings（R1/R2）已清掉，R4 改善→S3。v1.15.0 findings（M2/L2 + 自定义角色）已清掉，O2 改善（67.34→67.42%）。v1.16.0 findings（realtime 仪表盘）已清掉，O2 持平（67.42%）。v1.17.0 findings：U4（desktop 0.1.0）已清掉。v1.18.0 findings：N3/K2（per-request workspace contextvar）已清掉，O4（tag flow convention）已清掉。当前回流 findings：O2 + R3 + S1/S2/S3/S4 + T1/T2/T3/T4 + U1/U2/U3/U5/U6。
+- **lifecycle**：读 `.csp/lifecycle-state.json` 对齐在跑版本；本文件不写 lifecycle（外环）。v1.18.0 已 released（2026-09-07）。
