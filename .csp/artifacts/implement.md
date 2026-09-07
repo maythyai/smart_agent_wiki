@@ -461,3 +461,63 @@ Wave 2: T-F-S-3 (benchmark 更新, 依赖 S-2 ANN 路径)
 - 无新依赖（复用 yaml/typer/fastapi）
 - 无 torch/hnswlib 加载
 - 3 commits: 53cd582 / 8f6ad2b / 59f9552
+
+## v1.16.0 DEV-LOG (realtime 仪表盘 v4.3, 2026-09-07)
+
+### 执行范围
+
+Wave 1: T-F-U-1 (agent roster+activity) + T-F-U-2 (workflow runtime view)
+Wave 2: T-F-U-3 (realtime update, 依赖 U-1+U-2)
+
+3 Task 顺序执行（不 spawn 子代理, 不开 worktree——Dashboard.tsx/types/api.ts 共享文件须串行避冲突）。3 原子 commit。
+
+### T-F-U-1: agent roster+activity 仪表盘 (commit c42df02)
+
+- `types/api.ts`: 新增 `ActivitySummary`/`AgentRosterEntry`/`AgentActivity` 类型。
+- `hooks/useAgents.ts` (新建): `useQuery` GET /api/v1/agents, `refetchInterval: 15000` (ADR-016)。
+- `hooks/useAgentActivity.ts` (新建): `useQuery` GET /agents/{name}/activity, `enabled: !!agentName`, `refetchInterval: 15000`。
+- `AgentCard.tsx` (扩展): 接受 `rosterEntry?` prop, 显示 `activity_summary.calls` + custom 标记 + model_tier; activity null 显示 "—"; `role="button"` + `tabIndex={0}` + `onKeyDown` 可访问性; dark mode 支持。
+- `AgentList.tsx` (扩展): 接受 `roster?`/`onSelectAgent?`/`selectedAgent?` props; 合并 REST roster + WS live status 覆盖; WS-only 回退兼容。
+- `AgentActivityDetail.tsx` (新建): 接受 `agentName`/`onClose?`; 用 `useAgentActivity` hook; states: Loading/Error 404 "Agent not found"/calls=0 "no activity recorded"/Success 全详情。
+- `Dashboard.tsx`: 新增 AgentRosterSection (loading 骨架屏/error 条+Retry/success+AgentList+AgentActivityDetail); 移除旧 WS-only 空态。
+- 测试: 4 文件 8 测试 (AC-D-1 roster render / AC-D-2 activity detail / AC-D-3 activity null "—" / AC-D-4 404 "Agent not found")。vi.mock useStore (empty WS agents) + useAgentActivity (preset data/error)。
+- **偏离**: vitest config include pattern 是 `src/**/__tests__/**` 非 `web/tests/`——测试放 `web/src/__tests__/` (SPEC 写 `web/tests/` 但 vitest 不收集)。功能等价。
+
+### T-F-U-2: workflow 运行态视图 (commit a95e476)
+
+- `types/api.ts`: 新增 `WorkflowExecution`/`WorkflowListResponse`/`WorkflowStatusDetail`/`WorkflowStep` 类型。
+- `hooks/useWorkflows.ts` (新建): `useQuery` GET /api/v1/workflows?limit=20, `refetchInterval: 15000`。
+- `hooks/useWorkflowStatus.ts` (新建): `useQuery` GET /workflows/{id}/status, `enabled: !!workflowId`, `refetchInterval: 15000`。
+- `WorkflowList.tsx` (新建): workflow 列表 + running 置顶排序 + 空态 + 5xx error 条 + Retry + live 标记 + 点击展开 steps。
+- `WorkflowRow.tsx` (新建): status badge + 文字标签 + steps progress bar + live 标记 + 点击展开 step 详情 + timestamp; `role="button"` + `tabIndex={0}` 可访问性; dark mode。
+- `Dashboard.tsx`: 新增 WorkflowRuntimeSection。
+- 测试: 3 文件 4 测试 (AC-D-5 list render / AC-D-6 running top sort / AC-D-7 WS invalidate refetch row count maintained)。vi.mock useWorkflows + useWorkflowStatus。
+- **偏离**: AC-D-7 "invalidateQueries 被调 with ['workflows']" 的 useWebSocket 扩展在 F-U-3 实现; 本 Task 测试验证列表 refetch 后行数不变 (不整体替换)。
+
+### T-F-U-3: 实时更新 (commit 0704e5a)
+
+- `useWebSocket.ts` (扩展): 3 处追加 `invalidateQueries({ queryKey: ['workflows'] })`:
+  - `agent_status` case (L88-89): 已有 ['agents'], 新增 ['workflows']
+  - `workflow_progress` case (L93-96): 已有 ['agents'], 新增 ['workflows']
+  - `onopen` (L123): 已有 ['agents'], 新增 ['workflows'] (重连后立即拉最新)
+- `Dashboard.tsx` (扩展):
+  - polling 失败计数器 (`useRef(0)` + 3 次阈值)
+  - 3 种降级横幅: WS 断连+polling 正常 "Reconnecting..." (黄色) / polling 3x 失败 "Failed to refresh. Click to retry." (橙色+Retry) / 双源断 "Live updates paused. Data may be stale." (红色)
+  - 手动刷新按钮 (`useQueryClient().invalidateQueries()` 全量刷新 + 重置计数器)
+  - 移除旧 "Disconnected from server" 红色 banner (F-U-3 横幅替代)
+  - `useEffect` 监听 `agentsQuery.isError/isSuccess` 更新计数器+横幅
+- `ConnectionStatus.tsx`: 不改 (复用既有 status dot+label+Reconnect button; 降级横幅在 Dashboard 层渲染)
+- 测试: 1 文件 1 测试 (AC-D-8 WS disconnected + polling ok → "Reconnecting..." + roster/workflow 仍渲染)。vi.mock useWebSocket (status=disconnected) + useAgents (success) + useWorkflows (success) + useStore (empty) + api; wrap in QueryClientProvider。
+- **偏离**: SPEC 写 ConnectionStatus.tsx 扩展降级状态显示, 实现改为降级横幅在 Dashboard 层 (需访问 polling 失败计数器 state, ConnectionStatus 无此 state)。功能等价。
+
+### 验证结果
+
+- vitest: 64 passed (13 test files), 0 failed
+- tsc -b: type check pass (pre-existing TS6310 tsconfig.node warning, non-blocking)
+- vite build: success (1.53s)
+- pytest: 2220 passed, 3 skipped, 1 deselected (pre-existing S2 scale_curve) — no regression
+- ruff check src/: 0 errors
+- smoke: 16/16 passed
+- 无后端改动 (纯前端消费 v1.15.0 REST 端点)
+- 无新依赖 (复用 @tanstack/react-query 5.100.6 + zustand 5.0.12 + tailwindcss 4.2.4)
+- 3 commits: c42df02 / a95e476 / 0704e5a

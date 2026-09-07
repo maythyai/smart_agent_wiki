@@ -327,3 +327,32 @@ updated: "2026-09-01"
 - `GET /api/v1/agents/{name}/activity` → `build_agent_roster` (404 check) → `get_activity_tracker()` → `tracker.get_activity(name)`
 - `AgentActivityTracker.subscribe(bus)` → `bus.add_subscriber("WorkflowStep", handler)` → `WorkflowExecutor._publish_event({"type":"WorkflowStep",...})` → `bus._dispatch` → `handler._handle_event` → split `{agent}.{action}` → `dict[agent]["calls"] += 1`
 - `saw links apply` → `compute_related_pages()` → `extract_unique_targets` (dedup) → dry-run table or `WikiRepository.write(WikiPage)` (## Related + related sync)
+
+## v1.16.0 Delta — realtime 仪表盘 v4.3 前端（agent roster + workflow + 实时更新）
+
+### 新增/改动点（ground 自源码+前端栈，file:line）
+
+| 改动 | file:line | 说明 |
+|---|---|---|
+| `AgentRosterEntry`/`AgentActivity`/`ActivitySummary` 类型 | `web/src/types/api.ts:162-185` | REST 返回类型定义（GET /api/v1/agents + /agents/{name}/activity） |
+| `useAgents()` hook | `web/src/hooks/useAgents.ts:16-22` | `useQuery` GET /api/v1/agents, `refetchInterval: 15000` (ADR-016) |
+| `useAgentActivity()` hook | `web/src/hooks/useAgentActivity.ts:16-23` | `useQuery` GET /agents/{name}/activity, `enabled: !!agentName`, `refetchInterval: 15000` |
+| `AgentCard` 扩展 | `web/src/components/dashboard/AgentCard.tsx:8-11` | 接受 `rosterEntry?` prop, 显示 activity_summary.calls + custom 标记 + model_tier; `role="button"` + `tabIndex={0}` 可访问性 |
+| `AgentList` 扩展 | `web/src/components/dashboard/AgentList.tsx:13-17` | 接受 `roster?`/`onSelectAgent?`/`selectedAgent?` props; 合并 REST roster + WS live status 覆盖 |
+| `AgentActivityDetail` 新建 | `web/src/components/dashboard/AgentActivityDetail.tsx:18-20` | 用 `useAgentActivity` hook; states: Loading/404 "Agent not found"/calls=0 "no activity recorded"/Success 全详情 |
+| `WorkflowExecution`/`WorkflowStatusDetail`/`WorkflowStep` 类型 | `web/src/types/api.ts:190-218` | REST 返回类型定义（GET /api/v1/workflows + /workflows/{id}/status） |
+| `useWorkflows()` hook | `web/src/hooks/useWorkflows.ts:16-22` | `useQuery` GET /api/v1/workflows?limit=20, `refetchInterval: 15000` |
+| `useWorkflowStatus()` hook | `web/src/hooks/useWorkflowStatus.ts:16-23` | `useQuery` GET /workflows/{id}/status, `enabled: !!workflowId`, `refetchInterval: 15000` |
+| `WorkflowList` 新建 | `web/src/components/dashboard/WorkflowList.tsx:19-21` | workflow 列表 + running 置顶排序 + 空态 + error 条 + Retry + 点击展开 steps |
+| `WorkflowRow` 新建 | `web/src/components/dashboard/WorkflowRow.tsx:16-18` | status badge + 文字标签 + steps progress bar + live 标记 + 点击展开 step 详情 |
+| `useWebSocket` 扩展 invalidateQueries | `web/src/hooks/useWebSocket.ts:89,96,123` | 3 处追加 `invalidateQueries({ queryKey: ['workflows'] })`（agent_status/workflow_progress/onopen） |
+| `Dashboard.tsx` polling 降级 | `web/src/pages/Dashboard.tsx:40-52` | `useRef(0)` 失败计数器 + 3 种降级横幅 + 手动刷新按钮 (`useQueryClient().invalidateQueries()`) |
+| `Dashboard.tsx` AgentRosterSection | `web/src/pages/Dashboard.tsx:~215-245` | loading 骨架屏/error+Retry/success+AgentList(roster)+AgentActivityDetail |
+| `Dashboard.tsx` WorkflowRuntimeSection | `web/src/pages/Dashboard.tsx:~248-253` | `<WorkflowList />` 区域 |
+
+### 调用链（增量）
+- `Dashboard.tsx` → `useAgents()` → `api.get('/api/v1/agents')` → `AgentList(roster)` → `AgentCard(rosterEntry)` → activity_summary.calls
+- `Dashboard.tsx` → click agent → `setSelectedAgent(name)` → `AgentActivityDetail` → `useAgentActivity(name)` → `api.get('/agents/{name}/activity')`
+- `Dashboard.tsx` → `WorkflowList` → `useWorkflows()` → `api.get('/api/v1/workflows')` → `WorkflowRow` → click → `useWorkflowStatus(id)` → `api.get('/workflows/{id}/status')`
+- `useWebSocket` WS message → `invalidateQueries(['agents'])` + `invalidateQueries(['workflows'])` → react-query refetch → Dashboard re-render
+- `Dashboard.tsx` Retry button → `queryClient.invalidateQueries()` (全量) → reset fail counter → banners clear

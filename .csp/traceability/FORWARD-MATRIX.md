@@ -217,3 +217,26 @@ PRD feature_count=5（模块）→ decomposition 5 域 → 20 原子 Feature →
 | F-T-3 | SPEC-F-T-3 | T-F-T-3 | 1 | 59f9552 |
 
 链：PRD AC → Feature → Spec → Task，12 AC 全映射。03-tech done，04-tasks 待拆。
+
+## v1.16.0 delta（realtime 仪表盘 v4.3）
+
+| PRD 模块(§3) | AC | Feature | Spec |
+|---|---|---|---|
+| §3.1 F-U-1 | AC-D-1 | F-U-1 | SPEC-F-U-1 |
+| §3.1 | AC-D-2 | F-U-1 | SPEC-F-U-1 |
+| §3.1 | AC-D-3 | F-U-1 | SPEC-F-U-1 |
+| §3.1 | AC-D-4 | F-U-1 | SPEC-F-U-1 |
+| §3.2 F-U-2 | AC-D-5 | F-U-2 | SPEC-F-U-2 |
+| §3.2 | AC-D-6 | F-U-2 | SPEC-F-U-2 |
+| §3.2 | AC-D-7 | F-U-2 | SPEC-F-U-2 |
+| §3.3 F-U-3 | AC-D-8 | F-U-3 | SPEC-F-U-3 |
+
+### Task 追溯（Feature → Task，[TBD-04 待拆]）
+
+| Feature | Spec | Task | Wave | Commit |
+|---|---|---|---|---|
+| F-U-1 | SPEC-F-U-1 | T-F-U-1 | 1 | c42df02 |
+| F-U-2 | SPEC-F-U-2 | T-F-U-2 | 1 | a95e476 |
+| F-U-3 | SPEC-F-U-3 | T-F-U-3 | 2 | 0704e5a |
+
+链：PRD AC → Feature → Spec → Task → commit，8 AC 全映射（AC-D-9 系统级 NFR）。05-impl done，vitest 64 passed, build success, backend 2220 passed 不回归。

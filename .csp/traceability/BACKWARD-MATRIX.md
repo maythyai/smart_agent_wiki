@@ -95,3 +95,16 @@
 | test_agents_api.py (9 tests) | 53cd582+59f9552 | T-F-T-1/T-F-T-3 | SPEC-F-T-1/SPEC-F-T-3 | F-T-1, F-T-3 | AC-A-4, AC-C-3, AC-C-4 |
 | test_links_apply.py (4 tests) | 8f6ad2b | T-F-T-2 | SPEC-F-T-2 | F-T-2 | AC-B-1..4 |
 | test_agent_activity.py (8 tests) | 59f9552 | T-F-T-3 | SPEC-F-T-3 | F-T-3 | AC-C-1, AC-C-2 |
+
+## v1.16.0 delta（realtime 仪表盘 v4.3，backward: Test → Commit → Task → Spec → Feature → PRD AC）
+
+| Test | Commit | Task | Spec | Feature | PRD AC |
+|---|---|---|---|---|---|
+| test_agent_roster_render.test.tsx | c42df02 | T-F-U-1 | SPEC-F-U-1 | F-U-1 | AC-D-1 |
+| test_agent_activity_detail.test.tsx | c42df02 | T-F-U-1 | SPEC-F-U-1 | F-U-1 | AC-D-2 |
+| test_agent_activity_null.test.tsx | c42df02 | T-F-U-1 | SPEC-F-U-1 | F-U-1 | AC-D-3 |
+| test_agent_activity_404.test.tsx | c42df02 | T-F-U-1 | SPEC-F-U-1 | F-U-1 | AC-D-4 |
+| test_workflow_list_render.test.tsx | a95e476 | T-F-U-2 | SPEC-F-U-2 | F-U-2 | AC-D-5 |
+| test_workflow_running_top.test.tsx | a95e476 | T-F-U-2 | SPEC-F-U-2 | F-U-2 | AC-D-6 |
+| test_workflow_ws_update.test.tsx | a95e476 | T-F-U-2 | SPEC-F-U-2 | F-U-2 | AC-D-7 |
+| test_ws_disconnect_polling_degraded.test.tsx | 0704e5a | T-F-U-3 | SPEC-F-U-3 | F-U-3 | AC-D-8 |

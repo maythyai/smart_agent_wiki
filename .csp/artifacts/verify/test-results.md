@@ -336,3 +336,39 @@ Re-ran all gates during 06-ship release verification (post-05-impl, pre-tag).
 **Lint fix**: `examples/demo/sample-documents/utils.py:42` — removed unused `manager` variable assignment (F841, pre-existing demo file, ruff 0.16.5 caught it).
 
 **Verdict**: All gates green. 2220 passed, ruff 0, coverage 67.42% ≥ 67, smoke 6/6, wheel smart_agent_wiki-1.15.0, pyproject 1.15.0. Proceeding to reconcile + tag v1.15.0 + push + GitHub Release.
+
+---
+
+## v1.16.0 verify (realtime 仪表盘 v4.3, 2026-09-07)
+
+**Version**: v1.16.0 (realtime dashboard frontend)
+**Commits**: c42df02 (F-U-1), a95e476 (F-U-2), 0704e5a (F-U-3)
+
+### Frontend (vitest)
+
+| Metric | Result |
+|---|---|
+| vitest | 64 passed (13 test files), 0 failed |
+| tsc -b | type check pass (pre-existing TS6310 tsconfig.node warning, non-blocking) |
+| vite build | success (1.53s, dist/index-AAWEv9ra.js 1500KB) |
+| new tests | 8 test files, 13 tests (AC-D-1..8) |
+
+### Backend (no regression, frontend-only changes)
+
+| Gate | Command | Result | Status |
+|---|---|---|---|
+| pytest | `.venv/bin/python -m pytest --deselect tests/unit/test_embedding_benchmark.py::test_ac_c_3_scale_curve -q` | 2220 passed, 3 skipped, 1 deselected (pre-existing S2) | PASS |
+| ruff | `.venv/bin/ruff check src/` | 0 errors | PASS |
+| smoke | `.venv/bin/python -m pytest tests/test_smoke_cmd.py tests/unit/test_smoke_chain.py -v` | 16 passed | PASS |
+
+**Pre-existing failure**: `test_ac_c_3_scale_curve` — v1.14.0 S2 finding (synthetic 384dim vs qwen 1024dim, vLLM-env-dependent). Deselected (same as v1.15.0). NOT caused by v1.16.0 (frontend-only, no backend changes).
+
+### Per-Task results
+
+| Task | Commit | AC | Tests |
+|---|---|---|---|
+| T-F-U-1 (agent roster+activity) | c42df02 | AC-D-1/2/3/4 | 4 test files, 8 tests |
+| T-F-U-2 (workflow runtime view) | a95e476 | AC-D-5/6/7 | 3 test files, 4 tests |
+| T-F-U-3 (realtime update) | 0704e5a | AC-D-8 | 1 test file, 1 test |
+
+**Verdict**: All gates green. vitest 64 passed, build success, backend 2220 passed (no regression), ruff 0, smoke 16/16. Proceeding to docs + reconcile.
