@@ -521,3 +521,53 @@ Wave 2: T-F-U-3 (realtime update, 依赖 U-1+U-2)
 - 无后端改动 (纯前端消费 v1.15.0 REST 端点)
 - 无新依赖 (复用 @tanstack/react-query 5.100.6 + zustand 5.0.12 + tailwindcss 4.2.4)
 - 3 commits: c42df02 / a95e476 / 0704e5a
+
+## v1.17.0 DEV-LOG — desktop 完成 v4.4（2026-09-07）
+
+### 执行范围
+- Wave 1: T-F-V-1 (版本 bump + 配置收敛, infra, S)
+- Wave 2: T-F-V-2 (web 仪表盘集成验证, frontend, M) → T-F-V-3 (tauri build 验证, infra, L) → T-F-V-4 (后端协同 + 端口收敛, backend-logic, M)
+- 顺序执行避 build 冲突（V-2 验证 web/dist → V-3 执行 tauri build → V-4 改 vite.config.ts）
+
+### T-F-V-1: 4 文件版本 bump 0.1.0→1.0.0 + 配置收敛
+- 改动: `desktop/package.json:3` version 0.1.0→1.0.0, `desktop/src-tauri/tauri.conf.json:4` version 0.1.0→1.0.0, `desktop/src-tauri/Cargo.toml:3` version 0.1.0→1.0.0, `web/package.json:4` version 0.1.0→1.0.0
+- 配置审查: 15 项全 ✓ (frontendDist/devUrl/beforeDevCommand/beforeBuildCommand/bundle.active/bundle.targets/macOS/Windows/Linux 全核对, 无废弃字段)
+- 测试: `test_version_consistency.py` (5 tests) + `test_tauri_config_consistency.py` (16 tests) = 21 tests
+- commit: f922a99
+
+### T-F-V-2: web 仪表盘集成验证
+- 无代码改动 (验证性 Feature)
+- 验证: `web/dist/index.html` 存在 (466B) + 引用 assets/index-ZJ-gnL3B.js + index-CSZ67bzM.css; frontendDist=../../web/dist 解析正确; @tauri-apps/api ^2.0.0 集成
+- `cd web && npm run build` 确保 web/dist 最新 (1029 modules, 1.69s)
+- 测试: `test_web_dist_integration.py` (6 tests) + `test_web_dev_integration.py` (4 tests) = 10 tests
+- commit: 19578ef
+
+### T-F-V-3: tauri build 验证
+- `cd desktop && npm install` (安装 @tauri-apps/cli 2.11.0)
+- `npm run tauri:build` → cargo build --release (1m 39s) → bundle 产出 2 个原生包:
+  - `Smart Agent Wiki.app` (macOS .app bundle)
+  - `Smart Agent Wiki_1.0.0_aarch64.dmg` (2.8MB, macOS aarch64)
+- 编译警告: 4 个 unused import/variable warnings (menu.rs/commands/export.rs/main.rs, non-blocking)
+- 测试: `test_tauri_build_smoke.py` (2 tests, skipif no cargo, 87s) + `test_bundle_targets_config.py` (4 tests) = 6 tests
+- commit: 6bb6949 (amended with package-lock.json)
+
+### T-F-V-4: 后端协同 + 端口收敛
+- 改动 4 行:
+  - `web/vite.config.ts:19` proxy /api target 8080→8000
+  - `web/vite.config.ts:23` proxy /ws target 8080→8000
+  - `src/saw/drivers/cli/commands/web_cmd.py:34` cors_origins 默认值添加 localhost:5173
+  - `src/saw/drivers/web/app.py:228` CORS fallback origins 添加 localhost:5173
+- 测试: `test_port_convergence.py` (4 tests) + `test_prod_backend_connection.py` (5 tests) + `test_cors_expansion.py` (6 tests) = 15 tests
+- commit: 1ca63a1
+
+### 验证结果
+- pytest: 2267 passed, 7 skipped (2217 baseline + 50 new, no regression)
+- ruff: 0 errors
+- smoke: 16/16 passed
+- vitest: 64 passed (13 files), 0 failed (no frontend regression)
+- vite build: 1029 modules, 1.68s
+- tauri build: cargo 1m 39s → .app + .dmg produced (unsigned, per ADR-017 defer)
+- 4 commits: f922a99 / 19578ef / 6bb6949 / 1ca63a1
+- 无新依赖 (复用既有 Tauri v2 + vite + saw web)
+- 无 torch 加载
+- 签名/公证 defer (per ADR-017 + PRD §8)

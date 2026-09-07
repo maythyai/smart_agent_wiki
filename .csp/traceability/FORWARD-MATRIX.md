@@ -240,3 +240,28 @@ PRD feature_count=5（模块）→ decomposition 5 域 → 20 原子 Feature →
 | F-U-3 | SPEC-F-U-3 | T-F-U-3 | 2 | 0704e5a |
 
 链：PRD AC → Feature → Spec → Task → commit，8 AC 全映射（AC-D-9 系统级 NFR）。05-impl done，vitest 64 passed, build success, backend 2220 passed 不回归。
+
+## v1.17.0 delta（desktop 完成 v4.4）
+
+| PRD 模块(§3) | AC | Feature | Spec |
+|---|---|---|---|
+| §3.1 F-V-1 | AC-V-1 | F-V-1 | SPEC-F-V-1 |
+| §3.1 | AC-V-2 | F-V-1 | SPEC-F-V-1 |
+| §3.2 F-V-2 | AC-W-1 | F-V-2 | SPEC-F-V-2 |
+| §3.2 | AC-W-2 | F-V-2 | SPEC-F-V-2 |
+| §3.3 F-V-3 | AC-B-1 | F-V-3 | SPEC-F-V-3 |
+| §3.3 | AC-B-2 | F-V-3 | SPEC-F-V-3 |
+| §3.4 F-V-4 | AC-C-1 | F-V-4 | SPEC-F-V-4 |
+| §3.4 | AC-C-2 | F-V-4 | SPEC-F-V-4 |
+| §3.4 | AC-C-3 | F-V-4 | SPEC-F-V-4 |
+
+### Task 追溯（Feature → Task，[TBD-04 待拆]）
+
+| Feature | Spec | Task | Wave | Commit |
+|---|---|---|---|---|
+| F-V-1 | SPEC-F-V-1 | T-F-V-1 | 1 | f922a99 |
+| F-V-2 | SPEC-F-V-2 | T-F-V-2 | 2 | 19578ef |
+| F-V-3 | SPEC-F-V-3 | T-F-V-3 | 2 | 6bb6949 |
+| F-V-4 | SPEC-F-V-4 | T-F-V-4 | 2 | 1ca63a1 |
+
+链：PRD AC → Feature → Spec → Task，9 AC 全映射。03-tech done，04-tasks 待拆。

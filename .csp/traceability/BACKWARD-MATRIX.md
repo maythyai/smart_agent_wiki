@@ -108,3 +108,17 @@
 | test_workflow_running_top.test.tsx | a95e476 | T-F-U-2 | SPEC-F-U-2 | F-U-2 | AC-D-6 |
 | test_workflow_ws_update.test.tsx | a95e476 | T-F-U-2 | SPEC-F-U-2 | F-U-2 | AC-D-7 |
 | test_ws_disconnect_polling_degraded.test.tsx | 0704e5a | T-F-U-3 | SPEC-F-U-3 | F-U-3 | AC-D-8 |
+
+## v1.17.0 delta（desktop 完成 v4.4，backward: Test → Commit → Task → Spec → Feature → PRD AC）
+
+| Test | Commit | Task | Spec | Feature | PRD AC |
+|---|---|---|---|---|---|
+| test_version_consistency.py | f922a99 | T-F-V-1 | SPEC-F-V-1 | F-V-1 | AC-V-1 |
+| test_tauri_config_consistency.py | f922a99 | T-F-V-1 | SPEC-F-V-1 | F-V-1 | AC-V-2 |
+| test_web_dist_integration.py | 19578ef | T-F-V-2 | SPEC-F-V-2 | F-V-2 | AC-W-1 |
+| test_web_dev_integration.py | 19578ef | T-F-V-2 | SPEC-F-V-2 | F-V-2 | AC-W-2 |
+| test_tauri_build_smoke.py (skipif no cargo) | 6bb6949 | T-F-V-3 | SPEC-F-V-3 | F-V-3 | AC-B-1 |
+| test_bundle_targets_config.py | 6bb6949 | T-F-V-3 | SPEC-F-V-3 | F-V-3 | AC-B-2 |
+| test_port_convergence.py | 1ca63a1 | T-F-V-4 | SPEC-F-V-4 | F-V-4 | AC-C-1 |
+| test_prod_backend_connection.py | 1ca63a1 | T-F-V-4 | SPEC-F-V-4 | F-V-4 | AC-C-2 |
+| test_cors_expansion.py | 1ca63a1 | T-F-V-4 | SPEC-F-V-4 | F-V-4 | AC-C-3 |

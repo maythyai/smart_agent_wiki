@@ -356,3 +356,32 @@ updated: "2026-09-01"
 - `Dashboard.tsx` → `WorkflowList` → `useWorkflows()` → `api.get('/api/v1/workflows')` → `WorkflowRow` → click → `useWorkflowStatus(id)` → `api.get('/workflows/{id}/status')`
 - `useWebSocket` WS message → `invalidateQueries(['agents'])` + `invalidateQueries(['workflows'])` → react-query refetch → Dashboard re-render
 - `Dashboard.tsx` Retry button → `queryClient.invalidateQueries()` (全量) → reset fail counter → banners clear
+
+## v1.17.0 Delta — desktop 完成 v4.4（版本 bump + 配置收敛 + 端口收敛 + CORS 扩展）
+
+### 新增/改动点（ground 自源码，file:line）
+
+| 改动 | file:line | 说明 |
+|---|---|---|
+| desktop version bump 0.1.0→1.0.0 | `desktop/package.json:3`, `desktop/src-tauri/tauri.conf.json:4`, `desktop/src-tauri/Cargo.toml:3`, `web/package.json:4` | 4 文件版本对齐 1.0.0（desktop 1.0 正式版） |
+| tauri.conf.json 配置收敛 | `desktop/src-tauri/tauri.conf.json:2,8,9,10,11,22,25` | Tauri v2 schema 审查 15 项全 ✓：$schema=配置/2, frontendDist=../../web/dist, devUrl=localhost:5173, beforeDevCommand/beforeBuildCommand npm run dev/build --prefix ../web, bundle.active=true, bundle.targets 7 平台 |
+| vite proxy 端口收敛 8080→8000 | `web/vite.config.ts:19,23` | proxy /api + /ws target 从 8080 改为 8000，与 saw web 默认端口对齐（D-02 约定） |
+| CORS 扩展 localhost:5173 | `src/saw/drivers/cli/commands/web_cmd.py:34`, `src/saw/drivers/web/app.py:228` | cors_origins 默认值添加 localhost:5173（vite dev server 端口），dev 模式 saw web 默认允许 desktop 前端访问 |
+| tauri build 产出 | `desktop/src-tauri/target/release/bundle/macos/Smart Agent Wiki.app`, `desktop/src-tauri/target/release/bundle/dmg/Smart Agent Wiki_1.0.0_aarch64.dmg` | macOS .app + .dmg 原生包，unsigned（per ADR-017 defer） |
+
+### 调用链（增量）
+
+- **dev 模式**: `tauri dev` → vite dev server (5173) → proxy `/api` → `localhost:8000` (saw web) + proxy `/ws` → `localhost:8000/ws` (saw web WS router)
+- **prod 模式**: desktop 加载 `web/dist/index.html` → 前端直连 `VITE_API_BASE_URL` (默认 localhost:8000) + `VITE_WS_URL` (默认 ws://localhost:8000/ws)
+- **CORS**: saw web `create_app()` → `CORSMiddleware(allow_origins=["localhost:3000","127.0.0.1:3000","localhost:5173"])` → desktop dev 前端 5173 被 CORS 允许
+- **tauri build**: `npm run tauri:build` → `beforeBuildCommand: npm run build --prefix ../web` → `tsc -b && vite build` → `web/dist/` → `cargo build --release` → bundle → `.app` + `.dmg`
+
+### desktop 栈入口点（ground 自源码）
+
+| 入口 | file:line | 说明 |
+|---|---|---|
+| `main.rs` setup | `desktop/src-tauri/src/main.rs:25-42` | 原生菜单 + 托盘 + 主题 + 文件监听 + app 目录 + 全局快捷键 |
+| `main.rs` 插件注册 | `desktop/src-tauri/src/main.rs:16-22` | 8 插件 (shell/store/dialog/fs/global-shortcut/os/clipboard-manager/process) |
+| `main.rs` IPC 命令 | `desktop/src-tauri/src/main.rs:43-58` | 16 invoke_handler 命令 |
+| `Cargo.toml` release profile | `desktop/src-tauri/Cargo.toml:28-33` | panic=abort, codegen-units=1, lto=true, opt-level=s, strip=true |
+| `tauri.conf.json` build 配置 | `desktop/src-tauri/tauri.conf.json:7-12` | beforeDevCommand/beforeBuildCommand/devUrl/frontendDist |

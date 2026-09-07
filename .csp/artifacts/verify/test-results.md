@@ -403,3 +403,34 @@ Re-ran all gates during 06-ship release verification (post-05-impl, pre-tag).
 **Note**: v1.16.0 is frontend-only (no backend changes). The pytest count differs from v1.15.0 (2220 passed/3 skipped/1 deselected) because vLLM was running during v1.15.0 verify but is not running now — 3 benchmark tests that passed + 1 deselected are now 4 skipped. 0 failures, 0 errors. No regression.
 
 **Verdict**: All gates green. Proceeding to reconcile + tag + push + GitHub Release.
+
+## v1.17.0 Verify Results (2026-09-07)
+
+| Gate | Command | Result | Status |
+|---|---|---|---|
+| pytest | `.venv/bin/python -m pytest --ignore=tests/unit/test_tauri_build_smoke.py` | 2267 passed, 7 skipped (was 2217 + 50 new) | PASS |
+| pytest (new) | `.venv/bin/python -m pytest tests/unit/test_version_consistency.py tests/unit/test_tauri_config_consistency.py tests/unit/test_web_dist_integration.py tests/unit/test_web_dev_integration.py tests/unit/test_bundle_targets_config.py tests/unit/test_port_convergence.py tests/unit/test_prod_backend_connection.py tests/unit/test_cors_expansion.py` | 46 passed (excl. tauri build smoke) | PASS |
+| pytest (tauri build smoke) | `.venv/bin/python -m pytest tests/unit/test_tauri_build_smoke.py` | 2 passed (87.30s, includes cargo build) | PASS |
+| ruff | `.venv/bin/python -m ruff check` (changed files) | All checks passed | PASS |
+| smoke | `.venv/bin/python -m pytest tests/test_smoke_cmd.py tests/unit/test_smoke_chain.py` | 16/16 passed | PASS |
+| vitest | `cd web && npm test` | 64 passed (13 files), 0 failed | PASS |
+| vite build | `cd web && npm run build` | 1029 modules, built in 1.68s | PASS |
+| tauri build | `cd desktop && npm run tauri:build` | cargo build --release 1m39s → .app + .dmg produced | PASS |
+
+### tauri build artifacts
+
+| Artifact | Path | Size |
+|---|---|---|
+| macOS .app | `desktop/src-tauri/target/release/bundle/macos/Smart Agent Wiki.app` | — |
+| macOS .dmg | `desktop/src-tauri/target/release/bundle/dmg/Smart Agent Wiki_1.0.0_aarch64.dmg` | 2,848,791 bytes (~2.7 MB) |
+
+### pytest skip details (7 skipped, same as v1.16.0)
+
+| Test | Skip reason | Type |
+|---|---|---|
+| test_embedding_benchmark.py ×4 | vLLM endpoint unreachable | env |
+| test_team_deployment.py ×3 | @pytest.mark.skip "Requires FastAPI" | hardcoded skip |
+
+**Note**: v1.17.0 adds 50 new pytest tests (21 version/config + 10 web integration + 4 bundle targets + 15 port/CORS/prod). Tauri build smoke test (2 tests, 87s) run separately. No regression — 2267 passed = 2217 (v1.16.0 baseline) + 50 new. Backend changes limited to 4 lines (vite.config.ts 2 + web_cmd.py 1 + app.py 1).
+
+**Verdict**: All gates green. 4 commits: f922a99 / 19578ef / 6bb6949 / 1ca63a1. Tauri build produced .app + .dmg (unsigned, per ADR-017 defer). Proceeding to reconcile + tag.
