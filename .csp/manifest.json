@@ -3097,6 +3097,21 @@
       "original_ref": ".csp/milestones/v1.17.0/ARCHIVE-MANIFEST.md",
       "content_hash": "542625fa5f2555c3128f6ed44a7b212e80629e43",
       "build_status": "built"
+    },
+    {
+      "source_id": "doc:artifacts:retro-v1.17.0",
+      "source_type": "doc",
+      "kind": "retrospective",
+      "domain": "artifacts",
+      "title": "Retrospective v1.17.0 desktop",
+      "raw_path": ".csp/artifacts/retrospective-v1.17.0.md",
+      "output_path": "",
+      "original_ref": ".csp/artifacts/retrospective-v1.17.0.md",
+      "content_hash": "e176c93e654efc0e6dbc86dd645008298219591a",
+      "source_updated_at": "2026-09-07T00:00:00+08:00",
+      "build_status": "built",
+      "wiki_pages": [],
+      "status": "ready"
     }
   ],
   "last_updated": "2026-09-07"
