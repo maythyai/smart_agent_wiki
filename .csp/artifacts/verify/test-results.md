@@ -463,3 +463,36 @@ Re-ran all gates during 06-ship release verification (post-05-impl, pre-tag).
 | test_team_deployment.py ×3 | @pytest.mark.skip "Requires FastAPI" | hardcoded skip |
 
 **Verdict**: All gates green. 2267 passed, ruff 0, smoke 16/16, vitest 64, vite build OK, tauri build .dmg produced. pyproject 1.17.0, desktop 1.0.0, web 1.0.0. Proceeding to reconcile + tag v1.17.0 + push + GitHub Release (+.dmg asset).
+
+---
+
+## v1.18.0 Verify Results (2026-09-07)
+
+**Version**: v1.18.0 (per-request workspace contextvar injection + O4 tag flow)
+**Commits**: 47d5cee (F-W-1 + F-W-2)
+
+| Gate | Command | Result | Status |
+|---|---|---|---|
+| pytest | `.venv/bin/python -m pytest tests/ -x -q --tb=short` | 2277 passed, 7 skipped, 0 failed (185.67s) | PASS |
+| ruff | `.venv/bin/python -m ruff check src/ tests/` | All checks passed! (0 errors) | PASS |
+| smoke | `.venv/bin/saw smoke` | 6/6 passed (skeleton.import, skeleton.console, ingest.compile, query.keyword, govern.learn, offline.fallback) | PASS |
+| build wheel | `.venv/bin/python -m build --wheel --sdist` | smart_agent_wiki-1.18.0-py3-none-any.whl + smart_agent_wiki-1.18.0.tar.gz | PASS |
+| pyproject bump | `grep '^version' pyproject.toml` | 1.18.0 (bumped 1.17.0→1.18.0) | PASS |
+
+### New tests (10 added in v1.18.0)
+
+| Test file | Tests | AC |
+|---|---|---|
+| tests/unit/test_workspace_contextvar.py | 7 | AC-F-W-1-1..7 (contextvar set/get, fallback, isolation, thread-safety, async, middleware, query engine injection) |
+| tests/unit/test_tag_flow_convention.py | 3 | AC-F-W-2-1..3 (tag on release commit, not reconcile; annotated tag; release notes present) |
+
+### pytest skip details (7 skipped, same as v1.17.0)
+
+| Test | Skip reason | Type |
+|---|---|---|
+| test_embedding_benchmark.py ×4 | vLLM endpoint unreachable | env |
+| test_team_deployment.py ×3 | @pytest.mark.skip "Requires FastAPI" | hardcoded skip |
+
+**Note**: v1.18.0 adds 10 new pytest tests (7 contextvar + 3 tag convention). 2277 passed = 2267 (v1.17.0 baseline) + 10 new. Changes are additive (contextvar injection in QueryEngine internals, no public API change). No regression.
+
+**Verdict**: All gates green. 2277 passed, ruff 0, smoke 6/6, wheel smart_agent_wiki-1.18.0, pyproject 1.18.0. Proceeding to reconcile + tag v1.18.0 + push + GitHub Release.

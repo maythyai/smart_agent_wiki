@@ -352,3 +352,38 @@
 ## v1.17.0 里程碑
 - M-DESKTOP-1（Wave 1）：1.0.0 版本基线就绪（4 文件版本一致 + 配置审查通过）。
 - M-DESKTOP-2（Wave 2）：仪表盘集成验证 + tauri build 原生包产出 + 端口收敛 CORS 扩展就绪 → v1.17.0 可交付。
+
+---
+
+# v1.18.0 波次（per-request workspace 注入 + O4 tag 流程，2026-09-07）
+
+> 源自 PRD-per-request-ws-v1.18.0 + 02 delta + ADR-018。2 Task，1 Wave 全并行。DAG 无环（2 Task 互相独立，无边）。per-request workspace contextvar 注入 + O4 tag 流程约定文档化。
+
+## v1.18.0 Wave 1 — 全并行（2 Task，无依赖）
+| task_id | 描述 | 类型 | 并行性 |
+|---|---|---|---|
+| T-F-W-1 | per-request workspace contextvar 注入（FastAPI middleware + QueryEngine/子服务 _effective_workspace_id() + JSON 日志 + ThreadPoolExecutor 传播） | backend-logic | 独立（src/saw/ 运行时 + 6 测试文件） |
+| T-F-W-2 | O4 tag 流程修复（release-manager.md S8 tag 流程 + scripts/RELEASE-FLOW.md + 文档验证测试） | infra | 独立（release-manager.md + scripts/ + 2 测试文件） |
+
+## v1.18.0 共享资源串行
+- 无共享资源串行约束。2 Task 全独立，Wave 1 全并行。
+
+## v1.18.0 Wave 1 文件冲突分析
+| 文件 | Wave 1 写入方 | 冲突? |
+|---|---|---|
+| src/saw/drivers/web/middleware/workspace.py | T-F-W-1 | 否 |
+| src/saw/engines/query/engine.py | T-F-W-1 | 否 |
+| src/saw/engines/query/tree_mode.py | T-F-W-1 | 否 |
+| src/saw/engines/query/compiler.py | T-F-W-1 | 否 |
+| src/saw/engines/query/graph_traverse.py | T-F-W-1 | 否 |
+| src/saw/drivers/web/app.py | T-F-W-1 | 否 |
+| src/saw/middleware/observability.py | T-F-W-1 | 否 |
+| src/saw/engines/collaborate/collaborate.py | T-F-W-1 | 否 |
+| tests/unit/test_workspace_*.py | T-F-W-1 | 否（6 文件独占） |
+| .claude/agents/release-manager.md | T-F-W-2 | 否 |
+| scripts/RELEASE-FLOW.md | T-F-W-2 | 否 |
+| tests/unit/test_release_flow_docs.py | T-F-W-2 | 否 |
+| tests/unit/test_o4_tag_flow.py | T-F-W-2 | 否 |
+
+## v1.18.0 里程碑
+- M-PER-REQ-WS（Wave 1）：per-request workspace contextvar 注入 + O4 tag 流程约定文档化就绪 → v1.18.0 可交付。

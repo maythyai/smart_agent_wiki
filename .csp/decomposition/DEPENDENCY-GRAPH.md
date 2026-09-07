@@ -262,3 +262,22 @@ graph LR
 - F-V-2 与 F-V-3 均触及 tauri.conf.json 但 F-V-2 只读验证（frontendDist/beforeBuildCommand），F-V-3 执行构建，03 技术方案需注意构建链顺序。
 - F-V-2 与 F-V-4 均触及 web/vite.config.ts 但 F-V-2 只读验证（devUrl/proxy），F-V-4 修改 proxy target 端口，03 技术方案需注意 F-V-4 端口收敛后 F-V-2 验证用新端口。
 - F-V-3 与 F-V-4 均涉及后端协同但 F-V-3 关注构建产物，F-V-4 关注运行时连接，无冲突。
+
+## v1.18.0 delta（per-request workspace track）
+
+```mermaid
+graph LR
+  W1[F-W-1 per-request workspace contextvar 注入]
+  W2[F-W-2 O4 tag 流程修复]
+```
+
+### v1.18.0 Wave
+- **Wave 1（2 Feature 全并行）**：F-W-1（per-request workspace contextvar 注入） / F-W-2（O4 tag 流程修复）
+  - 2 Feature 互相独立（不同文件路径，不同关注点：多租户 web 隔离 vs release 流程），可全并行启动。无 Wave 2 — 无依赖边。
+
+### v1.18.0 DAG 校验
+- 拓扑序无环：2 个独立节点，无边，无回边 ✓
+
+### v1.18.0 并行机会
+- 2 Feature 全并行（2 路独立：contextvar 注入 vs tag 流程修复）。
+- F-W-1 触及 engine.py + middleware 新增，F-W-2 触及 release 流程脚本/文档，无共享文件冲突。

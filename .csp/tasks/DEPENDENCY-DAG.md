@@ -212,3 +212,25 @@ T-F-V-1 → T-F-V-2（2 步，最长链，与 V-1→V-3 / V-1→V-4 等长）
 ### v1.17.0 并行机会
 - Wave 1：T-F-V-1 独占（版本 bump + 配置收敛先行）。
 - Wave 2：T-F-V-2 / T-F-V-3 / T-F-V-4 全并行（3 路独立，不同文件集无重叠：只读验证 / 构建 / 端口配置）。
+
+---
+
+## v1.18.0 delta（per-request workspace 注入 + O4 tag 流程 track）
+
+```mermaid
+graph LR
+  W1[T-F-W-1 per-request workspace contextvar 注入]
+  W2[T-F-W-2 O4 tag 流程修复]
+```
+
+### v1.18.0 DAG 校验
+- 拓扑序无环：W-1 / W-2 互相独立，无依赖边 → 无回边 ✓
+- 与 decomposition DEPENDENCY-GRAPH v1.18.0 delta 一致（F-W-1 / F-W-2 全独立，无边）✓
+- 无自环、无环。若 05 重构致环 → 报错停步。
+
+### v1.18.0 关键路径
+- 无关键路径（2 Task 无依赖，全并行 1 步完成）。
+
+### v1.18.0 并行机会
+- Wave 1：T-F-W-1 / T-F-W-2 全并行（2 路独立，完全不同文件集与关注点：多租户 web 隔离 vs release 流程文档）。
+

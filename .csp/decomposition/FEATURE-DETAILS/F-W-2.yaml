@@ -1,0 +1,76 @@
+feature:
+  id: "F-W-2"
+  name: "O4 tag 流程修复（release-manager tag 指向 release commit 非 reconcile）"
+  domain: "per-request-ws"
+  prd_ref: "docs/prd/PRD-per-request-ws-v1.18.0.md#section-3.2"
+  pms_module: "per-request-ws"
+
+  # 用户视角
+  user_story: "作为 Release Manager，我想 tag 指向 release commit，以便 git checkout vX.Y.Z 检出完整的发布状态（含归档与 ROADMAP 更新）。"
+  acceptance_criteria:
+    - "Given 06 ship 完成, when git log --oneline v1.18.0, then 指向 release commit（含 ship artifacts + archive），非 reconcile commit (AC-O4-1)"
+    - "Given GitHub Release 创建, when 查看 Release tag, then 指向 release commit (AC-O4-2)"
+
+  # 边界
+  scope:
+    includes:
+      - "06 ship 流程调整顺序：reconcile commit → release commit → tag release commit"
+      - "tag message 包含 release notes 摘要"
+      - "release commit 包含 ship artifacts（RELEASE-NOTES + ROLLBACK-PLAN）+ milestone archive + ROADMAP/lifecycle/manifest update"
+      - "git tag -a 在 release commit 之后执行"
+      - "GitHub Release 关联 tag 指向 release commit"
+      - "约定文档（scripts/RELEASE-FLOW.md 或 release-manager 流程文档）明确 tag 顺序"
+    excludes:
+      - "不移动已推送 tag（不可变原则）"
+      - "不修改 GitHub Release API 调用方式（仅调 tag commit 指向）"
+      - "不做 tag 签名（GPG 签名 tag 为后续优化项）"
+
+  # 前后端边界
+  frontend:
+    pages: []
+    components: []
+    interactions: []
+  backend:
+    endpoints: []
+    business_logic: []
+    integrations:
+      - "06 ship 流程内部调整（git 命令顺序）"
+      - "GitHub Release API（gh CLI 或 GitHub API，既有流程不改调用方式）"
+
+  # 数据维度
+  data_entities: []
+  data_operations: []
+
+  # 技术维度预标记
+  tech_dimensions:
+    needs_database: false
+    needs_cache: false
+    needs_queue: false
+    needs_ai: false
+    needs_vector_store: false
+    needs_realtime: false
+    needs_file_storage: false
+    needs_search: false
+    needs_scheduler: false
+    needs_notification: false
+
+  # 非功能性需求
+  nfr:
+    performance: "无（流程调整，无运行时性能影响）"
+    security: "已推送 tag 不可移动（不可变原则），仅本地未推送时可重建"
+    compatibility: "git checkout vX.Y.Z 可检出完整发布态（ship artifacts + archive + ROADMAP/lifecycle/manifest）；GitHub Release 关联正确"
+
+  # 依赖与优先级
+  priority: P0
+  complexity: S
+  depends_on: []
+  blocked_by: []
+
+  # 风险与假设
+  risks:
+    - "06 ship 流程首次执行新顺序（tag release commit），须仔细核对每步骤"
+  assumptions:
+    - "release commit 包含全部 ship artifacts（RELEASE-NOTES + ROLLBACK-PLAN + milestone archive + ROADMAP/lifecycle/manifest update）"
+    - "git tag -a 在 release commit 上执行，tag 自然指向该 commit"
+    - "GitHub Release 关联的 tag 名与本地 tag 名一致（gh release create vX.Y.Z 自动关联）"
+    - "tag 已推送后不可移动（git push --force tag 不允许），仅本地未推送时可重建"

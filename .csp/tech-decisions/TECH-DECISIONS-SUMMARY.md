@@ -17,6 +17,7 @@
 | ADR-015 | agent 角色注册+活动聚合 | YAML 配置文件 + build_default_agents 合并（候选①>②DB表）；event_bus subscriber 写内存计数器（候选①>②DB聚合）；复用 BaseAgent/InMemoryEventBus/WikiRepository；不持久化 | Accepted | F-T-1, F-T-2, F-T-3 |
 | ADR-016 | realtime 仪表盘更新策略 | react-query refetchInterval polling 15s + 复用既有 WebSocket（候选②>①SSE>③纯WS）；无新后端端点；useWebSocket 已有 invalidateQueries；polling interval 15s（≥10s 下限） | Accepted | F-U-1, F-U-2, F-U-3 |
 | ADR-017 | desktop 嵌入策略 + 端口收敛 | Hybrid（dev proxy + prod external，sidecar defer）；vite proxy 8080→8000 收敛；CORS 添加 localhost:5173；prod external saw web + VITE_API_BASE_URL 配置；sidecar defer v2.0 候选（候选③>①sidecar>②external-only） | Accepted | F-V-1, F-V-2, F-V-3, F-V-4 |
+| ADR-018 | contextvar per-request workspace 注入 + O4 tag 流程修复 | FastAPI middleware contextvar 注入 + QueryEngine fallback 读取（additive，不改构造签名）（候选①>②构造签名变更>③ASGI scope）；O4 tag 流程约定文档化 + 06 执行时验证（候选①>②脚本化） | Accepted | F-W-1, F-W-2 |
 
 ## 复用原则
 - 全栈既有（六角架构/write_queue/observability/RBAC/receipt/FTS5），硬化只补"有模块→全链路闭环"。

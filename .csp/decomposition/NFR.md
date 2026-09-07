@@ -289,3 +289,55 @@
 ### 无新依赖
 - 复用既有 Tauri v2 + vite proxy + saw 后端 WS/CORS
 - 不引入新库
+
+## v1.18.0 NFR delta（per-request workspace track）
+
+> 来源：PRD-per-request-ws-v1.18.0 §4。Feature 级下沉见 F-W-1..2 各 yaml `nfr`。
+
+### 不回归
+- passed ≥2267（v1.17.0 基线 2267）
+- ruff 0 errors
+- smoke 6/6
+
+### 覆盖率
+- coverage ≥67% 不回归（CI fail_under=67）
+
+### 多租户不泄漏
+- 跨 workspace 查询结果泄漏率 0%
+- workspace A 请求不返回 workspace B 的 claim/graph/embedding 数据
+- 多租户集成测试验证（workspace A 查询 + workspace B 数据存在 → 结果为空或不包含 B 数据）
+
+### 构造签名不变
+- QueryEngine.__init__ 参数列表与 v1.17.0 一致（workspace_id: str = "default" 保留）
+- 既有调用方（create_app_from_config / CLI / tests）无需修改
+
+### CLI 行为不变
+- saw query / saw search / saw links 等 CLI 命令行为与 v1.17.0 一致
+- CLI 路径不走 web middleware，contextvar 保持 default "default"
+
+### contextvar 开销
+- < 1μs per request（Python stdlib contextvars 原生，O(1)）
+- contextvar 在 ThreadPoolExecutor 中传播须 03 技术方案验证（copy_context 或显式传递）
+
+### JSON 日志可观测
+- JSON log payload 新增 workspace_id 字段
+- 复用 observability.py contextvars 先例（request_id_var），同范式扩展
+
+### middleware 安全
+- workspace_id 校验：alphanumeric + hyphen，≤64 字符
+- 非法 workspace_id → 400 {"error": "Invalid workspace_id"}
+- 防路径注入（workspace_id 不可含 ../ 等路径分隔符）
+
+### 向后兼容
+- 请求未携带 workspace_id → contextvar 保持 default "default"，行为与 v1.17.0 一致
+- 无 breaking API 变更（additive MINOR）
+- 子服务（TreeModeSearch/ContextCompiler/GraphTraverse）fallback 到构造值
+
+### tag 流程
+- 06 ship 流程 tag 指向 release commit（非 reconcile）
+- git checkout vX.Y.Z 检出完整发布态（ship artifacts + archive + ROADMAP/lifecycle/manifest）
+- GitHub Release 关联 tag 指向 release commit
+
+### 无新依赖
+- 复用既有 contextvars（observability.py 先例）+ FastAPI middleware
+- 不引入新库

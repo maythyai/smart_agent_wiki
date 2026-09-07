@@ -345,3 +345,45 @@
 - 签名/公证 defer 到后续版本（需 Apple Developer ID + notarytool）
 - 自动更新（tauri updater）defer 到后续版本
 - `app.security.csp = null` 后续可加固（defer）
+
+---
+
+# v1.18.0 delta（per-request workspace 注入 + O4 tag 流程，2026-09-07）
+
+## 项目概览（v1.18.0）
+- 上游：2 Spec（1:1 decomposition 2 Feature F-W-1..2），1 PMS 模块（per-request-ws）
+- Task：2（1:1 Spec，M×1 / S×1），1 Wave 全并行，DAG 无环
+- 关键路径：无（2 Task 无依赖，全并行 1 步）
+- 估时：M/S 粒度，人日 [TBD]（无团队速率）
+
+## Task 类型分派矩阵（v1.18.0）
+| 类型 | Task | 推荐分派 |
+|---|---|---|
+| backend-logic | T-F-W-1 | 后端（FastAPI middleware contextvar 注入 + QueryEngine/子服务 _effective_workspace_id() + JSON 日志 workspace_id + ThreadPoolExecutor 传播） |
+| infra | T-F-W-2 | DevOps（release-manager.md S8 tag 流程约定 + scripts/RELEASE-FLOW.md 新建 + 文档验证测试） |
+
+## 拆解门控（v1.18.0）
+- [x] Spec 完整性：2 Task == 2 Spec（03 穷尽门控通过，2 Spec == 2 原子 Feature F-W-1..2）
+- [x] 每个 Feature 有 ≥1 Task（2/2）
+- [x] Task 粒度 ≤4h（M×1 / S×1）
+- [x] DAG 无环（W-1 / W-2 互相独立，无依赖边，实机校验 cycle=none）
+- [x] Task 依赖与 decomposition Feature 依赖一致（F-W-1 / F-W-2 全独立无边）
+- [x] Wave 划分合理（全 Wave 1 并行，无共享资源串行约束）
+- [x] 每 Task acceptance 非空（指向 AC，共 7 AC 全映射）
+- [x] 不越 PMS 边界（per-request-ws 模块）
+- [x] 并行检测通过（2 Task 文件集完全无重叠，不同关注点）
+
+## 05 实施指引（v1.18.0）
+- Lead 按 `WAVE-PLAN.md` 组建子 Agent 团队；Wave 1 两路并行（worktree 隔离）。
+- 每 Task 一个 commit；完成后续写 commit + 追溯矩阵。
+- 无共享文件冲突，2 Task 可同时启动。
+- T-F-W-1 后端 Task：FastAPI middleware + QueryEngine 改造 + 子服务改造 + JSON 日志 + ThreadPoolExecutor 传播 + 6 测试。
+- T-F-W-2 infra Task：release-manager.md S8 更新 + scripts/RELEASE-FLOW.md 新建 + 2 测试。
+- 详见 `.csp/tasks/TASKS-DELTA-v1.18.0.md`。
+
+## assumptions / [TBD]（v1.18.0）
+- contextvar 传播至 ThreadPoolExecutor 实测行为 [TBD]（Python 3.9+ asyncio.to_thread 内置 copy_context，05 实施后验证）
+- workspace_id 校验正则实际用户场景覆盖度 [TBD]（05 实施后 CI 验证）
+- 多租户集成测试 mock DB 策略 [TBD]（05 实施时决定 mock vs sqlite 内存）
+- GPG 签名 tag defer 到后续版本（当前 threat model 不要求）
+- `collaborate.py` asyncio.to_thread 后并发控制影响 [TBD]（05 实施时评估）

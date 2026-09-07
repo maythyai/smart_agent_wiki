@@ -167,6 +167,17 @@
 | T-F-U-2 | SPEC-F-U-2 | `Dashboard.tsx` 新增 `WorkflowRuntimeSection`；新建 `WorkflowList.tsx`（列表表格 + running 置顶 + 空态 + 5xx 错误条 + live 标记）+ `WorkflowRow.tsx`（status badge + steps progress + 点击展开）；新建 `useWorkflows.ts` + `useWorkflowStatus.ts`（refetchInterval: 15000）；`types/api.ts` 新增 WorkflowExecution/WorkflowListResponse/WorkflowStatusDetail/WorkflowStep；新建 3 vitest 测试文件 | frontend | M | — | web/src/pages/Dashboard.tsx, web/src/components/dashboard/WorkflowList.tsx, web/src/components/dashboard/WorkflowRow.tsx, web/src/hooks/useWorkflows.ts, web/src/hooks/useWorkflowStatus.ts, web/src/types/api.ts, web/src/lib/api.ts, web/tests/test_workflow_list_render.test.tsx, web/tests/test_workflow_running_top.test.tsx, web/tests/test_workflow_ws_update.test.tsx | AC-D-5, AC-D-6, AC-D-7 | dashboard |
 | T-F-U-3 | SPEC-F-U-3 | `useWebSocket.ts` 扩展（agent_status/workflow_progress/onopen 追加 invalidateQueries(['workflows'])）；`Dashboard.tsx` 新增 polling 失败计数器（useRef + 3 次阈值）+ 降级横幅（3 种状态）+ 手动刷新按钮；`ConnectionStatus.tsx` 扩展降级状态；复用 dashboardStore + useAgents/useWorkflows；新建 1 vitest 测试文件 | frontend | M | T-F-U-1, T-F-U-2 | web/src/hooks/useWebSocket.ts, web/src/pages/Dashboard.tsx, web/src/components/dashboard/ConnectionStatus.tsx, web/src/stores/dashboardStore.ts, web/tests/test_ws_disconnect_polling_degraded.test.tsx | AC-D-8 | dashboard |
 
+## v1.18.0 任务拆解（per-request workspace 注入 + O4 tag 流程，2026-09-07）
+- 2 Task（1:1 Spec）：T-F-W-1（backend-logic per-request workspace contextvar 注入）/ T-F-W-2（infra O4 tag 流程约定文档化）
+- 1 Wave：Wave 1 T-F-W-1 / T-F-W-2（全并行，2 Feature 互相独立无边）
+- DAG 无环（2 独立节点，无边），与 decomposition 一致
+- 详见 `.csp/tasks/TASKS-DELTA-v1.18.0.md`
+
+| task_id | spec_ref | 描述 | 类型 | 估时 | depends_on | files | acceptance | pms_module |
+|---|---|---|---|---|---|---|---|---|
+| T-F-W-1 | SPEC-F-W-1 | FastAPI middleware contextvar 注入 + QueryEngine/子服务 _effective_workspace_id() helper + middleware 注册 + JSON 日志 workspace_id + ThreadPoolExecutor 传播 + 6 测试文件 | backend-logic | M | — | src/saw/drivers/web/middleware/workspace.py, src/saw/engines/query/engine.py, src/saw/engines/query/tree_mode.py, src/saw/engines/query/compiler.py, src/saw/engines/query/graph_traverse.py, src/saw/drivers/web/app.py, src/saw/middleware/observability.py, src/saw/engines/collaborate/collaborate.py, tests/unit/test_workspace_*.py | AC-WS-1, AC-WS-2, AC-WS-3, AC-WS-4, AC-WS-5 | per-request-ws |
+| T-F-W-2 | SPEC-F-W-2 | release-manager.md S8 tag 流程约定 + scripts/RELEASE-FLOW.md 新建 + 文档验证测试 + 06 执行时验证测试 | infra | S | — | .claude/agents/release-manager.md, scripts/RELEASE-FLOW.md, tests/unit/test_release_flow_docs.py, tests/unit/test_o4_tag_flow.py | AC-O4-1, AC-O4-2 | per-request-ws |
+
 ## v1.17.0 任务拆解（desktop 完成 v4.4，2026-09-07）
 - 4 Task（1:1 Spec）：T-F-V-1（infra 版本 bump + 配置收敛）/ T-F-V-2（frontend web 仪表盘集成验证）/ T-F-V-3（infra tauri build 验证）/ T-F-V-4（backend-logic 后端协同 + 端口收敛）
 - 2 Wave：Wave 1 T-F-V-1（版本 bump + 配置收敛先行）→ Wave 2 T-F-V-2/V-3/V-4（全并行）

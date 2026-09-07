@@ -122,3 +122,16 @@
 | test_port_convergence.py | 1ca63a1 | T-F-V-4 | SPEC-F-V-4 | F-V-4 | AC-C-1 |
 | test_prod_backend_connection.py | 1ca63a1 | T-F-V-4 | SPEC-F-V-4 | F-V-4 | AC-C-2 |
 | test_cors_expansion.py | 1ca63a1 | T-F-V-4 | SPEC-F-V-4 | F-V-4 | AC-C-3 |
+
+## v1.18.0 delta（per-request workspace 注入 + O4 tag 流程修复，backward: Test → Commit → Task → Spec → Feature → PRD AC）
+
+| Test | Commit | Task | Spec | Feature | PRD AC |
+|---|---|---|---|---|---|
+| test_workspace_contextvar.py | [TBD] | T-F-W-1 | SPEC-F-W-1 | F-W-1 | AC-WS-1, AC-WS-2 |
+| test_workspace_isolation.py | [TBD] | T-F-W-1 | SPEC-F-W-1 | F-W-1 | AC-WS-3 |
+| test_workspace_cli_compat.py | [TBD] | T-F-W-1 | SPEC-F-W-1 | F-W-1 | AC-WS-4 |
+| test_workspace_signature.py | [TBD] | T-F-W-1 | SPEC-F-W-1 | F-W-1 | AC-WS-5 |
+| test_workspace_validation.py | [TBD] | T-F-W-1 | SPEC-F-W-1 | F-W-1 | AC-WS-1（补充） |
+| test_workspace_thread_propagation.py | [TBD] | T-F-W-1 | SPEC-F-W-1 | F-W-1 | AC-WS-1（补充） |
+| test_o4_tag_flow.py | [TBD] | T-F-W-2 | SPEC-F-W-2 | F-W-2 | AC-O4-1, AC-O4-2 |
+| test_release_flow_docs.py | [TBD] | T-F-W-2 | SPEC-F-W-2 | F-W-2 | AC-O4-1（文档） |

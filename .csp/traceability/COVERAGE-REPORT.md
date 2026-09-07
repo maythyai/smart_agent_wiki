@@ -243,3 +243,26 @@
 - PRD AC 总数：96 + 9 = 105
 - 已覆盖：96 + 9（[TBD-impl]）= 105
 - 缺口：0
+
+## v1.18.0 delta（per-request workspace 注入 + O4 tag 流程修复，7 AC）
+
+| AC | 描述 | 映射 Feature | 用例 | 状态 |
+|---|---|---|---|---|
+| AC-WS-1 | contextvar 注入生效（X-Workspace-Id: team-a → team-a 数据） | F-W-1 | test_workspace_contextvar.py | [TBD-impl] |
+| AC-WS-2 | fallback 默认值（无 header → default） | F-W-1 | test_workspace_contextvar.py | [TBD-impl] |
+| AC-WS-3 | 跨 workspace 不泄漏（workspace A 搜索不含 B claim） | F-W-1 | test_workspace_isolation.py | [TBD-impl] |
+| AC-WS-4 | CLI 不受影响（saw query 用 default workspace） | F-W-1 | test_workspace_cli_compat.py | [TBD-impl] |
+| AC-WS-5 | 构造签名不变（QueryEngine.__init__ 参数列表一致） | F-W-1 | test_workspace_signature.py | [TBD-impl] |
+| AC-O4-1 | tag 指向 release commit（git log v1.18.0 → release commit） | F-W-2 | test_o4_tag_flow.py（06 时执行） | [TBD-impl] |
+| AC-O4-2 | GitHub Release 关联（Release tag → release commit） | F-W-2 | test_o4_tag_flow.py（06 时执行） | [TBD-impl] |
+
+### v1.18.0 汇总
+- PRD AC 总数（本轮）：7
+- 已映射：7（100%）
+- 缺口：0
+- 全部 [TBD-impl]：05 实施后落定
+
+### 全局汇总（v1.0 + v1.10.0 + v1.11.0 + v1.12.0 + v1.13.0 + v1.14.0 + v1.15.0 + v1.16.0 + v1.17.0 + v1.18.0）
+- PRD AC 总数：105 + 7 = 112
+- 已覆盖：105 + 7（[TBD-impl]）= 112
+- 缺口：0

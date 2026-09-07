@@ -1,6 +1,6 @@
 # Feature Map — 完整 Feature 清单（表格视图）
 
-> 域 = PMS 模块（边界不越界）。54 Feature / 14 域。详见 `FEATURE-DETAILS/F-*.yaml`。
+> 域 = PMS 模块（边界不越界）。56 Feature / 15 域。详见 `FEATURE-DETAILS/F-*.yaml`。
 
 | id | name | domain(PMS) | priority | complexity | depends_on | wave | prd_ref |
 |---|---|---|---|---|---|---|---|
@@ -58,10 +58,12 @@
 | F-V-2 | web 仪表盘集成验证（frontendDist→web/dist 已 wired，验证 desktop 加载 v1.16.0 仪表盘构建产出） | desktop | P0 | M | F-V-1 | 2 | §3.2 |
 | F-V-3 | tauri build 验证（cargo build --release + bundle 产出原生包，至少 .app/.deb/.appimage） | desktop | P0 | L | F-V-1 | 2 | §3.3 |
 | F-V-4 | 后端协同 + 端口收敛 bug（vite proxy 8080 vs saw web 8000 错配统一 + CORS 扩展 + prod 模式连接） | desktop | P1 | M | F-V-1 | 2 | §3.4 |
+| F-W-1 | per-request workspace 注入（FastAPI middleware contextvar 注入 + QueryEngine fallback 读取） | per-request-ws | P0 | M | — | 1 | §3.1 |
+| F-W-2 | O4 tag 流程修复（release-manager tag 指向 release commit 非 reconcile） | per-request-ws | P0 | S | — | 1 | §3.2 |
 
 ## 汇总
-- 域：10（A e2e-usability / B claim-alignment / C security-hardening / D observability / E test-gate / Z tech-debt / P platform-team / N embedding / O debt-closure / Q embedding-api）+ S semantic-perf + T agent-link + U dashboard + V desktop
-- Feature：54（P0=36，P1=16，P2=3）— v1.4.0 新增 F-P-1..4 + F-Z-4/5；v1.5.0 +F-I-1..4+F-Z-6..9；v1.6.0 +F-J-1..4；v1.7.0 +F-K-1..3；v1.8.0 +F-L-1..3；v1.9.0 +F-M-1..3；v1.10.0 +F-N-1..4（源自 PRD-embedding-v1.10.0 + retro M1/L1）；v1.11.0 +F-O-1..4（源自 PRD-debt-closure-v1.11.0 + retro N7/N2·K1/M3/N5/N6）；v1.12.0 +F-Q-1..4（源自 PRD-embedding-api-v1.12.0 + retro N1/N4 + 用户决策 pivot to API）；v1.14.0 +F-S-1..3（源自 PRD-semantic-perf-v1.14.0 + retro R1/R2）；v1.15.0 +F-T-1..3（源自 PRD-agent-link-v1.15.0 + retro M2/L2 + v1.5.0 自定义 agent 角色候选）；v1.16.0 +F-U-1..3（源自 PRD-dashboard-v1.16.0 + retro 下一候选 realtime 仪表盘 v4.3 前端）；**v1.17.0 +F-V-1..4（源自 PRD-desktop-v1.17.0 + retro U4 desktop 仍 0.1.0）**
-- 复杂度：S=11，M=26，L=3（v1.17.0 增量：S=1, M=2, L=1）
-- Wave：v1.17.0 新增 Wave 1=1（F-V-1 版本 bump+配置收敛先行）+ Wave 2=3（F-V-2 + F-V-3 + F-V-4 全并行依赖 V-1）
-- 关键路径：F-A-1 → F-A-2 → F-A-5 → F-A-6 → F-E-3（5 步）；v1.10.0 次路径：F-N-1 → F-N-2（2 步）；v1.11.0：无依赖链（4 Feature 全并行 Wave 1）；v1.12.0 次路径：F-Q-1 → {F-Q-2, F-Q-3, F-Q-4}（2 步）；v1.14.0 次路径：F-S-2 → F-S-3（2 步），F-S-1 独立 Wave 1；v1.15.0：无依赖链（3 Feature 全并行 Wave 1，无依赖边）；v1.16.0 次路径：F-U-1 → F-U-3 + F-U-2 → F-U-3（2 步，U-1/U-2 并行后 U-3）；**v1.17.0 次路径：F-V-1 → {F-V-2, F-V-3, F-V-4}（2 步，V-1 先行后 V-2/V-3/V-4 全并行）**
+- 域：10（A e2e-usability / B claim-alignment / C security-hardening / D observability / E test-gate / Z tech-debt / P platform-team / N embedding / O debt-closure / Q embedding-api）+ S semantic-perf + T agent-link + U dashboard + V desktop + W per-request-ws
+- Feature：56（P0=38，P1=16，P2=3）— v1.4.0 新增 F-P-1..4 + F-Z-4/5；v1.5.0 +F-I-1..4+F-Z-6..9；v1.6.0 +F-J-1..4；v1.7.0 +F-K-1..3；v1.8.0 +F-L-1..3；v1.9.0 +F-M-1..3；v1.10.0 +F-N-1..4（源自 PRD-embedding-v1.10.0 + retro M1/L1）；v1.11.0 +F-O-1..4（源自 PRD-debt-closure-v1.11.0 + retro N7/N2·K1/M3/N5/N6）；v1.12.0 +F-Q-1..4（源自 PRD-embedding-api-v1.12.0 + retro N1/N4 + 用户决策 pivot to API）；v1.14.0 +F-S-1..3（源自 PRD-semantic-perf-v1.14.0 + retro R1/R2）；v1.15.0 +F-T-1..3（源自 PRD-agent-link-v1.15.0 + retro M2/L2 + v1.5.0 自定义 agent 角色候选）；v1.16.0 +F-U-1..3（源自 PRD-dashboard-v1.16.0 + retro 下一候选 realtime 仪表盘 v4.3 前端）；v1.17.0 +F-V-1..4（源自 PRD-desktop-v1.17.0 + retro U4 desktop 仍 0.1.0）；**v1.18.0 +F-W-1..2（源自 PRD-per-request-ws-v1.18.0 + retro N3/K2 per-request ws + O4 tag 流程）**
+- 复杂度：S=12，M=27，L=3（v1.18.0 增量：S=1, M=1）
+- Wave：v1.18.0 新增 Wave 1=2（F-W-1 + F-W-2 全并行，无 Wave 2）
+- 关键路径：F-A-1 → F-A-2 → F-A-5 → F-A-6 → F-E-3（5 步）；v1.10.0 次路径：F-N-1 → F-N-2（2 步）；v1.11.0：无依赖链（4 Feature 全并行 Wave 1）；v1.12.0 次路径：F-Q-1 → {F-Q-2, F-Q-3, F-Q-4}（2 步）；v1.14.0 次路径：F-S-2 → F-S-3（2 步），F-S-1 独立 Wave 1；v1.15.0：无依赖链（3 Feature 全并行 Wave 1，无依赖边）；v1.16.0 次路径：F-U-1 → F-U-3 + F-U-2 → F-U-3（2 步，U-1/U-2 并行后 U-3）；v1.17.0 次路径：F-V-1 → {F-V-2, F-V-3, F-V-4}（2 步，V-1 先行后 V-2/V-3/V-4 全并行）；**v1.18.0：无依赖链（2 Feature 全并行 Wave 1，无依赖边）**

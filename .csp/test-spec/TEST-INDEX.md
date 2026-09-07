@@ -88,3 +88,11 @@
 - 用例总数：[TBD-impl] 实施后落定（基线 2217 passed + 8 配置测试 + 1 skipif smoke）。
 - 新覆盖 AC：AC-V-1/2, AC-W-1/2, AC-B-1/2, AC-C-1/2/3（9 条全映射，pytest + json/re 文件检查）。
 - TMS delta 见 `TMS-DELTA-v1.17.0.md`。
+
+## v1.18.0 delta（per-request workspace 注入 + O4 tag 流程修复）
+- 模块：per-request-ws（PMS-per-request-ws），ADR-018 contextvar 注入 + O4 tag 流程修复。
+- 新增 7 AC（AC-WS-1..5, AC-O4-1/2），全映射。
+- 测试文件：test_workspace_contextvar.py（新建，middleware contextvar set/get）、test_workspace_isolation.py（新建，跨 workspace 隔离）、test_workspace_cli_compat.py（新建，CLI 兼容）、test_workspace_signature.py（新建，构造签名不变）、test_workspace_validation.py（新建，workspace_id 校验）、test_workspace_thread_propagation.py（新建，asyncio.to_thread 传播）、test_o4_tag_flow.py（新建，06 时 tag 验证，skipif）、test_release_flow_docs.py（新建，文档验证）。
+- 用例总数：[TBD-impl] 实施后落定（基线 2267 passed + ~10 新测试）。
+- 新覆盖 AC：AC-WS-1..5, AC-O4-1/2（7 条全映射，pytest + inspect + TestClient mock）。
+- TMS delta 见 `TMS-DELTA-v1.18.0.md`。

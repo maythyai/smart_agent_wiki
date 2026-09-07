@@ -129,7 +129,13 @@
 | SPEC-F-V-3 | F-V-3 | tauri build 验证（cargo build --release + bundle 产出原生包，至少 .app/.deb/.appimage） | L | desktop | 2/2 | SPEC-F-V-3.md |
 | SPEC-F-V-4 | F-V-4 | 后端协同 + 端口收敛（vite proxy 8080 vs saw web 8000 错配统一 + CORS 扩展 + prod 模式连接） | M | desktop | 3/3 | SPEC-F-V-4.md |
 
+## v1.18.0 delta（+2）
+| spec_id | feature_id | title | complexity | pms_module | ac_coverage | file |
+|---|---|---|---|---|---|---|
+| SPEC-F-W-1 | F-W-1 | per-request workspace 注入（FastAPI middleware contextvar + QueryEngine fallback 读取） | M | per-request-ws | 5/5 | SPEC-F-W-1.md |
+| SPEC-F-W-2 | F-W-2 | O4 tag 流程修复（release-manager tag 指向 release commit 非 reconcile） | S | per-request-ws | 2/2 | SPEC-F-W-2.md |
+
 ## 校验
-- Spec 数 == 20 + 8(v1.5.0) + 4(v1.6.0) + 3(v1.7.0) + 3(v1.8.0) + 3(v1.9.0) + 4(v1.10.0) + 4(v1.11.0) + 4(v1.12.0) + 5(v1.13.0) + 3(v1.14.0) + 3(v1.15.0) + 3(v1.16.0) + 4(v1.17.0) == 71 == decomposition 原子 Feature 数 ✓（1:1）
+- Spec 数 == 20 + 8(v1.5.0) + 4(v1.6.0) + 3(v1.7.0) + 3(v1.8.0) + 3(v1.9.0) + 4(v1.10.0) + 4(v1.11.0) + 4(v1.12.0) + 5(v1.13.0) + 3(v1.14.0) + 3(v1.15.0) + 3(v1.16.0) + 4(v1.17.0) + 2(v1.18.0) == 73 == decomposition 原子 Feature 数 ✓（1:1）
 - 每个 feature_id 在 decomposition FEATURE-DETAILS 存在 ✓
 - 每份 Spec ac_coverage 自检无未覆盖 AC ✓

@@ -265,3 +265,24 @@ PRD feature_count=5（模块）→ decomposition 5 域 → 20 原子 Feature →
 | F-V-4 | SPEC-F-V-4 | T-F-V-4 | 2 | 1ca63a1 |
 
 链：PRD AC → Feature → Spec → Task，9 AC 全映射。03-tech done，04-tasks 待拆。
+
+## v1.18.0 delta（per-request workspace 注入 + O4 tag 流程修复）
+
+| PRD 模块(§3) | AC | Feature | Spec |
+|---|---|---|---|
+| §3.1 F-W-1 | AC-WS-1 | F-W-1 | SPEC-F-W-1 |
+| §3.1 | AC-WS-2 | F-W-1 | SPEC-F-W-1 |
+| §3.1 | AC-WS-3 | F-W-1 | SPEC-F-W-1 |
+| §3.1 | AC-WS-4 | F-W-1 | SPEC-F-W-1 |
+| §3.1 | AC-WS-5 | F-W-1 | SPEC-F-W-1 |
+| §3.2 F-W-2 | AC-O4-1 | F-W-2 | SPEC-F-W-2 |
+| §3.2 | AC-O4-2 | F-W-2 | SPEC-F-W-2 |
+
+### Task 追溯（Feature → Task，[TBD-04 待拆]）
+
+| Feature | Spec | Task | Wave | Commit |
+|---|---|---|---|---|
+| F-W-1 | SPEC-F-W-1 | T-F-W-1 | 1 | [TBD] |
+| F-W-2 | SPEC-F-W-2 | T-F-W-2 | 1 | [TBD] |
+
+链：PRD AC → Feature → Spec → Task，7 AC 全映射。03-tech done，04-tasks 待拆。

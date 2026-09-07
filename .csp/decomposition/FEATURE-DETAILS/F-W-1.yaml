@@ -1,0 +1,87 @@
+feature:
+  id: "F-W-1"
+  name: "per-request workspace 注入（FastAPI middleware contextvar 注入 + QueryEngine fallback 读取）"
+  domain: "per-request-ws"
+  prd_ref: "docs/prd/PRD-per-request-ws-v1.18.0.md#section-3.1"
+  pms_module: "per-request-ws"
+
+  # 用户视角
+  user_story: "作为 OPS，我想在多租户 web 部署中每个请求自动按 workspace 隔离数据，以便不同团队的数据互不可见。"
+  acceptance_criteria:
+    - "Given web 实例运行, when 请求携带 X-Workspace-Id: team-a, then QueryEngine 返回 team-a workspace 的数据 (AC-WS-1)"
+    - "Given web 实例运行, when 请求未携带 workspace header, then QueryEngine 返回 default workspace 的数据（与 v1.17.0 一致）(AC-WS-2)"
+    - "Given web 实例含 workspace A + B 数据, when workspace A 请求搜索, then 结果不含 workspace B 的 claim (AC-WS-3)"
+    - "Given CLI 模式, when saw query 'test', then 行为与 v1.17.0 一致（用 default workspace）(AC-WS-4)"
+    - "Given 代码审查, when 检查 QueryEngine.__init__, then 参数列表与 v1.17.0 一致，无 breaking change (AC-WS-5)"
+
+  # 边界
+  scope:
+    includes:
+      - "引入 workspace_id_var: ContextVar[str]，default 'default'"
+      - "FastAPI middleware 提取 workspace_id（X-Workspace-Id header / query param / JWT claim）设入 contextvar，请求结束 reset"
+      - "QueryEngine 内部所有读 self._workspace_id 改为先读 contextvar，fallback 到 self._workspace_id"
+      - "子服务（TreeModeSearch/ContextCompiler/GraphTraverse）同样改为先读 contextvar"
+      - "middleware 校验 workspace_id（alphanumeric + hyphen，≤64 字符），非法 400"
+      - "JSON 日志 payload 新增 workspace_id 字段"
+    excludes:
+      - "不修改 QueryEngine 公开构造签名（workspace_id 参数保留，语义不变）"
+      - "不做 workspace 持久化/管理（仍由 CLI/ingest 路径管理）"
+      - "不影响 CLI 路径行为（CLI 不走 middleware，contextvar 保持 default）"
+
+  # 前后端边界
+  frontend:
+    pages: []
+    components: []
+    interactions: []
+  backend:
+    endpoints:
+      - "现有 REST routes 自动按 contextvar 中 workspace_id 隔离（无新端点）"
+    business_logic:
+      - "workspace_id_var: ContextVar[str] = ContextVar('workspace_id', default='default')"
+      - "workspace middleware（FastAPI middleware，提取+校验+set+reset）"
+      - "QueryEngine 内部 contextvar fallback 读取（替代直读 self._workspace_id）"
+      - "子服务 contextvar fallback（TreeModeSearch/ContextCompiler/GraphTraverse）"
+    integrations:
+      - "复用 observability.py contextvars 先例（request_id_var）"
+
+  # 数据维度
+  data_entities:
+    - "workspace_id_var（contextvar，无持久化）"
+  data_operations:
+    - "middleware set/reset per request"
+
+  # 技术维度预标记
+  tech_dimensions:
+    needs_database: false
+    needs_cache: false
+    needs_queue: false
+    needs_ai: false
+    needs_vector_store: false
+    needs_realtime: false
+    needs_file_storage: false
+    needs_search: false
+    needs_scheduler: false
+    needs_notification: false
+
+  # 非功能性需求
+  nfr:
+    performance: "contextvar 读写开销 < 1μs per request（Python stdlib 原生，O(1)）"
+    security: "多租户 web 测试跨 workspace 不泄漏（workspace A 请求不返回 workspace B 的 claim/graph/embedding 数据）；middleware 校验 workspace_id 防路径注入（alphanumeric + hyphen，≤64 字符）"
+    scalability: "contextvar 在 ThreadPoolExecutor 中传播须验证（copy_context 或显式传递）"
+    compatibility: "QueryEngine 公开构造签名不变（workspace_id 参数保留，语义不变）；CLI 路径行为不变；请求未提供 workspace_id 时 fallback 到 default（向后兼容）"
+
+  # 依赖与优先级
+  priority: P0
+  complexity: M
+  depends_on: []
+  blocked_by: []
+
+  # 风险与假设
+  risks:
+    - "contextvar 在 ThreadPoolExecutor 中不自动传播（PRD §8 风险），须 03 技术方案验证 copy_context 方案"
+    - "子服务改造范围广（TreeModeSearch/ContextCompiler/GraphTraverse），须系统测试确认不遗漏"
+  assumptions:
+    - "contextvars.ContextVar 在 Python 3.9+（SAW 既有版本）中行为与 async 协程兼容"
+    - "FastAPI middleware 支持 async contextvar set/reset（复用 observability.py 先例）"
+    - "workspace_id 校验规则 alphanumeric + hyphen ≤64 字符覆盖既有 workspace 命名"
+    - "QueryEngine cache key 已含 workspace_id（engine.py:234），contextvar 切换后 cache 自然隔离"
