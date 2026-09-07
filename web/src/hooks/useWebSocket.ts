@@ -102,6 +102,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
             const agentStatus = message.payload as unknown as AgentStatus;
             updateAgent(agentStatus);
             queryClient.invalidateQueries({ queryKey: ['agents'] });
+            queryClient.invalidateQueries({ queryKey: ['workflows'] });
             break;
           }
 
@@ -109,6 +110,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
             const workflowProgress = message.payload as unknown as WorkflowProgress;
             updateWorkflow(workflowProgress);
             queryClient.invalidateQueries({ queryKey: ['agents'] });
+            queryClient.invalidateQueries({ queryKey: ['workflows'] });
             break;
           }
 
@@ -158,6 +160,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
 
       // Refetch agents on reconnect
       queryClient.invalidateQueries({ queryKey: ['agents'] });
+      queryClient.invalidateQueries({ queryKey: ['workflows'] });
 
       // Start heartbeat
       startHeartbeat();

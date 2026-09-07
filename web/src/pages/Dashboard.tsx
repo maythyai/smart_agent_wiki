@@ -1,12 +1,13 @@
 import { useWebSocket } from '../hooks/useWebSocket';
 import { useAgents } from '../hooks/useAgents';
+import { useQueryClient } from '@tanstack/react-query';
 import { AgentList } from '../components/dashboard/AgentList';
 import { AgentActivityDetail } from '../components/dashboard/AgentActivityDetail';
 import { WorkflowList } from '../components/dashboard/WorkflowList';
 import { ConnectionStatus } from '../components/dashboard/ConnectionStatus';
 import { useStore } from '../stores';
 import { api } from '../lib/api';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 interface StatsData {
   total_pages: number;
@@ -25,6 +26,9 @@ export default function Dashboard() {
   // Initialize WebSocket connection (auto-connects on mount)
   const { reconnect, status: wsStatus } = useWebSocket({ autoConnect: true });
 
+  // QueryClient for manual refresh (F-U-3 degradation banner Retry)
+  const queryClient = useQueryClient();
+
   // Dashboard state from store (updated via WebSocket)
   const agents = useStore((s) => s.agents);
   const activeWorkflow = useStore((s) => s.activeWorkflow);
@@ -35,6 +39,28 @@ export default function Dashboard() {
 
   // Selected agent for activity detail expansion
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
+
+  // F-U-3: polling failure counter + degradation banners
+  const pollingFailCount = useRef(0);
+  const [showPollingDegraded, setShowPollingDegraded] = useState(false);
+  const [showFullDegraded, setShowFullDegraded] = useState(false);
+
+  // Monitor agentsQuery for polling failures (3 consecutive → degraded banner)
+  useEffect(() => {
+    if (agentsQuery.isError) {
+      pollingFailCount.current += 1;
+      if (pollingFailCount.current >= 3) {
+        setShowPollingDegraded(true);
+        if (wsStatus === 'disconnected') {
+          setShowFullDegraded(true);
+        }
+      }
+    } else if (agentsQuery.isSuccess) {
+      pollingFailCount.current = 0;
+      setShowPollingDegraded(false);
+      setShowFullDegraded(false);
+    }
+  }, [agentsQuery.isError, agentsQuery.isSuccess, wsStatus]);
 
   // Statistics state
   const [stats, setStats] = useState<StatsData>({
@@ -112,27 +138,37 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Disconnected error state */}
-      {wsStatus === 'disconnected' && (
-        <div className="flex items-center justify-between bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6">
-          <div className="flex items-center gap-3">
-            <div className="text-red-500">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                  d="M18.364 5.636a9 9 0 010 12.728M5.636 5.636a9 9 0 000 12.728M12 12h.01" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-red-800 dark:text-red-300">Disconnected from server</p>
-              <p className="text-xs text-red-600 dark:text-red-400">Agent updates are paused. Reconnecting automatically.</p>
-            </div>
-          </div>
+      {/* F-U-3: WS disconnected + polling normal → Reconnecting... */}
+      {wsStatus === 'disconnected' && !showFullDegraded && (
+        <div className="flex items-center gap-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 mb-6">
+          <div className="w-5 h-5 border-2 border-yellow-300 border-t-yellow-600 dark:border-yellow-600 dark:border-t-yellow-300 rounded-full animate-spin" />
+          <p className="text-sm text-yellow-800 dark:text-yellow-300">Reconnecting...</p>
+        </div>
+      )}
+
+      {/* F-U-3: polling 3x failure → Failed to refresh + Retry */}
+      {showPollingDegraded && !showFullDegraded && (
+        <div className="flex items-center justify-between bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4 mb-6">
+          <p className="text-sm text-orange-800 dark:text-orange-300">Failed to refresh. Click to retry.</p>
           <button
-            onClick={reconnect}
-            className="px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-xs font-medium"
+            onClick={() => {
+              queryClient.invalidateQueries();
+              pollingFailCount.current = 0;
+              setShowPollingDegraded(false);
+              setShowFullDegraded(false);
+            }}
+            className="px-3 py-1.5 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-xs font-medium"
+            aria-label="Retry data refresh"
           >
-            Reconnect
+            Retry
           </button>
+        </div>
+      )}
+
+      {/* F-U-3: WS disconnected + polling failed → full degradation */}
+      {showFullDegraded && (
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6">
+          <p className="text-sm text-red-800 dark:text-red-300">Live updates paused. Data may be stale.</p>
         </div>
       )}
 
