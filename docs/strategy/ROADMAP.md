@@ -339,9 +339,9 @@ canonical = `pyproject.toml`。发布时以下必须与之一致，用脚本校�
 | v1.15.0 | agent/link 能力（自定义 agent 角色 + L2 links apply + M2 活动聚合） | intelligence-adaptation | released (2026-09-06) |
 | v1.16.0 | realtime 仪表盘 v4.3（agent/workflow 运行态前端可视化） | ecosystem-integration | released (2026-09-07) |
 | v1.17.0 | desktop 完成 v4.4（Tauri→1.0 + 集成 web 仪表盘） | ecosystem-integration | released (2026-09-07, @e391611) |
-| v1.18.0 | per-request workspace 注入 + O4 tag 流程 | platform-team | released (2026-09-07, @TAG_PENDING) |
+| v1.18.0 | per-request workspace 注入 + O4 tag 流程 | platform-team | released (2026-09-07, @e4cf22d) |
 
-### v1.18.0 — per-request workspace 注入 + O4 tag 流程（status: released, 2026-09-07, @TAG_PENDING）
+### v1.18.0 — per-request workspace 注入 + O4 tag 流程（status: released, 2026-09-07, @e4cf22d）
 
 > platform-team track。闭合 N3/K2 + O4（最后的 backlog 项）。**additive**——contextvar 注入不改公开 API 契约，MINOR（非 MAJOR）。
 

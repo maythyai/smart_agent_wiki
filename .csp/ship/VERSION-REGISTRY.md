@@ -24,7 +24,7 @@
 
 **Notes**:
 - v1.10.0–v1.18.0 all status=released (tag pushed + GitHub Release created).
-- v1.18.0 tag @TAG_HASH_PENDING, GitHub Release: https://github.com/maythyai/smart_agent_wiki/releases/tag/v1.18.0
+- v1.18.0 tag @e4cf22d, GitHub Release: https://github.com/maythyai/smart_agent_wiki/releases/tag/v1.18.0
 - v1.17.0 tag @e391611, GitHub Release: https://github.com/maythyai/smart_agent_wiki/releases/tag/v1.17.0 (assets: wheel+sdist+.dmg)
 - v1.16.0 tag @57b9550, GitHub Release: https://github.com/maythyai/smart_agent_wiki/releases/tag/v1.16.0
 - v1.15.0 tag @d5b644f, GitHub Release: https://github.com/maythyai/smart_agent_wiki/releases/tag/v1.15.0
