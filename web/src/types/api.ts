@@ -157,3 +157,27 @@ export interface WorkflowProgress {
   current_step: number;
   status: 'pending' | 'running' | 'completed' | 'failed';
 }
+
+// Agent roster (REST GET /api/v1/agents, v1.15.0)
+export interface ActivitySummary {
+  calls: number;
+  last_active_at: string | null;
+}
+
+export interface AgentRosterEntry {
+  name: string;
+  model_tier: string;
+  tools_allowed: string[];
+  rule: boolean;
+  custom: boolean;
+  activity_summary: ActivitySummary | null;
+}
+
+// Agent activity detail (REST GET /api/v1/agents/{name}/activity, v1.15.0)
+export interface AgentActivity {
+  agent: string;
+  calls: number;
+  failures: number;
+  last_action: string | null;
+  last_active_at: string | null;
+}

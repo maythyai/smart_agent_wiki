@@ -1,5 +1,7 @@
 import { useWebSocket } from '../hooks/useWebSocket';
+import { useAgents } from '../hooks/useAgents';
 import { AgentList } from '../components/dashboard/AgentList';
+import { AgentActivityDetail } from '../components/dashboard/AgentActivityDetail';
 import { ConnectionStatus } from '../components/dashboard/ConnectionStatus';
 import { useStore } from '../stores';
 import { api } from '../lib/api';
@@ -26,6 +28,12 @@ export default function Dashboard() {
   const agents = useStore((s) => s.agents);
   const activeWorkflow = useStore((s) => s.activeWorkflow);
   const lastUpdate = useStore((s) => s.lastUpdate);
+
+  // Agent roster from REST API (15s polling, ADR-016)
+  const agentsQuery = useAgents();
+
+  // Selected agent for activity detail expansion
+  const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
 
   // Statistics state
   const [stats, setStats] = useState<StatsData>({
@@ -324,31 +332,44 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Agent list */}
+      {/* Agent roster + activity (REST via react-query, 15s polling) */}
       <div className="mb-6">
-        <h2 className="text-lg font-semibold text-gray-800 mb-3">Agents</h2>
-        <AgentList />
-      </div>
-
-      {/* Empty state */}
-      {Object.keys(agents).length === 0 && wsStatus === 'connected' && (
-        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-8 text-center">
-          <div className="text-gray-400 dark:text-gray-500 mb-3">
-            <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1.5}
-                d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-              />
-            </svg>
+        <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">Agents</h2>
+        {agentsQuery.isLoading && (
+          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-8 text-center">
+            <div className="w-8 h-8 border-2 border-gray-300 border-t-gray-600 dark:border-gray-600 dark:border-t-gray-300 rounded-full animate-spin mx-auto mb-3" />
+            <p className="text-sm text-gray-500 dark:text-gray-400">Loading agent roster...</p>
           </div>
-          <h3 className="text-lg font-medium text-gray-600 dark:text-gray-300 mb-1">No Agents Running</h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            Start the backend server and agents will appear here
-          </p>
-        </div>
-      )}
+        )}
+        {agentsQuery.isError && (
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 flex items-center justify-between">
+            <p className="text-sm text-red-800 dark:text-red-300">Failed to load agent roster.</p>
+            <button
+              onClick={() => agentsQuery.refetch()}
+              className="px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-xs font-medium"
+            >
+              Retry
+            </button>
+          </div>
+        )}
+        {agentsQuery.isSuccess && (
+          <>
+            <AgentList
+              roster={agentsQuery.data.agents}
+              onSelectAgent={setSelectedAgent}
+              selectedAgent={selectedAgent}
+            />
+            {selectedAgent && (
+              <div className="mt-4">
+                <AgentActivityDetail
+                  agentName={selectedAgent}
+                  onClose={() => setSelectedAgent(null)}
+                />
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }
