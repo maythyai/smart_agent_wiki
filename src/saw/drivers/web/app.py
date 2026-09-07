@@ -225,7 +225,7 @@ def create_app(
         app.state.cedar = None
 
     # CORS configuration (per D-03)
-    origins = cors_origins or ["http://localhost:3000", "http://127.0.0.1:3000"]
+    origins = cors_origins or ["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:5173"]
     app.add_middleware(
         CORSMiddleware,
         allow_origins=origins,

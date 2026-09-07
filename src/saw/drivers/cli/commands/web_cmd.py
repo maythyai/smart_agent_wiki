@@ -31,7 +31,7 @@ def web(
         help="Enable auto-reload for development",
     ),
     cors_origins: str = typer.Option(
-        "http://localhost:3000,http://127.0.0.1:3000",
+        "http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173",
         "--cors",
         "-c",
         help="Comma-separated CORS origins",
