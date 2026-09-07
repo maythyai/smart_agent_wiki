@@ -2,7 +2,7 @@
 id: PRD-desktop-v1.17.0
 title: desktop 完成 v4.4
 version: 1.0
-status: Approved
+status: Released
 date: 2026-09-07
 product_type: platform
 feature_count: 4

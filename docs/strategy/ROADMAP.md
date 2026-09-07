@@ -296,7 +296,9 @@ canonical = `pyproject.toml`。发布时以下必须与之一致，用脚本校�
 - **前置依赖**：v1.16.0 基线（web 仪表盘就绪）+ Rust 工具链（已装）。
 - **07 回流**：desktop v4.4。续留：N3/S/T/U 续留 + v2.0 per-request ws。
 
-> v1.14.0 周期闭环 2026-09-06（07-retro done，retrospective-v1.14.0.md）。v1.15.0 周期闭环 2026-09-06（07-retro done，retrospective-v1.15.0.md）。v1.16.0 周期闭环 2026-09-07（07-retro done，retrospective-v1.16.0.md）。以下为候选主题，**不定论**，供下一轮 01 PRD 决策。
+> v1.14.0 周期闭环 2026-09-06（07-retro done，retrospective-v1.14.0.md）。v1.15.0 周期闭环 2026-09-06（07-retro done，retrospective-v1.15.0.md）。v1.16.0 周期闭环 2026-09-07（07-retro done，retrospective-v1.16.0.md）。v1.17.0 周期闭环 2026-09-07（07-retro done，retrospective-v1.17.0.md：.dmg unsigned defer / 仅 mac aarch64 / sidecar defer v2.0+）。以下为候选主题，**不定论**，供下一轮 01 PRD 决策。
+
+> **v2.0.0 MAJOR 判断**（07 复盘结论）：per-request workspace 注入若用 contextvar（不改公开 API）→ additive → 应发 **v1.18.0 MINOR**，非 MAJOR；只有引入不兼容 API（QueryEngine 构造签名改/移除 deprecated）才 v2.0.0 MAJOR。诚实按 SemVer，不强行 MAJOR。v2.0.0 MAJOR 推迟到真实 breaking。
 
 | 候选 | findings 关联 | 说明 |
 |---|---|---|
