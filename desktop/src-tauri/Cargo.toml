@@ -1,6 +1,6 @@
 [package]
 name = "smart-agent-wiki"
-version = "0.1.0"
+version = "1.0.0"
 description = "Smart Agent Wiki Desktop Application"
 authors = ["Smart Agent Wiki Team"]
 edition = "2021"
