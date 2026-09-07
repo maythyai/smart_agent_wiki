@@ -181,3 +181,38 @@ export interface AgentActivity {
   last_action: string | null;
   last_active_at: string | null;
 }
+
+// Workflow execution (REST GET /api/v1/workflows, v1.15.0)
+export interface WorkflowExecution {
+  workflow_id: string;
+  definition_name: string;
+  name: string;
+  workflow: string;
+  status: 'running' | 'completed' | 'failed' | 'pending' | 'interrupted';
+  steps_completed: number;
+  steps_total: number;
+  updated_at: string | null;
+  finished_at: string | null;
+}
+
+export interface WorkflowListResponse {
+  workflows: WorkflowExecution[];
+  total: number;
+}
+
+// Workflow status detail (REST GET /api/v1/workflows/{id}/status, v1.15.0)
+export interface WorkflowStep {
+  name: string;
+  agent: string;
+  status: string;
+}
+
+export interface WorkflowStatusDetail {
+  workflow_id: string;
+  workflow: string;
+  status: string;
+  current_step: number;
+  steps_total: number;
+  steps: WorkflowStep[];
+  started_at: string;
+}

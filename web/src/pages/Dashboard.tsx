@@ -2,6 +2,7 @@ import { useWebSocket } from '../hooks/useWebSocket';
 import { useAgents } from '../hooks/useAgents';
 import { AgentList } from '../components/dashboard/AgentList';
 import { AgentActivityDetail } from '../components/dashboard/AgentActivityDetail';
+import { WorkflowList } from '../components/dashboard/WorkflowList';
 import { ConnectionStatus } from '../components/dashboard/ConnectionStatus';
 import { useStore } from '../stores';
 import { api } from '../lib/api';
@@ -369,6 +370,14 @@ export default function Dashboard() {
             )}
           </>
         )}
+      </div>
+
+      {/* Workflow runtime section (REST via react-query, 15s polling) */}
+      <div className="mb-6">
+        <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">
+          Workflow Runs
+        </h2>
+        <WorkflowList />
       </div>
     </div>
   );
