@@ -33,7 +33,7 @@ see_also: docs/strategy/STRATEGY.md | docs/prd/PRD-INDEX.md | .csp/review/REVIEW
 
 | 载体 | 现状 | 规则 |
 |---|---|---|
-| `pyproject.toml`（Python 包） | `1.17.0` | **canonical 真源**。下一个发布 = `v1.18.0`（TBD：per-request workspace / agent persistence / engine.py refactor / Playwright E2E，MINOR） |
+| `pyproject.toml`（Python 包） | `1.17.0` | **canonical 真源**。下一个发布 = `v1.18.0`（per-request workspace 注入 via contextvar + O4 tag 流程修复，MINOR） |
 | git tags `v1.0.1` … `v1.9.0` | 全部 SemVer annotated，与 pyproject 一致 | 保留，对外发布基线 |
 | git tags `v3.4.0` / `v3.7.0` | 历史 internal sprint 里程碑号 | 重新定性为**内部 milestone label**（见 1.3），不作为对外发布版本；不可变，不移动/删除 |
 | `desktop/`（tauri.conf.json + package.json） | `1.0.0` | 桌面端达 1.0，与 canonical 版本对齐 |
@@ -59,8 +59,9 @@ see_also: docs/strategy/STRATEGY.md | docs/prd/PRD-INDEX.md | .csp/review/REVIEW
 | `v4.5` | v1.15.0 | released |
 | `v4.6` | v1.16.0 | released |
 | `v4.7` | v1.17.0 | released |
+| `v4.8` | v1.18.0（下一周期） | in-progress（01-prd） |
 
-> lifecycle-state `next_cycle: v2.0.0`。v1.16.0 = realtime 仪表盘 v4.3（已 released）；v1.17.0 = desktop 完成 v4.4（Tauri→1.0 + 集成 web 仪表盘，已 released）。
+> lifecycle-state `next_cycle: v1.18.0`。v1.17.0 = desktop 完成 v4.4（已 released）；v1.18.0 = per-request workspace 注入 via contextvar + O4 tag 流程修复（additive MINOR，非 MAJOR）。v2.0.0 MAJOR 推迟到真实 breaking。
 
 ### 1.4 Tag 规则
 
@@ -337,7 +338,21 @@ canonical = `pyproject.toml`。发布时以下必须与之一致，用脚本校�
 | v1.14.0 | semantic 性能优化（R1 cache 阈值可配 + R2 ANN 索引） | intelligence-adaptation | released (2026-09-06) |
 | v1.15.0 | agent/link 能力（自定义 agent 角色 + L2 links apply + M2 活动聚合） | intelligence-adaptation | released (2026-09-06) |
 | v1.16.0 | realtime 仪表盘 v4.3（agent/workflow 运行态前端可视化） | ecosystem-integration | released (2026-09-07) |
-| v1.17.0 | desktop 完成 v4.4（Tauri→1.0 + 集成 web 仪表盘） | ecosystem-integration | released (2026-09-07) |
+| v1.17.0 | desktop 完成 v4.4（Tauri→1.0 + 集成 web 仪表盘） | ecosystem-integration | released (2026-09-07, @e391611) |
+| v1.18.0 | per-request workspace 注入 + O4 tag 流程 | platform-team | in-progress (01-prd) |
+
+### v1.18.0 — per-request workspace 注入 + O4 tag 流程（status: in-progress, 01-prd 进行中）
+
+> platform-team track。闭合 N3/K2 + O4（最后的 backlog 项）。**additive**——contextvar 注入不改公开 API 契约，MINOR（非 MAJOR）。
+
+- **目标**：web 多租户路径支持 per-request workspace 隔离（contextvar 注入 QueryEngine 内部读，构造签名不变）+ 修复 O4 tag 流程（06 tag release commit 非 reconcile）。
+- **关键功能（摘要级）**：
+  1. **per-request workspace 注入**（N3/K2）：contextvar 持有 workspace_id，QueryEngine 内部读（fallback 默认），web 中间件 per-request 设 contextvar；REST `/workflows`/`/agents` 等读 DB 时自动按当前请求 workspace 隔离；构造签名不变（additive）
+  2. **O4 tag 流程修复**：06 release-manager 改 tag release commit（非 reconcile commit），确保 `git tag -l vX.Y.Z` 指向 release artifacts
+- **价值描述**：用户价值——多租户 web 部署时请求级 workspace 隔离；业务价值——N3/K2 闭合，per-request 架构债清零。
+- **成功指标**：contextvar 注入生效；多租户 web 测试跨 workspace 不泄漏；06 tag 指向 release commit；2267+ passed 不回归；ruff 0。
+- **前置依赖**：v1.17.0 基线。
+- **07 回流**：N3(K2 per-request ws) + O4(tag 流程)。续留：V1-V3(desktop 签名/跨平台/sidecar 后续专项) + S/T/U 续留 P3 defers。
 
 ## 3. 3 年路径（大版本里程碑）
 
