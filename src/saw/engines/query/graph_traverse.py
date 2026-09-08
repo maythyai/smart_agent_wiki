@@ -38,6 +38,7 @@ class GraphTraverse:
         """
         self._conn = conn
         self._workspace_id = workspace_id
+        self._loaded_workspace_id: str = workspace_id  # AUDIT-F-08: track which workspace's graph is in memory
         self._graph: nx.DiGraph = nx.DiGraph()
         self._entity_cache: dict[str, Entity] = {}
         self._relation_count: int = 0
@@ -46,10 +47,34 @@ class GraphTraverse:
     def set_workspace_id(self, workspace_id: str) -> None:
         """Re-scope the graph and reload entities/relations (T-F-K-2)."""
         self._workspace_id = workspace_id
+        self._loaded_workspace_id = workspace_id
         self._graph = nx.DiGraph()
         self._entity_cache = {}
         self._relation_count = 0
         self._load_graph()
+
+    @property
+    def effective_workspace_id(self) -> str:
+        """Workspace scope for the current operation (AUDIT-F-08 fix).
+
+        Reads ``workspace_id_var`` (set by ``WorkspaceContextMiddleware``
+        on web requests) first; falls back to the instance-level
+        ``_workspace_id`` for CLI/scripts/tests without middleware.
+
+        When the effective workspace differs from ``_loaded_workspace_id``,
+        ``_reload_if_stale`` will reload the graph for the new scope.
+        """
+        try:
+            from saw.drivers.web.middleware.workspace import (
+                get_current_workspace_id,
+            )
+
+            ctx = get_current_workspace_id()
+            if ctx is not None:
+                return ctx
+        except Exception:  # pragma: no cover — web middleware not importable
+            pass
+        return self._workspace_id
 
     def _load_graph(self) -> None:
         """Load entity_relation table into NetworkX graph.
@@ -58,7 +83,8 @@ class GraphTraverse:
         that workspace are loaded, and only relations whose both endpoints
         belong to it (so cross-workspace edges never appear).
         """
-        ws = self._workspace_id
+        ws = self.effective_workspace_id
+        self._loaded_workspace_id = ws
         # Load entities in this workspace
         entity_rows = self._conn.execute(
             "SELECT uuid, name, aliases, entity_type, description "
@@ -201,6 +227,8 @@ class GraphTraverse:
         if from_e is None or to_e is None:
             return []
 
+        self._reload_if_stale()
+
         try:
             path = nx.shortest_path(
                 self._graph, from_e.uuid, to_e.uuid
@@ -262,6 +290,8 @@ class GraphTraverse:
         Returns:
             Entity if found, None otherwise.
         """
+        # AUDIT-F-08: ensure cache/graph match current request workspace
+        self._reload_if_stale()
         # Check cache first
         for entity in self._entity_cache.values():
             if entity.name.lower() == name.lower():
@@ -277,7 +307,7 @@ class GraphTraverse:
                   OR (aliases IS NOT NULL AND aliases LIKE ?))
                   AND workspace_id = ?
                LIMIT 1""",
-            (name.lower(), f'%"{name.lower()}"%', self._workspace_id),
+            (name.lower(), f'%"{name.lower()}"%', self.effective_workspace_id),
         ).fetchone()
 
         if row:
@@ -323,7 +353,15 @@ class GraphTraverse:
         return paths
 
     def _reload_if_stale(self) -> None:
-        """Reload graph from DB if relation count has changed."""
+        """Reload graph from DB if workspace changed or relation count changed."""
+        # AUDIT-F-08: check per-request workspace change (contextvar)
+        ws = self.effective_workspace_id
+        if ws != self._loaded_workspace_id:
+            self._graph = nx.DiGraph()
+            self._entity_cache.clear()
+            self._load_graph()
+            return
+
         row = self._conn.execute(
             "SELECT COUNT(*) FROM entity_relation"
         ).fetchone()

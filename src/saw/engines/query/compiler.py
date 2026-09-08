@@ -64,6 +64,29 @@ class ContextCompiler:
         """Set the workspace scope (T-F-K-2: public, replaces private setattr)."""
         self._workspace_id = workspace_id
 
+    @property
+    def effective_workspace_id(self) -> str:
+        """Workspace scope for the current operation (AUDIT-F-08 fix).
+
+        Reads ``workspace_id_var`` (set by ``WorkspaceContextMiddleware``
+        on web requests) first; falls back to the instance-level
+        ``_workspace_id`` for CLI/scripts/tests without middleware.
+
+        Mirrors ``QueryEngine.effective_workspace_id`` so that compiler
+        claim lookups are scoped per-request, not per-construction.
+        """
+        try:
+            from saw.drivers.web.middleware.workspace import (
+                get_current_workspace_id,
+            )
+
+            ctx = get_current_workspace_id()
+            if ctx is not None:
+                return ctx
+        except Exception:  # pragma: no cover — web middleware not importable
+            pass
+        return self._workspace_id
+
     def compile(
         self,
         question: str,
@@ -91,7 +114,7 @@ class ContextCompiler:
         # Step 3: Load candidate claims
         candidate_claims = []
         for uuid in search_result.claim_uuids:
-            claim = self._claims_repo.get_by_id(uuid, workspace_id=self._workspace_id)
+            claim = self._claims_repo.get_by_id(uuid, workspace_id=self.effective_workspace_id)
             if claim:
                 candidate_claims.append(claim)
 
