@@ -164,7 +164,14 @@ cmd_diff() {
     END { for (s in paths) print paths[s] "\t" hash[s] "\t" s }
   ' "$MANIFEST" | while IFS=$'\t' read -r rp h sid; do
     [ -n "$rp" ] || continue
-    if [ -f "$ROOT/$rp" ]; then
+    if [ -d "$ROOT/$rp" ]; then
+      # directory item: hash = git tree object at HEAD:<path-without-trailing-slash>
+      rel="${rp%/}"
+      cur="$(git -C "$ROOT" rev-parse "HEAD:$rel" 2>/dev/null || echo MISSING)"
+      if [ -z "$h" ]; then printf 'ADDED   %s  (%s)\n' "$rp" "$sid"; added=$((added+1))
+      elif [ "$cur" != "$h" ]; then printf 'CHANGED %s  (%s)\n' "$rp" "$sid"; changed=$((changed+1))
+      fi
+    elif [ -f "$ROOT/$rp" ]; then
       cur="$(git -C "$ROOT" hash-object "$ROOT/$rp" 2>/dev/null || echo MISSING)"
       if [ -z "$h" ]; then printf 'ADDED   %s  (%s)\n' "$rp" "$sid"; added=$((added+1))
       elif [ "$cur" != "$h" ]; then printf 'CHANGED %s  (%s)\n' "$rp" "$sid"; changed=$((changed+1))

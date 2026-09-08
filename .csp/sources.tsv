@@ -83,3 +83,17 @@ doc:tdd:summary	.csp/tech-design/TECH-DESIGN-SUMMARY.md	TDD summary	tech-design	
 doc:techdec:summary	.csp/tech-decisions/TECH-DECISIONS-SUMMARY.md	Tech decisions summary	tech-decisions	tech-decision
 doc:trace:summary	.csp/traceability/TRACEABILITY-SUMMARY.md	Traceability summary	traceability	traceability
 doc:tasks:summary	.csp/tasks/TASK-BREAKDOWN-SUMMARY.md	Task breakdown summary (20 tasks)	tasks	feature
+# --- 2026-09-08 brownfield doc-integration delta (base-input docs) ---
+# WARNING: manifest.json currently holds ~145 downstream-stage writeback items (doc:prd:*, doc:spec:*,
+# doc:tms:*, doc:ship:*, doc:milestone:*, doc:artifacts:*) NOT listed in this tsv. Running
+# `hub_manifest.sh gen` would DROP those items. Do not run gen without first porting all writeback
+# items into this tsv (or patching gen to preserve non-tsv items). Manifest is the sync baseline.
+doc:overview:capabilities	docs/CAPABILITIES.md	Capabilities registry (human-readable)	overview	reference
+doc:design:claims-schema	docs/claims_schema.sql	Claims DB schema DDL (reference)	design	reference
+doc:design:claims-queries	docs/claims_queries.sql	Claims DB queries (reference)	design	reference
+doc:design:claims-migration	docs/claims_migration_and_performance.sql	Claims DB migration + perf (reference)	design	reference
+doc:analysis:audit-summary-v1.18.0	docs/analysis/AUDIT-SUMMARY-v1.18.0-audit.md	Audit summary v1.18.0 (human-readable; distilled to .csp/audit)	analysis	audit-summary
+doc:planning:milestones	.planning/MILESTONES.md	Planning milestones registry	planning	reference
+doc:planning:config	.planning/config.json	Planning config	planning	reference
+doc:planning:research-competitive	.planning/research/SAW_Competitive_Analysis_Report.md	Research: competitive analysis	planning	reference
+doc:planning:research-stack-v31	.planning/research/v3.1/STACK.md	Research: stack v3.1	planning	reference

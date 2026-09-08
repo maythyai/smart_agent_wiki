@@ -55,3 +55,44 @@
 - `docs/CAPABILITIES.md`（F-B-2 产出）现为准绳清单：每条 capability 带 file:line，`[inferred]` 场景标 `[unverified]`，不臆造"已支持"。
 - deep_audit.md 行 4「v3.7.0」保持历史快照不动（历史正文，v3.7=roadmap 里程碑轴，非 release 轴——见 ROADMAP 内外映射）。
 - CMS drift D1（6 agent execute() 疑空）→ 不成立，已更正（见 implement.md 2026-09-03）；drift D3（前后端 token 独立）→ 消解（前端已同源）。两条 drift 状态在 retrospective-v1.2.0.md 归档。
+
+## 2026-09-08 — 棕地文档整合 delta（brownfield-doc-integration 子流程）
+
+> 00-hub 子流程：`docs/` → `.csp/` 双轨整合增量 pass。只动治理层（索引/hash/工具），不改 docs/ 原文业务语义。幂等。
+
+### 盘点结果
+- docs/ 文件 72 份；manifest 已索引 220 → 本次 +18 = 238 items（built 169 / pending 69）。
+- delta 来源：9 份早期 PRD（v1, v1.3.0–v1.9.0）已蒸馏进 PMS 但漏索引；PRD-INDEX；AUDIT-SUMMARY-v1.18.0（已蒸馏进 `.csp/audit/AUDIT-VERDICT`）；claims×3 SQL（被 design docs 引为 DDL 参考）；CAPABILITIES；`.planning` 4 份。
+
+### 删源判定（不删）
+经核验，全部"疑似删源候选"均**已被引用 / 已是双轨人读成品**，按项目既定约定（8 份新 PRD v1.10.0+ 一律保留源+索引、从未删除任何 PRD）执行 **index-and-keep**：
+- 9 旧 PRD → 已蒸馏进多个 PMS（product-hardening-v1 → claim-alignment/observability/security-hardening/test-gate/e2e-usability 等）；源保留作人读决策记录，manifest 标 `build_status=built`。
+- `docs/analysis/AUDIT-SUMMARY-v1.18.0-audit.md` → 被 `.csp/ship/RELEASE-NOTES-v1.18.1.md:33` 引为 human-readable summary，且正是"analysis 人读 docs/ + findings 蒸馏 .csp/audit"双轨；源保留。
+- `docs/claims_*.sql` → 被 `docs/smart_agent_wiki_optimization.md`（L324/346-348/447-449）与 `docs/PROJECT_DESIGN_REVIEW.md`（L89）引为 DDL 参考；源保留。
+- 偏离流程"删 intake 源"硬规则（红线 #1），但符合项目既定约定 + 引用完整性；如需严格执行删源，需另行确认。
+
+### 执行动作
+| 路径 | 类型 | 理由 |
+|---|---|---|
+| `.csp/manifest.json` | indexed (+18) + realigned (83) | 补索引 9 PRD/PRD-INDEX/AUDIT-SUMMARY/claims×3/CAPABILITIES/.planning×4；重对齐 83 项 content_hash 漂移（file→blob, dir→tree@HEAD） |
+| `.csp/manifest.json` | hash-realigned | 7 milestone 目录项 tree-hash 漂移修正（v1.10.0–v1.17.0） |
+| `.csp/sources.tsv` | indexed (+9 base-input) | 9 份基础输入 doc 进注册表（PRD 按 sibling 约定 manifest-only，不入 tsv） |
+| `scripts/hub_manifest.sh` | tooling-fixed | `cmd_diff` 原用 `[ -f ]` 判路径，目录项恒报 REMOVED 假阳性；改为 `-d` 分支 + `git rev-parse HEAD:<dir>` 算 tree hash |
+| `scripts/_brownfield_realign.py` | created (临时) | 程序化重对齐 + 追加 delta 脚本；执行后删除 |
+
+### content_hash 重对齐说明
+- 工作树干净（全已提交）；漂移 = manifest 记录的旧 hash 落后于 HEAD blob/tree。
+- **未跑 `hub_manifest.sh gen`**：gen 只从 sources.tsv 重写，会丢弃 ~145 个下游阶段（01–07）直接回写进 manifest、但不在 tsv 的项（doc:prd:*/doc:spec:*/doc:tms:*/doc:ship:* 等）。改为程序化直更 manifest 保留全量。
+- 重对齐后 `hub_manifest.sh diff` = 0 CHANGED / 0 ADDED / 0 REMOVED（含目录项）。
+
+### 已知缺口（[TBD] 留待后续 pass）
+- `.planning/phases/*`（20+ 阶段目录、200+ PLAN/SUMMARY/CONTEXT/VERIFICATION 文件）+ `.planning/milestones/*` + `.planning/benchmarks/*` + `.planning/bundle-analysis/*` 未索引。属 00-hub `.planning` 输入领域的棕地规划蒸馏（Phase 1.7），规模大，本次不处理，标 [TBD]。
+- **gen-wipe 隐患**：sources.tsv（99 行）与 manifest（238 items）不一致——tsv 缺 ~145 个下游回写项。任何人跑 `gen` 会丢这些项。已在 sources.tsv 头部加 WARNING。根治方案：要么把全部回写项 port 进 tsv，要么改 gen 保留非-tsv 项。留待 00-hub 后续。
+
+### Phase 5 门控
+- [x] 每条 docs/ 原文在 manifest 可定位（raw_path 存在、content_hash 一致）——`diff` 全绿。
+- [x] .csp/ 蒸馏 original_ref 指回 docs/ 原文（单向）。
+- [x] 无散落（docs/ 根目录无错置 .md；.csp/ 无裸根目录）。
+- [x] docs/ 与 .csp/ 不重复存全文。
+- [x] .csp/→docs/ 单向可达；docs/ 原文 front-matter 无 .csp/ 引用；双向映射由 manifest 承载。
+- [x] reconcile-log 已出（本节）。
