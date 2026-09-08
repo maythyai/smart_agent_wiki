@@ -21,6 +21,7 @@
 | v1.16.0 | v1.16.0 | released | 2026-09-07 | null | null | agent roster+activity dashboard (react-query)+workflow runtime view+realtime polling 15s+WS invalidate+disconnect degraded | No | Yes (additive MINOR, frontend-only) | realtime 仪表盘 v4.3 |
 | v1.17.0 | v1.17.0 | released | 2026-09-07 | null | null | desktop 1.0 bump 0.1.0→1.0.0+config convergence 15项+web dashboard integration frontendDist→web/dist+tauri build .app/.dmg (unsigned ADR-017 defer)+port convergence 8080→8000+CORS localhost:5173 | No | Yes (additive MINOR, desktop 0.x→1.0) | desktop 完成 v4.4 |
 | v1.18.0 | v1.18.0 | released | 2026-09-07 | null | null | per-request workspace contextvar injection (N3/K2 closure)+O4 tag flow convention docs (§7.3.5)+middleware per-request workspace_id+QueryEngine contextvar read fallback | No | Yes (additive MINOR, no breaking) | per-request workspace 注入 + O4 tag 流程 |
+| v1.18.1 | v1.18.1 | released | 2026-09-08 | null | null | fix: AUDIT-F-08/W1 sub-service (TreeModeSearch/ContextCompiler/GraphTraverse) effective_workspace_id contextvar isolation + W2 7 E2E tests + audit verdict (security review all passed) | No | Yes (additive PATCH, no breaking) | audit fix: sub-service contextvar workspace isolation |
 
 **Notes**:
 - v1.10.0–v1.18.0 all status=released (tag pushed + GitHub Release created).
