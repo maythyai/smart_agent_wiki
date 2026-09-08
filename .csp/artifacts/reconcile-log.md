@@ -86,7 +86,8 @@
 - 重对齐后 `hub_manifest.sh diff` = 0 CHANGED / 0 ADDED / 0 REMOVED（含目录项）。
 
 ### 已知缺口（[TBD] 留待后续 pass）
-- `.planning/phases/*`（20+ 阶段目录、200+ PLAN/SUMMARY/CONTEXT/VERIFICATION 文件）+ `.planning/milestones/*` + `.planning/benchmarks/*` + `.planning/bundle-analysis/*` 未索引。属 00-hub `.planning` 输入领域的棕地规划蒸馏（Phase 1.7），规模大，本次不处理，标 [TBD]。
+- **`.planning/phases/*` 已清理**（2026-09-08，按用户指示"已开发完即删除"）：36 个 phase 中 35 个已落地于 src（VERIFIED passed 或功能在 src 实现：01-22、26-28、30、phase-39/40/41/42/43/44/45），删除其 211 份追踪规划文件 + 7 个未追踪 phase-39+ 目录。**仅保留 `29-agent-skills-layer`**（src 无任何 skill 实现，CONTEXT Status: Planning，未开发）。Git 历史保留全部已删规划。
+- `.planning/milestones/*` + `.planning/benchmarks/*` + `.planning/bundle-analysis/*` 仍未索引（非 docs/ 范畴，留待 00-hub 后续）。
 - **gen-wipe 隐患**：sources.tsv（99 行）与 manifest（238 items）不一致——tsv 缺 ~145 个下游回写项。任何人跑 `gen` 会丢这些项。已在 sources.tsv 头部加 WARNING。根治方案：要么把全部回写项 port 进 tsv，要么改 gen 保留非-tsv 项。留待 00-hub 后续。
 
 ### Phase 5 门控
