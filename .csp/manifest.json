@@ -1244,8 +1244,8 @@
       "raw_path": "docs/strategy/ROADMAP.md",
       "output_path": "",
       "original_ref": "docs/strategy/ROADMAP.md",
-      "content_hash": "d4ab1f517504518734abddfaa8b224c4c414973f",
-      "source_updated_at": "2026-09-06T19:00:00+08:00",
+      "content_hash": "243990f2ac0b5cae62847136efcfaa2c5a32aa86",
+      "source_updated_at": "2026-09-07T23:45:00+08:00",
       "build_status": "built",
       "wiki_pages": [],
       "status": "ready"
@@ -3259,6 +3259,21 @@
       "original_ref": ".csp/decomposition/DECOMPOSITION-DELTA-v1.18.0.md",
       "content_hash": "c992f1d855d125fab7a9ed9491d29ff410a235da",
       "source_updated_at": "2026-09-07T00:00:00+08:00",
+      "build_status": "built",
+      "wiki_pages": [],
+      "status": "ready"
+    },
+    {
+      "source_id": "doc:artifacts:retrospective-v1.18.0",
+      "source_type": "doc",
+      "kind": "reference",
+      "domain": "artifacts",
+      "title": "Retrospective v1.18.0 — per-request workspace + O4 tag flow (9 轮 backlog 清零)",
+      "raw_path": ".csp/artifacts/retrospective-v1.18.0.md",
+      "output_path": "",
+      "original_ref": ".csp/artifacts/retrospective-v1.18.0.md",
+      "content_hash": "1fcdcf123dd183ff6df8170a310c700b68e36975",
+      "source_updated_at": "2026-09-07T23:30:00+08:00",
       "build_status": "built",
       "wiki_pages": [],
       "status": "ready"

@@ -2,7 +2,7 @@
 id: PRD-per-request-ws-v1.18.0
 title: per-request workspace 注入 + O4 tag 流程
 version: 1.0
-status: Approved
+status: Released
 author: prd-writer
 date: 2026-09-07
 product_type: platform

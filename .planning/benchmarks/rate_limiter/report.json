@@ -32,13 +32,13 @@
       "configured_burst": 50,
       "actual_burst": 50,
       "configured_rate": 0,
-      "actual_sustained_rate": 46.78
+      "actual_sustained_rate": 47.46
     }
   },
   "analysis": {
     "bottleneck": "token_bucket_wait",
     "recommendation": "Rate limiter correctly enforces platform limits. For higher throughput, consider parallel rate limiters."
   },
-  "date": "2026-09-05T01:49:37.950828+00:00",
+  "date": "2026-09-08T03:25:31.035040+00:00",
   "version": "1.0"
 }
