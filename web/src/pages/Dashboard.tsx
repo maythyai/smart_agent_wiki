@@ -7,6 +7,7 @@ import { WorkflowList } from '../components/dashboard/WorkflowList';
 import { ConnectionStatus } from '../components/dashboard/ConnectionStatus';
 import { useStore } from '../stores';
 import { api } from '../lib/api';
+import { STATS_INTERVAL_MS } from '../lib/polling';
 import { useState, useEffect, useRef } from 'react';
 
 interface StatsData {
@@ -104,7 +105,7 @@ export default function Dashboard() {
     };
 
     fetchStats();
-    const interval = setInterval(fetchStats, 30000); // Refresh every 30s
+    const interval = setInterval(fetchStats, STATS_INTERVAL_MS); // Refresh every STATS_INTERVAL_MS
     return () => {
       active = false;
       clearInterval(interval);

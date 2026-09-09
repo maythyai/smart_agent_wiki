@@ -8,6 +8,7 @@ parse_wiki_links, extract_unique_targets) — no new engine logic.
 """
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import typer
@@ -42,6 +43,32 @@ def _resolve_page(wiki, page: str) -> str | None:
         if slugify(Path(p).stem) == target:
             return p
     return None
+
+
+# ── T2: rollback snapshot helpers ──────────────────────────────────────
+def _rollback_dir(path: str) -> Path:
+    """Directory holding per-page apply rollback snapshots."""
+    return Path(path).resolve() / ".saw" / "links-rollback"
+
+
+def _rollback_snapshot_path(path: str, page: str) -> Path:
+    from saw.engines.query.wiki_links import slugify
+
+    return _rollback_dir(path) / f"{slugify(Path(page).stem if page.endswith('.md') else page)}.json"
+
+
+def _save_rollback_snapshot(path: str, page: str, content: str, related: list[str], console) -> None:
+    """Persist the pre-apply state of a page so `saw links rollback` can restore it."""
+    try:
+        snap_path = _rollback_snapshot_path(path, page)
+        snap_path.parent.mkdir(parents=True, exist_ok=True)
+        snap_path.write_text(
+            json.dumps({"page": page, "content": content, "related": related}, ensure_ascii=False),
+            encoding="utf-8",
+        )
+        console.print(f"[dim]Rollback snapshot saved: {snap_path.name}[/dim]")
+    except Exception as e:  # snapshot is best-effort; apply must still succeed
+        console.print(f"[yellow]Warning: could not save rollback snapshot: {e}[/yellow]")
 
 
 @app.command(name="suggest")
@@ -213,6 +240,11 @@ def apply(
     skipped: list[str] = []
     failed: list[tuple[str, str]] = []
 
+    # T2: snapshot the original content + related list BEFORE mutating src,
+    # so `saw links rollback` can restore this page to its pre-apply state.
+    original_content = src.content
+    original_related = list(src.related)
+
     for r in suggestions:
         link_slug = slugify(Path(r["slug"]).stem)
         # Dedup check: already linked?
@@ -241,6 +273,8 @@ def apply(
     if applied:
         try:
             wiki.write(src)
+            # T2: persist a rollback snapshot now that the write succeeded.
+            _save_rollback_snapshot(path, resolved, original_content, original_related, console)
         except Exception as e:
             failed.append((resolved, str(e)))
             console.print(f"[red]Failed to write {resolved}: {e}[/red]")
@@ -306,4 +340,60 @@ def audit(
         console.print(t)
     else:
         console.print("[green]No broken links — all [[targets]] resolve.[/green]")
+    raise typer.Exit(code=0)
+
+
+@app.command(name="rollback")
+def rollback(
+    page: str = typer.Argument(..., help="Page slug/path to restore to its last `links apply --confirm` state"),
+    path: str = typer.Option(".", "--path", "-p", help="Wiki directory path"),
+) -> None:
+    """Restore a page to the state before its last ``links apply --confirm`` (T2).
+
+    ``saw links apply --confirm`` saves a per-page rollback snapshot under
+    ``.saw/links-rollback/`` before writing; this command reads that snapshot,
+    restores the original content + ``related`` frontmatter, and re-writes the
+    page. The snapshot is deleted on success. No-op if no snapshot exists.
+    """
+    wiki, console = _wiki(path)
+    resolved = _resolve_page(wiki, page)
+    if resolved is None:
+        console.print(f"[red]Error:[/red] page not found: {page}")
+        raise typer.Exit(code=1)
+
+    snap_path = _rollback_snapshot_path(path, resolved)
+    if not snap_path.is_file():
+        console.print(
+            f"[yellow]No rollback snapshot for {resolved} "
+            "(run `saw links apply --confirm` first).[/yellow]"
+        )
+        raise typer.Exit(code=0)
+
+    import json as _json
+
+    snap = _json.loads(snap_path.read_text(encoding="utf-8"))
+    src = wiki.read(resolved)
+    if src is None:
+        console.print(f"[red]Error:[/red] could not read page: {resolved}")
+        raise typer.Exit(code=1)
+
+    # Restore the pre-apply content + related list. Must also sync
+    # frontmatter['related'] because WikiRepository.write() does
+    # ``fm.update(page.frontmatter)`` last, which would otherwise re-introduce
+    # the post-apply related list from the captured frontmatter dict.
+    src.content = snap.get("content", src.content)
+    src.related = list(snap.get("related", src.related))
+    if isinstance(src.frontmatter, dict):
+        src.frontmatter["related"] = list(src.related)
+    try:
+        wiki.write(src)
+    except Exception as e:
+        console.print(f"[red]Failed to restore {resolved}: {e}[/red]")
+        raise typer.Exit(code=1)
+
+    snap_path.unlink(missing_ok=True)
+    console.print(
+        f"[green]Rolled back {resolved} to its pre-apply state "
+        f"({len(src.related)} related link(s)). Snapshot cleared.[/green]"
+    )
     raise typer.Exit(code=0)

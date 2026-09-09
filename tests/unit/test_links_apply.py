@@ -172,3 +172,81 @@ def test_ac_b_4_apply_then_audit_no_broken(tmp_path: Path, monkeypatch) -> None:
     assert res2.exit_code == 0, res2.output
     assert "beta" not in res2.output.lower().replace("no broken", "") or \
         "no broken links" in res2.output.lower()
+
+
+# ── T2: rollback restores pre-apply state ───────────────────────────
+
+def test_t2_apply_saves_rollback_snapshot(tmp_path: Path, monkeypatch) -> None:
+    """``links apply --confirm`` persists a rollback snapshot before writing."""
+    _make_wiki(tmp_path)
+    monkeypatch.setattr(
+        "saw.engines.query.related_pages.compute_related_pages",
+        _mock_related_pages([
+            {"slug": "beta.md", "title": "Beta", "score": 0.8,
+             "reasons": ["shared tags"]},
+        ]),
+    )
+    from saw.drivers.cli.main import app
+
+    res = CliRunner().invoke(
+        app, ["links", "apply", "alpha", "--path", str(tmp_path), "--confirm"]
+    )
+    assert res.exit_code == 0, res.output
+    snap = tmp_path / ".saw" / "links-rollback" / "alpha.json"
+    assert snap.is_file(), "rollback snapshot not saved"
+
+
+def test_t2_rollback_restores_pre_apply(tmp_path: Path, monkeypatch) -> None:
+    """``links rollback`` restores content + related to pre-apply state."""
+    _make_wiki(tmp_path)
+    alpha_file = tmp_path / "wiki" / "concepts" / "alpha.md"
+    original = alpha_file.read_text()
+
+    monkeypatch.setattr(
+        "saw.engines.query.related_pages.compute_related_pages",
+        _mock_related_pages([
+            {"slug": "beta.md", "title": "Beta", "score": 0.8,
+             "reasons": ["shared tags"]},
+        ]),
+    )
+    from saw.drivers.cli.main import app
+
+    runner = CliRunner()
+    # Apply mutates alpha (adds [[beta]] + related)
+    res = runner.invoke(
+        app, ["links", "apply", "alpha", "--path", str(tmp_path), "--confirm"]
+    )
+    assert res.exit_code == 0, res.output
+    assert "[[beta]]" in alpha_file.read_text()
+
+    # Rollback restores the pre-apply state
+    res2 = runner.invoke(
+        app, ["links", "rollback", "alpha", "--path", str(tmp_path)]
+    )
+    assert res2.exit_code == 0, res2.output
+    assert "rolled back" in res2.output.lower()
+    # Re-read the restored page: the applied [[beta]] link and related entry
+    # must be gone. (We assert on the parsed page rather than raw bytes
+    # because WikiRepository.write normalizes frontmatter field order/adds
+    # metadata fields, so byte-equality with the original file does not hold.)
+    from saw.adapters.storage.wiki_repository import WikiRepository
+    wiki = WikiRepository(tmp_path / "wiki")
+    page = wiki.read("concepts/alpha.md")
+    assert page is not None
+    assert "[[beta]]" not in page.content
+    assert "## Related" not in page.content
+    assert "beta" not in page.related
+    # Snapshot cleared after rollback
+    assert not (tmp_path / ".saw" / "links-rollback" / "alpha.json").is_file()
+
+
+def test_t2_rollback_no_snapshot(tmp_path: Path) -> None:
+    """``links rollback`` with no prior apply is a graceful no-op."""
+    _make_wiki(tmp_path)
+    from saw.drivers.cli.main import app
+
+    res = CliRunner().invoke(
+        app, ["links", "rollback", "alpha", "--path", str(tmp_path)]
+    )
+    assert res.exit_code == 0, res.output
+    assert "no rollback snapshot" in res.output.lower()

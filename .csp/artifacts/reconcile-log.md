@@ -113,3 +113,36 @@
 
 ### 差异化结论
 6 竞品各做 SAW 一部分，无一同时覆盖溯源+治理+数据主权。借鉴方向 = 强化护城河（v1.19 矛盾边/rethink/自维护 Wiki/resolve+record/skills 包；v1.20 社区检测+DRIFT/状态轴/Agent File/Langfuse；v1.21 深度研究/调度/IM+Obsidian/Queue dashboard；v1.22 NLP 降本/provenance+feedback/sandbox/heartbeat）。候选非定论，待 01 PRD 取舍。
+
+## 2026-09-09 — 生产硬化 pass（fix→verify 循环）
+
+> 子智能体协作（基于 .claude/agents：auditor/qa-engineer/reviewer 派生）+ 自验循环。基线绿 → 审计真实 findings → 修 → 定向测试 → 全量回归。
+
+### 基线（HEAD master）
+- ruff 0；pytest 2284 passed/7 skip/0 fail；coverage 67.46%（gate 67 踩线过）；vitest 64 passed。**#1 生产风险 = coverage 踩线（少几行测试即跌破 CI 门）。**
+
+### 审计结论（W/S/T/U/V findings 真伪）
+- **W1/W2/S1 已在代码中修/缓解**（effective_workspace_id contextvar / 隔离测试存在 / scale-driven ANN↔cosine 切换）——非 bug。
+- **S2** 仅 vLLM-skip 基准测试合成向量（非生产）。
+- **S3** COVERAGE-REPORT `[TBD-impl]` 标记**准确非 stale**（测试存在但 importorskip-gated，盲改 covered 是虚假绿）——不动。
+- **S4** engine.py 881 行 god-file = 异味非 bug，重构核心查询引擎有回归风险 → defer。
+- **T1/U1/U3/V1-V3** 需 DB model/CI 基建 → defer。
+
+### 修复（每项定向测试验证）
+| 项 | 修复 | 验证 |
+|---|---|---|
+| **T2** | `saw links apply --confirm` 写前存 rollback 快照（`.saw/links-rollback/`）；新 `saw links rollback` 子命令恢复 content+related（同步 frontmatter['related'] 防 write fm.update 覆盖） | 3 新测试 pass |
+| **T3** | `saw agents export/import` 子命令（YAML 复制 + 校验 name/model_tier/system_prompt + 拒 builtin 名 + --force） | 7 新测试 pass |
+| **activity 路由 bug** | `agents` callback `invoke_without_command=True`+末尾 `raise Exit(0)` 拦截所有子命令 → **v1.15.0 的 `saw agents activity` 从未真正路由（恒打印 roster）**；修为 `ctx.invoked_subcommand is not None: return` | CLI smoke 确认 activity/export/import 全路由 |
+| **U5** | vitest include `src/**/__tests__/**` → `src/**/*.test.{ts,tsx}`（发现更多测试不破坏现有） | vitest 64 pass |
+| **U2** | 4 个 polling hook + Dashboard 30s stats 改读共享 `lib/polling.ts` 的 `VITE_POLL_INTERVAL_MS`/`VITE_STATS_INTERVAL_MS`（带默认，WS 仍近实时） | vitest pass |
+| **README badge** | README+README_CN release v1.9.0→v1.18.1（canonical 对齐） | manifest rehash |
+
+### 全量回归
+- pytest **2294 passed/7 skip/0 fail**（+10 新测试），coverage **67.52%**（+0.06），ruff 0，vitest 64 pass。**零回归。**
+
+### Deferred（非 bug / 需基建，诚实标注）
+- U6（降级 banner 搬入 ConnectionStatus）= 结构性 SPEC 偏移，行为正确，搬动有打断 retry 逻辑风险 → defer。
+- T4 剩余（CLI→web try/except 耦合）= cosmetic（已优雅降级），real bug（activity 路由）已修 → defer 余耦合。
+- S4（engine.py 拆分）= 重构核心引擎有回归风险 → defer。
+- T1（activity 持久化）/U1（Playwright）/U3（vLLM CI）/V1-V3（desktop 签名+跨平台）= 需 DB/CI 基建 → 后续版本。
