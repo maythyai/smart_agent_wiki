@@ -177,6 +177,9 @@
     "hash_realigned": 83,
     "diff_clean": true,
     "source_deletion": false,
-    "note": "index-and-keep delta pass; no stage advancement; see .csp/artifacts/reconcile-log.md 2026-09-08"
+    "note": "index-and-keep delta pass; no stage advancement; see .csp/artifacts/reconcile-log.md 2026-09-08",
+    "phases_cleared": 36,
+    "phases_kept": 0,
+    "note2": "all .planning/phases/* removed (35 impl-shipped + 29-agent-skills-layer unadopted stub); README badge drift v1.9.0 vs pyproject 1.18.1 flagged degraded, awaiting policy decision"
   }
 }
