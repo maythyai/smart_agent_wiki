@@ -65,7 +65,7 @@ def activity(
 
     tracker = None
     try:
-        from saw.drivers.web.app import get_activity_tracker
+        from saw.engines.collaborate.activity_tracker import get_activity_tracker
 
         tracker = get_activity_tracker()
     except Exception:

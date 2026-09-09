@@ -146,3 +146,19 @@
 - T4 剩余（CLI→web try/except 耦合）= cosmetic（已优雅降级），real bug（activity 路由）已修 → defer 余耦合。
 - S4（engine.py 拆分）= 重构核心引擎有回归风险 → defer。
 - T1（activity 持久化）/U1（Playwright）/U3（vLLM CI）/V1-V3（desktop 签名+跨平台）= 需 DB/CI 基建 → 后续版本。
+
+## 2026-09-09 — 生产硬化 pass 2（T4 耦合清理 + CLI 冒烟覆盖）
+
+### 修复
+- **T4（real 部分）**：`get_activity_tracker`/`set_activity_tracker` 单例从 `saw.drivers.web.app` 移至 `saw.engines.collaborate.activity_tracker`（类所在地）；web.app 改薄 re-export（向后兼容，`# noqa: F401`）；CLI `agents_cmd` + REST `api/routes/collaborate` 改从 collaborate 模块导入——**消除 CLI→web 耦合**（此前 CLI 只能 try/except 从 web 层拿 tracker）。real bug（activity 路由）已在上 pass 修。
+- **CLI 冒烟覆盖**：新增 `test_cli_smoke.py`——参数化 `saw <cmd> --help` 全 29 命令 + root help，零副作用覆盖注册/帮助渲染（提升 review/lint/search/freshness/learn/feed/verify/compile/query 等低覆盖命令入口）。+30 tests。
+- **T4 accessor 测试**：`test_agents_cmd.py` 加 `test_t4_shared_activity_tracker_accessor`（含 web.app re-export 向后兼容断言）。
+
+### 回归
+- pytest **2325 passed/7 skip/0 fail**（+31 新测试），coverage 67.52%（gate 67 过），ruff 0，lint baseline F401=0，vitest 64 pass。**零回归。**
+
+### Deferred（gate 性质，非代码 bug）
+- **S4** engine.py 881 行 god-file：异味非 bug；`_semantic_search`+ANN 紧耦合 engine 状态（repos/conn/workspace/cache/keyword fallback），提取命中最高流量查询路径有回归风险——留专项重构，不前推。
+- **U6** banner 归位：SPEC 偏移行为正确；banner 耦合 polling/retry/queryClient 状态，搬动有打断 retry 风险——defer。
+- **T1** activity 持久化：**PRD §3.3 rule 6 明确不持久化**——改需 01-PRD 决策，非代码 bug。
+- **U1** Playwright / **U3** vLLM CI / **V1-V3** desktop 签名+跨平台：需 CI 基建（browser runner / vLLM 服务 / 签名证书），非代码层可解。

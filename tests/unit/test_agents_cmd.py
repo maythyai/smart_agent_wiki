@@ -156,3 +156,29 @@ def test_t3_import_existing_no_force(tmp_path: Path) -> None:
         app, ["agents", "import", str(src), "--path", str(tmp_path), "--force"]
     )
     assert res2.exit_code == 0, res2.output
+
+
+# ── T4: shared activity-tracker accessor ───────────────────────────
+
+def test_t4_shared_activity_tracker_accessor() -> None:
+    """get_activity_tracker / set_activity_tracker live in the collaborate
+    module (not web.app), so the CLI doesn't import the web layer."""
+    from saw.engines.collaborate.activity_tracker import (
+        AgentActivityTracker,
+        get_activity_tracker,
+        set_activity_tracker,
+    )
+
+    # Singleton starts unset (or whatever prior tests left); set, verify,
+    # restore to None so this is order-independent.
+    set_activity_tracker(None)
+    assert get_activity_tracker() is None
+    t = AgentActivityTracker()
+    set_activity_tracker(t)
+    assert get_activity_tracker() is t
+    set_activity_tracker(None)  # cleanup
+    assert get_activity_tracker() is None
+    # web.app must still re-export it (backward compat for any importer)
+    from saw.drivers.web import app as web_app
+    assert web_app.get_activity_tracker is get_activity_tracker
+    assert web_app.set_activity_tracker is set_activity_tracker

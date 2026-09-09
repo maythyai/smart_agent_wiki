@@ -108,3 +108,23 @@ class AgentActivityTracker:
             "calls": activity["calls"],
             "last_active_at": activity["last_active_at"],
         }
+
+
+# ── Process-global singleton accessor (T4) ──────────────────────────
+# Canonical home for the activity-tracker singleton so the CLI and REST
+# routes don't have to import from saw.drivers.web.app (which created a
+# fragile CLI→web coupling). ``saw web``'s lifespan calls set_activity_tracker()
+# on startup; CLI-only mode / tests leave it None and callers degrade to
+# empty activity.
+_tracker: "AgentActivityTracker | None" = None
+
+
+def get_activity_tracker() -> "AgentActivityTracker | None":
+    """Return the process-global activity tracker, or None if unset."""
+    return _tracker
+
+
+def set_activity_tracker(tracker: "AgentActivityTracker | None") -> None:
+    """Set the process-global activity tracker (called by the web lifespan)."""
+    global _tracker  # noqa: PLW0603
+    _tracker = tracker

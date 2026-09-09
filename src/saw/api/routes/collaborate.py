@@ -434,7 +434,7 @@ async def list_agents() -> dict[str, Any]:
     # F-T-3: attach activity summary if tracker is available
     tracker = None
     try:
-        from saw.drivers.web.app import get_activity_tracker
+        from saw.engines.collaborate.activity_tracker import get_activity_tracker
 
         tracker = get_activity_tracker()
     except Exception:
@@ -474,7 +474,7 @@ async def get_agent_activity(agent_name: str = Path(
 
     tracker = None
     try:
-        from saw.drivers.web.app import get_activity_tracker
+        from saw.engines.collaborate.activity_tracker import get_activity_tracker
 
         tracker = get_activity_tracker()
     except Exception:

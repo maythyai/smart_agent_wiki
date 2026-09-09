@@ -444,21 +444,16 @@ def create_app(
 
 
 # ── F-T-3: Agent activity tracker singleton ────────────────────────
-# Set in lifespan; accessible from REST routes that don't have a Request
-# object (e.g. list_agents). Returns None when tracker isn't initialized
-# (tests, CLI-only mode) — routes degrade to empty activity.
-_activity_tracker: "Any | None" = None
-
-
-def get_activity_tracker() -> "Any | None":
-    """Return the module-level activity tracker (or None if not set)."""
-    return _activity_tracker
-
-
-def set_activity_tracker(tracker: "Any | None") -> None:
-    """Set the module-level activity tracker (called in lifespan)."""
-    global _activity_tracker  # noqa: PLW0603
-    _activity_tracker = tracker
+# T4: the canonical accessor now lives in
+# saw.engines.collaborate.activity_tracker so the CLI (``saw agents
+# activity``) and REST routes can import it without pulling in the web
+# layer (the previous ``from saw.drivers.web.app import get_activity_tracker``
+# created a fragile CLI→web coupling). Re-exported here for any caller that
+# still imports it from the app module.
+from saw.engines.collaborate.activity_tracker import (  # noqa: E402, F401
+    get_activity_tracker,
+    set_activity_tracker,
+)
 
 
 def create_app_from_config(
