@@ -98,3 +98,18 @@
 - [x] docs/ 与 .csp/ 不重复存全文。
 - [x] .csp/→docs/ 单向可达；docs/ 原文 front-matter 无 .csp/ 引用；双向映射由 manifest 承载。
 - [x] reconcile-log 已出（本节）。
+
+## 2026-09-09 — 外环 roadmap Phase 0.5 竞品借鉴 + ROADMAP 增量更新
+
+> 外环 roadmap 子流程 Phase 0.5。deep-read 6 个同类开源项目，提炼借鉴清单回写 ROADMAP v1.19.0+ 候选主题。只动治理层 + 战略规划，不改业务代码。
+
+### 参考项目（shallow-clone 至 `开源项目参考/`，已 .gitignore，只读分析不入源树）
+- WeKnora(MIT) / Khoj(AGPL,仅思路) / GraphRAG(MIT) / Cognee(Apache) / Letta(Apache) / Potpie(Apache)
+
+### 产出
+- 新增 `docs/analysis/COMPETITIVE-REFERENCE.md`（借鉴清单：来源→feature→SAW 差异化落地→拟纳入版本，A/B/C/D 四 track + 不借鉴清单 + 协议合规）
+- `docs/strategy/ROADMAP.md` v1.1→1.2：新增「竞品借鉴候选」节 + 版本-主题表 v1.19.0–v1.22.0 candidate 行 + §5 衔接声明补竞品借鉴 bullet；front-matter last_updated→2026-09-09，see_also 加 COMPETITIVE-REFERENCE
+- `.csp/manifest.json`：+`doc:analysis:competitive-reference`(built) + rehash `doc:strategy:roadmap`
+
+### 差异化结论
+6 竞品各做 SAW 一部分，无一同时覆盖溯源+治理+数据主权。借鉴方向 = 强化护城河（v1.19 矛盾边/rethink/自维护 Wiki/resolve+record/skills 包；v1.20 社区检测+DRIFT/状态轴/Agent File/Langfuse；v1.21 深度研究/调度/IM+Obsidian/Queue dashboard；v1.22 NLP 降本/provenance+feedback/sandbox/heartbeat）。候选非定论，待 01 PRD 取舍。

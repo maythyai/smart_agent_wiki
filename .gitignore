@@ -256,3 +256,6 @@ temp/
 
 # CSP knowledge-hub run workspace (not committed)
 .csp/.hub-run/
+
+# open-source reference clones (read-only analysis, not part of SAW source tree)
+开源项目参考/

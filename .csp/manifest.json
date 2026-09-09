@@ -1244,7 +1244,7 @@
       "raw_path": "docs/strategy/ROADMAP.md",
       "output_path": "",
       "original_ref": "docs/strategy/ROADMAP.md",
-      "content_hash": "61459f5a2aca4f5805d27668779b06896debb493",
+      "content_hash": "a658db9181fe918318b4a7fbaaa87699ea9c5f44",
       "source_updated_at": "2026-09-07T23:45:00+08:00",
       "build_status": "built",
       "wiki_pages": [],
@@ -3545,6 +3545,21 @@
       "content_hash": "670a978ccfe38662f6bcd7ea7cd073ab8aa72cc6",
       "source_updated_at": "2026-05-02T17:25:09+08:00",
       "build_status": "pending",
+      "wiki_pages": [],
+      "status": "ready"
+    },
+    {
+      "source_id": "doc:analysis:competitive-reference",
+      "source_type": "doc",
+      "kind": "competitive-reference",
+      "domain": "analysis",
+      "title": "Competitive reference (Phase 0.5 borrow list)",
+      "raw_path": "docs/analysis/COMPETITIVE-REFERENCE.md",
+      "output_path": "docs/analysis/COMPETITIVE-REFERENCE.md",
+      "original_ref": "docs/analysis/COMPETITIVE-REFERENCE.md",
+      "content_hash": "5b72d38c3467dd83f8d6276a666f6c79ae34f9e8",
+      "source_updated_at": "unknown",
+      "build_status": "built",
       "wiki_pages": [],
       "status": "ready"
     }
