@@ -3,6 +3,27 @@
 All notable changes to this project are documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [v1.20.0] - 2026-09-09
+### Added
+- **C3 coding-harness skills package** (`.claude/skills/saw-tools/SKILL.md`) —
+  teaches coding agents WHEN to call which SAW MCP tool: `saw_impact`/
+  `saw_blast_radius` + `saw_code_context` before code changes, `saw_freshness`/
+  `saw_status`/`saw_conflicts` for staleness, `saw_verify`/`saw_lint`/`saw_audit`
+  after. Closes the deleted phase-29 "agent skills layer" need as a lightweight
+  skills package (first competitive-borrow candidate shipped, per
+  `docs/analysis/COMPETITIVE-REFERENCE.md`).
+- AUDIT-F-04 coverage tests: functional `saw lint` / `saw search` / `saw
+  freshness` / `saw verify` (config→repo→governor paths, +4 tests; total
+  govern/CLI coverage up).
+
+### Audit
+- `.csp/audit/AUDIT-VERDICT-v1.19.0.md` — verdict 放行 (production-ready),
+  Critical/High=0, security baseline confirmed (AUDIT-F-08).
+
+### Release Gate
+- pytest 2333 passed / 7 skipped / 0 failed; coverage ~67.8% (gate 67); ruff 0;
+  vitest 64 pass.
+
 ## [v1.19.0] - 2026-09-09
 ### Added
 - `saw links rollback <page>` — restore a page to its pre-`links apply

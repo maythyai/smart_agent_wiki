@@ -1,8 +1,8 @@
 {
   "pipeline_version": 2,
-  "milestone": "v4.9",
-  "current_stage": "released-v1.19.0",
-  "next_cycle": "v1.20.0",
+  "milestone": "v5.0",
+  "current_stage": "released-v1.20.0",
+  "next_cycle": "v1.21.0",
   "stages": [
     {
       "stage": "00-hub",
@@ -182,6 +182,7 @@
     "phases_kept": 0,
     "note2": "all .planning/phases/* removed (35 impl-shipped + 29-agent-skills-layer unadopted stub); README badge drift v1.9.0 vs pyproject 1.18.1 flagged degraded, awaiting policy decision",
     "v1_19_0_released": "2026-09-09",
-    "note_v1_19": "production hardening (T2/T3/activity-routing-fix/T4/S4 + CLI/govern tests); additive -> MINOR v1.19.0; competitive-borrow candidates shifted to v1.20.0+"
+    "note_v1_19": "production hardening (T2/T3/activity-routing-fix/T4/S4 + CLI/govern tests); additive -> MINOR v1.19.0; competitive-borrow candidates shifted to v1.20.0+",
+    "v1_20_0_released": "2026-09-09"
   }
 }

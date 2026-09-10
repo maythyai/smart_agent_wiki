@@ -80,3 +80,50 @@ def test_verify_not_in_wiki(tmp_path: Path, monkeypatch) -> None:
     res = CliRunner().invoke(app, ["verify", "any-uuid"])
     assert res.exit_code == 1, res.output
     assert "not in a saw wiki" in res.output.lower() or "saw init" in res.output.lower()
+
+
+# ── lint (CWD-based, like freshness/verify) ───────────────────────
+
+def test_lint_empty_wiki(tmp_path: Path, monkeypatch) -> None:
+    """`saw lint` in a fresh wiki prints the health report (no issues)."""
+    _make_saw_root(tmp_path)
+    monkeypatch.chdir(tmp_path)
+
+    from saw.drivers.cli.main import app
+
+    res = CliRunner().invoke(app, ["lint"])
+    assert res.exit_code == 0, res.output
+    assert "Health" in res.output or "health" in res.output.lower()
+
+
+def test_lint_not_in_wiki(tmp_path: Path, monkeypatch) -> None:
+    """`saw lint` outside a saw root exits 1."""
+    monkeypatch.chdir(tmp_path)
+
+    from saw.drivers.cli.main import app
+
+    res = CliRunner().invoke(app, ["lint"])
+    assert res.exit_code == 1, res.output
+    assert "not in a saw wiki" in res.output.lower() or "saw init" in res.output.lower()
+
+
+# ── search (--path based) ──────────────────────────────────────────
+
+def test_search_not_in_wiki(tmp_path: Path) -> None:
+    """`saw search` against a non-wiki path exits 1 (no wiki found)."""
+    from saw.drivers.cli.main import app
+
+    res = CliRunner().invoke(app, ["search", "anything", "--path", str(tmp_path / "nope")])
+    assert res.exit_code == 1, res.output
+    assert "no wiki found" in res.output.lower() or "saw init" in res.output.lower()
+
+
+def test_search_empty_wiki(tmp_path: Path) -> None:
+    """`saw search` in a fresh wiki exits 0 (no results, no crash)."""
+    _make_saw_root(tmp_path)
+
+    from saw.drivers.cli.main import app
+
+    res = CliRunner().invoke(app, ["search", "anything", "--path", str(tmp_path)])
+    # Empty index → either "no results" or graceful empty; must not crash (exit 0)
+    assert res.exit_code == 0, res.output

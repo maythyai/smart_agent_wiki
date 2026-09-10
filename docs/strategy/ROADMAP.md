@@ -1,7 +1,7 @@
 ---
 id: ROADMAP
 project: smart-agent-wiki
-version: 1.3
+version: 1.4
 last_updated: 2026-09-09
 status: active
 tracks: [core-trust, platform-team, ecosystem-integration, intelligence-adaptation]
@@ -357,10 +357,11 @@ canonical = `pyproject.toml`。发布时以下必须与之一致，用脚本校�
 | v1.18.0 | per-request workspace 注入 + O4 tag 流程 | platform-team | released (2026-09-07, @e4cf22d) |
 | v1.18.1 | fix: AUDIT-F-08/W1 sub-service contextvar + W2 E2E test | platform-team | planned (audit 2026-09-08) |
 | v1.19.0 | production hardening: links rollback / agents export-import / activity-routing fix / T4 decouple / S4 engine.py split / CLI+govern tests | core-trust+ecosystem | shipped (2026-09-09) |
-| v1.20.0 | 矛盾边+rethink / agent 自维护 Wiki / saw_resolve+record / coding-harness skills 包 | core-trust+ecosystem | candidate (竞品借鉴, 待 01 PRD) |
-| v1.21.0 | claims 图社区检测+DRIFT / claim 状态轴 / Agent File 便携角色 / Langfuse trace | intelligence+platform | candidate (竞品借鉴, 待 01 PRD) |
-| v1.22.0 | 深度研究模式 / 调度自动化 / IM serving+Obsidian 插件 / Write Queue dashboard | intelligence+ecosystem | candidate (竞品借鉴, 待 01 PRD) |
-| v1.23.0 | FastGraphRAG NLP 降本 / provenance+auto-feedback / skill sandbox / heartbeat 巡检 | core-trust+ecosystem | candidate (竞品借鉴, 待 01 PRD) |
+| v1.20.0 | C3 coding-harness skills package (.claude/skills/saw-tools) + AUDIT-F-04 coverage tests (lint/search/freshness/verify functional) | core-trust+ecosystem | shipped (2026-09-09) |
+| v1.21.0 | 矛盾边+rethink(B1/B2) / saw_resolve+record(C1/C2) / agent 自维护 Wiki(A1) | core-trust+ecosystem | candidate (竞品借鉴, 待 01 PRD) |
+| v1.22.0 | claims 图社区检测+DRIFT / claim 状态轴 / Agent File 便携角色 / Langfuse trace | intelligence+platform | candidate (竞品借鉴, 待 01 PRD) |
+| v1.23.0 | 深度研究模式 / 调度自动化 / IM serving+Obsidian 插件 / Write Queue dashboard | intelligence+ecosystem | candidate (竞品借鉴, 待 01 PRD) |
+| v1.24.0 | FastGraphRAG NLP 降本 / provenance+auto-feedback / skill sandbox / heartbeat 巡检 | core-trust+ecosystem | candidate (竞品借鉴, 待 01 PRD) |
 
 ### v1.18.0 — per-request workspace 注入 + O4 tag 流程（status: released, 2026-09-07, @e4cf22d）
 
