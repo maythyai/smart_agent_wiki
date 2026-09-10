@@ -127,3 +127,34 @@ def test_search_empty_wiki(tmp_path: Path) -> None:
     res = CliRunner().invoke(app, ["search", "anything", "--path", str(tmp_path)])
     # Empty index → either "no results" or graceful empty; must not crash (exit 0)
     assert res.exit_code == 0, res.output
+
+
+# ── review (CWD-based) ─────────────────────────────────────────────
+
+def test_review_not_in_wiki(tmp_path: Path, monkeypatch) -> None:
+    """`saw review` outside a saw root exits 1."""
+    monkeypatch.chdir(tmp_path)
+    from saw.drivers.cli.main import app
+    res = CliRunner().invoke(app, ["review"])
+    assert res.exit_code == 1, res.output
+
+
+def test_review_empty_queue(tmp_path: Path, monkeypatch) -> None:
+    """`saw review --all` in a fresh wiki exits 0 (empty review queue)."""
+    _make_saw_root(tmp_path)
+    monkeypatch.chdir(tmp_path)
+    from saw.drivers.cli.main import app
+    res = CliRunner().invoke(app, ["review", "--all"])
+    assert res.exit_code == 0, res.output
+
+
+# ── learn distill (LLM-gated branch) ───────────────────────────────
+
+def test_learn_distill_no_llm(tmp_path: Path) -> None:
+    """`saw learn distill` without an LLM configured exits non-zero with a
+    clear 'LLM unavailable' message (covers the tier-check branch)."""
+    _make_saw_root(tmp_path)
+    from saw.drivers.cli.main import app
+    res = CliRunner().invoke(app, ["learn", "distill", "--path", str(tmp_path)])
+    assert res.exit_code != 0, res.output
+    assert "llm" in res.output.lower() or "unavailable" in res.output.lower()
