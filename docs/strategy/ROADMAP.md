@@ -1,7 +1,7 @@
 ---
 id: ROADMAP
 project: smart-agent-wiki
-version: 1.2
+version: 1.3
 last_updated: 2026-09-09
 status: active
 tracks: [core-trust, platform-team, ecosystem-integration, intelligence-adaptation]
@@ -325,10 +325,10 @@ canonical = `pyproject.toml`。发布时以下必须与之一致，用脚本校�
 
 | 版本 | Track | 候选主题（来源） |
 |---|---|---|
-| **v1.19.0** | core-trust + ecosystem | B1 `contradicts` 矛盾边+置信(Cognee) / B2 `memory_rethink` 矛盾重评(Letta) / A1 agent 自蒸馏自维护 Wiki(WeKnora) / C1 `saw_resolve` 任务级上下文(Potpie) / C2 `saw_record` 持久学习(Potpie) / **C3 coding-harness skills 包**(Potpie——直接填补已删 phase-29 的真实需求，轻量 skills 而非 in-product phase) |
-| **v1.20.0** | intelligence + platform | A2 层次社区检测+社区报告(GraphRAG) / A3 DRIFT 混合检索(GraphRAG) / B3 claim TRUE/FALSE/SUSPECTED 状态轴(GraphRAG) / C4 Agent File 便携角色格式(Letta，闭合 backlog T3) / D1 Langfuse 式 trace(WeKnora) |
-| **v1.21.0** | intelligence + ecosystem | A4 深度研究模式(Khoj) / A5 调度自动化(Khoj) / C5 IM serving+Obsidian 插件(Khoj/WeKnora) / D2 Write Queue 运维 dashboard(WeKnora) |
-| **v1.22.0** | core-trust + ecosystem | B4 FastGraphRAG NLP 降本层(GraphRAG) / B5 provenance+auto-feedback(Cognee) / C6 skill sandbox 执行(WeKnora) / D3 heartbeat 主动巡检(Letta) |
+| **v1.20.0** | core-trust + ecosystem | B1 `contradicts` 矛盾边+置信(Cognee) / B2 `memory_rethink` 矛盾重评(Letta) / A1 agent 自蒸馏自维护 Wiki(WeKnora) / C1 `saw_resolve` 任务级上下文(Potpie) / C2 `saw_record` 持久学习(Potpie) / **C3 coding-harness skills 包**(Potpie——直接填补已删 phase-29 的真实需求，轻量 skills 而非 in-product phase) |
+| **v1.21.0** | intelligence + platform | A2 层次社区检测+社区报告(GraphRAG) / A3 DRIFT 混合检索(GraphRAG) / B3 claim TRUE/FALSE/SUSPECTED 状态轴(GraphRAG) / C4 Agent File 便携角色格式(Letta，闭合 backlog T3) / D1 Langfuse 式 trace(WeKnora) |
+| **v1.22.0** | intelligence + ecosystem | A4 深度研究模式(Khoj) / A5 调度自动化(Khoj) / C5 IM serving+Obsidian 插件(Khoj/WeKnora) / D2 Write Queue 运维 dashboard(WeKnora) |
+| **v1.23.0** | core-trust + ecosystem | B4 FastGraphRAG NLP 降本层(GraphRAG) / B5 provenance+auto-feedback(Cognee) / C6 skill sandbox 执行(WeKnora) / D3 heartbeat 主动巡检(Letta) |
 
 **不借鉴（聚焦代价）**：Khoj 云托管/图像生成/voice（偏离 local-first 与编译定位）；WeKnora 腾讯生态强绑定（厂商锁定）；GraphRAG 全 LLM 抽取作唯一路径（成本高，SAW 采 NLP+LLM 分层）；Letta OS 虚拟内存全套（SAW 已有四层存储+Write Queue）。AGPL(Khoj) 仅借鉴思路不引代码。
 
@@ -356,10 +356,11 @@ canonical = `pyproject.toml`。发布时以下必须与之一致，用脚本校�
 | v1.17.0 | desktop 完成 v4.4（Tauri→1.0 + 集成 web 仪表盘） | ecosystem-integration | released (2026-09-07, @e391611) |
 | v1.18.0 | per-request workspace 注入 + O4 tag 流程 | platform-team | released (2026-09-07, @e4cf22d) |
 | v1.18.1 | fix: AUDIT-F-08/W1 sub-service contextvar + W2 E2E test | platform-team | planned (audit 2026-09-08) |
-| v1.19.0 | 矛盾边+rethink / agent 自维护 Wiki / saw_resolve+record / coding-harness skills 包 | core-trust+ecosystem | candidate (竞品借鉴, 待 01 PRD) |
-| v1.20.0 | claims 图社区检测+DRIFT / claim 状态轴 / Agent File 便携角色 / Langfuse trace | intelligence+platform | candidate (竞品借鉴, 待 01 PRD) |
-| v1.21.0 | 深度研究模式 / 调度自动化 / IM serving+Obsidian 插件 / Write Queue dashboard | intelligence+ecosystem | candidate (竞品借鉴, 待 01 PRD) |
-| v1.22.0 | FastGraphRAG NLP 降本 / provenance+auto-feedback / skill sandbox / heartbeat 巡检 | core-trust+ecosystem | candidate (竞品借鉴, 待 01 PRD) |
+| v1.19.0 | production hardening: links rollback / agents export-import / activity-routing fix / T4 decouple / S4 engine.py split / CLI+govern tests | core-trust+ecosystem | shipped (2026-09-09) |
+| v1.20.0 | 矛盾边+rethink / agent 自维护 Wiki / saw_resolve+record / coding-harness skills 包 | core-trust+ecosystem | candidate (竞品借鉴, 待 01 PRD) |
+| v1.21.0 | claims 图社区检测+DRIFT / claim 状态轴 / Agent File 便携角色 / Langfuse trace | intelligence+platform | candidate (竞品借鉴, 待 01 PRD) |
+| v1.22.0 | 深度研究模式 / 调度自动化 / IM serving+Obsidian 插件 / Write Queue dashboard | intelligence+ecosystem | candidate (竞品借鉴, 待 01 PRD) |
+| v1.23.0 | FastGraphRAG NLP 降本 / provenance+auto-feedback / skill sandbox / heartbeat 巡检 | core-trust+ecosystem | candidate (竞品借鉴, 待 01 PRD) |
 
 ### v1.18.0 — per-request workspace 注入 + O4 tag 流程（status: released, 2026-09-07, @e4cf22d）
 
@@ -397,7 +398,7 @@ SAW 的终局是**AI agent 与人类共用的、可验证、可溯源、可治�
 
 ## 5. 衔接声明
 
-- **01 PRD** 读本文件定位本版本主题；PRD front-matter 标 `roadmap_ref: ROADMAP` + `target_version`（如 v1.11.0）。v1.11.0 周期已闭环（released 2026-09-05）。v1.12.0 周期已闭环（released 2026-09-05，embedding 改用 OpenAI 风格 API + E2E 验证）。v1.13.0 周期已闭环（released 2026-09-06，E2E 收尾轮）。v1.14.0 周期已闭环（released 2026-09-06，semantic 性能优化：cache 阈值可配 + ANN 索引 hnswlib + benchmark cache.stats 真实度量）。v1.15.0 周期已闭环（released 2026-09-06，agent/link 能力：自定义 agent 角色 + L2 links apply + M2 agent 活动聚合）。v1.16.0 周期已闭环（released 2026-09-07，realtime 仪表盘 v4.3：agent roster+activity dashboard + workflow runtime view + realtime polling/WS）。v1.17.0 周期已闭环（released 2026-09-07，desktop 完成 v4.4：Tauri→1.0 + 集成 web 仪表盘 + .app/.dmg build + port convergence）。v1.18.0 周期已闭环（released 2026-09-07，per-request workspace contextvar injection + O4 tag flow convention）。**9 轮循环（v1.10.0–v1.18.0）backlog 清零达成**（2026-09-07，企业生产标准：pytest 2277 + ruff 0 + coverage 67.42% + smoke 6/6 + 9 wheel + 9 GitHub Release + 112 AC 全映射）。下一候选 v1.19.0+（W1 sub-service effective_workspace_id / W2 per-request ws E2E / V1-V3 desktop 签名+跨平台 / S1-S4 ANN 实证 / T1-T4 activity 持久化 / U1-U6 视觉 E2E / coverage 70%+，待下一轮 01 PRD 决策）。
+- **01 PRD** 读本文件定位本版本主题；PRD front-matter 标 `roadmap_ref: ROADMAP` + `target_version`（如 v1.11.0）。v1.11.0 周期已闭环（released 2026-09-05）。v1.12.0 周期已闭环（released 2026-09-05，embedding 改用 OpenAI 风格 API + E2E 验证）。v1.13.0 周期已闭环（released 2026-09-06，E2E 收尾轮）。v1.14.0 周期已闭环（released 2026-09-06，semantic 性能优化：cache 阈值可配 + ANN 索引 hnswlib + benchmark cache.stats 真实度量）。v1.15.0 周期已闭环（released 2026-09-06，agent/link 能力：自定义 agent 角色 + L2 links apply + M2 agent 活动聚合）。v1.16.0 周期已闭环（released 2026-09-07，realtime 仪表盘 v4.3：agent roster+activity dashboard + workflow runtime view + realtime polling/WS）。v1.17.0 周期已闭环（released 2026-09-07，desktop 完成 v4.4：Tauri→1.0 + 集成 web 仪表盘 + .app/.dmg build + port convergence）。v1.18.0 周期已闭环（released 2026-09-07，per-request workspace contextvar injection + O4 tag flow convention）。v1.18.1 周期已闭环（released 2026-09-08，fix: AUDIT-F-08/W1 sub-service contextvar + W2 E2E test）。**v1.19.0 周期已闭环**（released 2026-09-09，production hardening：links rollback / agents export-import / agents activity 路由 bug 修复 / T4 activity-tracker 解耦 / S4 engine.py 语义搜索拆分 + CLI/govern 测试补强；additive → MINOR）。下一候选 v1.20.0+（竞品借鉴候选见下文「竞品借鉴候选」节，待 01 PRD 决策）。
 - **06 release** 用「版本号规则」节（SemVer/Tag/预发布/多平台一致性），不另立方案。v1.17.0 为 additive → 发 MINOR，不强行 MAJOR。
 - **07 复盘** findings（status=open/deferred）回流更新本文件下一版本主题与版本-主题表 status（planned→in-progress→shipped→deferred）。v1.12.0 findings（N1/N4）已清掉。v1.13.0 findings（Q1/Q2/Q3 + O3）已清掉，O1 改善→R1。v1.14.0 findings（R1/R2）已清掉，R4 改善→S3。v1.15.0 findings（M2/L2 + 自定义角色）已清掉，O2 改善（67.34→67.42%）。v1.16.0 findings（realtime 仪表盘）已清掉，O2 持平（67.42%）。v1.17.0 findings：U4（desktop 0.1.0）已清掉。v1.18.0 findings：N3/K2（per-request workspace contextvar）已清掉，O4（tag flow convention）已清掉。**9 轮 backlog 清零达成**。新增 W1（sub-service _workspace_id 未读 contextvar P1）已修复→v1.18.1 fix / W2（per-request ws 未 E2E P2）已修复→v1.18.1 fix / W3（release-manager.md gitignored P3 info）。当前回流 findings：O2 + R3 + S1/S2/S3/S4 + T1/T2/T3/T4 + U1/U2/U3/U5/U6 + V1/V2/V3。
 - **lifecycle**：读 `.csp/lifecycle-state.json` 对齐在跑版本；本文件不写 lifecycle（外环）。v1.18.0 已 released（2026-09-07）。

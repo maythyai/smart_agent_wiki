@@ -162,3 +162,24 @@
 - **U6** banner 归位：SPEC 偏移行为正确；banner 耦合 polling/retry/queryClient 状态，搬动有打断 retry 风险——defer。
 - **T1** activity 持久化：**PRD §3.3 rule 6 明确不持久化**——改需 01-PRD 决策，非代码 bug。
 - **U1** Playwright / **U3** vLLM CI / **V1-V3** desktop 签名+跨平台：需 CI 基建（browser runner / vLLM 服务 / 签名证书），非代码层可解。
+
+## 2026-09-09 — release v1.19.0（production hardening）
+
+> v1.18.1 已在 origin 发布（tag cd8a56b）。本批 post-v1.18.1 硬化 → additive 新功能（T2 rollback / T3 export-import）→ SemVer **v1.19.0**（MINOR）。
+
+### S4 engine.py god-file 拆分（本 pass 新增）
+- `_semantic_search`/`_cosine_search_batch`/`_ann_search` 提取至 `SemanticSearchMixin`（`src/saw/engines/query/semantic.py`），engine.py 881→635 行。逐字搬移不改逻辑；语义/嵌入/cache 12 测试 pass；全量 2329 pass 零回归。
+- 删 engine.py 未用 `import os`（F401 修）。
+
+### 版本同步
+- pyproject 1.18.1→1.19.0（canonical）；VERSION=1.19.0；README/README_CN badge→v1.19.0。
+- ROADMAP v1.2→v1.3：v1.19.0 标 shipped；竞品借鉴候选后移 v1.20.0–v1.23.0；§5 衔接声明加 v1.19.0 闭环。
+- CHANGELOG 加 v1.19.0 条目（含 v1.18.0/v1.18.1 摘要）。
+- lifecycle-state：milestone v4.9 / next_cycle v1.20.0 / current_stage=released-v1.19.0。
+- manifest rehash README/README_CN/ROADMAP。
+
+### Deferred（gate 性质，release 不阻塞）
+- T1（PRD §3.3 rule 6 不持久化，需 01-PRD 决策）/ U6（SPEC 偏移行为正确，搬动有 retry 耦合风险）/ U1 Playwright（需 CI browser runner）/ U3 vLLM CI（需 vLLM 服务）/ V1-V3 desktop 签名+跨平台（需证书+平台 runner）。
+
+### Release gate（2026-09-09）
+pytest 2329 passed/7 skip/0 fail · cov 67.76% · ruff 0 · F401 baseline 0 · vitest 64 pass · 零回归。

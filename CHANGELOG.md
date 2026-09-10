@@ -3,6 +3,50 @@
 All notable changes to this project are documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [v1.19.0] - 2026-09-09
+### Added
+- `saw links rollback <page>` — restore a page to its pre-`links apply
+  --confirm` state from a per-page rollback snapshot saved under
+  `.saw/links-rollback/` (T2). `apply --confirm` now snapshots content +
+  related before writing.
+- `saw agents export <name> --out` / `saw agents import <file>` — portable
+  custom-role YAML (validates name/model_tier/system_prompt, rejects
+  built-in name collisions, `--force` overwrite). Closes ROADMAP backlog T3.
+- CLI smoke tests (`tests/unit/test_cli_smoke.py`) — parametrized `saw <cmd>
+  --help` over all 29 commands + root help.
+- Functional govern CLI tests (`tests/unit/test_govern_cli.py`) —
+  `saw freshness` / `saw verify` config→repo→governor paths.
+- Configurable REST polling fallback: `VITE_POLL_INTERVAL_MS` /
+  `VITE_STATS_INTERVAL_MS` (shared `web/src/lib/polling.ts`); WS real-time
+  path unchanged (U2).
+- `docs/analysis/COMPETITIVE-REFERENCE.md` — Phase 0.5 deep-read of 6 peer
+  OSS projects (WeKnora/Khoj/GraphRAG/Cognee/Letta/Potpie) with
+  differentiated borrow list → ROADMAP v1.20.0+ candidates.
+
+### Fixed
+- `saw agents activity <name>` never routed (v1.15.0 regression): the
+  `agents` callback (`invoke_without_command=True` + `raise Exit`) intercepted
+  every subcommand, so it always printed the roster. Fixed to yield when a
+  subcommand is invoked.
+- CLI→web coupling: `get_activity_tracker`/`set_activity_tracker` singleton
+  moved from `saw.drivers.web.app` to `saw.engines.collaborate.activity_tracker`
+  (T4); CLI + REST import from the collaborate module.
+- README/README_CN release badge stale (v1.9.0) → aligned to canonical.
+
+### Changed
+- S4: `QueryEngine._semantic_search` / `_cosine_search_batch` / `_ann_search`
+  extracted to a `SemanticSearchMixin` (`src/saw/engines/query/semantic.py`),
+  slimming `engine.py` from 881 → 635 lines. Logic unchanged (mechanical
+  move); verified by the semantic/embedding/cache test suite.
+
+### Release gate
+- pytest 2329 passed / 7 skipped / 0 failed; coverage 67.76% (gate 67);
+  ruff 0; F401 baseline 0; vitest 64 pass.
+
+### Builds on
+- v1.18.1 (2026-09-08): fix AUDIT-F-08/W1 sub-service contextvar + W2 E2E.
+- v1.18.0 (2026-09-07): per-request workspace contextvar injection + O4 tag flow.
+
 ## [v1.17.0] - 2026-09-07
 ### Added
 - Desktop version bumped 0.1.0 → 1.0.0 (desktop/package.json +
