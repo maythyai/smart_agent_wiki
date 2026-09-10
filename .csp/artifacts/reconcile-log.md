@@ -183,3 +183,25 @@
 
 ### Release gate（2026-09-09）
 pytest 2329 passed/7 skip/0 fail · cov 67.76% · ruff 0 · F401 baseline 0 · vitest 64 pass · 零回归。
+
+## 2026-09-09 — audit v1.19.0（模块化审计+可用性审查，聚焦）
+
+> audit role（独立审计）。solo 串行执行（子智能体 fan-out 在本环境反复致 runner 崩溃，按 role §"无 subagent 能力时串行" + 红线 #11 不降级审计）。聚焦维度：G 安全 + F 代码审查 + H 性能 + I 可观测/文档drift + 前序 W/S/T/U/V 合成。
+
+### 产出（.csp/audit/ + docs/analysis/）
+- MODULE-LIST-v1.19.0.md（7 模块组含 DB 底层 + Mermaid 依赖图）
+- AUDIT-FINDINGS-v1.19.0.json（8 findings 结构化）
+- AUDIT-VERDICT-v1.19.0.md（裁决=放行 + 9 节）
+- docs/analysis/AUDIT-SUMMARY-v1.19.0.md（人类摘要）
+- manifest +4 items（243 total）
+
+### 安全基线实证（AUDIT-F-08，达标）
+G1 SQL=参数化占位符（pipeline.py:399 placeholders="?,?,?"+tuple 绑定，非注入）/ G2 硬编码 secret=0 / G3 shell=True=0 / F bare-except-swallow=0 / I1 生产 print()=0（仅 tutorial demo）。
+
+### findings 汇总
+- fixed-in-v1.19.0：F-01 activity 路由 P0 / F-02 CLI→web 耦合 / F-03 engine.py 拆分
+- open/deferred：F-04 coverage→70%（v1.20 技术债）/ F-05 activity 持久化（[TBD-PRD]）/ F-06 banner（v1.21+）/ F-07 desktop 签名+vLLM+Playwright（[TBD-infra]）
+- Critical/High=0；裁决=放行（production-ready）
+
+### 范围声明（诚实）
+聚焦审计，非全量 9 维 × 逐模块可用性 × 实跑四层联动。D 前端深度/E 测试矩阵/实跑联动/mutation-fuzz-property 标 未验证-范围。审计 role 不改代码/不发版；v1.19.0 为当前 release。
