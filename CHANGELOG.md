@@ -3,6 +3,15 @@
 All notable changes to this project are documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [v1.22.0] - 2026-09-09
+### Added — agent-native MCP tools (competitive-borrow C1/C2, Potpie-inspired)
+- **`saw_resolve(task, limit)`** (C1) — task-scoped context retrieval: aggregates the most relevant claims (with 4-level confidence + score) + code symbols + a freshness warning (level≥6 claims to re-ingest first) so an agent plans a change from real project context. Distinct from `saw_code_context` (single symbol) and `saw_search` (claims only): resolve is task-scoped multi-source.
+- **`saw_record(summary, kind, confidence)`** (C2) — persist a durable decision/convention as a claim via the Write Queue (`sink_name="claims"`, `source_uuid="agent:saw_record"`, idempotent on `claim_uuid=op_id`, dispatched + receipted through the existing chain). Not a free-floating note.
+- New `agent_tools.py` module + `init_agent_tools` wiring in `tools/__init__.py`.
+
+### Release Gate
+- pytest 2344 passed / 7 skipped / 0 failed (+6 agent-tools tests); coverage ~68.3%; ruff 0; vitest 64.
+
 ## [v1.21.0] - 2026-09-09
 ### Added — B1 contradicts 矛盾边+置信 (competitive-borrow B1, Cognee-inspired)
 - **migration v11**: `contradictions` table + `claim_a_confidence`/`claim_b_confidence` (4-level, default unverified) + `receipt` (Ed25519 receipt id) columns (idempotent).

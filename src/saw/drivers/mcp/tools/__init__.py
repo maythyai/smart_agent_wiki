@@ -8,7 +8,7 @@ Extended with compile layer, concept graph, feedback, and code wiki tools.
 
 # Import all tool modules to register tools with FastMCP
 # Tools are registered via @mcp.tool decorators in each module
-from saw.drivers.mcp.tools import ingest, query, govern, learn, collaborate, pages, links, code_graph, compile, thinking
+from saw.drivers.mcp.tools import ingest, query, govern, learn, collaborate, pages, links, code_graph, compile, thinking, agent_tools
 
 __all__ = [
     "register_all_tools",
@@ -23,6 +23,7 @@ __all__ = [
     "code_graph",
     "compile",
     "thinking",
+    "agent_tools",
 ]
 
 
@@ -90,6 +91,7 @@ def init_all_tools(
     from saw.drivers.mcp.tools.links import init_links_tools
     from saw.drivers.mcp.tools.code_graph import init_code_graph_tools
     from saw.drivers.mcp.tools.compile import init_compile_tools
+    from saw.drivers.mcp.tools.agent_tools import init_agent_tools  # C1/C2 v1.22.0
 
     init_ingest_tools(pipeline)
     init_query_tools(query_engine, search, compiler, graph, tree_mode)
@@ -103,3 +105,5 @@ def init_all_tools(
         compile_engine, archiver, wiki_linter,
         concept_graph, feedback_engine, code_wiki_engine,
     )
+    # C1/C2 (v1.22.0): agent-native resolve (task context) + record (durable decision)
+    init_agent_tools(query_engine=query_engine, code_graph_engine=code_graph_engine, write_queue=write_queue)
