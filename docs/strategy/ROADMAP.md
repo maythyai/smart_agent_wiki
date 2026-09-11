@@ -1,7 +1,7 @@
 ---
 id: ROADMAP
 project: smart-agent-wiki
-version: 1.4
+version: 1.5
 last_updated: 2026-09-09
 status: active
 tracks: [core-trust, platform-team, ecosystem-integration, intelligence-adaptation]
@@ -358,10 +358,11 @@ canonical = `pyproject.toml`。发布时以下必须与之一致，用脚本校�
 | v1.18.1 | fix: AUDIT-F-08/W1 sub-service contextvar + W2 E2E test | platform-team | planned (audit 2026-09-08) |
 | v1.19.0 | production hardening: links rollback / agents export-import / activity-routing fix / T4 decouple / S4 engine.py split / CLI+govern tests | core-trust+ecosystem | shipped (2026-09-09) |
 | v1.20.0 | C3 coding-harness skills package (.claude/skills/saw-tools) + AUDIT-F-04 coverage tests (lint/search/freshness/verify functional) | core-trust+ecosystem | shipped (2026-09-09) |
-| v1.21.0 | 矛盾边+rethink(B1/B2) / saw_resolve+record(C1/C2) / agent 自维护 Wiki(A1) | core-trust+ecosystem | candidate (竞品借鉴, 待 01 PRD) |
-| v1.22.0 | claims 图社区检测+DRIFT / claim 状态轴 / Agent File 便携角色 / Langfuse trace | intelligence+platform | candidate (竞品借鉴, 待 01 PRD) |
-| v1.23.0 | 深度研究模式 / 调度自动化 / IM serving+Obsidian 插件 / Write Queue dashboard | intelligence+ecosystem | candidate (竞品借鉴, 待 01 PRD) |
-| v1.24.0 | FastGraphRAG NLP 降本 / provenance+auto-feedback / skill sandbox / heartbeat 巡检 | core-trust+ecosystem | candidate (竞品借鉴, 待 01 PRD) |
+| v1.21.0 | B1 contradicts 矛盾边+置信（4级置信双claim+receipt列+图边暴露+saw_conflicts 修复）| core-trust | shipped (2026-09-09) |
+| v1.22.0 | saw_resolve+record(C1/C2) / agent 自维护 Wiki(A1) / 矛盾重评(B2) | core-trust+ecosystem | candidate (竞品借鉴, 待 01 PRD) |
+| v1.23.0 | claims 图社区检测+DRIFT / claim 状态轴 / Agent File 便携角色 / Langfuse trace | intelligence+platform | candidate (竞品借鉴, 待 01 PRD) |
+| v1.24.0 | 深度研究模式 / 调度自动化 / IM serving+Obsidian 插件 / Write Queue dashboard | intelligence+ecosystem | candidate (竞品借鉴, 待 01 PRD) |
+| v1.25.0 | FastGraphRAG NLP 降本 / provenance+auto-feedback / skill sandbox / heartbeat 巡检 | core-trust+ecosystem | candidate (竞品借鉴, 待 01 PRD) |
 
 ### v1.18.0 — per-request workspace 注入 + O4 tag 流程（status: released, 2026-09-07, @e4cf22d）
 

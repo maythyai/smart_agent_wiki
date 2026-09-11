@@ -105,12 +105,16 @@ def _contradictions_conn(tmp_path) -> sqlite3.Connection:
         "CREATE TABLE contradictions (uuid TEXT PRIMARY KEY, "
         "claim_a_uuid TEXT NOT NULL, claim_b_uuid TEXT NOT NULL, "
         "contradiction_type TEXT NOT NULL, resolution TEXT NOT NULL, "
-        "detected_at TEXT NOT NULL, resolved_at TEXT, blast_radius TEXT);"
+        "detected_at TEXT NOT NULL, resolved_at TEXT, blast_radius TEXT, "
+        "claim_a_confidence TEXT NOT NULL DEFAULT 'unverified', "
+        "claim_b_confidence TEXT NOT NULL DEFAULT 'unverified', "
+        "receipt TEXT);"
     )
     return conn
 
 
-def _record(uuid="c-1", a="a1", b="b1") -> ContradictionRecord:
+def _record(uuid="c-1", a="a1", b="b1",
+            conf_a="verified", conf_b="unverified") -> ContradictionRecord:
     return ContradictionRecord(
         uuid=uuid,
         claim_a_uuid=a,
@@ -120,6 +124,8 @@ def _record(uuid="c-1", a="a1", b="b1") -> ContradictionRecord:
         detected_at=datetime.now(timezone.utc),
         resolved_at=None,
         blast_radius=["page-x"],
+        claim_a_confidence=conf_a,
+        claim_b_confidence=conf_b,
     )
 
 
@@ -143,6 +149,49 @@ class TestContradictionsSink:
         assert row[0] == "c-1"
         import json as _j
         assert _j.loads(row[1]) == ["page-x"]
+
+    def test_b1_confidence_round_trips(self, tmp_path):
+        """B1: stored contradiction carries both claims' 4-level confidence."""
+        from saw.engines.govern.contradiction import ContradictionDetector
+
+        conn = _contradictions_conn(tmp_path)
+        claims_repo = MagicMock()
+        claims_repo._conn = conn
+        detector = ContradictionDetector.__new__(ContradictionDetector)
+        detector._claims_repo = claims_repo
+        detector._llm_router = MagicMock()
+        detector._queue = None
+        detector._processing = False
+        detector._worker_task = None
+
+        detector._store_contradiction(_record(uuid="c-rt", conf_a="verified", conf_b="refuted"))
+        recs = detector.get_all_contradictions()
+        assert len(recs) == 1
+        assert recs[0].claim_a_confidence == "verified"
+        assert recs[0].claim_b_confidence == "refuted"
+
+    def test_b1_contradiction_edges_carry_confidence(self, tmp_path):
+        """B1: contradictions surface as `contradicts` graph edges w/ confidence."""
+        from saw.engines.govern.contradiction import ContradictionDetector
+
+        conn = _contradictions_conn(tmp_path)
+        claims_repo = MagicMock()
+        claims_repo._conn = conn
+        detector = ContradictionDetector.__new__(ContradictionDetector)
+        detector._claims_repo = claims_repo
+        detector._llm_router = MagicMock()
+        detector._queue = None
+        detector._processing = False
+        detector._worker_task = None
+
+        detector._store_contradiction(_record(uuid="c-edge", a="aa", b="bb", conf_a="verified", conf_b="disputed"))
+        edges = detector.get_contradiction_edges()
+        assert len(edges) == 1
+        e = edges[0]
+        assert e["edge_type"] == "contradicts"
+        assert e["source"] == "aa" and e["target"] == "bb"
+        assert e["claim_a_confidence"] == "verified"
+        assert e["claim_b_confidence"] == "disputed"
 
 
 class TestContradictionDetectorDelegates:

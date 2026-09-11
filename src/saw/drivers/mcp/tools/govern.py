@@ -95,16 +95,21 @@ async def saw_conflicts(unresolved_only: bool = False) -> list[dict]:
     try:
         contradictions = _detector.get_all_contradictions()
         for c in contradictions:
-            if unresolved_only and c.resolved:
+            if unresolved_only and c.resolved_at is not None:
                 continue
             results.append({
                 "uuid": c.uuid,
-                "type": c.contradiction_type.name if hasattr(c, "contradiction_type") else "UNKNOWN",
+                "type": c.contradiction_type.name.lower() if c.contradiction_type else "unknown",
                 "claim_a": c.claim_a_uuid,
                 "claim_b": c.claim_b_uuid,
-                "resolved": c.resolved,
-                "strategy": c.resolution_strategy.name if hasattr(c, "resolution_strategy") and c.resolution_strategy else None,
-                "version": "1.0.0",
+                # B1: 4-level confidence of both claims so an agent/reader
+                # can judge how much to trust each side of the contradiction.
+                "claim_a_confidence": getattr(c, "claim_a_confidence", "unverified"),
+                "claim_b_confidence": getattr(c, "claim_b_confidence", "unverified"),
+                "resolved": c.resolved_at is not None,
+                "strategy": c.resolution.name.lower() if c.resolution else None,
+                "receipt": getattr(c, "receipt", None),
+                "version": "1.21.0",
             })
     except Exception as e:
         results = [{"error": str(e)}]

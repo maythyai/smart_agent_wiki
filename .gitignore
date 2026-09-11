@@ -222,11 +222,16 @@ feedback/rejected.yaml
 # OMC state (session-specific)
 .omc/
 
-# Claude Code session state (ignore machine-local runtime, but ship the
-# shared coding-harness skills package — a product feature)
+# Claude Code session state (ignore machine-local runtime — agents, plans,
+# harness skill packages like csp-*). Ship ONLY the saw-tools coding-harness
+# skill (a product feature); everything else stays machine-local.
 .claude/*
 !.claude/skills/
-!.claude/skills/**
+.claude/skills/*
+!.claude/skills/saw-tools/
+!.claude/skills/saw-tools/**
+# Cursor session state (mirror of .claude machine-local runtime)
+.cursor/
 
 # GSD planning directory (development process artifacts)
 .planning/

@@ -358,6 +358,31 @@ CREATE INDEX IF NOT EXISTS idx_embedding_model
 _register(10, _create_embedding_store)
 
 
+# v11: B1 — contradictions as confidence-bearing `contradicts` graph edges.
+# (T-F-B1, ADR-019, COMPETITIVE-REFERENCE B1). A contradiction now carries
+# the 4-level confidence of BOTH claims at detection time (so a reader/agent
+# can judge how much to trust each side — Cognee-style "contradicts edge with
+# confidence") + an optional Ed25519 receipt id for governance closure.
+# Idempotent via column-existence checks (matches v2/v3/v6 pattern).
+def _add_contradiction_confidence_receipt(conn: sqlite3.Connection) -> None:
+    cols = {r[1] for r in conn.execute("PRAGMA table_info(contradictions)")}
+    if "claim_a_confidence" not in cols:
+        conn.execute(
+            "ALTER TABLE contradictions ADD COLUMN "
+            "claim_a_confidence TEXT NOT NULL DEFAULT 'unverified'"
+        )
+    if "claim_b_confidence" not in cols:
+        conn.execute(
+            "ALTER TABLE contradictions ADD COLUMN "
+            "claim_b_confidence TEXT NOT NULL DEFAULT 'unverified'"
+        )
+    if "receipt" not in cols:
+        conn.execute("ALTER TABLE contradictions ADD COLUMN receipt TEXT")
+
+
+_register(11, _add_contradiction_confidence_receipt)
+
+
 # ── Public API ────────────────────────────────────────────────────────
 
 TARGET_VERSION = max(v for v, _ in _MIGRATIONS) if _MIGRATIONS else 1

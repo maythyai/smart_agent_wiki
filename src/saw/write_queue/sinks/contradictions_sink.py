@@ -28,8 +28,9 @@ if TYPE_CHECKING:
 
 _CONTRADICTION_INSERT = """INSERT OR IGNORE INTO contradictions
     (uuid, claim_a_uuid, claim_b_uuid, contradiction_type,
-     resolution, detected_at, resolved_at, blast_radius)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)"""
+     resolution, detected_at, resolved_at, blast_radius,
+     claim_a_confidence, claim_b_confidence, receipt)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
 
 
 def record_to_payload(record: "ContradictionRecord") -> dict:
@@ -43,6 +44,10 @@ def record_to_payload(record: "ContradictionRecord") -> dict:
         "detected_at": record.detected_at.isoformat(),
         "resolved_at": record.resolved_at.isoformat() if record.resolved_at else None,
         "blast_radius": record.blast_radius,
+        # B1: confidence of both claims at detection time
+        "claim_a_confidence": getattr(record, "claim_a_confidence", "unverified") or "unverified",
+        "claim_b_confidence": getattr(record, "claim_b_confidence", "unverified") or "unverified",
+        "receipt": getattr(record, "receipt", None),
     }
 
 
@@ -61,6 +66,9 @@ def store_contradiction(conn: sqlite3.Connection, record: "ContradictionRecord")
                 payload["detected_at"],
                 payload["resolved_at"],
                 json.dumps(payload["blast_radius"]),
+                payload["claim_a_confidence"],
+                payload["claim_b_confidence"],
+                payload["receipt"],
             ),
         )
 
@@ -90,6 +98,9 @@ class ContradictionsSink:
                     payload["detected_at"],
                     payload.get("resolved_at"),
                     json.dumps(payload.get("blast_radius", [])),
+                    payload.get("claim_a_confidence", "unverified") or "unverified",
+                    payload.get("claim_b_confidence", "unverified") or "unverified",
+                    payload.get("receipt"),
                 ),
             )
 

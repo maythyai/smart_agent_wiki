@@ -25,7 +25,10 @@ if TYPE_CHECKING:
     from saw.adapters.storage.claims_repository import SQLiteClaimsRepository
 
 
-# SQL for contradictions table
+# SQL for contradictions table (B1: confidence-bearing contradicts edges).
+# v11 migration adds claim_a_confidence/claim_b_confidence/receipt to
+# existing DBs; this CREATE includes them for fresh DBs at v1 (the v1
+# baseline in migrations.py creates the base table; v11 ALTERs the rest).
 CONTRADICTIONS_SCHEMA = """
 CREATE TABLE IF NOT EXISTS contradictions (
     uuid TEXT PRIMARY KEY,
@@ -36,6 +39,9 @@ CREATE TABLE IF NOT EXISTS contradictions (
     detected_at TEXT NOT NULL,
     resolved_at TEXT,
     blast_radius TEXT,  -- JSON array of affected pages
+    claim_a_confidence TEXT NOT NULL DEFAULT 'unverified',  -- B1: 4-level confidence of claim_a
+    claim_b_confidence TEXT NOT NULL DEFAULT 'unverified',  -- B1: 4-level confidence of claim_b
+    receipt TEXT,  -- B1: Ed25519 receipt id for governance closure
     FOREIGN KEY (claim_a_uuid) REFERENCES claim(uuid),
     FOREIGN KEY (claim_b_uuid) REFERENCES claim(uuid)
 );
@@ -47,6 +53,9 @@ class ContradictionRecord:
     """Record of a detected contradiction between claims.
 
     Per D-09: All contradictions have a resolution strategy applied.
+    B1 (ADR-019): carries the 4-level confidence of BOTH claims so a
+    reader/agent can judge how much to trust each side (Cognee-style
+    "contradicts edge with confidence"), + an optional receipt id.
     """
     uuid: str
     claim_a_uuid: str
@@ -56,6 +65,9 @@ class ContradictionRecord:
     detected_at: datetime
     resolved_at: datetime | None = None
     blast_radius: list[str] = field(default_factory=list)
+    claim_a_confidence: str = "unverified"
+    claim_b_confidence: str = "unverified"
+    receipt: str | None = None
 
 
 class ContradictionDetector:
@@ -331,6 +343,10 @@ class ContradictionDetector:
             detected_at=datetime.now(timezone.utc),
             resolved_at=datetime.now(timezone.utc) if resolution != ResolutionStrategy.HISTORICAL else None,
             blast_radius=[],  # Would be computed by BlastRadiusAnalyzer
+            # B1: carry the 4-level confidence of both claims so the
+            # contradiction is a confidence-bearing edge, not a bare link.
+            claim_a_confidence=getattr(claim_a, "confidence", None) and claim_a.confidence.name.lower() or "unverified",
+            claim_b_confidence=getattr(claim_b, "confidence", None) and claim_b.confidence.name.lower() or "unverified",
         )
 
     def _store_contradiction(self, record: ContradictionRecord) -> None:
@@ -392,14 +408,56 @@ class ContradictionDetector:
         return []
 
     def _row_to_record(self, row) -> ContradictionRecord:
-        """Convert DB row to ContradictionRecord."""
+        """Convert DB row to ContradictionRecord (column-name robust)."""
+        # B1: use column names (not positional indices) so ALTER-added
+        # columns (claim_a_confidence/claim_b_confidence/receipt) are
+        # read correctly regardless of migration state.
+        cursor = self._claims_repo._conn.execute("SELECT * FROM contradictions LIMIT 1")
+        col_names = [d[0] for d in cursor.description] if cursor.description else []
+        cursor.close()
+        if col_names and len(row) == len(col_names):
+            data = dict(zip(col_names, row))
+        else:  # fallback to positional (legacy row shape)
+            data = {
+                "uuid": row[0], "claim_a_uuid": row[1], "claim_b_uuid": row[2],
+                "contradiction_type": row[3], "resolution": row[4],
+                "detected_at": row[5], "resolved_at": row[6] if len(row) > 6 else None,
+                "blast_radius": row[7] if len(row) > 7 else None,
+            }
         return ContradictionRecord(
-            uuid=row[0],
-            claim_a_uuid=row[1],
-            claim_b_uuid=row[2],
-            contradiction_type=ContradictionType[row[3].upper()],
-            resolution=ResolutionStrategy[row[4].upper()],
-            detected_at=datetime.fromisoformat(row[5]),
-            resolved_at=datetime.fromisoformat(row[6]) if row[6] else None,
-            blast_radius=json.loads(row[7]) if row[7] else [],
+            uuid=data["uuid"],
+            claim_a_uuid=data["claim_a_uuid"],
+            claim_b_uuid=data["claim_b_uuid"],
+            contradiction_type=ContradictionType[data["contradiction_type"].upper()],
+            resolution=ResolutionStrategy[data["resolution"].upper()],
+            detected_at=datetime.fromisoformat(data["detected_at"]),
+            resolved_at=datetime.fromisoformat(data["resolved_at"]) if data.get("resolved_at") else None,
+            blast_radius=json.loads(data["blast_radius"]) if data.get("blast_radius") else [],
+            claim_a_confidence=data.get("claim_a_confidence", "unverified") or "unverified",
+            claim_b_confidence=data.get("claim_b_confidence", "unverified") or "unverified",
+            receipt=data.get("receipt"),
         )
+
+    def get_contradiction_edges(self) -> list[dict]:
+        """B1: surface contradictions as traversable `contradicts` graph edges.
+
+        Each edge carries both claims' 4-level confidence so an agent/graph
+        traversal (saw_graph / saw_blast_radius / saw_navigate) can judge how
+        much to trust each side of the contradiction — the Cognee-style
+        "contradicts edge with confidence" model.
+        """
+        return [
+            {
+                "source": r.claim_a_uuid,
+                "target": r.claim_b_uuid,
+                "edge_type": "contradicts",
+                "contradiction_type": r.contradiction_type.name.lower(),
+                "resolution": r.resolution.name.lower(),
+                "claim_a_confidence": r.claim_a_confidence,
+                "claim_b_confidence": r.claim_b_confidence,
+                "receipt": r.receipt,
+                "resolved": r.resolved_at is not None,
+                "uuid": r.uuid,
+            }
+            for r in self.get_all_contradictions()
+        ]

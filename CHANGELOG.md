@@ -3,6 +3,19 @@
 All notable changes to this project are documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [v1.21.0] - 2026-09-09
+### Added — B1 contradicts 矛盾边+置信 (competitive-borrow B1, Cognee-inspired)
+- **migration v11**: `contradictions` table + `claim_a_confidence`/`claim_b_confidence` (4-level, default unverified) + `receipt` (Ed25519 receipt id) columns (idempotent).
+- `ContradictionRecord` carries both claims' confidence + receipt; `_create_record` captures `claim_a.confidence`/`claim_b.confidence` at detection.
+- **`get_contradiction_edges()`** — surfaces contradictions as traversable `contradicts` graph edges (source/target/edge_type/confidence_a/confidence_b/receipt/resolved) for `saw_graph`/`saw_blast_radius`/`saw_navigate`.
+- `store_contradiction`/`ContradictionsSink`/`record_to_payload` write 11 columns; `_row_to_record` reads by column name (ALTER-robust).
+### Fixed
+- **`saw_conflicts` MCP tool latent bug**: accessed non-existent `c.resolved`/`c.resolution_strategy` → AttributeError swallowed to `{"error"}` for every contradiction. Now uses real attrs (`resolved_at`/`resolution`) + emits both claims' confidence + receipt.
+- `.gitignore`: narrow `.claude/skills/` un-ignore to `saw-tools/` only (machine-local csp-* harness skills stay ignored) + ignore `.cursor/` (ruff re-clean).
+
+### Release Gate
+- pytest 2338 passed / 7 skipped / 0 failed; coverage 68.15% (gate 67); ruff 0; vitest 64 pass; migration v11 verified on fresh DB.
+
 ## [v1.20.0] - 2026-09-09
 ### Added
 - **C3 coding-harness skills package** (`.claude/skills/saw-tools/SKILL.md`) —
