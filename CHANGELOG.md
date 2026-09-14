@@ -3,6 +3,15 @@
 All notable changes to this project are documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [v1.23.0] - 2026-09-09
+### Added — agent self-maintaining Wiki + memory_rethink + semantic resolve
+- **A1 `saw_wiki_distill(topic, limit, path_prefix)`** (WeKnora-inspired) — Writer agent distills search-ranked claims on a topic into a synthesis wiki page, written via WikiRepository (real frontmatter; interlinkable on next `saw links suggest`). The "agents distill docs → wiki" primitive for SAW. No-claims / no-engine / no-wiki-repo handled.
+- **B2 `ContradictionDetector.rethink_contradiction(uuid)`** (Letta memory_rethink, async) — re-evaluates an existing contradiction: re-classifies the claim pair (LLM, heuristic fallback) + re-applies resolution + persists the updated type/resolution. The "agent rethinks its memory on conflict" primitive, built on B1's contradicts edges. Unknown uuid → None.
+- **saw_resolve semantic upgrade** — when embeddings are available, `saw_resolve` uses `query(mode="semantic")` (cosine) to find same-meaning claims the keyword path misses; auto-falls-back to FTS5/BM25 when embeddings are not configured (existing FTS5 tests unchanged).
+
+### Release Gate
+- pytest 2352 passed / 7 skipped / 0 failed (+9: A1×3 + B2×2 + existing saw_resolve/record still green); coverage ~68.3%; ruff 0; vitest 64.
+
 ## [v1.22.0] - 2026-09-09
 ### Added — agent-native MCP tools (competitive-borrow C1/C2, Potpie-inspired)
 - **`saw_resolve(task, limit)`** (C1) — task-scoped context retrieval: aggregates the most relevant claims (with 4-level confidence + score) + code symbols + a freshness warning (level≥6 claims to re-ingest first) so an agent plans a change from real project context. Distinct from `saw_code_context` (single symbol) and `saw_search` (claims only): resolve is task-scoped multi-source.

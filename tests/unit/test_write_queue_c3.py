@@ -8,8 +8,10 @@ Covers:
 """
 from __future__ import annotations
 
+import asyncio
 import sqlite3
 from datetime import datetime, timezone
+from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
@@ -346,3 +348,56 @@ class TestWriteQueueThreadSafety:
             "SELECT COUNT(*) FROM sink_tracking WHERE status='done'"
         ).fetchone()[0]
         assert tracked == total
+
+
+# ── B2 memory_rethink ───────────────────────────────────────────────
+
+class TestContradictionRethink:
+    """B2 (Letta memory_rethink): re-evaluate an existing contradiction."""
+
+    def test_rethink_updates_record(self, tmp_path):
+        from datetime import datetime, timezone, timedelta
+        from saw.engines.govern.contradiction import ContradictionDetector
+
+        conn = _contradictions_conn(tmp_path)
+        claims_repo = MagicMock()
+        claims_repo._conn = conn
+        # Two claims with different timestamps (triggers TEMPORAL heuristic).
+        t0 = datetime.now(timezone.utc)
+        t1 = t0 - timedelta(days=400)
+        claims_repo.get_by_id = lambda uid: SimpleNamespace(
+            uuid=uid, content="X is best", created_at=(t1 if uid == "aa" else t0),
+            confidence=SimpleNamespace(name="VERIFIED"),
+        ) if uid in ("aa", "bb") else None
+
+        detector = ContradictionDetector.__new__(ContradictionDetector)
+        detector._claims_repo = claims_repo
+        detector._llm_router = None  # heuristic classify (no LLM)
+        detector._queue = None
+        detector._processing = False
+        detector._worker_task = None
+
+        detector._store_contradiction(_record(uuid="c-rethink", a="aa", b="bb"))
+        # Rethink: re-classify + re-resolve + persist.
+        rec = asyncio.run(detector.rethink_contradiction("c-rethink"))
+        assert rec is not None
+        assert rec.uuid == "c-rethink"
+        # Row still present (rethink updated, not deleted).
+        n = conn.execute("SELECT COUNT(*) FROM contradictions WHERE uuid='c-rethink'").fetchone()[0]
+        assert n == 1
+        # The re-thought type/resolution persisted (heuristic may pick TEMPORAL
+        # for >1yr timestamp diff; just assert the row reflects a valid type).
+        row = conn.execute(
+            "SELECT contradiction_type, resolution FROM contradictions WHERE uuid='c-rethink'"
+        ).fetchone()
+        assert row[0] in ("temporal", "opinion", "factual")
+        assert row[1] in ("superseded", "disputed", "historical")
+
+    def test_rethink_unknown_uuid_returns_none(self, tmp_path):
+        from saw.engines.govern.contradiction import ContradictionDetector
+        conn = _contradictions_conn(tmp_path)
+        claims_repo = MagicMock(); claims_repo._conn = conn
+        detector = ContradictionDetector.__new__(ContradictionDetector)
+        detector._claims_repo = claims_repo; detector._llm_router = None
+        detector._queue = None; detector._processing = False; detector._worker_task = None
+        assert asyncio.run(detector.rethink_contradiction("nope")) is None

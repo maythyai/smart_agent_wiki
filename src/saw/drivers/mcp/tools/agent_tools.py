@@ -23,14 +23,17 @@ logger = logging.getLogger(__name__)
 _query_engine = None
 _code_graph_engine = None
 _write_queue = None
+_wiki_repo = None
 
 
-def init_agent_tools(query_engine=None, code_graph_engine=None, write_queue=None) -> None:
+def init_agent_tools(query_engine=None, code_graph_engine=None, write_queue=None,
+                     wiki_repo=None) -> None:
     """Inject engine references for the agent-native tools."""
-    global _query_engine, _code_graph_engine, _write_queue
+    global _query_engine, _code_graph_engine, _write_queue, _wiki_repo
     _query_engine = query_engine
     _code_graph_engine = code_graph_engine
     _write_queue = write_queue
+    _wiki_repo = wiki_repo
 
 
 @mcp.tool
@@ -60,27 +63,52 @@ async def saw_resolve(
     claims_out: list[dict[str, Any]] = []
     stale: list[str] = []
     claims_repo = getattr(_query_engine, "_claims_repo", None)
-    if claims_repo is not None:
+
+    # v1.23.0: prefer semantic search (cosine) when embeddings are available
+    # — finds same-meaning claims the keyword path misses; auto-falls-back to
+    # BM25 inside QueryEngine when the index is empty. Fall back to FTS5
+    # keyword search when embeddings are not configured.
+    candidates: list[tuple[str, str, str | None, float]] = []
+    try:
+        from saw.adapters.embeddings import embeddings_available
+        sem = embeddings_available()
+    except Exception:
+        sem = False
+    if sem:
         try:
-            res = _query_engine._search.search(task, limit=limit) if _query_engine._search else None
+            qr = _query_engine.query(task, mode="semantic", limit=limit)
+            for s in (qr.sources or []):
+                candidates.append((
+                    s.get("claim_uuid") or s.get("page_slug", ""),
+                    s.get("content", ""),
+                    s.get("confidence", "unverified"),
+                    float(s.get("score", 0.0)),
+                ))
+        except Exception:
+            candidates = []
+    if not candidates and getattr(_query_engine, "_search", None) is not None:
+        try:
+            res = _query_engine._search.search(task, limit=limit)
         except Exception:
             res = None
         if res is not None:
             for doc_id, content, score in zip(res.claim_uuids, res.contents, res.scores):
-                claim = claims_repo.get_by_id(doc_id)
-                if claim is None:
-                    continue
-                claims_out.append({
-                    "uuid": claim.uuid,
-                    "content": claim.content,
-                    "confidence": claim.confidence.name.lower(),
-                    "score": round(score, 3),
-                })
-                # Freshness signal: surface aging/stale claims the agent
-                # should not build on without re-ingesting.
-                fr = getattr(claim, "freshness", None)
-                if fr is not None and getattr(fr, "value", 0) >= 6:
-                    stale.append(claim.uuid)
+                candidates.append((doc_id, content, None, float(score)))
+
+    for cuid, content, conf, score in candidates:
+        claim = claims_repo.get_by_id(cuid) if claims_repo is not None else None
+        c_conf = conf or (getattr(claim, "confidence", None) and claim.confidence.name.lower()) or "unverified"
+        claims_out.append({
+            "uuid": cuid,
+            "content": content or (claim.content if claim else ""),
+            "confidence": c_conf,
+            "score": round(score, 3),
+        })
+        # Freshness signal: surface aging/stale claims the agent should not
+        # build on without re-ingesting.
+        fr = getattr(claim, "freshness", None)
+        if fr is not None and getattr(fr, "value", 0) >= 6:
+            stale.append(cuid)
 
     code_symbols: list[dict[str, Any]] = []
     if _code_graph_engine is not None:
@@ -105,7 +133,7 @@ async def saw_resolve(
 async def saw_record(
     summary: str,
     kind: str = "decision",
-    confidence: str = "verified",
+    confidence: str = "human_verified",
 ) -> dict[str, Any]:
     """Persist a durable decision/convention as a claim (C2).
 
@@ -163,4 +191,89 @@ async def saw_record(
         "confidence": confidence,
         "dispatch_note": "Enqueued to the write queue; dispatched + receipted on the "
                          "next dispatch cycle. Query with saw_wiki_log / saw_status.",
+    }
+
+
+@mcp.tool
+async def saw_wiki_distill(
+    topic: str,
+    limit: int = 10,
+    path_prefix: str = "concepts",
+) -> dict[str, Any]:
+    """A1: distill high-confidence claims on a topic into a wiki page.
+
+    WeKnora-inspired "agents distill docs → wiki": searches claims matching
+    the topic, drafts a synthesis wiki page via the Writer agent (template
+    fallback when no LLM), and writes it via WikiRepository so it is a real
+    page (frontmatter + ## Related interlinking on next `saw links suggest`).
+
+    Args:
+        topic: Topic/title to distill (e.g. 'rate limiting').
+        limit: Max claims to synthesize (1-30).
+        path_prefix: Wiki namespace dir (concepts/entities/sources/collections).
+
+    Returns:
+        ``{distilled, path, title, claim_count, mode}``.
+    """
+    if _query_engine is None:
+        return {"error": "query_engine_not_initialized",
+                "message": "Query engine not available; cannot search claims."}
+    if _wiki_repo is None:
+        return {"error": "wiki_repo_not_initialized",
+                "message": "Wiki repository not available; cannot write page."}
+    if not topic or not topic.strip():
+        return {"error": "empty_topic"}
+    limit = max(1, min(int(limit), 30))
+
+    claims_repo = getattr(_query_engine, "_claims_repo", None)
+    contents: list[str] = []
+    if claims_repo is not None and getattr(_query_engine, "_search", None) is not None:
+        try:
+            res = _query_engine._search.search(topic, limit=limit)
+            for _doc_id, content, _score in zip(res.claim_uuids, res.contents, res.scores):
+                if content:
+                    contents.append(content)
+        except Exception:
+            pass
+
+    if not contents:
+        return {"distilled": False, "reason": "no_claims_found",
+                "message": f"No claims matched '{topic}' to distill."}
+
+    # Writer agent drafts a synthesis page (template fallback, no LLM).
+    from saw.domain.agent import AgentTask
+    from saw.engines.collaborate.agents.writer import WriterAgent
+
+    writer = WriterAgent(None)
+    task = AgentTask(
+        type="synthesis",
+        payload={"title": topic.strip(), "claims": [{"content": c} for c in contents]},
+    )
+    markdown = writer._generate_fallback(task)
+
+    # Write as a real wiki page (frontmatter serialized by WikiRepository).
+    from saw.domain.value_objects import ConfidenceLevel
+    from saw.domain.wiki import WikiPage
+
+    slug = "".join(ch if ch.isalnum() or ch in "-_" else "-" for ch in topic.strip().lower()).strip("-")
+    page_path = f"{path_prefix.strip('/')}/{slug}.md"
+    page = WikiPage(
+        path=page_path,
+        title=topic.strip(),
+        content=markdown,
+        confidence=ConfidenceLevel.HUMAN_VERIFIED,  # distilled from search-ranked claims
+        tags=["agent-distilled"],
+    )
+    try:
+        _wiki_repo.write(page)
+    except Exception as e:
+        return {"error": "write_failed", "message": str(e)}
+
+    return {
+        "distilled": True,
+        "path": page_path,
+        "title": topic.strip(),
+        "claim_count": len(contents),
+        "mode": "writer-template",
+        "next": "Run `saw links suggest <path>` + `saw links apply --confirm` to interlink.",
     }

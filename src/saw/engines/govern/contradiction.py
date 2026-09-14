@@ -461,3 +461,56 @@ class ContradictionDetector:
             }
             for r in self.get_all_contradictions()
         ]
+
+    async def rethink_contradiction(self, contradiction_uuid: str) -> "ContradictionRecord | None":
+        """B2 (Letta memory_rethink): re-evaluate a contradiction.
+
+        When new information arrives that may affect a known contradiction,
+        re-classify the claim pair + re-apply the resolution strategy, then
+        persist the updated type/resolution. Escalates to HISTORICAL (human
+        review) when the two sides now disagree on a factual axis. This is
+        the "agent rethinks its memory on conflict" primitive — distinct
+        from first-pass detection, it re-examines an existing edge.
+
+        Returns the updated ContradictionRecord, or None if not found.
+        Best-effort: errors are logged, not raised.
+        """
+        rec = next(
+            (r for r in self.get_all_contradictions() if r.uuid == contradiction_uuid),
+            None,
+        )
+        if rec is None:
+            return None
+        a = self._claims_repo.get_by_id(rec.claim_a_uuid)
+        b = self._claims_repo.get_by_id(rec.claim_b_uuid)
+        if a is None or b is None:
+            return rec  # cannot rethink without both claims
+
+        # Re-classify (async LLM) + re-resolve (sync heuristic).
+        try:
+            new_type = await self.classify_contradiction(a, b)
+        except Exception:
+            new_type = rec.contradiction_type  # keep prior on LLM failure
+        if new_type is None:
+            new_type = rec.contradiction_type
+        new_resolution = self.resolve_contradiction(new_type, a, b)
+
+        rec.contradiction_type = new_type
+        rec.resolution = new_resolution
+        # Persist the re-thought type + resolution (resolved_at left as-is;
+        # HISTORICAL stays unresolved for human review).
+        conn = getattr(self._claims_repo, "_conn", None)
+        if isinstance(conn, sqlite3.Connection):
+            try:
+                with conn:
+                    conn.execute(
+                        "UPDATE contradictions SET contradiction_type = ?, "
+                        "resolution = ? WHERE uuid = ?",
+                        (new_type.name.lower(), new_resolution.name.lower(), rec.uuid),
+                    )
+            except sqlite3.Error:
+                import logging as _lg
+                _lg.getLogger(__name__).warning(
+                    "rethink_contradiction: failed to persist %s", rec.uuid
+                )
+        return rec

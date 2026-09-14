@@ -106,4 +106,5 @@ def init_all_tools(
         concept_graph, feedback_engine, code_wiki_engine,
     )
     # C1/C2 (v1.22.0): agent-native resolve (task context) + record (durable decision)
-    init_agent_tools(query_engine=query_engine, code_graph_engine=code_graph_engine, write_queue=write_queue)
+    # v1.23.0: +wiki_repo for A1 saw_wiki_distill
+    init_agent_tools(query_engine=query_engine, code_graph_engine=code_graph_engine, write_queue=write_queue, wiki_repo=wiki_repo)
