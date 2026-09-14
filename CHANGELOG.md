@@ -3,7 +3,15 @@
 All notable changes to this project are documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/).
 
-## [v1.24.0] - 2026-09-09
+## [v1.25.0] - 2026-09-09
+### Added — A3 DRIFT hybrid search + B3 claim status axis
+- **A3 `saw_drift_search(query, depth, limit)`** (GraphRAG DRIFT-inspired): global (community) + local (entity neighborhood) hybrid search — primer semantic-searches the query to top claims → `community_of` for the broad view, then per-depth `traverse` for follow-up local refinement. Confidence-gated (claims below CROSS_VALIDATED flagged SUSPECTED). Built on A2 communities + semantic.
+- **B3 `ClaimStatus`** (GraphRAG-inspired TRUE/FALSE/SUSPECTED axis): new enum + `derive_claim_status(confidence, contradicted, resolution)` — reuses SAW's 4-level confidence + B1's `contradicts` edge resolution (SUPERSEDED→FALSE, DISPUTED/HISTORICAL→SUSPECTED, high-conf-not-contradicted→TRUE). `Claim.status` property; surfaced in `saw_search` + `saw_drift_search` output.
+
+### Release Gate
+- pytest 2363 passed / 7 skipped / 0 failed (+8: B3×5 + A3×3); coverage ~68.3%; ruff 0; vitest 64.
+
+## [v1.24.0] - 2026-09-09 - 2026-09-09
 ### Added — A2 community detection + D1 Langfuse trace
 - **A2 `saw_communities(min_size)` / `saw_community_of(entity)`** (GraphRAG-inspired): Louvain community detection on the entity graph (networkx) so a "what is this KB about" global view is possible — not just per-entity traversal. Connected-components fallback; empty-graph → []. Members are entities (4-level confidence via their claims).
 - **D1 `langfuse_span(name)`** (WeKnora-inspired, env-gated): optional Langfuse trace export (`pip install smart-agent-wiki[observability]`); graceful no-op when langfuse package or `LANGFUSE_PUBLIC_KEY` absent (the existing request_id ContextVar still correlates logs). Wires into `init_observability`.

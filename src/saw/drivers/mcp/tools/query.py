@@ -104,15 +104,20 @@ async def saw_search(keywords: str, limit: int = 10) -> list[dict]:
 
     try:
         search_result = _search.search(keywords, limit=limit)
+        claims_repo = getattr(_query_engine, "_claims_repo", None) if _query_engine else None
         for uuid, content, score in zip(
             search_result.claim_uuids,
             search_result.contents,
             search_result.scores,
         ):
+            # B3 (v1.25.0): surface the claim's TRUE/FALSE/SUSPECTED status.
+            claim = claims_repo.get_by_id(uuid) if claims_repo is not None else None
             results.append({
                 "claim_uuid": uuid,
                 "content": content[:200] + "..." if len(content) > 200 else content,
                 "score": score,
+                "confidence": (claim.confidence.name.lower()) if claim is not None else "unverified",
+                "status": (claim.status.name.lower()) if claim is not None else "suspected",
                 "version": "1.0.0",
             })
     except Exception as e:
@@ -342,3 +347,77 @@ async def saw_community_of(entity: str) -> dict:
         return res if res is not None else {"not_found": entity}
     except Exception as e:
         return {"error": str(e)}
+
+
+# ── A3 (v1.25.0): DRIFT hybrid search (GraphRAG-inspired) ──────────
+
+@mcp.tool
+async def saw_drift_search(query: str, depth: int = 2, limit: int = 5) -> dict:
+    """DRIFT search — global (community) + local (entity) hybrid (A3).
+
+    GraphRAG-inspired "Dynamic Reasoning and Inference with Flexible Traversal":
+    (A) Primer — semantic-search the query to find the top claims + their
+    entities, then locate the community of the top entity (broad context);
+    (B) Follow-Up — traverse the local entity neighborhood (per-depth) to
+    refine into specific related claims. Returns a ranked hybrid answer.
+
+    Confidence-gated: claims below CROSS_VALIDATED are flagged SUSPECTED
+    (B3 status axis) so the agent doesn't build on weak premises.
+
+    Args:
+        query: Question / search anchor.
+        depth: Follow-up traversal depth (1-4).
+        limit: Max claims in the primer.
+
+    Returns:
+        ``{query, broad: {entity, community}, follow_ups: [{entity, neighbors}],
+        claims: [{uuid, content, confidence, status, score}], mode: "drift"}``.
+    """
+    if _query_engine is None:
+        return {"error": "query_engine_not_initialized"}
+    depth = max(1, min(int(depth), 4))
+    out: dict[str, Any] = {"query": query, "mode": "drift",
+                          "broad": None, "follow_ups": [], "claims": []}
+
+    # (A) Primer — semantic search (auto-degrades to BM25).
+    try:
+        qr = _query_engine.query(query, mode="semantic", limit=limit)
+    except Exception as e:
+        return {"error": f"semantic primer failed: {e}"}
+
+    claims_repo = getattr(_query_engine, "_claims_repo", None)
+    top_claims: list[dict] = []
+    top_entities: list[str] = []
+    for s in (qr.sources or []):
+        cuid = s.get("claim_uuid") or s.get("page_slug", "")
+        claim = claims_repo.get_by_id(cuid) if claims_repo is not None else None
+        conf = s.get("confidence") or (claim.confidence.name.lower() if claim else "unverified")
+        # B3: surface the claim's truth-status (confidence-based).
+        status = (claim.status.name.lower()) if claim is not None else "suspected"
+        top_claims.append({
+            "uuid": cuid, "content": s.get("content", ""),
+            "confidence": conf, "status": status, "score": s.get("score", 0.0),
+        })
+        if claim is not None:
+            for e in getattr(claim, "entities", []) or []:
+                if e and e not in top_entities:
+                    top_entities.append(e)
+    out["claims"] = top_claims
+
+    # (B) Broad — the community of the top entity (global view).
+    if _graph is not None and top_entities:
+        broad = _graph.community_of(top_entities[0])
+        if broad is not None:
+            out["broad"] = broad
+
+        # (C) Follow-Up — local neighborhood of the top entity (per-depth).
+        for ent in top_entities[:3]:
+            try:
+                gr = _graph.traverse(ent, mode="bfs", max_depth=depth, max_nodes=20)
+                neighbors = [{"name": n.name, "type": n.entity_type} for n in gr.nodes if n.name.lower() != ent.lower()]
+                if neighbors:
+                    out["follow_ups"].append({"entity": ent, "neighbors": neighbors})
+            except Exception:
+                continue
+
+    return out

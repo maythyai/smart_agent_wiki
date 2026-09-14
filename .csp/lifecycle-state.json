@@ -1,8 +1,8 @@
 {
   "pipeline_version": 2,
-  "milestone": "v5.4",
-  "current_stage": "released-v1.24.0",
-  "next_cycle": "v1.25.0",
+  "milestone": "v5.5",
+  "current_stage": "released-v1.25.0",
+  "next_cycle": "v1.26.0",
   "stages": [
     {
       "stage": "00-hub",
@@ -187,6 +187,7 @@
     "v1_21_0_released": "2026-09-09",
     "v1_22_0_released": "2026-09-09",
     "v1_23_0_released": "2026-09-09",
-    "v1_24_0_released": "2026-09-09"
+    "v1_24_0_released": "2026-09-09",
+    "v1_25_0_released": "2026-09-09"
   }
 }

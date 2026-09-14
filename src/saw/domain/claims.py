@@ -40,3 +40,15 @@ class Claim:
     def compute_hash(cls, content: str) -> str:
         """Compute SHA-256 hash of claim content for deduplication."""
         return hashlib.sha256(content.encode("utf-8")).hexdigest()
+
+    @property
+    def status(self) -> "ClaimStatus":
+        """B3 (v1.25.0): TRUE/FALSE/SUSPECTED truth-status axis.
+
+        Confidence-based by default (a claim not on a `contradicts` edge).
+        For the contradicted-aware status, use
+        ``derive_claim_status(claim.confidence, contradicted=True, resolution=...)``
+        with the contradiction's resolution from the `contradicts` edges.
+        """
+        from saw.domain.value_objects import derive_claim_status
+        return derive_claim_status(self.confidence)

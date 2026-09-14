@@ -102,6 +102,47 @@ class ResolutionStrategy(IntEnum):
     HISTORICAL = 3  # Factual: both preserved for review
 
 
+class ClaimStatus(IntEnum):
+    """B3 (v1.25.0, GraphRAG-inspired): claim truth-status axis.
+
+    Orthogonal to the 4-level confidence — a claim's *status* says whether to
+    act on it as true, false, or suspect. Derived from confidence + whether
+    the claim is on a `contradicts` edge (and that edge's resolution).
+    """
+    TRUE = 1       # high confidence + not contradicted (act on it)
+    FALSE = 2      # superseded by a newer claim on a contradicts edge
+    SUSPECTED = 3  # contradicted-disputed / single-source / unverified
+
+
+def derive_claim_status(
+    confidence: "ConfidenceLevel | int",
+    *,
+    contradicted: bool = False,
+    resolution: "ResolutionStrategy | int | None" = None,
+) -> "ClaimStatus":
+    """B3: derive a claim's TRUE/FALSE/SUSPECTED status.
+
+    Mapping (per the ROADMAP B3 candidate — reuses SAW's 4-level confidence
+    + B1's `contradicts` edges rather than inventing a new dimension):
+    - contradicted + SUPERSEDED → FALSE (older claim, replaced)
+    - contradicted + DISPUTED/HISTORICAL → SUSPECTED (under dispute / review)
+    - not contradicted + confidence >= CROSS_VALIDATED → TRUE
+    - not contradicted + SINGLE_SOURCE/UNVERIFIED → SUSPECTED
+    """
+    if contradicted:
+        if resolution == ResolutionStrategy.SUPERSEDED:
+            return ClaimStatus.FALSE
+        return ClaimStatus.SUSPECTED
+    # not contradicted
+    try:
+        conf = int(confidence)
+    except (TypeError, ValueError):
+        conf = 0
+    if conf >= int(ConfidenceLevel.CROSS_VALIDATED):
+        return ClaimStatus.TRUE
+    return ClaimStatus.SUSPECTED
+
+
 @dataclass(frozen=True)
 class WikiPageRef:
     """Reference to a wiki page."""

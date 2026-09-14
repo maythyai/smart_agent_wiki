@@ -250,10 +250,11 @@ class TestAllToolsCount:
         expected_tools = [
             # Ingest (2)
             "saw_ingest", "saw_reparse",
-            # Query (9) — +saw_communities/saw_community_of (v1.24 A2)
+            # Query (10) — +saw_communities/saw_community_of (v1.24 A2),
+            # +saw_drift_search (v1.25 A3)
             "saw_query", "saw_search", "saw_tree_search", "saw_graph",
             "saw_compare", "saw_compile", "saw_coverage",
-            "saw_communities", "saw_community_of",
+            "saw_communities", "saw_community_of", "saw_drift_search",
             # Govern (7)
             "saw_lint", "saw_conflicts", "saw_verify", "saw_freshness",
             "saw_review", "saw_audit", "saw_blast_radius",
