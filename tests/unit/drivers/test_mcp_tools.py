@@ -16,7 +16,7 @@ def _get_tool_names_sync() -> list[str]:
     FastMCP stores tools in _tool_manager._tools dict.
     """
     # Import all tool modules to ensure registration
-    from saw.drivers.mcp.tools import ingest, query, govern, learn, collaborate
+    from saw.drivers.mcp.tools import ingest, query, govern, learn, collaborate, agent_tools
     from saw.drivers.mcp.server import mcp
 
     # FastMCP 3.x stores tools in docket._tools
@@ -31,7 +31,7 @@ def _get_tool_names_sync() -> list[str]:
     tool_names: list[str] = []
 
     # Check ingest module for saw_* functions decorated with @mcp.tool
-    for module in [ingest, query, govern, learn, collaborate]:
+    for module in [ingest, query, govern, learn, collaborate, agent_tools]:
         for name in dir(module):
             if name.startswith("saw_"):
                 tool_names.append(name)
@@ -240,17 +240,20 @@ class TestCollaborateTools:
 class TestAllToolsCount:
     """Tests for total tool count."""
 
-    def test_all_23_tools_registered(self):
-        """Test 5: All 23 tools registered with correct schemas."""
+    def test_all_tools_registered(self):
+        """Test 5: All tools registered with correct schemas."""
         tool_names = _get_tool_names_sync()
 
-        # Expected 23 tools
+        # Expected tools (grew from 23 baseline as competitive-borrow features
+        # shipped: v1.22 saw_resolve/saw_record, v1.23 saw_wiki_distill,
+        # v1.24 saw_communities/saw_community_of).
         expected_tools = [
             # Ingest (2)
             "saw_ingest", "saw_reparse",
-            # Query (7)
+            # Query (9) — +saw_communities/saw_community_of (v1.24 A2)
             "saw_query", "saw_search", "saw_tree_search", "saw_graph",
             "saw_compare", "saw_compile", "saw_coverage",
+            "saw_communities", "saw_community_of",
             # Govern (7)
             "saw_lint", "saw_conflicts", "saw_verify", "saw_freshness",
             "saw_review", "saw_audit", "saw_blast_radius",
@@ -258,12 +261,16 @@ class TestAllToolsCount:
             "saw_status", "saw_learn", "saw_distill", "saw_suggest", "saw_wip",
             # Collaborate (2)
             "saw_workflow", "saw_feedback",
+            # Agent-native (3) — v1.22/v1.23 (C1/C2/A1)
+            "saw_resolve", "saw_record", "saw_wiki_distill",
         ]
 
         for tool in expected_tools:
             assert tool in tool_names, f"Missing tool: {tool}"
 
-        assert len(tool_names) == 23, f"Expected 23 tools, got {len(tool_names)}"
+        assert len(tool_names) == len(expected_tools), (
+            f"Expected {len(expected_tools)} tools, got {len(tool_names)}"
+        )
 
     def test_tools_have_version_field(self):
         """Per PITFALLS.md: All tool schemas include version field for drift detection."""

@@ -295,3 +295,50 @@ async def saw_coverage(query: str) -> float:
         return compiled.coverage
     except Exception:
         return 0.0
+
+
+# ── A2 (v1.24.0): community detection (GraphRAG-inspired) ───────────
+
+@mcp.tool
+async def saw_communities(min_size: int = 2) -> list[dict]:
+    """Detect thematic communities on the entity graph (A2).
+
+    GraphRAG-inspired: clusters the entity graph (Louvain modularity) into
+    communities so a "what is this knowledge base about" global view is
+    possible — not just per-entity traversal. Each community lists its member
+    entity names + size, sorted largest-first.
+
+    Args:
+        min_size: Drop communities smaller than this (singletons = noise).
+
+    Returns:
+        List of ``{id, size, members: [name,...]}``.
+    """
+    if _graph is None:
+        return [{"error": "Graph not initialized"}]
+    try:
+        return _graph.communities(min_size=min_size)
+    except Exception as e:
+        return [{"error": str(e)}]
+
+
+@mcp.tool
+async def saw_community_of(entity: str) -> dict:
+    """Find the community containing an entity (A2 DRIFT "local" part).
+
+    Scopes "what's related to X" at the community level (all entities in the
+    same Louvain cluster) rather than per-edge traversal.
+
+    Args:
+        entity: Entity name to locate.
+
+    Returns:
+        ``{entity, community_id, size, members}`` or ``{not_found: entity}``.
+    """
+    if _graph is None:
+        return {"error": "Graph not initialized"}
+    try:
+        res = _graph.community_of(entity)
+        return res if res is not None else {"not_found": entity}
+    except Exception as e:
+        return {"error": str(e)}

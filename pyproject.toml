@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "smart-agent-wiki"
-version = "1.23.0"
+version = "1.24.0"
 description = "Smart Agent Wiki - 智能多代理知识平台"
 requires-python = ">=3.11"
 dependencies = [
@@ -63,6 +63,7 @@ connectors = [
 ]
 learn = ["fsrs>=4.0", "sentence-transformers>=2.2"]   # spaced-repetition scheduler + embeddings (FULL tier, M-19)
 semantic = ["hnswlib>=0.7"]   # ANN vector index for large-scale semantic search (T-F-S-2, ADR-014)
+observability = ["langfuse>=2.0"]   # D1: external trace UI (env-gated, graceful no-op without it)
 dev = ["pytest>=8.0", "pytest-asyncio>=1.0", "pytest-benchmark>=4.0", "ruff>=0.4"]
 
 [tool.hatch.build.targets.wheel]

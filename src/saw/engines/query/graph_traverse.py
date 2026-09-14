@@ -371,3 +371,60 @@ class GraphTraverse:
             self._graph = nx.DiGraph()
             self._entity_cache.clear()
             self._load_graph()
+
+    # ── A2 (v1.24.0): community detection (GraphRAG-inspired) ──────────
+    def communities(self, min_size: int = 2) -> list[dict]:
+        """Detect communities on the entity graph (Louvain).
+
+        A2 (competitive-borrow, GraphRAG-inspired): clusters the entity graph
+        into thematic communities so a "what is this KB about" global view is
+        possible (not just per-entity traversal). Returns communities sorted
+        by size, each with member entity names. Falls back to connected
+        components when Louvain is unavailable.
+
+        Args:
+            min_size: Drop communities smaller than this (singletons are noise).
+
+        Returns:
+            ``[{id, size, members: [name,...]}, ...]``.
+        """
+        self._reload_if_stale()
+        if self._graph.number_of_nodes() < min_size:
+            return []
+        # Louvain modularity works on an undirected view of the graph.
+        ug = self._graph.to_undirected()
+        try:
+            from networkx.algorithms.community import louvain_communities
+            comms = louvain_communities(ug, seed=42)
+        except Exception:  # pragma: no cover — very old networkx or empty graph
+            comms = [set(c) for c in nx.connected_components(ug)]
+        result: list[dict] = []
+        for i, comm in enumerate(sorted(comms, key=len, reverse=True)):
+            if len(comm) < min_size:
+                continue
+            members = [
+                self._entity_cache[u].name
+                for u in comm
+                if u in self._entity_cache
+            ]
+            if not members:
+                continue
+            result.append({"id": i, "size": len(comm), "members": members})
+        return result
+
+    def community_of(self, entity_name: str) -> dict | None:
+        """A2: find the community containing ``entity_name`` (the DRIFT "local" part).
+
+        Returns ``{entity, community_id, size, members}`` or None if the entity
+        isn't in the graph. Lets an agent scope "what's related to X" at the
+        community level rather than per-edge traversal.
+        """
+        entity = self._find_entity(entity_name)
+        if entity is None:
+            return None
+        comms = self.communities(min_size=1)
+        for c in comms:
+            # members are names; match by name (case-insensitive)
+            if any(m.lower() == entity.name.lower() for m in c["members"]):
+                return {"entity": entity.name, **c}
+        return None

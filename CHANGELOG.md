@@ -3,7 +3,17 @@
 All notable changes to this project are documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/).
 
-## [v1.23.0] - 2026-09-09
+## [v1.24.0] - 2026-09-09
+### Added — A2 community detection + D1 Langfuse trace
+- **A2 `saw_communities(min_size)` / `saw_community_of(entity)`** (GraphRAG-inspired): Louvain community detection on the entity graph (networkx) so a "what is this KB about" global view is possible — not just per-entity traversal. Connected-components fallback; empty-graph → []. Members are entities (4-level confidence via their claims).
+- **D1 `langfuse_span(name)`** (WeKnora-inspired, env-gated): optional Langfuse trace export (`pip install smart-agent-wiki[observability]`); graceful no-op when langfuse package or `LANGFUSE_PUBLIC_KEY` absent (the existing request_id ContextVar still correlates logs). Wires into `init_observability`.
+### Note
+- **C4 Agent File** already shipped in v1.19.0 (`saw agents export/import`) — marked done, no new work.
+
+### Release Gate
+- pytest 2355 passed / 7 skipped / 0 failed (+6: A2×5 + D1×1); coverage ~68.3%; ruff 0; vitest 64.
+
+## [v1.23.0] - 2026-09-09 - 2026-09-09
 ### Added — agent self-maintaining Wiki + memory_rethink + semantic resolve
 - **A1 `saw_wiki_distill(topic, limit, path_prefix)`** (WeKnora-inspired) — Writer agent distills search-ranked claims on a topic into a synthesis wiki page, written via WikiRepository (real frontmatter; interlinkable on next `saw links suggest`). The "agents distill docs → wiki" primitive for SAW. No-claims / no-engine / no-wiki-repo handled.
 - **B2 `ContradictionDetector.rethink_contradiction(uuid)`** (Letta memory_rethink, async) — re-evaluates an existing contradiction: re-classifies the claim pair (LLM, heuristic fallback) + re-applies resolution + persists the updated type/resolution. The "agent rethinks its memory on conflict" primitive, built on B1's contradicts edges. Unknown uuid → None.

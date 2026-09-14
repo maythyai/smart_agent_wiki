@@ -139,3 +139,69 @@ def init_observability(auth_mode: str = "local") -> None:
             )
         except Exception as e:  # pragma: no cover — never block startup on telemetry
             logging.getLogger(__name__).warning("Sentry init failed: %s", e)
+
+    # 4) D1 (v1.24.0): optional Langfuse trace export (env-gated; graceful
+    #    no-op when the langfuse package or LANGFUSE_PUBLIC_KEY is absent).
+    #    W3C traceparent / request_id is already propagated by
+    #    RequestContextMiddleware; Langfuse adds an external trace UI when
+    #    configured. Install the extra: pip install smart-agent-wiki[observability]
+    if os.environ.get("LANGFUSE_PUBLIC_KEY"):
+        try:
+            from langfuse import Langfuse
+
+            _langfuse_client.init(Langfuse(
+                public_key=os.environ["LANGFUSE_PUBLIC_KEY"],
+                secret_key=os.environ.get("LANGFUSE_SECRET_KEY", ""),
+                host=os.environ.get("LANGFUSE_HOST", "https://cloud.langfuse.com"),
+            ))
+            logging.getLogger(__name__).info("Langfuse trace export initialised")
+        except ImportError:
+            logging.getLogger(__name__).warning(
+                "LANGFUSE_PUBLIC_KEY set but langfuse not installed "
+                "(pip install smart-agent-wiki[observability]); skipping."
+            )
+        except Exception as e:  # pragma: no cover — never block startup
+            logging.getLogger(__name__).warning("Langfuse init failed: %s", e)
+
+
+# ── D1: Langfuse span helper (env-gated, graceful no-op) ─────────────
+import contextlib  # noqa: E402
+
+
+class _LangfuseClient:
+    """Singleton wrapper so the Langfuse client survives across requests."""
+
+    _client: Any = None
+
+    def init(self, client: Any) -> None:
+        self._client = client
+
+    @property
+    def client(self) -> Any:
+        return self._client
+
+
+_langfuse_client = _LangfuseClient()
+
+
+@contextlib.contextmanager
+def langfuse_span(name: str, *, metadata: dict | None = None):
+    """D1: a trace span exported to Langfuse when configured, else a no-op.
+
+    Wrap a code region to emit a named span. When Langfuse is not initialised
+    (no ``LANGFUSE_PUBLIC_KEY`` / package absent), this is a transparent
+    no-op — the request_id ContextVar still correlates logs. Use around the
+    key paths you want surfaced in the Langfuse trace UI.
+    """
+    lf = _langfuse_client.client
+    if lf is None:
+        yield None
+        return
+    try:
+        trace = lf.trace(name=name, metadata=metadata or {})
+        span = trace.span(name=name) if hasattr(trace, "span") else None
+        yield span
+        if span is not None and hasattr(span, "end"):
+            span.end()
+    except Exception:  # pragma: no cover — telemetry must never break the call
+        yield None
