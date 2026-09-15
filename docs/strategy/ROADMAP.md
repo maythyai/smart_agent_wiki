@@ -1,8 +1,8 @@
 ---
 id: ROADMAP
 project: smart-agent-wiki
-version: 1.10
-last_updated: 2026-09-09
+version: 1.11
+last_updated: 2026-09-15
 status: active
 tracks: [core-trust, platform-team, ecosystem-integration, intelligence-adaptation]
 north_star: trustworthy-claim coverage
@@ -364,6 +364,10 @@ canonical = `pyproject.toml`。发布时以下必须与之一致，用脚本校�
 | v1.24.0 | A2 saw_communities/community_of (Louvain) + D1 langfuse_span (env-gated) / C4 Agent File (done v1.19.0) | intelligence+platform | shipped (2026-09-09) |
 | v1.25.0 | A3 saw_drift_search (DRIFT hybrid) + B3 ClaimStatus (TRUE/FALSE/SUSPECTED) | intelligence+platform | shipped (2026-09-09) |
 | v1.26.0 | B4 saw_nlp_keywords (NLP 降本) + B5 saw_record_feedback (auto-feedback) + D3 HeartbeatScheduler (heartbeat 巡检) | core-trust+ecosystem | shipped (2026-09-09) |
+| v1.27.0 | D2 Write Queue 运维 dashboard + A5 调度自动化（复用 D3 apscheduler 周期 Scholar/Guardian 任务）| ecosystem-integration | planned |
+| v1.28.0 | C5a Obsidian 插件（触达 KW 用户：只读 sync+chat）+ i18n 基建（prompt/CLI EN 选项）| ecosystem-integration | planned |
+| v1.29.0 | core-trust+perf 硬化：coverage→70%+（AUDIT-F-04 续）+ 规模性能（ANN 大规模 benchmark / Write Queue 吞吐）| core-trust | planned |
+| v1.30.0 | A4 深度研究模式（Scholar 编排 web+claims→可溯源报告）+ C5b IM serving（webhook 起步）| intelligence-adaptation | planned |
 
 ### v1.18.0 — per-request workspace 注入 + O4 tag 流程（status: released, 2026-09-07, @e4cf22d）
 
@@ -377,6 +381,41 @@ canonical = `pyproject.toml`。发布时以下必须与之一致，用脚本校�
 - **成功指标**：contextvar 注入生效；多租户 web 测试跨 workspace 不泄漏；06 tag 指向 release commit；2267+ passed 不回归；ruff 0。
 - **前置依赖**：v1.17.0 基线。
 - **07 回流**：N3(K2 per-request ws) + O4(tag 流程)。续留：V1-V3(desktop 签名/跨平台/sidecar 后续专项) + S/T/U 续留 P3 defers。
+
+## 下一年路径 v1.27.0+（竞品借鉴近尾声，新战略主题，按四 track 逼近 v2.0）
+
+> 竞品借鉴 18 项已 ship 13；剩余多为基建型（C6 sandbox 需 Docker、C5 IM 需 SDK、A4 需 web search）。v1.27+ 转向**四 track 均衡推进** + 把 deferred gate 项变可执行，向 v2.0 平台化逼近。每版本摘要级（详细 spec 留 01/03）。
+
+### v1.27.0 — 运维 dashboard + 调度自动化（ecosystem-integration track）— status: planned
+- 实际 SemVer：v1.27.0（additive=MINOR）
+- 目标：让 Write Queue 运维态可观测 + agent 任务可周期化，平台化基建。
+- 关键功能：D2 Write Queue 运维 dashboard endpoint（队列深度/背压/失败重试/死信可视化，复用既有 dispatcher metrics）；A5 调度自动化（复用 D3 apscheduler——Scholar/Guardian 周期任务，用户可配 cron）。
+- 价值：运维可见（不再黑盒队列）+ 主动巡检自动化（D3 心跳的扩展到任意 agent 任务）。
+- 成功指标：dashboard endpoint 覆盖核心运维指标 `[TBD]`；A5 跑 ≥1 周期任务无回归。
+- 前置依赖：v1.26.0（D3 HeartbeatScheduler 复用）。
+
+### v1.28.0 — Obsidian 插件 + i18n 基建（ecosystem-integration track）— status: planned
+- 目标：触达 SAW 的核心 KW 用户（Obsidian/Logseq 用户）+ 全球化基础。
+- 关键功能：C5a Obsidian 插件（只读 sync：SAW claims→Obsidian notes + chat 查询入口）；i18n 基建（抽取 CLI/prompt 硬编码中文字符串，EN 选项 env-gated）。
+- 价值：降低 KW 用户上手门槛（Obsidian 是 SAW 定位人群的 PKM hub）+ 为 v2.0 全球化铺路。
+- 成功指标：Obsidian 插件 MVP 可 sync + query `[TBD]`；i18n 覆盖 CLI 命令 help。
+- 前置依赖：v1.27.0。
+
+### v1.29.0 — core-trust + 性能硬化（core-trust track）— status: planned
+- 目标：把质量门从踩线（cov 68%/gate 67）推到安全区 + 验证大规模。
+- 关键功能：coverage→70%+（补 compile/feed/learn/review CLI 功能测试——AUDIT-F-04 续）；规模性能（ANN hnswlib ≥500 规模实证 benchmark / Write Queue 吞吞吐压 + DLQ 压测）。
+- 价值：CI 门不再踩线（少几行测试即跌破的风险消除）+ 给 v2.0 多租户规模背书。
+- 成功指标：coverage ≥70%；ANN ≥500 规模 benchmark P95 `[TBD]`。
+- 前置依赖：v1.28.0。
+
+### v1.30.0 — 深度研究 + IM serving（intelligence-adaptation track）— status: planned
+- 目标：把 Scholar 从"单步检索"升到"多步研究"+ 让 SAW 经 IM 被 agent 生态调用。
+- 关键功能：A4 深度研究模式（Scholar 编排 web 搜索 + 库内 claims→可溯源研究报告，结论锚定可信 claims）；C5b IM serving（webhook 起步——经通用 webhook serve Q&A，后续接飞书/Slack SDK）。
+- 价值：产品化"深度研究"（Khoj 同赛道功能 SAW 差异化：结论锚定库内可信 claims）+ agent 生态后端入口。
+- 成功指标：A4 产研究报告带 ≥N 可溯源 claims `[TBD]`；C5b webhook serve Q&A 端到端通。
+- 前置依赖：v1.29.0。
+
+> deferred gate 项（不动，需基建/PRD 决策）：AUDIT-F-05 activity 持久化（PRD §3.3 rule 6）/ AUDIT-F-06 banner SPEC 偏移（risk-gated，行为正确）/ AUDIT-F-07 desktop 签名+vLLM CI+Playwright（infra）/ C6 skill sandbox（需 Docker/E2B）。
 
 ## 3. 3 年路径（大版本里程碑）
 
@@ -401,7 +440,7 @@ SAW 的终局是**AI agent 与人类共用的、可验证、可溯源、可治�
 
 ## 5. 衔接声明
 
-- **01 PRD** 读本文件定位本版本主题；PRD front-matter 标 `roadmap_ref: ROADMAP` + `target_version`（如 v1.11.0）。v1.11.0 周期已闭环（released 2026-09-05）。v1.12.0 周期已闭环（released 2026-09-05，embedding 改用 OpenAI 风格 API + E2E 验证）。v1.13.0 周期已闭环（released 2026-09-06，E2E 收尾轮）。v1.14.0 周期已闭环（released 2026-09-06，semantic 性能优化：cache 阈值可配 + ANN 索引 hnswlib + benchmark cache.stats 真实度量）。v1.15.0 周期已闭环（released 2026-09-06，agent/link 能力：自定义 agent 角色 + L2 links apply + M2 agent 活动聚合）。v1.16.0 周期已闭环（released 2026-09-07，realtime 仪表盘 v4.3：agent roster+activity dashboard + workflow runtime view + realtime polling/WS）。v1.17.0 周期已闭环（released 2026-09-07，desktop 完成 v4.4：Tauri→1.0 + 集成 web 仪表盘 + .app/.dmg build + port convergence）。v1.18.0 周期已闭环（released 2026-09-07，per-request workspace contextvar injection + O4 tag flow convention）。v1.18.1 周期已闭环（released 2026-09-08，fix: AUDIT-F-08/W1 sub-service contextvar + W2 E2E test）。**v1.19.0 周期已闭环**（released 2026-09-09，production hardening：links rollback / agents export-import / agents activity 路由 bug 修复 / T4 activity-tracker 解耦 / S4 engine.py 语义搜索拆分 + CLI/govern 测试补强；additive → MINOR）。下一候选 v1.20.0+（竞品借鉴候选见下文「竞品借鉴候选」节，待 01 PRD 决策）。
+- **01 PRD** 读本文件定位本版本主题；PRD front-matter 标 `roadmap_ref: ROADMAP` + `target_version`（如 v1.11.0）。v1.11.0 周期已闭环（released 2026-09-05）。v1.12.0 周期已闭环（released 2026-09-05，embedding 改用 OpenAI 风格 API + E2E 验证）。v1.13.0 周期已闭环（released 2026-09-06，E2E 收尾轮）。v1.14.0 周期已闭环（released 2026-09-06，semantic 性能优化：cache 阈值可配 + ANN 索引 hnswlib + benchmark cache.stats 真实度量）。v1.15.0 周期已闭环（released 2026-09-06，agent/link 能力：自定义 agent 角色 + L2 links apply + M2 agent 活动聚合）。v1.16.0 周期已闭环（released 2026-09-07，realtime 仪表盘 v4.3：agent roster+activity dashboard + workflow runtime view + realtime polling/WS）。v1.17.0 周期已闭环（released 2026-09-07，desktop 完成 v4.4：Tauri→1.0 + 集成 web 仪表盘 + .app/.dmg build + port convergence）。v1.18.0 周期已闭环（released 2026-09-07，per-request workspace contextvar injection + O4 tag flow convention）。v1.18.1 周期已闭环（released 2026-09-08，fix: AUDIT-F-08/W1 sub-service contextvar + W2 E2E test）。**v1.19.0 周期已闭环**（released 2026-09-09，production hardening：links rollback / agents export-import / agents activity 路由 bug 修复 / T4 activity-tracker 解耦 / S4 engine.py 语义搜索拆分 + CLI/govern 测试补强；additive → MINOR）。**v1.20.0–v1.26.0 周期已闭环**（released 2026-09-09/15，竞品借鉴 13 项 ship：C3 skills / B1 contradicts 边 / C1+C2 resolve+record / A1 wiki distill / B2 rethink / A2 communities / D1 langfuse / C4 Agent File(v1.19) / A3 DRIFT / B3 status / B4 NLP / B5 auto-feedback / D3 heartbeat）。下一候选 **v1.27.0+**（下一年路径见上文「下一年路径 v1.27.0+」节——运维 dashboard+调度 / Obsidian+i18n / core-trust+perf / 深度研究+IM，待 01 PRD 决策）。
 - **06 release** 用「版本号规则」节（SemVer/Tag/预发布/多平台一致性），不另立方案。v1.17.0 为 additive → 发 MINOR，不强行 MAJOR。
 - **07 复盘** findings（status=open/deferred）回流更新本文件下一版本主题与版本-主题表 status（planned→in-progress→shipped→deferred）。v1.12.0 findings（N1/N4）已清掉。v1.13.0 findings（Q1/Q2/Q3 + O3）已清掉，O1 改善→R1。v1.14.0 findings（R1/R2）已清掉，R4 改善→S3。v1.15.0 findings（M2/L2 + 自定义角色）已清掉，O2 改善（67.34→67.42%）。v1.16.0 findings（realtime 仪表盘）已清掉，O2 持平（67.42%）。v1.17.0 findings：U4（desktop 0.1.0）已清掉。v1.18.0 findings：N3/K2（per-request workspace contextvar）已清掉，O4（tag flow convention）已清掉。**9 轮 backlog 清零达成**。新增 W1（sub-service _workspace_id 未读 contextvar P1）已修复→v1.18.1 fix / W2（per-request ws 未 E2E P2）已修复→v1.18.1 fix / W3（release-manager.md gitignored P3 info）。当前回流 findings：O2 + R3 + S1/S2/S3/S4 + T1/T2/T3/T4 + U1/U2/U3/U5/U6 + V1/V2/V3。
 - **lifecycle**：读 `.csp/lifecycle-state.json` 对齐在跑版本；本文件不写 lifecycle（外环）。v1.18.0 已 released（2026-09-07）。
