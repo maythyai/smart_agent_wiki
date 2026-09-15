@@ -1,7 +1,7 @@
 ---
 id: ROADMAP
 project: smart-agent-wiki
-version: 1.9
+version: 1.10
 last_updated: 2026-09-09
 status: active
 tracks: [core-trust, platform-team, ecosystem-integration, intelligence-adaptation]
@@ -363,7 +363,7 @@ canonical = `pyproject.toml`。发布时以下必须与之一致，用脚本校�
 | v1.23.0 | A1 saw_wiki_distill (agent 自维护 Wiki) / B2 rethink_contradiction (memory_rethink) / saw_resolve 语义升级 | core-trust+ecosystem | shipped (2026-09-09) |
 | v1.24.0 | A2 saw_communities/community_of (Louvain) + D1 langfuse_span (env-gated) / C4 Agent File (done v1.19.0) | intelligence+platform | shipped (2026-09-09) |
 | v1.25.0 | A3 saw_drift_search (DRIFT hybrid) + B3 ClaimStatus (TRUE/FALSE/SUSPECTED) | intelligence+platform | shipped (2026-09-09) |
-| v1.26.0 | FastGraphRAG NLP 降本 / provenance+auto-feedback / skill sandbox / heartbeat 巡检 | core-trust+ecosystem | candidate (竞品借鉴, 待 01 PRD) |
+| v1.26.0 | B4 saw_nlp_keywords (NLP 降本) + B5 saw_record_feedback (auto-feedback) + D3 HeartbeatScheduler (heartbeat 巡检) | core-trust+ecosystem | shipped (2026-09-09) |
 
 ### v1.18.0 — per-request workspace 注入 + O4 tag 流程（status: released, 2026-09-07, @e4cf22d）
 

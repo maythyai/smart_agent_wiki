@@ -264,6 +264,8 @@ class TestAllToolsCount:
             "saw_workflow", "saw_feedback",
             # Agent-native (3) — v1.22/v1.23 (C1/C2/A1)
             "saw_resolve", "saw_record", "saw_wiki_distill",
+            # Govern +3 (v1.26 B4/B5/D3)
+            "saw_nlp_keywords", "saw_record_feedback", "saw_heartbeat_status",
         ]
 
         for tool in expected_tools:

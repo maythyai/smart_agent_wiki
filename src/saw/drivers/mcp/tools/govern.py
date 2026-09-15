@@ -285,3 +285,96 @@ async def saw_blast_radius(claim_uuid: str) -> dict[str, Any]:
         result["error"] = str(e)
 
     return result
+
+# ── D3 (v1.26.0): heartbeat proactive patrol ───────────────────────
+_heartbeat = None
+
+
+def init_heartbeat_tools(heartbeat) -> None:
+    """Inject the HeartbeatScheduler instance (D3)."""
+    global _heartbeat
+    _heartbeat = heartbeat
+
+
+@mcp.tool
+async def saw_heartbeat_status() -> dict[str, Any]:
+    """D3: report the last proactive patrol run (freshness + contradictions).
+
+    The heartbeat (if started) periodically runs a freshness + unresolved-
+    contradiction scan in the background (Letta-inspired proactive patrol),
+    so stale claims and open contradictions surface without a user trigger.
+
+    Returns:
+        ``{status, ran_at, interval_seconds, stale_count,
+        unresolved_contradictions}`` or ``{status: "disabled", reason}``.
+    """
+    if _heartbeat is None:
+        return {"status": "disabled", "reason": "heartbeat not configured"}
+    return _heartbeat.last_run or {"status": "not-yet-run"}
+
+
+# ── B5 (v1.26.0): auto-feedback (Cognee-inspired) ───────────────────
+
+@mcp.tool
+async def saw_record_feedback(claim_uuid: str, helpful: bool) -> dict[str, Any]:
+    """D3/B5: record per-turn feedback on a claim, adjusting its confidence.
+
+    Cognee-inspired auto-feedback self-tuning: a user/agent signals whether a
+    claim was useful, and the claim's 4-level confidence is bumped (helpful) or
+    lowered (not helpful). This lets retrieval weighting drift toward claims
+    the agent community found useful — without re-ingesting.
+
+    Args:
+        claim_uuid: UUID of the claim.
+        helpful: True = useful (bump confidence toward HUMAN_VERIFIED);
+            False = not useful (lower toward UNVERIFIED, mark for re-review).
+
+    Returns:
+        ``{recorded, claim_uuid, helpful, new_confidence, status}``.
+    """
+    if _governor is None:
+        return {"error": "governor_not_initialized"}
+    claims_repo = getattr(_governor, "claims_repo", None) or getattr(_governor, "_claims_repo", None)
+    if claims_repo is None or not hasattr(claims_repo, "update_confidence"):
+        return {"error": "claims_repo_not_available"}
+    claim = claims_repo.get_by_id(claim_uuid)
+    if claim is None:
+        return {"error": "claim_not_found", "claim_uuid": claim_uuid}
+    from saw.domain.value_objects import ConfidenceLevel, derive_claim_status
+    levels = sorted(ConfidenceLevel, key=lambda c: int(c))
+    cur = int(claim.confidence)
+    if helpful:
+        new = min(c for c in levels if int(c) > cur) if any(int(c) > cur for c in levels) else cur
+    else:
+        new = max(c for c in levels if int(c) < cur) if any(int(c) < cur for c in levels) else cur
+    new_conf = new.name.lower()
+    try:
+        claims_repo.update_confidence(claim_uuid, new_conf)
+    except Exception as e:
+        return {"error": "update_failed", "message": str(e)}
+    status = derive_claim_status(new).name.lower()
+    return {"recorded": True, "claim_uuid": claim_uuid, "helpful": helpful,
+            "new_confidence": new_conf, "status": status}
+
+
+# ── B4 (v1.26.0): NLP noun-phrase cost-reduction tier ───────────────
+
+@mcp.tool
+async def saw_nlp_keywords(text: str, top_k: int = 20) -> dict[str, Any]:
+    """B4: cheap NLP noun-phrase extraction (no LLM, no network).
+
+    FastGraphRAG-inspired cost-reduction pre-index: extracts noun-phrase
+    candidates (jieba for CJK, regex for Latin) so ingest can run a cheap first
+    pass before the (expensive) LLM claim extraction, and degrade to NLP-only
+    on OFFLINE tier. Pure-Python + jieba (a SAW dep for CJK FTS5).
+
+    Args:
+        text: Source text to extract noun-phrases from.
+        top_k: Max phrases to return (1-100).
+
+    Returns:
+        ``{keywords: [...], count, mode: "nlp-no-llm"}``.
+    """
+    from saw.engines.ingest.nlp_index import extract_noun_phrases
+    kws = extract_noun_phrases(text, top_k=top_k)
+    return {"keywords": kws, "count": len(kws), "mode": "nlp-no-llm"}

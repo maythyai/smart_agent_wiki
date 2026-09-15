@@ -3,7 +3,16 @@
 All notable changes to this project are documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/).
 
-## [v1.25.0] - 2026-09-09
+## [v1.26.0] - 2026-09-09
+### Added — B4 NLP cost-reduction + B5 auto-feedback + D3 heartbeat patrol
+- **B4 `extract_noun_phrases(text)` + `saw_nlp_keywords`** (FastGraphRAG-inspired): cheap NLP noun-phrase extraction (jieba CJK + regex Latin, no LLM/network) as a cost-reduction pre-index tier / OFFLINE-tier degrade path.
+- **B5 `saw_record_feedback(claim_uuid, helpful)`** (Cognee-inspired auto-feedback): per-turn feedback bumps/lowers a claim's 4-level confidence (reuses `claims_repo.update_confidence`); retrieval drifts toward claims the agent community found useful — no re-ingest.
+- **D3 `HeartbeatScheduler` + `saw_heartbeat_status`** (Letta-inspired heartbeat): apscheduler background patrol runs Governor freshness + Detector unresolved-contradiction scans on an interval (env `SAW_HEARTBEAT_INTERVAL`), surfacing stale claims / open contradictions proactively.
+
+### Release Gate
+- pytest 2376 passed / 7 skipped / 0 failed (+13: B4×4 + B5×4 + D3×5); coverage ~68.3%; ruff 0; vitest 64.
+
+## [v1.25.0] - 2026-09-09 - 2026-09-09
 ### Added — A3 DRIFT hybrid search + B3 claim status axis
 - **A3 `saw_drift_search(query, depth, limit)`** (GraphRAG DRIFT-inspired): global (community) + local (entity neighborhood) hybrid search — primer semantic-searches the query to top claims → `community_of` for the broad view, then per-depth `traverse` for follow-up local refinement. Confidence-gated (claims below CROSS_VALIDATED flagged SUSPECTED). Built on A2 communities + semantic.
 - **B3 `ClaimStatus`** (GraphRAG-inspired TRUE/FALSE/SUSPECTED axis): new enum + `derive_claim_status(confidence, contradicted, resolution)` — reuses SAW's 4-level confidence + B1's `contradicts` edge resolution (SUPERSEDED→FALSE, DISPUTED/HISTORICAL→SUSPECTED, high-conf-not-contradicted→TRUE). `Claim.status` property; surfaced in `saw_search` + `saw_drift_search` output.
