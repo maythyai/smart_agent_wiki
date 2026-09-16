@@ -46,7 +46,13 @@ see_also: docs/strategy/ROADMAP.md | docs/strategy/STRATEGY.md
 | v1.29.0 | tests | coverage→70%+（compile/feed/learn/review CLI 功能测试，AUDIT-F-04 续）| 📋 |
 | v1.29.0 | perf | 规模性能（ANN ≥500 benchmark / Write Queue 吞吐压测）| 📋 |
 | v1.30.0 | research | A4 深度研究模式（Scholar 编排 web+claims→可溯源报告）| 📋 |
-| v1.30.0 | connectors | C5b IM serving（webhook 起步，serve Q&A）| 📋 |
+| v1.27.0 | write_queue | D2 saw_queue_status（运维 dashboard: per-status/dead-letter/age）| ✅ |
+| v1.27.0 | collaborate | A5 AgentScheduler + saw_schedule（apscheduler 周期任务）| ✅ |
+| v1.28.0 | plugins | C5a Obsidian 插件（manifest+main.ts: search+sync+settings）| ✅ |
+| v1.28.0 | i18n | i18n 基建（tr() helper + SAW_LANG env + 10 EN strings）| ✅ |
+| v1.29.0 | tests | thin CLI 功能测试（review/learn/compile/feed，AUDIT-F-04 续）| ✅ |
+| v1.30.0 | MCP/agent | A4 saw_deep_research（claims→Writer synthesis report）| ✅ |
+| v1.30.0 | api | C5b webhook serving（/api/research + /api/webhook/query）| ✅ |
 
 ## deferred-gate（不动，需基建/PRD 决策）
 

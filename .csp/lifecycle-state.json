@@ -1,8 +1,8 @@
 {
   "pipeline_version": 2,
-  "milestone": "v5.6",
-  "current_stage": "released-v1.26.0",
-  "next_cycle": "v1.27.0",
+  "milestone": "v6.0",
+  "current_stage": "released-v1.30.0",
+  "next_cycle": "v2.0-prep",
   "stages": [
     {
       "stage": "00-hub",
@@ -177,7 +177,7 @@
     "hash_realigned": 83,
     "diff_clean": true,
     "source_deletion": false,
-    "note": "index-and-keep delta pass; no stage advancement; see .csp/artifacts/reconcile-log.md 2026-09-08",
+    "note": "v1.27-v1.30 all shipped (D2/A5/C5a/i18n/coverage/A4/C5b); lifecycle-state was stale (still said v1.26.0/v1.27.0 next); reconciled.",
     "phases_cleared": 36,
     "phases_kept": 0,
     "note2": "all .planning/phases/* removed (35 impl-shipped + 29-agent-skills-layer unadopted stub); README badge drift v1.9.0 vs pyproject 1.18.1 flagged degraded, awaiting policy decision",
@@ -189,6 +189,7 @@
     "v1_23_0_released": "2026-09-09",
     "v1_24_0_released": "2026-09-09",
     "v1_25_0_released": "2026-09-09",
-    "v1_26_0_released": "2026-09-09"
+    "v1_26_0_released": "2026-09-09",
+    "v1_27_30_released": "2026-09-16"
   }
 }

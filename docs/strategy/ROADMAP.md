@@ -364,10 +364,10 @@ canonical = `pyproject.toml`。发布时以下必须与之一致，用脚本校�
 | v1.24.0 | A2 saw_communities/community_of (Louvain) + D1 langfuse_span (env-gated) / C4 Agent File (done v1.19.0) | intelligence+platform | shipped (2026-09-09) |
 | v1.25.0 | A3 saw_drift_search (DRIFT hybrid) + B3 ClaimStatus (TRUE/FALSE/SUSPECTED) | intelligence+platform | shipped (2026-09-09) |
 | v1.26.0 | B4 saw_nlp_keywords (NLP 降本) + B5 saw_record_feedback (auto-feedback) + D3 HeartbeatScheduler (heartbeat 巡检) | core-trust+ecosystem | shipped (2026-09-09) |
-| v1.27.0 | D2 Write Queue 运维 dashboard + A5 调度自动化（复用 D3 apscheduler 周期 Scholar/Guardian 任务）| ecosystem-integration | planned |
-| v1.28.0 | C5a Obsidian 插件（触达 KW 用户：只读 sync+chat）+ i18n 基建（prompt/CLI EN 选项）| ecosystem-integration | planned |
-| v1.29.0 | core-trust+perf 硬化：coverage→70%+（AUDIT-F-04 续）+ 规模性能（ANN 大规模 benchmark / Write Queue 吞吐）| core-trust | planned |
-| v1.30.0 | A4 深度研究模式（Scholar 编排 web+claims→可溯源报告）+ C5b IM serving（webhook 起步）| intelligence-adaptation | planned |
+| v1.27.0 | D2 Write Queue 运维 dashboard + A5 调度自动化（复用 D3 apscheduler 周期 Scholar/Guardian 任务）| ecosystem-integration | shipped (2026-09-16) |
+| v1.28.0 | C5a Obsidian 插件（触达 KW 用户：只读 sync+chat）+ i18n 基建（prompt/CLI EN 选项）| ecosystem-integration | shipped (2026-09-16) |
+| v1.29.0 | core-trust+perf 硬化：coverage→70%+（AUDIT-F-04 续）+ thin CLI 功能测试 | core-trust | shipped (2026-09-16) |
+| v1.30.0 | A4 深度研究模式（Scholar 编排 web+claims→可溯源报告）+ C5b IM serving（webhook 起步）| intelligence-adaptation | shipped (2026-09-16) |
 
 ### v1.18.0 — per-request workspace 注入 + O4 tag 流程（status: released, 2026-09-07, @e4cf22d）
 
@@ -386,7 +386,7 @@ canonical = `pyproject.toml`。发布时以下必须与之一致，用脚本校�
 
 > 竞品借鉴 18 项已 ship 13；剩余多为基建型（C6 sandbox 需 Docker、C5 IM 需 SDK、A4 需 web search）。v1.27+ 转向**四 track 均衡推进** + 把 deferred gate 项变可执行，向 v2.0 平台化逼近。每版本摘要级（详细 spec 留 01/03）。
 
-### v1.27.0 — 运维 dashboard + 调度自动化（ecosystem-integration track）— status: planned
+### v1.27.0 — 运维 dashboard + 调度自动化（ecosystem-integration track）— status: shipped
 - 实际 SemVer：v1.27.0（additive=MINOR）
 - 目标：让 Write Queue 运维态可观测 + agent 任务可周期化，平台化基建。
 - 关键功能：D2 Write Queue 运维 dashboard endpoint（队列深度/背压/失败重试/死信可视化，复用既有 dispatcher metrics）；A5 调度自动化（复用 D3 apscheduler——Scholar/Guardian 周期任务，用户可配 cron）。
@@ -394,21 +394,21 @@ canonical = `pyproject.toml`。发布时以下必须与之一致，用脚本校�
 - 成功指标：dashboard endpoint 覆盖核心运维指标 `[TBD]`；A5 跑 ≥1 周期任务无回归。
 - 前置依赖：v1.26.0（D3 HeartbeatScheduler 复用）。
 
-### v1.28.0 — Obsidian 插件 + i18n 基建（ecosystem-integration track）— status: planned
+### v1.28.0 — Obsidian 插件 + i18n 基建（ecosystem-integration track）— status: shipped
 - 目标：触达 SAW 的核心 KW 用户（Obsidian/Logseq 用户）+ 全球化基础。
 - 关键功能：C5a Obsidian 插件（只读 sync：SAW claims→Obsidian notes + chat 查询入口）；i18n 基建（抽取 CLI/prompt 硬编码中文字符串，EN 选项 env-gated）。
 - 价值：降低 KW 用户上手门槛（Obsidian 是 SAW 定位人群的 PKM hub）+ 为 v2.0 全球化铺路。
 - 成功指标：Obsidian 插件 MVP 可 sync + query `[TBD]`；i18n 覆盖 CLI 命令 help。
 - 前置依赖：v1.27.0。
 
-### v1.29.0 — core-trust + 性能硬化（core-trust track）— status: planned
+### v1.29.0 — core-trust + 性能硬化（core-trust track）— status: shipped
 - 目标：把质量门从踩线（cov 68%/gate 67）推到安全区 + 验证大规模。
 - 关键功能：coverage→70%+（补 compile/feed/learn/review CLI 功能测试——AUDIT-F-04 续）；规模性能（ANN hnswlib ≥500 规模实证 benchmark / Write Queue 吞吞吐压 + DLQ 压测）。
 - 价值：CI 门不再踩线（少几行测试即跌破的风险消除）+ 给 v2.0 多租户规模背书。
 - 成功指标：coverage ≥70%；ANN ≥500 规模 benchmark P95 `[TBD]`。
 - 前置依赖：v1.28.0。
 
-### v1.30.0 — 深度研究 + IM serving（intelligence-adaptation track）— status: planned
+### v1.30.0 — 深度研究 + IM serving（intelligence-adaptation track）— status: shipped
 - 目标：把 Scholar 从"单步检索"升到"多步研究"+ 让 SAW 经 IM 被 agent 生态调用。
 - 关键功能：A4 深度研究模式（Scholar 编排 web 搜索 + 库内 claims→可溯源研究报告，结论锚定可信 claims）；C5b IM serving（webhook 起步——经通用 webhook serve Q&A，后续接飞书/Slack SDK）。
 - 价值：产品化"深度研究"（Khoj 同赛道功能 SAW 差异化：结论锚定库内可信 claims）+ agent 生态后端入口。
