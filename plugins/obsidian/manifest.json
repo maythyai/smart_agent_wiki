@@ -1,0 +1,10 @@
+{
+  "id": "smart-agent-wiki",
+  "name": "Smart Agent Wiki",
+  "version": "0.1.0",
+  "minAppVersion": "1.4.0",
+  "description": "Search and sync your Smart Agent Wiki knowledge base from within Obsidian.",
+  "author": "Smart Agent Wiki",
+  "authorUrl": "https://github.com/maythyai/smart_agent_wiki",
+  "isDesktopOnly": true
+}
