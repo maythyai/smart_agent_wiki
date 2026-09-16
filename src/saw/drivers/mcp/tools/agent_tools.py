@@ -277,3 +277,78 @@ async def saw_wiki_distill(
         "mode": "writer-template",
         "next": "Run `saw links suggest <path>` + `saw links apply --confirm` to interlink.",
     }
+
+
+# ── A4 (v1.30.0): deep research mode ────────────────────────────────
+
+@mcp.tool
+async def saw_deep_research(query: str, limit: int = 10) -> dict[str, Any]:
+    """A4: deep research mode — synthesize a report from claims (Khoj-inspired).
+
+    Multi-step: searches claims (semantic/FTS5) → drafts a synthesis report
+    via the Writer agent template → returns the report with cited claims.
+    Distinct from saw_wiki_distill (writes a page) — this returns a research
+    REPORT (prose) for the agent/user, with claim citations.
+
+    Args:
+        query: Research question.
+        limit: Max claims to synthesize (1-30).
+
+    Returns:
+        ``{query, report, claims: [{uuid, content, confidence, status}], mode}``.
+    """
+    if _query_engine is None:
+        return {"error": "query_engine_not_initialized"}
+    if not query or not query.strip():
+        return {"error": "empty_query"}
+    limit = max(1, min(int(limit), 30))
+
+    # 1. Gather claims (reuse saw_resolve's semantic/FTS5 path)
+    claims_repo = getattr(_query_engine, "_claims_repo", None)
+    try:
+        from saw.adapters.embeddings import embeddings_available
+        sem = embeddings_available()
+    except Exception:
+        sem = False
+    contents: list[str] = []
+    claim_data: list[dict] = []
+    if sem:
+        try:
+            qr = _query_engine.query(query, mode="semantic", limit=limit)
+            for s in (qr.sources or []):
+                c = s.get("content", "")
+                if c:
+                    contents.append(c)
+                    claim_data.append({"content": c, "uuid": s.get("claim_uuid", ""),
+                                       "confidence": s.get("confidence", "unverified")})
+        except Exception:
+            pass
+    if not contents and claims_repo is not None and getattr(_query_engine, "_search", None) is not None:
+        try:
+            res = _query_engine._search.search(query, limit=limit)
+            for doc_id, content, _score in zip(res.claim_uuids, res.contents, res.scores):
+                if content:
+                    contents.append(content)
+                    claim_data.append({"content": content, "uuid": doc_id, "confidence": "unverified"})
+        except Exception:
+            pass
+
+    if not contents:
+        return {"query": query, "report": "", "claims": [], "mode": "no-results",
+                "message": f"No claims found for '{query}'."}
+
+    # 2. Writer template synthesizes a research report
+    from saw.domain.agent import AgentTask
+    from saw.engines.collaborate.agents.writer import WriterAgent
+
+    writer = WriterAgent(None)  # template fallback (no LLM)
+    task = AgentTask(type="synthesis", payload={"title": query.strip(), "claims": [{"content": c} for c in contents]})
+    report = writer._generate_fallback(task)
+
+    return {
+        "query": query.strip(),
+        "report": report,
+        "claims": claim_data,
+        "mode": "writer-template",
+        "note": "Report synthesized from search-ranked claims; for LLM-grade prose, run with an LLM-configured Writer.",
+    }

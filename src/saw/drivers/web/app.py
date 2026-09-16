@@ -351,6 +351,11 @@ def create_app(
 
     app.include_router(dashboard_stats_router, tags=["dashboard"], dependencies=auth_dep)
 
+    # v1.30.0 (C5b): IM serving / deep-research webhook
+    from saw.api.research import router as research_router
+
+    app.include_router(research_router, prefix="/api", tags=["research"], dependencies=auth_dep)
+
     # H1-1: register previously-unwired api/ routers (all already have
     # their own /api/v1/... prefix). Public read endpoints get auth_dep;
     # webhook/inbound endpoints are exempt (they use HMAC verification).
