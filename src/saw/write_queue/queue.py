@@ -311,6 +311,43 @@ class SQLiteWriteQueue:
             ).fetchall()
         return [self._row_to_op(row) for row in rows]
 
+    def status(self) -> dict:
+        """D2 (v1.27.0): operational health snapshot for the ops dashboard.
+
+        Returns a dict with per-status op counts + dead-letter count + the
+        oldest pending op age (seconds) — the metrics an operator needs to
+        see at a glance whether the queue is healthy, backing up, or bleeding
+        dead-letters. Read-only (no lock held longer than the SELECT).
+        """
+        from datetime import datetime, timezone
+
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT status, COUNT(*) FROM write_outbox GROUP BY status"
+            ).fetchall()
+            by_status = {r[0]: r[1] for r in rows}
+            oldest = self._conn.execute(
+                "SELECT MIN(created_at) FROM write_outbox WHERE status='pending'"
+            ).fetchone()[0]
+        age_s: float | None = None
+        if oldest:
+            try:
+                from datetime import datetime as _dt
+
+                age_s = round((datetime.now(timezone.utc) - _dt.fromisoformat(oldest)).total_seconds(), 1)
+            except Exception:
+                age_s = None
+        return {
+            "by_status": by_status,
+            "total": sum(by_status.values()),
+            "pending": by_status.get("pending", 0),
+            "processing": by_status.get("processing", 0),
+            "done": by_status.get("done", 0),
+            "failed": by_status.get("failed", 0),
+            "dead_letter": by_status.get("dead_letter", 0),
+            "oldest_pending_age_s": age_s,
+        }
+
     def retry_dead_letter(self, op_id: str) -> None:
         """Reset a dead-letter op so it can be retried from scratch.
 

@@ -16,7 +16,7 @@ def _get_tool_names_sync() -> list[str]:
     FastMCP stores tools in _tool_manager._tools dict.
     """
     # Import all tool modules to ensure registration
-    from saw.drivers.mcp.tools import ingest, query, govern, learn, collaborate, agent_tools
+    from saw.drivers.mcp.tools import ingest, query, govern, learn, collaborate, agent_tools, ops_tools
     from saw.drivers.mcp.server import mcp
 
     # FastMCP 3.x stores tools in docket._tools
@@ -31,7 +31,7 @@ def _get_tool_names_sync() -> list[str]:
     tool_names: list[str] = []
 
     # Check ingest module for saw_* functions decorated with @mcp.tool
-    for module in [ingest, query, govern, learn, collaborate, agent_tools]:
+    for module in [ingest, query, govern, learn, collaborate, agent_tools, ops_tools]:
         for name in dir(module):
             if name.startswith("saw_"):
                 tool_names.append(name)
@@ -266,6 +266,8 @@ class TestAllToolsCount:
             "saw_resolve", "saw_record", "saw_wiki_distill",
             # Govern +3 (v1.26 B4/B5/D3)
             "saw_nlp_keywords", "saw_record_feedback", "saw_heartbeat_status",
+            # Ops +2 (v1.27 D2/A5)
+            "saw_queue_status", "saw_schedule",
         ]
 
         for tool in expected_tools:
