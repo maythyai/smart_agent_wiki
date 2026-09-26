@@ -1,8 +1,8 @@
 ---
 id: COMPETITIVE-REFERENCE
 project: smart-agent-wiki
-version: 1.0
-last_updated: 2026-09-09
+version: 1.1
+last_updated: 2026-09-18
 status: active
 generated_by: roadmap Phase 0.5（竞品借鉴）
 see_also: docs/strategy/ROADMAP.md | docs/strategy/STRATEGY.md
@@ -94,3 +94,64 @@ see_also: docs/strategy/ROADMAP.md | docs/strategy/STRATEGY.md
 - 各参考项目 clone 仅为只读分析，不纳入 SAW 源树（`开源项目参考/` 已 .gitignore）。
 
 > 下一步：本清单的"拟纳入版本"作为 ROADMAP v1.19.0+ 候选主题输入；具体取舍由下一轮 01 PRD 决策（01 读 ROADMAP 定位版本主题）。
+
+## 六、2026-09-18 外网调研补充（行业·新竞品·范式拐点）
+
+> 多模态并行桌面调研（Web 搜索 2 轮）补全。证据出处见各条。借鉴红线不变：强化 SAW 护城河（溯源+治理+数据主权），非堆 feature。
+
+### 6.1 行业/市场（赛道规模·增长·政策·拐点）
+
+- **市场规模**：中国企业级 AI Agent 市场 212 亿(2025)→449 亿(2026)→3320 亿(2029)，CAGR 107%；72% 企业已试点、平均 3.5 场景（CIDC《2026 智能体白皮书》）。
+- **政策**：2026 政府工作报告首写"智能体"；国务院目标 2027 普及 70%、2030 90%；2026.05 三部门《智能体规范应用与创新发展实施意见》把**安全/可靠/可信**定为产业底线——**直接利好 SAW 治理/provenance 定位**。
+- **Agent Memory 赛道爆发**：Mem0 Series A $24M / 41k★ / 14M PyPI；记忆张量 6 个月近亿 RMB；Cloudflare 下场；OpenAI "Dreaming V3"(2026.06)；ICLR 2026 MemAgents 专场；NUS+RUC 综述（200+论文，"形式-功能-动态"框架）。
+- **层级判断**：5 亿美元+市值只在 Layer 1 向量库（已商品化、价格战，Pinecone 砍估值、Weaviate/Qdrant 盈利难）与 **Layer 2 记忆/知识中间件（开放窗口）**；Layer 3 应用天花板低，Layer 4 被大厂免费吃。**SAW 定位 Layer 2，窗口开放**。
+- **资金流向**：Anthropic ARR $45B(2026.05)、企业 ARPU 7×OpenAI；Claude Code $1B run-rate；Cursor ~$2B；Lovable $400M/146 人——agent 基建是企业钱最集中处。
+
+### 6.2 新竞品功能矩阵（参考文件夹 6 个之外的补充）
+
+| 项目 | 协议 | 一句话定位 | 与 SAW 关系 / 差异化 |
+|---|---|---|---|
+| **LightRAG** (HKUDS) | MIT | 轻量 GraphRAG：双层检索+增量更新+更便宜，22.9k★；RAG-Anything 多模态 | **检索层竞品**：有 graph+增量无治理/溯源/local-first/code。SAW 差异化=治理+四层溯源。借鉴 v1.36 增量图。 |
+| **KAG / OpenSPG** (蚂蚁) | Apache-2.0 | 知识增强：逻辑符号混合推理+KG↔文本互索引+**provenance 可追溯**；hotpotQA +19.6%、2wiki +33.5%；政务 91%/医疗 90%+ | **最接近 SAW"编译+溯源"概念竞品**：但云/服务端优先、垂直企业、无 local-first/code/Ed25519 receipts/9 级新鲜度。借鉴 v1.36 logical-symbolic reasoning，差异化锚定可信 claims。 |
+| **CodeGraph** (colbymchenry) | MIT | tree-sitter+SQLite MCP，给 Claude Code/Cursor/Codex 本地代码地图，29.1k★(2026.01) | **代码智能竞品**：code-only 无治理/溯源。SAW v1.43 "governed code intelligence" 差异化（impact+staleness+provenance）。 |
+| **Graphify** | MIT | 代码 KG 工具，55.6k★，20 AI 平台 | **代码智能竞品**：同上，code-only。SAW 差异化护城河。 |
+| **mex-memory** | — | 团队记忆，存 repo、Git 共享 | 与 SAW Token Optimizer/Cerebrum 重叠。借鉴 Git 共享记忆分发。 |
+| **DeepWiki / open-deepwiki / claude-deep-wiki** | — | 自动生成项目知识库（Devin 模式） | **Agent-Wiki copycat**：Karpathy LLM Wiki gist 2026.04 病毒传播后涌现。SAW 差异化=四层+治理+code+MCP，copycat 皆无。 |
+| **SocratiCode / ai-maestro** | — | 企业 codebase intelligence / agent 编排+skills | 代码/编排竞品。SAW 差异化=provenance+治理。 |
+
+### 6.3 范式拐点：Structured Context Infrastructure（2026.09 行业论点）
+
+行业新共识（腾讯新闻/微软 GraphRAG 维护模式公告）：agent 真正需要的 context 不是一摞文档，而是 **vector(找相似)+graph(关系)+ontology(什么算什么)+state(现实此刻)+permission(谁能知/做)+action(可改什么)** 的"结构化上下文基础设施"。GraphRAG 只是早期形态，已进维护模式。
+
+**SAW 架构本就覆盖六要素**：四层存储(vector+graph+claims)+治理(state=freshness+置信+矛盾)+RBAC(permission)+agent/MCP(action)——**领先于话语但未自我定位**。ROADMAP v1.35 Structured Context API 即把此定位产品化、抢占品类。
+
+### 6.4 信任/溯源危机（SAW 护城河的政策+需求双重验证）
+
+- **跨 agent 知识污染**（苏黎世联邦理工+KPMV 2026.09）：81% 多 agent 系统经历污染传播，58% 传播 >4 agent 才检出，34% 已写入"不可变决策记录"，**97% 从未做信息溯源验证**。
+- **IEEE "Trust-Aware Agentic RAG"**：vector+KG 混合 + provenance anchoring + policy encoding，面向医疗/金融/政务合规——**正是 SAW 四层+治理+receipt 的学术映射**。
+- **2026.05《智能体规范》**：可信/安全/可靠=产业底线。
+
+→ SAW 的 **provenance(溯源)+governance(治理)+data-sovereignty(local-first)** 三耦合是稀缺、可防御、政策对齐的楔子。ROADMAP v1.31–v1.32（Provenance API + Compliance Tier）即落此楔子。
+
+### 6.5 借鉴清单更新（v1.31.0+ 候选输入，详见 ROADMAP §2.6）
+
+| # | 来源 | 借鉴点 | SAW 差异化落地 | 拟纳入 |
+|---|---|---|---|---|
+| E1 | KAG | logical-symbolic 混合推理 + KG↔文本互索引 | 结论锚定可信 claims+receipts（非 KAG 云优先） | v1.36 |
+| E2 | LightRAG | claims 图增量更新（不全量重建） | 增量走 Write Queue+receipt | v1.36 |
+| E3 | Cognee COGX | 跨记忆系统迁移格式 | SAW bundle 携带 provenance+receipts | v1.37 |
+| E4 | Letta/EverOS | sleeptime + skill 沉淀 | reconcile 写 contradicts 边+receipt；skill 锚定 claims | v1.38/v1.46 |
+| E5 | OpenAI Dreaming V3 / EverOS | dreaming 离线整理 | 走 SAW 治理引擎+receipt | v1.46 |
+| E6 | BeyondUncertainty | confidence 门控检索路由 | 复用 SAW 4 级置信作门控 | v1.35 |
+| E7 | OpenClaw 痛点/$47k 事故 | token 成本危机 | Token Optimizer 产品化为成本层 | v1.44 |
+| E8 | WeKnora 沙箱 | Docker/E2B skill 执行 | 沙箱操作产 receipt+受治理（闭合 C6） | v1.41 |
+
+### 6.6 不借鉴（聚焦代价，续）
+
+| 来源 | feature | 不借鉴理由 |
+|---|---|---|
+| Khoj | 云托管/SaaS/图像/voice | SAW 红线 local-first + 编译定位（不变） |
+| WeKnora | 腾讯生态强绑定连接器 | 不做厂商锁定（不变） |
+| GraphRAG(微软) | 全 LLM 抽取作唯一路径 | 已维护模式；成本高；SAW 采 NLP+LLM 分层（不变） |
+| Mem0/Zep | 纯记忆层无编译 | SAW 是编译层非记忆胶囊；记忆是子能力非定位 |
+| Letta OS 虚拟内存全套 | 分页/FIFO 抽象 | SAW 已有四层存储+Write Queue（不变） |

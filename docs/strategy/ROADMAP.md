@@ -1,8 +1,8 @@
 ---
 id: ROADMAP
 project: smart-agent-wiki
-version: 1.11
-last_updated: 2026-09-15
+version: 1.14
+last_updated: 2026-09-18
 status: active
 tracks: [core-trust, platform-team, ecosystem-integration, intelligence-adaptation]
 north_star: trustworthy-claim coverage
@@ -368,6 +368,40 @@ canonical = `pyproject.toml`。发布时以下必须与之一致，用脚本校�
 | v1.28.0 | C5a Obsidian 插件（触达 KW 用户：只读 sync+chat）+ i18n 基建（prompt/CLI EN 选项）| ecosystem-integration | shipped (2026-09-16) |
 | v1.29.0 | core-trust+perf 硬化：coverage→70%+（AUDIT-F-04 续）+ thin CLI 功能测试 | core-trust | shipped (2026-09-16) |
 | v1.30.0 | A4 深度研究模式（Scholar 编排 web+claims→可溯源报告）+ C5b IM serving（webhook 起步）| intelligence-adaptation | shipped (2026-09-16) |
+| v1.30.1 | fix: audit 快速修复批（AUDIT-F-02 MCP 工具数断言 / F-07 nav / F-09 死按钮 aria / F-10 graph 空态）| core-trust | planned (audit 2026-09-18) |
+| v1.31.0 | Provenance Verification API + Activity 持久化 + wiki 索引 YAML 韧性（AUDIT-F-03 折入）| core-trust | planned |
+| v1.32.0 | Compliance & Audit Tier（Ed25519 receipt 导出 + 数据驻留 + 删除传播）| platform-team | planned |
+| v1.33.0 | Playwright E2E + Desktop 签名/跨平台（AUDIT-F-07/V1/V2 闭合）| ecosystem-integration | planned |
+| v1.34.0 | ANN ≥5000 实证 + coverage 72% + Write Queue 压测（S1/S2/O2）| core-trust | planned |
+| v1.35.0 | Structured Context API v1（统一 vector+graph+ontology+state，★品类定位）| intelligence-adaptation | planned |
+| v1.36.0 | Incremental Graph + Logical-Symbolic Reasoning（借鉴 LightRAG/KAG 差异化）| intelligence-adaptation | planned |
+| v1.37.0 | Claim Exchange Format v0（联邦互操作种子，借鉴 COGX 差异化）| ecosystem-integration | planned |
+| v1.38.0 | Multi-Agent Orchestration + Sleeptime（借鉴 Letta/EverOS 差异化）| intelligence-adaptation | planned |
+| v1.39.0 | RBAC 深化 + 多租户生产级（4 级 + 配额 + SSO/OIDC）| platform-team | planned |
+| v1.40.0 | Plugin Marketplace v1（registry + SDK v1 + connector framework）| ecosystem-integration | planned |
+| v1.41.0 | Skill Sandbox 执行（C6 闭合，Docker/E2B）| ecosystem-integration | planned |
+| v1.42.0 | IM Serving 全链路 + Obsidian/Logseq 深集成（C5 续）| ecosystem-integration | planned |
+| v1.43.0 | Coding-Harness 全平台 + Governed Code Intelligence（vs CodeGraph/Graphify）| ecosystem-integration | planned |
+| v1.44.0 | Token Optimizer 产品化（成本层，OpenClaw/$47k 痛点）| intelligence-adaptation | planned |
+| v1.45.0 | Deep Research v2 + Web Grounding（A4 续）| intelligence-adaptation | planned |
+| v1.46.0 | Agent Self-Evolution + Dreaming（借鉴 Dreaming V3/EverOS 差异化）| intelligence-adaptation | planned |
+| v1.47.0 | Observability v2（Langfuse-grade + W3C traceparent + A2A）| platform-team | planned |
+| v1.48.0 | Federated Knowledge Graph v0（跨实例联邦，v3.0 seed）| ecosystem-integration | planned |
+| v1.49.0 | Pre-v2.0 硬化 + 迁移工具 + property/fuzz 基建 | core-trust | planned |
+| v1.50.0 | v2.0 RC + 统一 Context API freeze | intelligence-adaptation | planned |
+| v2.0.0 | 平台化 MAJOR（仅真实 breaking API 变更才 bump）| platform-team | planned |
+| v2.1.0 | Post-2.0 生态扩展（marketplace v2 + 多语言 SDK + 连接器长尾）| ecosystem-integration | planned |
+| v2.2.0 | 联邦生产化 + claim 互操作标准提案外部化 | ecosystem-integration | planned |
+| v2.3.0 | Governance-as-a-Service（治理层 sidecar 可嵌入外部 RAG）| platform-team | planned |
+| v2.4.0 | 多模态编译（image/audio/video/table→claim 锚定原文位置）| intelligence-adaptation | planned |
+| v2.5.0 | Agent Skill 市场与分享（skill exchange format，携带 provenance）| ecosystem-integration | planned |
+| v2.6.0 | 自治知识体（Guardian 全自动 expire/晋升/矛盾仲裁闭环）| core-trust | planned |
+| v2.7.0 | 联邦信任网络（跨实例 trust scoring + receipt notarization 共识）| ecosystem-integration | planned |
+| v2.8.0 | 知识图谱标准提案（claim graph schema 开放标准草案 v1）| core-trust | planned |
+| v3.0.0 | 生态/开放 MAJOR（范式跃迁，仅真实 breaking 才 bump）| ecosystem-integration | planned |
+| v3.1.0 | 行业垂直合规包（医疗/金融/法律 ontology + 审计模板）| platform-team | planned |
+| v3.2.0 | 边缘部署（离线自治 + 按需联邦，弱网/断网可用）| ecosystem-integration | planned |
+| v3.3.0 | 知识资产经济（claim attribution/许可/计费，可信知识可交易）| ecosystem-integration | planned |
 
 ### v1.18.0 — per-request workspace 注入 + O4 tag 流程（status: released, 2026-09-07, @e4cf22d）
 
@@ -417,22 +451,269 @@ canonical = `pyproject.toml`。发布时以下必须与之一致，用脚本校�
 
 > deferred gate 项（不动，需基建/PRD 决策）：AUDIT-F-05 activity 持久化（PRD §3.3 rule 6）/ AUDIT-F-06 banner SPEC 偏移（risk-gated，行为正确）/ AUDIT-F-07 desktop 签名+vLLM CI+Playwright（infra）/ C6 skill sandbox（需 Docker/E2B）。
 
+## 2.6 下下年路径 v1.31.0+（v2.0 逼近 · Structured Context Infrastructure）
+
+> 2026-09-18 外环 roadmap 增量更新。基于桌面调研（行业/竞品/客户/经济模型，见 `docs/analysis/COMPETITIVE-REFERENCE.md` 扩展）+ 既有 ROADMAP。v1.27–v1.30 已 ship，自此向后推演。**战略主线**：把 SAW 自我定位为 **"agent 的可信编译知识层 / Structured Context Infrastructure"**——vector(找相似)+graph(关系)+ontology(什么算什么)+state(现实此刻)+permission(谁能知/做)+action(可改什么)（2026.09 行业论点，SAW 架构本就覆盖），并以 **provenance + 治理 + 数据主权** 作护城河（97% 多 agent 系统从不做溯源验证、2026.05《智能体规范》把可信定为底线）。每版本摘要级，详细 spec 留 01/03。SemVer：全 additive = MINOR，**v2.0.0 MAJOR 仅在 06 验证到真实 breaking API 变更才 bump**（见 §1.1）。
+
+### v1.30.1 — fix: audit 快速修复批（PATCH）— status: planned
+- 实际 SemVer：v1.30.1（fix=PATCH，攒批 4 项审计快速修复，不开 MINOR）
+- 目标：闭合 v1.30.0 审计中 `快速修复=true` 的 P0/P3 项。
+- 关键功能（摘要级，源自 `.csp/audit/AUDIT-FINDINGS-v1.30.0.json`）：
+  1. **AUDIT-F-02** [P0] 更新 `tests/unit/drivers/test_mcp_tools.py` expected_tools +1（34→35）+ README/manifest/test 三处工具数对齐
+  2. **AUDIT-F-07** [/integrations nav] `web/src/App.tsx` 顶部 nav 增 Integrations NavLink
+  3. **AUDIT-F-09** [/integrations 死按钮] 图标按钮补 `aria-label`
+  4. **AUDIT-F-10** [/graph 空态] /graph 空数据加 CTA（Import/新建页面）
+- 价值：P0 测试失败收敛 + a11y/IA/UX 快速整改，解 06 gate。
+- 成功指标：pytest 0 failed；ruff 0；AUDIT-F-02/07/09/10 → closed。
+- 前置依赖：v1.30.0。07 回流：v1.30.0 审计（AUDIT-F-02/07/09/10）。
+- **未并入本批（折入后续版本，见审计交棒 `docs/analysis/AUDIT-TO-ROADMAP.md`）**：AUDIT-F-05/06（saw web 挂 SPA + proxy 配置化）→ v1.33.0；AUDIT-F-01/04（god-files + coverage 70）→ v1.34.0；AUDIT-F-03（wiki 索引韧性）→ v1.31.0；AUDIT-F-08（404→200）→ v1.33.0；CRITIC-F-01（Dashboard 状态卡）→ v1.35.0。
+
+### Phase A — 信任加固与合规楔子（core-trust / platform）
+
+**v1.31.0 — Provenance Verification API + Activity 持久化**（core-trust track）— status: planned
+- 实际 SemVer：v1.31.0（additive=MINOR）
+- 目标：把"溯源"从存储能力升为可调 API，闭合 AUDIT-F-05 + 直击跨 agent 知识污染（81% 系统经历、97% 从不验证）。
+- 关键功能：`saw_verify_provenance` MCP 原语（claim→证据链校验，返回 receipt+原文路径）；agent activity 持久化到 DB（跨重启，闭合 AUDIT-F-05）；`/api/v1/provenance/{claim_id}` REST；contamination scan（检测衍生自过期/被取代源的 claim）。
+- 用户场景/竞品差距：企业需"信息溯源验证"——**只有 SAW 能做**（四层存储 Vault→Claims→Wiki→Index 是物理基础），KAG 有 provenance 但无四层锚定原文。
+- 成功指标：provenance 链可校验 `[TBD]`；activity 跨重启不丢；`[TBD]`。
+- 前置依赖：v1.30.0。07 回流：AUDIT-F-05 + W1(stale)。
+
+**v1.32.0 — Compliance & Audit Tier（医疗/金融/政务）**（platform-team track）— status: planned
+- 目标：把 Ed25519 receipt + RBAC + provenance 打包为合规产品 tier，对齐 2026.05《智能体规范》可信底线。
+- 关键功能：audit receipt 导出（Ed25519 签名 bundle，类 SBOM）；数据驻留控制（workspace→存储后端绑定 + on-prem 断言）；留存/删除策略引擎（GDPR/PIPL 被遗忘权传播到 claims/receipts）；合规配置 profile。
+- 用户场景/竞品差距：金融/医疗/政务准入需审计链；to-B 楔子。WeKnora 有审计日志但无密码学 receipt 链。
+- 成功指标：receipt bundle 可被第三方校验 `[TBD]`；删除传播覆盖 claims+receipts+索引。
+- 前置依赖：v1.31.0。
+
+**v1.33.0 — Playwright E2E + Desktop 签名/跨平台**（ecosystem-integration track）— status: planned
+- 目标：闭合 AUDIT-F-07 + V1/V2，四层 round-trip 视觉回归 + 桌面端可分发。
+- 关键功能：Playwright E2E（dashboard/四层联动视觉回归，U1 闭合）；Apple Developer ID 签名 + notarization（V1）；跨平台 CI matrix（win/linux/mac x86_64+aarch64，V2）；GitHub Release per-platform artifacts。
+- 用户场景/竞品差距：非 CLI 用户需可分发桌面包；审计 §5"未验证-范围"四层联动补位。
+- 成功指标：Playwright 回归套件通过；.dmg/.exe/.AppImage 签名产出。
+- 前置依赖：v1.32.0。07 回流：AUDIT-F-07 / U1 / V1 / V2。
+
+**v1.34.0 — ANN 大规模实证 + 性能硬化 II**（core-trust track）— status: planned
+- 目标：闭合 S1/S2/O2，给 v2.0 多租户规模背书。
+- 关键功能：ANN hnswlib ≥5000 规模 benchmark + scale_curve 维度修复（S1/S2）；coverage→72%+（compile/compiler/synthesize 深覆盖，O2 续）；Write Queue 吞吐压测 + DLQ 混沌；query P95 SLO 基线。
+- 成功指标：ANN ≥5000 P95 优于全量 cosine `[TBD]`；coverage ≥72%；DLQ 压测无丢数据。
+- 前置依赖：v1.33.0。07 回流：S1/S2/O2。
+
+### Phase B — 结构化上下文基础设施（intelligence-adaptation）★ 品类定位主线
+
+**v1.35.0 — Structured Context API v1（统一 vector+graph+ontology+state）**（intelligence-adaptation track）— status: planned
+- 目标：**SAW 品类定位版本**——把 vector 语义 / graph 遍历 / DRIFT / logical-symbolic 统一到一个 `saw_context` API，对齐 2026.09 "Structured Context Infrastructure" 论点。无单一竞品同时覆盖六要素。
+- 关键功能（摘要级，5 条）：
+  1. `saw_context` 统一 MCP+REST 接口（单一入口，`mode=semantic|graph|drift|hybrid|logical`，替代分散的 query/search/drift 原语直调）
+  2. ontology 层（concept type/relation type + claim→concept 归纳，借鉴 KAG LLMFriSPG；差异化：concept 锚定 claims+receipts，可溯源到原文）
+  3. state 层（claim freshness/置信/矛盾态作一等查询维度，可按"仅 fresh / 置信≥X / 排除 contradicted"过滤）
+  4. 自适应查询路由（confidence 门控：低置信 claim 触发扩展检索/多跳，借鉴 BeyondUncertainty；差异化：用 SAW 4 级置信作门控）
+  5. permission 维度接入（query 按 RBAC workspace 过滤可见 claim，使 permission 成为 context 的第六要素）
+- 用户场景/竞品差距：agent 需"外部世界"context（对象+关系+状态+权限+动作），非一摞文档。LightRAG 有 graph+增量无 ontology/state/permission；KAG 有 ontology+逻辑推理无 local-first/code。
+- 成功指标：统一 API 覆盖 4 检索模式 `[TBD]`；自适应路由降低无效检索 `[TBD]`。
+- 前置依赖：v1.34.0。
+
+**v1.36.0 — Incremental Graph + Logical-Symbolic Reasoning**（intelligence-adaptation track）— status: planned
+- 目标：检索侧补齐 LightRAG 级增量 + KAG 级逻辑推理，差异化锚定可信 claims。
+- 关键功能（摘要级，5 条）：
+  1. claims 图 delta-merge 增量更新（新文档只更新受影响子图，不全量重建，借鉴 LightRAG dual-level+incremental；差异化：delta 走 Write Queue+receipt）
+  2. logical-symbolic reasoner（plan/retrieve/reason 三算子，自然语言→逻辑表达式→图谱推理+chunk 检索+LLM 推理混合求解，借鉴 KAG；差异化：结论锚定可信 claims+置信+receipt）
+  3. hierarchical community report v2（社区报告锚定 claims+置信，B3 status 轴续，每社区主题可溯源到支撑 claims）
+  4. hybrid reranker（semantic+graph+logical 三路融合排序，低置信 claim 降权）
+  5. temporal reasoning（双时态：事件发生时间+系统记录时间，借鉴 Zep/Graphiti bi-temporal；差异化：时态锚定 Vault 原文版本）
+- 用户场景/竞品差距：GraphRAG 维护模式留真空；LightRAG 无治理；KAG 无四层溯源。
+- 成功指标：增量更新不重建全图 `[TBD]`；多跳推理准确率 `[TBD]`。
+- 前置依赖：v1.35.0。
+
+**v1.37.0 — Claim Exchange Format v0（联邦互操作种子）**（ecosystem-integration track）— status: planned
+- 目标：定义可移植 claim bundle 格式（claim+证据+receipt+置信+新鲜度，签名），为 v3.0 联邦铺路。
+- 关键功能：portable claim bundle 格式 v0；跨 SAW 实例 import/export；从 Mem0/Letta/Zep/Cognee 迁移（借鉴 cognee COGX，差异化：SAW bundle 携带 provenance+receipts）；联邦只读协议（查远端 SAW + 验 receipts）。
+- 用户场景/竞品差距：cognee COGX 兴起；SAW 差异化=携带溯源链。开启"可信知识跨实例交换"品类。
+- 成功指标：bundle 可跨实例校验+导入 `[TBD]`。
+- 前置依赖：v1.36.0。
+
+**v1.38.0 — Multi-Agent Orchestration + Sleeptime**（intelligence-adaptation track）— status: planned
+- 目标：多 agent 协作 + 后台整理，差异化锚定 receipt。
+- 关键功能：多 agent workflow（A2A 感知，agent handoff 带 provenance 标签 context）；sleeptime 整理（Guardian/Scholar 后台 reconcile，借鉴 Letta sleeptime，差异化：reconcile 写 contradicts 边+receipt）；agent skill 沉淀（重复成功路径→可复用 skill，借鉴 EverOS/OpenClaw，差异化：skill 锚定库内 claims）。
+- 成功指标：多 agent handoff 不丢 provenance `[TBD]`；sleeptime 跑 ≥1 周期。
+- 前置依赖：v1.37.0。
+
+### Phase C — 平台化与多租户生产级（platform-team / ecosystem）
+
+**v1.39.0 — RBAC 深化 + 多租户生产级**（platform-team track）— status: planned
+- 目标：多租户生产级隔离 + 权限决策可审计。
+- 关键功能：4 级 RBAC（Owner/Admin/Contributor/Viewer，借鉴 WeKnora，差异化：权限决策产 receipt）；per-workspace 配额+限流；tenant 隔离硬化（跨子服务再验 per-request ws，W1 闭合确认）；SSO/OIDC。
+- 成功指标：跨 tenant 不泄漏 E2E `[TBD]`；权限操作产 receipt。
+- 前置依赖：v1.38.0。
+
+**v1.40.0 — Plugin Marketplace v1（非破坏）**（ecosystem-integration track）— status: planned
+- 目标：稳定插件 SDK + 连接器框架 + 注册安装。
+- 关键功能：插件 registry + `saw plugin install`（git/zip/registry，借鉴 WeKnora 技能目录，差异化：插件走 Write Queue+receipt）；Plugin SDK v1 stable（事件 hook、生命周期）；connector framework v1（GitHub/Notion/Slack/飞书 ingest，通用不绑厂商）；`.claude/skills` 打包。
+- 成功指标：外部插件可装+跑 hook `[TBD]`。
+- 前置依赖：v1.39.0。
+
+**v1.41.0 — Skill Sandbox 执行（C6 闭合）**（ecosystem-integration track）— status: planned
+- 目标：闭合 C6，agent 代码操作受沙箱治理。
+- 关键功能：Docker/E2B 沙箱执行 agent 代码（借鉴 WeKnora/Cognee，差异化：沙箱操作产 receipt+受治理）；`saw sandbox exec`（per-workspace 网络策略）；skill catalog 安装（ClawHub/SkillHub/git）。
+- 成功指标：沙箱 exec 不触达宿主敏感路径 `[TBD]`。
+- 前置依赖：v1.40.0。07 回流：C6。
+
+**v1.42.0 — IM Serving 全链路 + Obsidian/Logseq 深集成**（ecosystem-integration track）— status: planned
+- 目标：C5 serving 侧补全，触达 KW 用户。
+- 关键功能：飞书/Slack/企微 SDK serving（Q&A 带可溯源 claims，C5b 续）；Obsidian 插件双向 sync + Logseq connector；web widget embed（域名白名单+限流，借鉴 WeKnora，差异化：答案带 provenance）。
+- 成功指标：IM Q&A 端到端带引用 `[TBD]`。
+- 前置依赖：v1.41.0。
+
+### Phase D — 生态与 agent-native 扩张（ecosystem / intelligence）
+
+**v1.43.0 — Coding-Harness 全平台 + Governed Code Intelligence**（ecosystem-integration track）— status: planned
+- 目标：在拥挤的 code-intelligence 赛道用"治理+溯源"差异化。
+- 关键功能：coding-harness skills for Codex/Cursor/OpenCode（C3 续，vs Potpie）；"governed code intelligence" 楔子（impact+staleness+provenance，vs CodeGraph/Graphify code-only）；tree-sitter AST zero-LLM 解析（planned）；code↔doc anchoring（claims 锚定 code symbol）。
+- 用户场景/竞品差距：CodeGraph 29k★/Graphify 55k★ 但 code-only 无治理/溯源——SAW 差异化。
+- 成功指标：AST 解析 zero-LLM `[TBD]`；impact 锚 claims。
+- 前置依赖：v1.42.0。
+
+**v1.44.0 — Token Optimizer 产品化（成本层）**（intelligence-adaptation track）— status: planned
+- 目标：把已有 Token Optimizer（65% 理论节省）产品化为成本层，直击 OpenClaw token 黑洞 / $47k 跑飞痛点。
+- 关键功能（摘要级，5 条）：
+  1. token ledger served 层（Anatomy/Cerebrum/BugLog/Tracker 暴露为 `/api/v1/tokens` REST + `saw_tokens` MCP，agent 可查自身消耗）
+  2. cost dashboard（per-session/workspace/agent token 消耗+理论节省+预算告警）
+  3. context-compaction（自动蒸馏过期/低价值 context，差异化：compaction 锚定可信 claims，非无差别压缩——压缩后仍可溯源）
+  4. token budget 策略（per-agent/per-workspace 预算+超限自动降级到更便宜模型 tier）
+  5. 重复读检测+提示（Session Tracker 升级：检测 agent 重复读同一文件→提示用已索引 claim，直击 OpenClaw system-prompt 底噪 + 重复探索黑洞）
+- 用户场景/竞品差距：OpenClaw 月 $3600、多 agent $47k——成本危机。SAW 现成基建产品化。
+- 成功指标：context-compaction 降 token `[TBD]`。
+- 前置依赖：v1.43.0。
+
+**v1.45.0 — Deep Research v2 + Web Grounding**（intelligence-adaptation track）— status: planned
+- 目标：A4 深度研究升级到多步+web grounding。
+- 关键功能：Scholar deep-research 多步（web 搜索+库内 claims+logical-symbolic reasoner→可溯源报告）；web-grounded claim 摄入（URL→claim 带 freshness timer+source authority）；研究报告 provenance 导出。
+- 成功指标：研究报告带 ≥N 可溯源 claims `[TBD]`。
+- 前置依赖：v1.44.0。07 回流：A4 续。
+
+**v1.46.0 — Agent Self-Evolution + Dreaming**（intelligence-adaptation track）— status: planned
+- 目标：agent 自我演进，差异化锚定 receipt。
+- 关键功能：skill 沉淀引擎（重复成功路径→skill，借鉴 EverOS，差异化：锚定 claims+receipt）；"dreaming" 离线 reconcile（批量 Guardian freshness/矛盾/expire，借鉴 OpenAI Dreaming V3/Letta sleeptime，差异化：走治理引擎+receipt）；auto-distill trends。
+- 成功指标：dreaming 跑 ≥1 周期无回归 `[TBD]`。
+- 前置依赖：v1.45.0。
+
+### Phase E — 平台收口与 v2.0 跃迁
+
+**v1.47.0 — Observability v2（Langfuse-grade）+ A2A**（platform-team track）— status: planned
+- 目标：D1 trace 升级到 Langfuse 级 + A2A 适配。
+- 关键功能：Langfuse/W3C traceparent 全链路（D1 续，OpenTelemetry 导出）；A2A 协议适配器（agent 间通信带 provenance 标签）；per-claim lifecycle 可观测（freshness/置信/矛盾 over time）。
+- 前置依赖：v1.46.0。07 回流：D1 续。
+
+**v1.48.0 — Federated Knowledge Graph v0（跨实例联邦）**（ecosystem-integration track）— status: planned
+- 目标：v3.0 生态种子，跨 SAW 实例联邦。
+- 关键功能：联邦查询跨实例（用 v1.37 exchange 格式）；跨实例矛盾检测；联邦信任策略（哪些实例的 claim 在何级别被信）。
+- 前置依赖：v1.47.0。
+
+**v1.49.0 — Pre-v2.0 硬化 + 迁移工具**（core-trust track）— status: planned
+- 目标：v2.0 MAJOR 前奏，硬化 + 迁移就绪。
+- 关键功能：v2.0 breaking 变更 deprecation 警告；迁移指南 + `saw migrate v2` 工具；coverage→75%；property/fuzz 测试基建（audit §6 补位，hypothesis/atheris）。
+- 前置依赖：v1.48.0。
+
+**v1.50.0 — v2.0 RC + 统一 Context API freeze**（intelligence-adaptation track）— status: planned
+- 目标：冻结统一 Structured Context API 面，发 v2.0.0-rc.1。
+- 关键功能：freeze 统一 Context API（v1.35 演进）；claim exchange 格式 v1 stable；评估 v2.0 是否含 breaking SDK（marketplace v2）→ 若 breaking 则推到 v2.0.0。
+- 前置依赖：v1.49.0。
+
+**v2.0.0 — 平台化 MAJOR（仅真实 breaking 时 bump）**（platform-team track）— status: planned
+- 目标：SAW 成为可自托管、多租户的可信知识编译平台。**⚠️ 按 §1.1：仅当 06 验证到真实不兼容 API 变更**（统一 Context API 移除旧 QueryEngine 签名 / claim exchange 格式替换内部表示 / marketplace v2 SDK breaking）才 bump MAJOR。若 v1.50 仅 additive → 实际发 v1.50.0 MINOR，v2.0.0 继续推迟到真实 breaking。战略号 v2.0 是叙事愿景，不是确定 tag。
+- 关键能力跃迁：多租户平台生产级、治理即平台原语、marketplace v2、claim 互操作标准 v1、零停机升级。
+- 预期市场位置：local-first + self-hosted 可信知识编译平台开源标杆，agent 生态默认可信后端候选。
+- 逼近说明：v1.x 序列（v1.31–v1.50）逐步逼近 v2.0；workspace 三闭环(v1.5–1.7)+per-request ws(v1.18) 已铺隔离地基，v1.31–v1.50 把溯源/治理/平台/生态补齐，v2.0.0 是否 bump 取决于是否引入不兼容 API。
+
+### v2.0 后演进（Phase F–H，v2.1 → v3.3，向 v3.0 生态/开放 + 功能饱和）
+
+> 续推 v2.0 之后至功能饱和。SemVer 续编：v2.x MINOR；v3.0.0 MAJOR 仅在真实 breaking（claim 交换格式 v1 stable 替换内部表示 + SDK v3 breaking）才 bump。每版本摘要级，详细 spec 留 01/03。
+
+### Phase F — 生态深化与标准化（v2.1–v2.4，ecosystem / platform）
+
+**v2.1.0 — Marketplace v2 + 多语言 SDK**（ecosystem-integration track）— status: planned
+- 目标：Post-2.0 生态扩展，第三方插件/连接器激增 + 多语言 SDK 降低接入门槛。
+- 关键功能：marketplace v2（第三方插件 registry + 评分+签名校验，借鉴 WeKnora/ClawHub，差异化：插件操作产 receipt）；多语言 SDK（Python canonical + TypeScript + Rust，借鉴 cognee 多 SDK，差异化：SDK 内置 provenance 验证调用）；连接器长尾（社区贡献 GitHub/Notion/Slack/飞书/Jira/Confluence connector）；agent skill 市场。
+- 成功指标：第三方插件 ≥N 上架 `[TBD]`；TS/Rust SDK 可调核心 API。
+- 前置依赖：v2.0.0。
+
+**v2.2.0 — 联邦生产化 + Claim 互操作标准提案**（ecosystem-integration track）— status: planned
+- 目标：跨实例联邦从 v0 到生产，claim 互操作标准外部化。
+- 关键功能：联邦查询生产级（跨 SAW 实例，用 v1.37/v1.50 exchange 格式，带缓存+一致性）；跨实例矛盾仲裁（联邦矛盾触发 Guardian reconcile）；claim 互操作标准草案 v1 外部化（向 standards body/W3C-style 提案）；联邦信任策略 UI。
+- 成功指标：联邦查询跨实例 P95 `[TBD]`；标准草案发布。
+- 前置依赖：v2.1.0。
+
+**v2.3.0 — Governance-as-a-Service（治理即服务）**（platform-team track）— status: planned
+- 目标：把置信/新鲜度/矛盾/receipt 作为可嵌入外部 RAG/agent 的 API 服务——差异化"治理层可嵌入"，vs 云 RAG 黑盒。
+- 关键功能：governance sidecar（外部 RAG 可调 `saw_verify`/`saw_freshness`/`saw_contradicts` API 给自己的 chunk 加治理标签）；governance SDK（嵌入任意 agent 框架的 middleware）；治理标签同步（外部 chunk→SAW claim 双向映射）。
+- 用户场景/竞品差距：企业已有 RAG 但无治理——SAW 作治理层 sidecar 嵌入，不要求迁移。云 RAG 黑盒无此能力。
+- 成功指标：sidecar 可给外部 chunk 打置信+新鲜度 `[TBD]`。
+- 前置依赖：v2.2.0。
+
+**v2.4.0 — 多模态编译**（intelligence-adaptation track）— status: planned
+- 目标：把编译能力从文本扩到多模态，claim 锚定原文位置。
+- 关键功能：image claim 抽取（图表/流程图→claim 锚定像素区域+VLM 描述）；audio/video 转录→claim（时间戳锚定，借鉴 VideoRAG，差异化：锚定+receipt）；table 结构化抽取（表格→claim 保留行列结构）；多模态 wiki 页（混合文本/图/表，可溯源）。
+- 用户场景/竞品差距：RAG-Anything/VideoRAG 多模态但无编译/治理；SAW 多模态 claim 可溯源+置信。
+- 成功指标：多模态 claim 可锚定原文位置 `[TBD]`。
+- 前置依赖：v2.3.0。
+
+### Phase G — 自治知识体与 v3.0 跃迁（v2.5–v2.8 + v3.0）
+
+**v2.5.0 — Agent Skill 市场与分享**（ecosystem-integration track）— status: planned
+- 目标：skill 作为可分享资产，携带 provenance。
+- 关键功能：skill exchange format（skill 包含步骤+依赖+provenance 链，借鉴 ClawHub/SkillHub，差异化：skill 锚定库内 claims+受治理）；skill 分享/安装 CLI；skill 版本+签名；社区 skill registry。
+- 成功指标：外部 skill 可装+跑+溯源 `[TBD]`。
+- 前置依赖：v2.4.0。
+
+**v2.6.0 — 自治知识体（self-governing knowledge body）**（core-trust track）— status: planned
+- 目标：Guardian 全自动闭环——知识体自演进：自动 expire/归档/置信晋升/矛盾仲裁，无需人工。
+- 关键功能：自动置信晋升（单源→交叉验证→人工验证 的自动升级路径，复用 v1.31 contamination scan）；自动 expire/归档（过期 claim 自动降权+归档，freshness 驱动）；矛盾仲裁（多源矛盾自动 reconcile 或标记待人工，写 contradicts 边+receipt）；自治策略配置（per-workspace 治理规则）。
+- 用户场景/竞品差距：知识库"自己维护自己"——cognee/Letta 有记忆整理但无四层治理闭环。
+- 成功指标： Guardian 跑 ≥1 周期自动晋升/expire/仲裁 `[TBD]`。
+- 前置依赖：v2.5.0。
+
+**v2.7.0 — 联邦信任网络**（ecosystem-integration track）— status: planned
+- 目标：跨实例 trust scoring + receipt notarization 共识，local-first 优先。
+- 关键功能：跨实例 trust scoring（实例声誉——哪些实例的 claim 更可信，基于历史 receipt 验证率）；receipt notarization 共识（关键 claim 的 receipt 跨实例公证，借鉴 blockchain notarization 但 local-first，不依赖公链）；信任策略可配。
+- 成功指标：跨实例信任分可计算+生效 `[TBD]`。
+- 前置依赖：v2.6.0。
+
+**v2.8.0 — 知识图谱标准提案**（core-trust track）— status: planned
+- 目标：SAW claim graph schema 作为开放标准草案 v1（含 ontology/状态轴/receipt 模型）。
+- 关键功能：claim graph schema v1 草案（claim/证据/receipt/置信/新鲜度/矛盾边/ontology 的开放序列化）；与 RDF/SPG 互操作映射；标准参考实现（SAW 自身）；标准文档+一致性测试套件。
+- 用户场景/竞品差距：定义"可验证知识"的互操作标准之一——云 RAG 黑盒之外的可信替代。
+- 成功指标：schema 草案发布+≥1 第三方实现 `[TBD]`。
+- 前置依赖：v2.7.0。
+
+**v3.0.0 — 生态/开放 MAJOR（范式跃迁）**（ecosystem-integration track）— status: planned
+- 目标：从产品到生态——claim 开放交换格式成标准，第三方 agent 即插即用接入治理层，治理能力以 API 服务化输出。**⚠️ 按 §1.1：仅当 06 验证到真实 breaking**（claim 交换格式 v1 stable 替换内部表示 + SDK v3 breaking + 治理 API surface 重构）才 bump MAJOR。若 v2.8 仅 additive → 实际发 v2.8.0 MINOR，v3.0.0 继续推迟到真实 breaking。
+- 关键能力跃迁：claim/证据开放交换格式成互操作标准、第三方 agent 即插即用接入治理层、治理能力以 API 服务化输出、联邦信任网络生产级。
+- 预期市场位置：定义"可验证知识"的互操作标准之一，云上 RAG 黑盒之外的可信替代。
+- 前置依赖：v2.8.0。
+
+### Phase H — 远期方向（v3.1+，方向性，功能饱和后）
+
+- **v3.1.0** — 行业垂直合规包（医疗 HIPAA/金融 SOX-2/法律 ontology 包，复用 v1.32 compliance tier，per-行业 schema + 审计模板）。
+- **v3.2.0** — 边缘部署（edge/local-first 极致：离线自治+按需联邦，弱网/断网可用，桌面端作联邦节点）。
+- **v3.3.0** — 知识资产经济（claim attribution/许可/计费——可信知识作为可交易资产，差异化：provenance 使知识可 attribution，为数据要素流通提供可信底座）。
+- **远期愿景**：见 §4——SAW 成为 AI agent 与人类共用的、可验证可溯源可治理的本地知识编译层；护城河=溯源+治理+数据主权三耦合。
+
 ## 3. 3 年路径（大版本里程碑）
 
 > 主题演进与关键能力跃迁。战略主题号是叙事愿景，不是确定 tag——实际发布号按 1.1 从 v1.9.0 续编增量，只在真实 breaking/范式跃迁发生时才到达 v2.0/v3.0。
 
 ### v2.0 — 平台化（约第 2 年）
 
-- **方向主题**：SAW 成为可自托管、多租户的"可信知识编译平台"。
-- **关键能力跃迁**：多租户隔离生产级、治理即平台原语（暴露给第三方插件/连接器）、插件/连接器 marketplace 雏形、部署与升级零停机。
-- **预期市场位置**：local-first + self-hosted 知识平台的开源标杆，AI agent 生态的默认可信后端候选。
-- **逼近说明**：当前 v1.x 序列正逐步逼近 v2.0；workspace 三闭环（v1.5–v1.7）已铺好隔离地基，v2.0.0 周期是否真正 bump MAJOR 取决于是否引入不兼容 API 变更。
+- **方向主题**：SAW 成为可自托管、多租户的"可信知识编译平台"——**agent 生态的 Structured Context Infrastructure**（vector+graph+ontology+state+permission+action，2026.09 行业论点，SAW 架构本就覆盖）。
+- **关键能力跃迁**：多租户隔离生产级、治理即平台原语（暴露给第三方插件/连接器）、插件/连接器 marketplace v2 雏形、claim 互操作标准 v1、部署与升级零停机。
+- **预期市场位置**：local-first + self-hosted 知识平台的开源标杆，AI agent 生态的默认可信后端候选。调研支撑：2026 企业 agent 市场 449 亿→2029 3320 亿 RMB（CAGR 107%），《智能体规范 2026.05》把可信定为底线，97% 多 agent 系统从不做溯源验证——SAW 治理/provenance 是稀缺且政策对齐的楔子。
+- **逼近说明**：当前 v1.x 序列正逐步逼近 v2.0；workspace 三闭环（v1.5–v1.7）已铺好隔离地基，v1.31–v1.50 把溯源/治理/平台/生态补齐，v2.0.0 周期是否真正 bump MAJOR 取决于是否引入不兼容 API 变更（统一 Context API 移除旧签名 / claim exchange 格式替换 / marketplace v2 SDK breaking）。战略号 v2.0 是叙事愿景，**不是确定 tag**——在那之前按 SemVer 增量续编（v1.51/v1.52/…），诚实不强行 MAJOR。
 
 ### v3.0 — 生态 / 开放（约第 3 年）
 
 - **方向主题**：从产品走向生态——开放知识图谱标准与联邦。
 - **关键能力跃迁**：claim/证据的开放交换格式（跨 SAW 实例联邦）、知识图谱标准提案、第三方代理即插即用接入治理层、治理能力以 API 服务化输出。
 - **预期市场位置**：定义"可验证知识"的互操作标准之一，云上 RAG 黑盒之外的可信替代。
+- **逼近说明**：v2.6–v2.8（自治知识体→联邦信任网络→标准提案）逐步铺路；v3.0.0 是否 bump MAJOR 取决于 claim 交换格式 v1 stable 替换内部表示 + SDK v3 breaking + 治理 API surface 重构。战略号 v3.0 是叙事愿景，不是确定 tag——在那之前按 SemVer 增量续编（v2.9/v2.10/…），诚实不强行 MAJOR。
 
 ## 4. 长期愿景（3 年+）
 
@@ -440,7 +721,7 @@ SAW 的终局是**AI agent 与人类共用的、可验证、可溯源、可治�
 
 ## 5. 衔接声明
 
-- **01 PRD** 读本文件定位本版本主题；PRD front-matter 标 `roadmap_ref: ROADMAP` + `target_version`（如 v1.11.0）。v1.11.0 周期已闭环（released 2026-09-05）。v1.12.0 周期已闭环（released 2026-09-05，embedding 改用 OpenAI 风格 API + E2E 验证）。v1.13.0 周期已闭环（released 2026-09-06，E2E 收尾轮）。v1.14.0 周期已闭环（released 2026-09-06，semantic 性能优化：cache 阈值可配 + ANN 索引 hnswlib + benchmark cache.stats 真实度量）。v1.15.0 周期已闭环（released 2026-09-06，agent/link 能力：自定义 agent 角色 + L2 links apply + M2 agent 活动聚合）。v1.16.0 周期已闭环（released 2026-09-07，realtime 仪表盘 v4.3：agent roster+activity dashboard + workflow runtime view + realtime polling/WS）。v1.17.0 周期已闭环（released 2026-09-07，desktop 完成 v4.4：Tauri→1.0 + 集成 web 仪表盘 + .app/.dmg build + port convergence）。v1.18.0 周期已闭环（released 2026-09-07，per-request workspace contextvar injection + O4 tag flow convention）。v1.18.1 周期已闭环（released 2026-09-08，fix: AUDIT-F-08/W1 sub-service contextvar + W2 E2E test）。**v1.19.0 周期已闭环**（released 2026-09-09，production hardening：links rollback / agents export-import / agents activity 路由 bug 修复 / T4 activity-tracker 解耦 / S4 engine.py 语义搜索拆分 + CLI/govern 测试补强；additive → MINOR）。**v1.20.0–v1.26.0 周期已闭环**（released 2026-09-09/15，竞品借鉴 13 项 ship：C3 skills / B1 contradicts 边 / C1+C2 resolve+record / A1 wiki distill / B2 rethink / A2 communities / D1 langfuse / C4 Agent File(v1.19) / A3 DRIFT / B3 status / B4 NLP / B5 auto-feedback / D3 heartbeat）。下一候选 **v1.27.0+**（下一年路径见上文「下一年路径 v1.27.0+」节——运维 dashboard+调度 / Obsidian+i18n / core-trust+perf / 深度研究+IM，待 01 PRD 决策）。
+- **01 PRD** 读本文件定位本版本主题；PRD front-matter 标 `roadmap_ref: ROADMAP` + `target_version`（如 v1.11.0）。v1.11.0 周期已闭环（released 2026-09-05）。v1.12.0 周期已闭环（released 2026-09-05，embedding 改用 OpenAI 风格 API + E2E 验证）。v1.13.0 周期已闭环（released 2026-09-06，E2E 收尾轮）。v1.14.0 周期已闭环（released 2026-09-06，semantic 性能优化：cache 阈值可配 + ANN 索引 hnswlib + benchmark cache.stats 真实度量）。v1.15.0 周期已闭环（released 2026-09-06，agent/link 能力：自定义 agent 角色 + L2 links apply + M2 agent 活动聚合）。v1.16.0 周期已闭环（released 2026-09-07，realtime 仪表盘 v4.3：agent roster+activity dashboard + workflow runtime view + realtime polling/WS）。v1.17.0 周期已闭环（released 2026-09-07，desktop 完成 v4.4：Tauri→1.0 + 集成 web 仪表盘 + .app/.dmg build + port convergence）。v1.18.0 周期已闭环（released 2026-09-07，per-request workspace contextvar injection + O4 tag flow convention）。v1.18.1 周期已闭环（released 2026-09-08，fix: AUDIT-F-08/W1 sub-service contextvar + W2 E2E test）。**v1.19.0 周期已闭环**（released 2026-09-09，production hardening：links rollback / agents export-import / agents activity 路由 bug 修复 / T4 activity-tracker 解耦 / S4 engine.py 语义搜索拆分 + CLI/govern 测试补强；additive → MINOR）。**v1.20.0–v1.26.0 周期已闭环**（released 2026-09-09/15，竞品借鉴 13 项 ship：C3 skills / B1 contradicts 边 / C1+C2 resolve+record / A1 wiki distill / B2 rethink / A2 communities / D1 langfuse / C4 Agent File(v1.19) / A3 DRIFT / B3 status / B4 NLP / B5 auto-feedback / D3 heartbeat）。下一候选 **v1.31.0+**（下下年路径见上文 §2.6「下下年路径 v1.31.0+」节——Provenance API / Compliance Tier / Structured Context API / 平台化 / 生态 / v2.0 逼近，2026-09-18 调研更新，待 01 PRD 决策）。
 - **06 release** 用「版本号规则」节（SemVer/Tag/预发布/多平台一致性），不另立方案。v1.17.0 为 additive → 发 MINOR，不强行 MAJOR。
 - **07 复盘** findings（status=open/deferred）回流更新本文件下一版本主题与版本-主题表 status（planned→in-progress→shipped→deferred）。v1.12.0 findings（N1/N4）已清掉。v1.13.0 findings（Q1/Q2/Q3 + O3）已清掉，O1 改善→R1。v1.14.0 findings（R1/R2）已清掉，R4 改善→S3。v1.15.0 findings（M2/L2 + 自定义角色）已清掉，O2 改善（67.34→67.42%）。v1.16.0 findings（realtime 仪表盘）已清掉，O2 持平（67.42%）。v1.17.0 findings：U4（desktop 0.1.0）已清掉。v1.18.0 findings：N3/K2（per-request workspace contextvar）已清掉，O4（tag flow convention）已清掉。**9 轮 backlog 清零达成**。新增 W1（sub-service _workspace_id 未读 contextvar P1）已修复→v1.18.1 fix / W2（per-request ws 未 E2E P2）已修复→v1.18.1 fix / W3（release-manager.md gitignored P3 info）。当前回流 findings：O2 + R3 + S1/S2/S3/S4 + T1/T2/T3/T4 + U1/U2/U3/U5/U6 + V1/V2/V3。
 - **lifecycle**：读 `.csp/lifecycle-state.json` 对齐在跑版本；本文件不写 lifecycle（外环）。v1.18.0 已 released（2026-09-07）。

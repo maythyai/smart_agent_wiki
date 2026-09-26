@@ -1,8 +1,8 @@
 ---
 id: STRATEGY
 project: smart-agent-wiki
-version: 1.0
-last_updated: 2026-09-02
+version: 1.1
+last_updated: 2026-09-18
 status: active
 tracks: [core-trust, platform-team, ecosystem-integration, intelligence-adaptation]
 north_star: trustworthy-claim coverage
@@ -35,6 +35,8 @@ see_also: docs/strategy/ROADMAP.md | docs/prd/PRD-INDEX.md | .csp/manifest.json
 - **可扩展**：插件系统 + 连接器框架（GitHub/Notion/Slack/Discord/飞书/企业微信/Logseq）。
 
 **为什么是现在**：AI agent 大规模落地，"答案可信度"成为生产级瓶颈；MCP 协议成熟，local-first + agent-native 的组合窗口打开。错过窗口，知识层会被云上 RAG 黑盒统一吞没。
+
+> **2026-09 调研验证**：① 行业论点收敛于 "Structured Context Infrastructure"（vector+graph+ontology+state+permission+action）——SAW 架构本就覆盖六要素，领先于话语（详见 `docs/analysis/COMPETITIVE-REFERENCE.md` §6.3）。② 信任危机显性化：97% 多 agent 系统从不做溯源验证（苏黎世联邦理工+KPMG 2026.09）；2026.05《智能体规范》把可信/安全/可靠定为产业底线。③ 中国企业 Agent 市场 CAGR 107%（→2029 3320 亿 RMB），记忆/知识中间件是 Layer 2 开放窗口。→ SAW 的**溯源+治理+数据主权**三耦合是稀缺、政策对齐、可防御的楔子。下一迭代 ROADMAP v1.31+ 即落此楔子（Provenance API → Structured Context API → 平台化 v2.0）。
 
 ## 3. Who it's for（为谁）
 

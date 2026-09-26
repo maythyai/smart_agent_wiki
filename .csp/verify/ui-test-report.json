@@ -1,0 +1,364 @@
+{
+  "base": "http://127.0.0.1:9133",
+  "openapi_path_count": 114,
+  "routes_audited": 12,
+  "frontend_api_called_count": 0,
+  "hidden_backend_api_uncalled": [
+    "/api/admin/policy/reload",
+    "/api/auth/login",
+    "/api/auth/logout",
+    "/api/auth/me",
+    "/api/auth/mode",
+    "/api/auth/refresh",
+    "/api/auth/register",
+    "/api/capture",
+    "/api/dashboard/stats",
+    "/api/entity-types",
+    "/api/entity-types/{type_id}",
+    "/api/graph",
+    "/api/graph/{entity}",
+    "/api/impact/",
+    "/api/impact/{target}",
+    "/api/impact/{target}/graph",
+    "/api/import/markdown",
+    "/api/import/zip",
+    "/api/onboarding/seed",
+    "/api/onboarding/status",
+    "/api/pages",
+    "/api/pages/{slug}",
+    "/api/pages/{slug}/backlinks",
+    "/api/pages/{slug}/outlinks",
+    "/api/pages/{slug}/properties",
+    "/api/pages/{slug}/related",
+    "/api/research",
+    "/api/search",
+    "/api/search/suggestions",
+    "/api/templates",
+    "/api/templates/{template_id}",
+    "/api/templates/{template_id}/apply",
+    "/api/timeline",
+    "/api/timeline/daily-note",
+    "/api/v1/agents",
+    "/api/v1/agents/{agent_name}/activity",
+    "/api/v1/blast-radius",
+    "/api/v1/claims/{claim_id}",
+    "/api/v1/claims/{claim_id}/confidence",
+    "/api/v1/compare",
+    "/api/v1/compile",
+    "/api/v1/connectors/{platform}/reauth",
+    "/api/v1/connectors/{platform}/settings",
+    "/api/v1/contradictions",
+    "/api/v1/contradictions/{contradiction_id}/resolve",
+    "/api/v1/distill",
+    "/api/v1/feedback",
+    "/api/v1/feeds",
+    "/api/v1/feeds/export",
+    "/api/v1/feeds/import",
+    "/api/v1/feeds/{feed_id}",
+    "/api/v1/feeds/{feed_id}/entries",
+    "/api/v1/feeds/{feed_id}/poll",
+    "/api/v1/health",
+    "/api/v1/health/status",
+    "/api/v1/health/{connector_id}",
+    "/api/v1/ingest",
+    "/api/v1/ingest/{job_id}/status",
+    "/api/v1/integrations/dashboard",
+    "/api/v1/integrations/{platform}",
+    "/api/v1/integrations/{platform}/errors",
+    "/api/v1/integrations/{platform}/reauth",
+    "/api/v1/integrations/{platform}/sync",
+    "/api/v1/lint",
+    "/api/v1/logseq/connect",
+    "/api/v1/logseq/status",
+    "/api/v1/logseq/sync",
+    "/api/v1/logseq/watch/start",
+    "/api/v1/logseq/watch/stop",
+    "/api/v1/oauth/platforms",
+    "/api/v1/oauth/{platform}/authorize",
+    "/api/v1/oauth/{platform}/callback",
+    "/api/v1/prune",
+    "/api/v1/query",
+    "/api/v1/status",
+    "/api/v1/sync/logs",
+    "/api/v1/sync/status",
+    "/api/v1/sync/status/{connector_id}",
+    "/api/v1/sync/trigger-all",
+    "/api/v1/sync/trigger/{connector_id}",
+    "/api/v1/trends",
+    "/api/v1/verify",
+    "/api/v1/webhooks/platforms",
+    "/api/v1/webhooks/{platform}",
+    "/api/v1/wip",
+    "/api/v1/workflows",
+    "/api/v1/workflows/{workflow_id}/status",
+    "/api/webhook/query",
+    "/connectors/github/health",
+    "/connectors/github/rate-limit",
+    "/connectors/github/repositories",
+    "/connectors/github/repositories/select",
+    "/connectors/github/repositories/selected",
+    "/connectors/github/repositories/{repository_id}",
+    "/connectors/github/status",
+    "/connectors/notion/databases",
+    "/connectors/notion/databases/select",
+    "/connectors/notion/databases/selected",
+    "/connectors/notion/databases/{database_id}/mapping",
+    "/connectors/notion/sync/conflicts",
+    "/connectors/notion/sync/conflicts/{conflict_id}/resolve",
+    "/connectors/notion/sync/poll/start",
+    "/connectors/notion/sync/poll/stop",
+    "/connectors/notion/sync/pull",
+    "/connectors/notion/sync/push",
+    "/connectors/notion/sync/status",
+    "/connectors/notion/sync/trigger",
+    "/health",
+    "/health/live",
+    "/health/ready",
+    "/metrics",
+    "/webhooks/github",
+    "/webhooks/github/health",
+    "/webhooks/github/reconcile"
+  ],
+  "route_results": [
+    {
+      "route": "/",
+      "errors": [],
+      "http_status": 404,
+      "final_url": "http://127.0.0.1:9133/",
+      "title": "",
+      "h1_count": 0,
+      "has_main_content": false,
+      "main_preview": "",
+      "button_count": 0,
+      "buttons_sample": [],
+      "empty_text_buttons": [],
+      "console_errors": [
+        "error:Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "net_4xx_5xx": [
+        "404 /"
+      ],
+      "api_calls": []
+    },
+    {
+      "route": "/search",
+      "errors": [],
+      "http_status": 404,
+      "final_url": "http://127.0.0.1:9133/search",
+      "title": "",
+      "h1_count": 0,
+      "has_main_content": false,
+      "main_preview": "",
+      "button_count": 0,
+      "buttons_sample": [],
+      "empty_text_buttons": [],
+      "console_errors": [
+        "error:Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "net_4xx_5xx": [
+        "404 /search"
+      ],
+      "api_calls": []
+    },
+    {
+      "route": "/graph",
+      "errors": [],
+      "http_status": 404,
+      "final_url": "http://127.0.0.1:9133/graph",
+      "title": "",
+      "h1_count": 0,
+      "has_main_content": false,
+      "main_preview": "",
+      "button_count": 0,
+      "buttons_sample": [],
+      "empty_text_buttons": [],
+      "console_errors": [
+        "error:Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "net_4xx_5xx": [
+        "404 /graph"
+      ],
+      "api_calls": []
+    },
+    {
+      "route": "/pages",
+      "errors": [],
+      "http_status": 404,
+      "final_url": "http://127.0.0.1:9133/pages",
+      "title": "",
+      "h1_count": 0,
+      "has_main_content": false,
+      "main_preview": "",
+      "button_count": 0,
+      "buttons_sample": [],
+      "empty_text_buttons": [],
+      "console_errors": [
+        "error:Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "net_4xx_5xx": [
+        "404 /pages"
+      ],
+      "api_calls": []
+    },
+    {
+      "route": "/dashboard",
+      "errors": [],
+      "http_status": 404,
+      "final_url": "http://127.0.0.1:9133/dashboard",
+      "title": "",
+      "h1_count": 0,
+      "has_main_content": false,
+      "main_preview": "",
+      "button_count": 0,
+      "buttons_sample": [],
+      "empty_text_buttons": [],
+      "console_errors": [
+        "error:Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "net_4xx_5xx": [
+        "404 /dashboard"
+      ],
+      "api_calls": []
+    },
+    {
+      "route": "/integrations",
+      "errors": [],
+      "http_status": 404,
+      "final_url": "http://127.0.0.1:9133/integrations",
+      "title": "",
+      "h1_count": 0,
+      "has_main_content": false,
+      "main_preview": "",
+      "button_count": 0,
+      "buttons_sample": [],
+      "empty_text_buttons": [],
+      "console_errors": [
+        "error:Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "net_4xx_5xx": [
+        "404 /integrations"
+      ],
+      "api_calls": []
+    },
+    {
+      "route": "/import",
+      "errors": [],
+      "http_status": 404,
+      "final_url": "http://127.0.0.1:9133/import",
+      "title": "",
+      "h1_count": 0,
+      "has_main_content": false,
+      "main_preview": "",
+      "button_count": 0,
+      "buttons_sample": [],
+      "empty_text_buttons": [],
+      "console_errors": [
+        "error:Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "net_4xx_5xx": [
+        "404 /import"
+      ],
+      "api_calls": []
+    },
+    {
+      "route": "/templates",
+      "errors": [],
+      "http_status": 404,
+      "final_url": "http://127.0.0.1:9133/templates",
+      "title": "",
+      "h1_count": 0,
+      "has_main_content": false,
+      "main_preview": "",
+      "button_count": 0,
+      "buttons_sample": [],
+      "empty_text_buttons": [],
+      "console_errors": [
+        "error:Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "net_4xx_5xx": [
+        "404 /templates"
+      ],
+      "api_calls": []
+    },
+    {
+      "route": "/timeline",
+      "errors": [],
+      "http_status": 404,
+      "final_url": "http://127.0.0.1:9133/timeline",
+      "title": "",
+      "h1_count": 0,
+      "has_main_content": false,
+      "main_preview": "",
+      "button_count": 0,
+      "buttons_sample": [],
+      "empty_text_buttons": [],
+      "console_errors": [
+        "error:Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "net_4xx_5xx": [
+        "404 /timeline"
+      ],
+      "api_calls": []
+    },
+    {
+      "route": "/login",
+      "errors": [],
+      "http_status": 404,
+      "final_url": "http://127.0.0.1:9133/login",
+      "title": "",
+      "h1_count": 0,
+      "has_main_content": false,
+      "main_preview": "",
+      "button_count": 0,
+      "buttons_sample": [],
+      "empty_text_buttons": [],
+      "console_errors": [
+        "error:Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "net_4xx_5xx": [
+        "404 /login"
+      ],
+      "api_calls": []
+    },
+    {
+      "route": "/onboarding",
+      "errors": [],
+      "http_status": 404,
+      "final_url": "http://127.0.0.1:9133/onboarding",
+      "title": "",
+      "h1_count": 0,
+      "has_main_content": false,
+      "main_preview": "",
+      "button_count": 0,
+      "buttons_sample": [],
+      "empty_text_buttons": [],
+      "console_errors": [
+        "error:Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "net_4xx_5xx": [
+        "404 /onboarding"
+      ],
+      "api_calls": []
+    },
+    {
+      "route": "/definitely-not-a-route-xyz",
+      "errors": [],
+      "http_status": 404,
+      "final_url": "http://127.0.0.1:9133/definitely-not-a-route-xyz",
+      "title": "",
+      "h1_count": 0,
+      "has_main_content": false,
+      "main_preview": "",
+      "button_count": 0,
+      "buttons_sample": [],
+      "empty_text_buttons": [],
+      "console_errors": [
+        "error:Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "net_4xx_5xx": [
+        "404 /definitely-not-a-route-xyz"
+      ],
+      "api_calls": []
+    }
+  ]
+}

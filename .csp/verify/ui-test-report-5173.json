@@ -1,0 +1,428 @@
+{
+  "base": "http://localhost:5173",
+  "openapi_path_count": 0,
+  "routes_audited": 12,
+  "frontend_api_called_count": 10,
+  "hidden_backend_api_uncalled": [],
+  "route_results": [
+    {
+      "route": "/",
+      "errors": [],
+      "http_status": 200,
+      "final_url": "http://localhost:5173/",
+      "title": "Smart Agent Wiki",
+      "h1_count": 1,
+      "has_main_content": true,
+      "main_preview": "Welcome to Smart Agent Wiki  A next-generation intelligent multi-agent knowledge platform.  Search  Search your knowledge base  Knowledge Graph  Visualize knowl",
+      "button_count": 1,
+      "buttons_sample": [
+        {
+          "text": "Search\n⌘K",
+          "disabled": false
+        }
+      ],
+      "empty_text_buttons": [],
+      "console_errors": [
+        "error:Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "error:Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "net_4xx_5xx": [
+        "404 /api/auth/mode",
+        "404 /api/auth/mode"
+      ],
+      "api_calls": [
+        "/api/auth/mode"
+      ]
+    },
+    {
+      "route": "/search",
+      "errors": [],
+      "http_status": 200,
+      "final_url": "http://localhost:5173/search",
+      "title": "Smart Agent Wiki",
+      "h1_count": 2,
+      "has_main_content": true,
+      "main_preview": "Search Search  Enter a search term to find knowledge.",
+      "button_count": 1,
+      "buttons_sample": [
+        {
+          "text": "Search\n⌘K",
+          "disabled": false
+        }
+      ],
+      "empty_text_buttons": [],
+      "console_errors": [
+        "error:Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "error:Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "net_4xx_5xx": [
+        "404 /api/auth/mode",
+        "404 /api/auth/mode"
+      ],
+      "api_calls": [
+        "/api/auth/mode"
+      ]
+    },
+    {
+      "route": "/graph",
+      "errors": [
+        "NAV_FATAL: Locator.inner_text: Error: strict mode violation: locator(\"main\") resolved to 2 elements:\n    1) <main id=\"main-content\" class=\"flex-1 pt-14 px-4 md:px-6 dark:bg-gray-900 dark:text-white\">…</main> aka get_by_text(\"GraphKnowledge GraphLoading\")\n    2) <main class=\"flex-1 relative\">…</main> aka get_by_text(\"Loading graph data...Loading\")\n\nCall log:\n  - waiting for locator(\"main\")\n"
+      ],
+      "http_status": 200,
+      "final_url": "http://localhost:5173/graph",
+      "title": "Smart Agent Wiki",
+      "h1_count": 2
+    },
+    {
+      "route": "/pages",
+      "errors": [],
+      "http_status": 200,
+      "final_url": "http://localhost:5173/pages",
+      "title": "Smart Agent Wiki",
+      "h1_count": 2,
+      "has_main_content": true,
+      "main_preview": "Pages 所有页面 新建页面",
+      "button_count": 2,
+      "buttons_sample": [
+        {
+          "text": "Search\n⌘K",
+          "disabled": false
+        },
+        {
+          "text": "新建页面",
+          "disabled": false
+        }
+      ],
+      "empty_text_buttons": [],
+      "console_errors": [
+        "error:Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "error:Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "error:Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "error:Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "error:Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "error:Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "net_4xx_5xx": [
+        "404 /api/auth/mode",
+        "404 /api/auth/mode",
+        "404 /api/entity-types",
+        "404 /api/pages",
+        "404 /api/entity-types",
+        "404 /api/pages"
+      ],
+      "api_calls": [
+        "/api/auth/mode",
+        "/api/entity-types",
+        "/api/pages"
+      ]
+    },
+    {
+      "route": "/dashboard",
+      "errors": [],
+      "http_status": 200,
+      "final_url": "http://localhost:5173/dashboard",
+      "title": "Smart Agent Wiki",
+      "h1_count": 2,
+      "has_main_content": true,
+      "main_preview": "Dashboard Agent Dashboard  Monitor agent status and workflow progress in real-time  Reconnecting...  Disconnected Reconnect  TOTAL PAGES  0  RECENT EDITS (24H) ",
+      "button_count": 6,
+      "buttons_sample": [
+        {
+          "text": "Search\n⌘K",
+          "disabled": false
+        },
+        {
+          "text": "Reconnect",
+          "disabled": false
+        },
+        {
+          "text": "View Graph",
+          "disabled": false
+        },
+        {
+          "text": "Search Pages",
+          "disabled": false
+        },
+        {
+          "text": "Manage Integrations",
+          "disabled": false
+        },
+        {
+          "text": "Run",
+          "disabled": false
+        }
+      ],
+      "empty_text_buttons": [],
+      "console_errors": [
+        "error:Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "error:Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "warning:WebSocket connection to 'ws://localhost:5173/ws/default' failed: WebSocket is closed before the connection is established.",
+        "error:WebSocket error: Event",
+        "error:Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "error:Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "error:Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "error:WebSocket connection to 'ws://localhost:5173/ws/default' failed: Error during WebSocket handshake: Unexpected response code: 403"
+      ],
+      "net_4xx_5xx": [
+        "404 /api/auth/mode",
+        "404 /api/auth/mode",
+        "404 /api/v1/workflows?limit=20",
+        "404 /api/v1/agents",
+        "404 /api/dashboard/stats",
+        "404 /api/dashboard/stats",
+        "404 /api/v1/workflows?limit=20",
+        "404 /api/v1/agents"
+      ],
+      "api_calls": [
+        "/api/auth/mode",
+        "/api/dashboard/stats",
+        "/api/v1/agents",
+        "/api/v1/workflows?limit=20"
+      ]
+    },
+    {
+      "route": "/integrations",
+      "errors": [],
+      "http_status": 200,
+      "final_url": "http://localhost:5173/integrations",
+      "title": "Smart Agent Wiki",
+      "h1_count": 2,
+      "has_main_content": true,
+      "main_preview": "Integrations Integration Dashboard  Manage platform connections and monitor sync status  Connecting... Not Found No Integrations  Connect platforms to sync your",
+      "button_count": 2,
+      "buttons_sample": [
+        {
+          "text": "Search\n⌘K",
+          "disabled": false
+        },
+        {
+          "text": "",
+          "disabled": false
+        }
+      ],
+      "empty_text_buttons": [
+        {
+          "text": "",
+          "disabled": false
+        }
+      ],
+      "console_errors": [
+        "error:Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "error:Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "warning:WebSocket connection to 'ws://localhost:5173/ws/integrations' failed: WebSocket is closed before the connection is established.",
+        "warning:WebSocket connection to 'ws://localhost:5173/ws/integrations' failed: WebSocket is closed before the connection is established.",
+        "warning:WebSocket connection to 'ws://localhost:5173/ws/integrations' failed: WebSocket is closed before the connection is established.",
+        "error:Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "warning:WebSocket connection to 'ws://localhost:5173/ws/integrations' failed: WebSocket is closed before the connection is established.",
+        "warning:WebSocket connection to 'ws://localhost:5173/ws/integrations' failed: WebSocket is closed before the connection is established."
+      ],
+      "net_4xx_5xx": [
+        "404 /api/auth/mode",
+        "404 /api/auth/mode",
+        "404 /api/v1/integrations/dashboard",
+        "404 /api/v1/integrations/dashboard"
+      ],
+      "api_calls": [
+        "/api/auth/mode",
+        "/api/v1/integrations/dashboard"
+      ]
+    },
+    {
+      "route": "/import",
+      "errors": [],
+      "http_status": 200,
+      "final_url": "http://localhost:5173/import",
+      "title": "Smart Agent Wiki",
+      "h1_count": 2,
+      "has_main_content": true,
+      "main_preview": "Import Import Knowledge  Import Markdown files or an Obsidian vault into your wiki  Drag and drop files here  .md files or .zip archive  Select .md Files Upload",
+      "button_count": 3,
+      "buttons_sample": [
+        {
+          "text": "Search\n⌘K",
+          "disabled": false
+        },
+        {
+          "text": "Select .md Files",
+          "disabled": false
+        },
+        {
+          "text": "Upload .zip Archive",
+          "disabled": false
+        }
+      ],
+      "empty_text_buttons": [],
+      "console_errors": [
+        "error:Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "error:Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "net_4xx_5xx": [
+        "404 /api/auth/mode",
+        "404 /api/auth/mode"
+      ],
+      "api_calls": [
+        "/api/auth/mode"
+      ]
+    },
+    {
+      "route": "/templates",
+      "errors": [],
+      "http_status": 200,
+      "final_url": "http://localhost:5173/templates",
+      "title": "Smart Agent Wiki",
+      "h1_count": 2,
+      "has_main_content": true,
+      "main_preview": "Templates Templates",
+      "button_count": 1,
+      "buttons_sample": [
+        {
+          "text": "Search\n⌘K",
+          "disabled": false
+        }
+      ],
+      "empty_text_buttons": [],
+      "console_errors": [
+        "error:Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "error:Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "error:Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "error:Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "net_4xx_5xx": [
+        "404 /api/auth/mode",
+        "404 /api/auth/mode",
+        "404 /api/templates",
+        "404 /api/templates"
+      ],
+      "api_calls": [
+        "/api/auth/mode",
+        "/api/templates"
+      ]
+    },
+    {
+      "route": "/timeline",
+      "errors": [],
+      "http_status": 200,
+      "final_url": "http://localhost:5173/timeline",
+      "title": "Smart Agent Wiki",
+      "h1_count": 2,
+      "has_main_content": true,
+      "main_preview": "Timeline Timeline  Chronological view of your knowledge base  Today's Note",
+      "button_count": 2,
+      "buttons_sample": [
+        {
+          "text": "Search\n⌘K",
+          "disabled": false
+        },
+        {
+          "text": "Today's Note",
+          "disabled": false
+        }
+      ],
+      "empty_text_buttons": [],
+      "console_errors": [
+        "error:Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "error:Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "error:Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "error:Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "error:Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "error:Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "net_4xx_5xx": [
+        "404 /api/auth/mode",
+        "404 /api/auth/mode",
+        "404 /api/timeline?limit=30",
+        "404 /api/entity-types",
+        "404 /api/entity-types",
+        "404 /api/timeline?limit=30"
+      ],
+      "api_calls": [
+        "/api/auth/mode",
+        "/api/entity-types",
+        "/api/timeline?limit=30"
+      ]
+    },
+    {
+      "route": "/login",
+      "errors": [],
+      "http_status": 200,
+      "final_url": "http://localhost:5173/login",
+      "title": "Smart Agent Wiki",
+      "h1_count": 1,
+      "has_main_content": false,
+      "main_preview": "",
+      "button_count": 1,
+      "buttons_sample": [
+        {
+          "text": "登录",
+          "disabled": false
+        }
+      ],
+      "empty_text_buttons": [],
+      "console_errors": [],
+      "net_4xx_5xx": [],
+      "api_calls": []
+    },
+    {
+      "route": "/onboarding",
+      "errors": [],
+      "http_status": 200,
+      "final_url": "http://localhost:5173/onboarding",
+      "title": "Smart Agent Wiki",
+      "h1_count": 1,
+      "has_main_content": false,
+      "main_preview": "",
+      "button_count": 2,
+      "buttons_sample": [
+        {
+          "text": "Get Started →",
+          "disabled": false
+        },
+        {
+          "text": "Skip",
+          "disabled": false
+        }
+      ],
+      "empty_text_buttons": [],
+      "console_errors": [
+        "error:Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "error:Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "net_4xx_5xx": [
+        "404 /api/onboarding/status",
+        "404 /api/onboarding/status"
+      ],
+      "api_calls": [
+        "/api/onboarding/status"
+      ]
+    },
+    {
+      "route": "/definitely-not-a-route-xyz",
+      "errors": [],
+      "http_status": 200,
+      "final_url": "http://localhost:5173/definitely-not-a-route-xyz",
+      "title": "Smart Agent Wiki",
+      "h1_count": 1,
+      "has_main_content": false,
+      "main_preview": "",
+      "button_count": 3,
+      "buttons_sample": [
+        {
+          "text": "返回首页",
+          "disabled": false
+        },
+        {
+          "text": "浏览所有页面",
+          "disabled": false
+        },
+        {
+          "text": "搜索",
+          "disabled": false
+        }
+      ],
+      "empty_text_buttons": [],
+      "console_errors": [],
+      "net_4xx_5xx": [],
+      "api_calls": []
+    }
+  ]
+}
