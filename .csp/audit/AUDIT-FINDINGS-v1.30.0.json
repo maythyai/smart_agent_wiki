@@ -16,83 +16,132 @@
   },
   "findings": [
     {
-      "id": "AUDIT-F-01", "severity": "P1", "category": "maintainability",
+      "id": "AUDIT-F-01",
+      "severity": "P1",
+      "category": "maintainability",
       "title": "God-files 膨胀（>600 行）",
       "evidence": "wc -l: src/saw/drivers/web/app.py 755; src/saw/code_graph/parser.py 677; src/saw/onboarding/starter_kits.py 673; src/saw/code_graph/store.py 671; src/saw/engines/compile/compiler.py 663; src/saw/connectors/github/connector.py 660; src/saw/engines/query/engine.py 631; src/saw/drivers/cli/commands/compile_cmd.py 608; src/saw/engines/collaborate/workflow_executor.py 605",
       "impact": "可维护性/审查难度，engine.py 已在 v1.19.0 拆过(881→635)但仍 >600",
-      "status": "open", "quick_fix": false, "ref_step": "Step1-static"
+      "status": "open",
+      "quick_fix": false,
+      "ref_step": "Step1-static"
     },
     {
-      "id": "AUDIT-F-02", "severity": "P0", "category": "test-failure/consistency",
+      "id": "AUDIT-F-02",
+      "severity": "P0",
+      "category": "test-failure/consistency",
       "title": "test_all_tools_registered 失败：MCP 工具数 34≠35",
       "evidence": "pytest tests/unit/drivers/test_mcp_tools.py::TestAllToolsCount::test_all_tools_registered → AssertionError: Expected 34 tools, got 35. 新增 MCP 工具未同步更新 expected_tools 列表",
       "impact": "CI 宣称-实现不一致；README 宣称 56+/64+ tools，测试断言 34，实际 35——三处对不上",
-      "status": "open", "quick_fix": true, "ref_step": "Step1-static",
-      "fix_hint": "更新 tests/unit/drivers/test_mcp_tools.py expected_tools 列表 +1 工具，并三处(README/test/manifest)对齐真实工具数"
+      "status": "closed",
+      "quick_fix": true,
+      "ref_step": "Step1-static",
+      "fix_hint": "更新 tests/unit/drivers/test_mcp_tools.py expected_tools 列表 +1 工具，并三处(README/test/manifest)对齐真实工具数",
+      "fixed_in": "v1.30.1",
+      "closed_at": "2026-09-18"
     },
     {
-      "id": "AUDIT-F-03", "severity": "P1", "category": "resilience",
+      "id": "AUDIT-F-03",
+      "severity": "P1",
+      "category": "resilience",
       "title": "Wiki 索引对坏 markdown YAML 不韧：单页致索引失败",
       "evidence": "saw web 启动日志: `Wiki indexing failed: Failed to read wiki page .claude/skills/csp-workflow/commands/csp-test-spec.md: mapping values are not allowed in this context  in \"<unicode string>\", line 3, column 117`",
       "impact": "单个 wiki 页 YAML front-matter 错误导致整库索引失败（非跳过坏页继续）",
-      "status": "open", "quick_fix": false, "ref_step": "Step1-static"
+      "status": "open",
+      "quick_fix": false,
+      "ref_step": "Step1-static"
     },
     {
-      "id": "AUDIT-F-04", "severity": "P2", "category": "coverage/consistency",
+      "id": "AUDIT-F-04",
+      "severity": "P2",
+      "category": "coverage/consistency",
       "title": "Coverage 68.42% 低于 v1.29.0 宣称 70%+ 目标",
       "evidence": "pytest --cov: TOTAL 30450 stmts, 9616 missed, 68.42%. FEATURES.md/ROADMAP v1.29.0 标 coverage→70%+ shipped。gate 67 ✓ 但未达宣称 70",
       "impact": "宣称-实现漂移；薄覆盖模块：tutorial/demo_content、wiki_sink 69%、connector_sink 72%",
-      "status": "open", "quick_fix": false, "ref_step": "Step1-static"
+      "status": "open",
+      "quick_fix": false,
+      "ref_step": "Step1-static"
     },
     {
-      "id": "AUDIT-F-05", "severity": "P2", "category": "consistency/宣称-实现",
+      "id": "AUDIT-F-05",
+      "severity": "P2",
+      "category": "consistency/宣称-实现",
       "title": "`saw web` 仅服务 API，不挂 SPA——README 宣称 UI 在 :8000",
       "evidence": "grep src/saw/drivers/web/app.py + src/saw/api/：无 StaticFiles/app.mount/FileResponse/index.html/web/dist 任何 SPA 挂载。saw web :9133 → curl `/`=404, `/index.html`=404，但 /api/auth/mode 返 {auth_mode:local}（API 正常）。README: 'saw web → http://localhost:8000' 暗示 UI 由 saw web 服务",
       "impact": "用户跑 `saw web` 看不到 UI；须另跑 npm run dev 或 desktop。宣称与实现不符",
-      "status": "open", "quick_fix": false, "ref_step": "Step2-confirmed",
+      "status": "open",
+      "quick_fix": false,
+      "ref_step": "Step2-confirmed",
       "unblock_e2e": "需 saw web 挂 web/dist SPA（StaticFiles + SPA fallback）或 README 更正"
     },
     {
-      "id": "AUDIT-F-06", "severity": "P2", "category": "config/dev-friction",
+      "id": "AUDIT-F-06",
+      "severity": "P2",
+      "category": "config/dev-friction",
       "title": "vite.config.ts proxy 硬编码 :8000，与 vLLM 冲突",
       "evidence": "web/vite.config.ts:19 proxy '/api' target http://localhost:8000。lsof :8000 = vLLM (Qwen2.5-1.5B OpenAI server, pid 24623/71759)。用户机器 :8000 被 vLLM 占用，saw web 无法用 :8000，npm run dev 代理到 vLLM 而非 SAW",
       "impact": "开发摩擦：无法同时跑 vLLM + saw web + vite dev 而不改配置",
-      "status": "open", "quick_fix": false, "ref_step": "Step2-confirmed"
+      "status": "open",
+      "quick_fix": false,
+      "ref_step": "Step2-confirmed"
     },
     {
-      "id": "AUDIT-F-07", "severity": "P3", "category": "IA/navigation",
+      "id": "AUDIT-F-07",
+      "severity": "P3",
+      "category": "IA/navigation",
       "title": "/integrations 路由存在但不在顶部导航——nav 不可达",
       "evidence": "router.tsx 含 /integrations, /integrations/:platform, /integrations/:platform/settings, /onboarding, /page/:slug。App.tsx 顶部 NavLink 仅: pages/search/graph/dashboard/import/templates/timeline。/integrations 全功能页无 nav 入口",
       "impact": "用户无法经导航到达集成管理页（须手输 URL）",
-      "status": "open", "quick_fix": true, "ref_step": "Step2-confirmed",
-      "fix_hint": "App.tsx 顶部 nav 增 Integrations NavLink"
+      "status": "closed",
+      "quick_fix": true,
+      "ref_step": "Step2-confirmed",
+      "fix_hint": "App.tsx 顶部 nav 增 Integrations NavLink",
+      "fixed_in": "v1.30.1",
+      "closed_at": "2026-09-18"
     },
     {
-      "id": "AUDIT-F-08", "severity": "P3", "category": "a11y/SEO",
+      "id": "AUDIT-F-08",
+      "severity": "P3",
+      "category": "a11y/SEO",
       "title": "客户端 404 路由返回 HTTP 200",
       "evidence": "Playwright GET /definitely-not-a-route-xyz → http_status=200，渲染 NotFound 页（按钮: 返回首页/浏览所有页面/搜索）。createBrowserRouter 客户端路由不设 404 状态码",
       "impact": "SEO/监控/正确性：404 不可由 HTTP 状态码识别",
-      "status": "open", "quick_fix": false, "ref_step": "Step2-confirmed"
+      "status": "open",
+      "quick_fix": false,
+      "ref_step": "Step2-confirmed"
     },
     {
-      "id": "AUDIT-F-09", "severity": "P2", "category": "dead-button/a11y",
+      "id": "AUDIT-F-09",
+      "severity": "P2",
+      "category": "dead-button/a11y",
       "title": "/integrations 存在空文本+启用按钮（图标按钮无可访问名）",
       "evidence": "ui-test-report-5173.json /integrations: buttons_sample=['Search\\n⌘K', '']，empty_text_buttons=[{text:'', disabled:false}]。截图 .csp/verify/ui-sweep/integrations.png",
       "impact": "屏幕阅读器不可读；疑似图标按钮缺 aria-label 或为死按钮",
-      "status": "open", "quick_fix": true, "ref_step": "Step2-confirmed",
-      "fix_hint": "补 aria-label 或确认图标按钮的可访问名"
+      "status": "closed",
+      "quick_fix": true,
+      "ref_step": "Step2-confirmed",
+      "fix_hint": "补 aria-label 或确认图标按钮的可访问名",
+      "fixed_in": "v1.30.1",
+      "closed_at": "2026-09-18"
     },
     {
-      "id": "AUDIT-F-10", "severity": "P3", "category": "empty-state/UX",
+      "id": "AUDIT-F-10",
+      "severity": "P3",
+      "category": "empty-state/UX",
       "title": "/graph 空数据时无 CTA/引导",
       "evidence": "ui-test-report-5173.json /graph: button_count=0, has_main_content=false（无 main 文本）。空状态不引导用户去 import/create",
       "impact": "新用户进 /graph 见空白不知所措",
-      "status": "open", "quick_fix": true, "ref_step": "Step2-confirmed"
+      "status": "closed",
+      "quick_fix": true,
+      "ref_step": "Step2-confirmed",
+      "fixed_in": "v1.30.1",
+      "closed_at": "2026-09-18"
     }
   ],
   "blocked": [
     {
-      "id": "E2E-BLOCKED-01", "status": "BLOCKED",
+      "id": "E2E-BLOCKED-01",
+      "status": "BLOCKED",
       "title": "数据依赖 API 行为 E2E 未验证",
       "reason": "vite dev proxy→:8000=vLLM（用户 LLM），非 SAW 后端；/api/* 全 404。saw web :9133 API 正常但 vite 配置硬编 :8000 且不可改（不破坏 repo 配置）",
       "unblock_condition": "三选一：① saw web 挂 SPA 后直驱 :9133；② vLLM 移离 :8000 让 saw web 用 :8000；③ 临时改 vite proxy target→saw web 端口",

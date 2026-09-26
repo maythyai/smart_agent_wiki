@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useSearchParams } from 'react-router';
+import { useSearchParams, Link } from 'react-router';
 import type { Core } from 'cytoscape';
 import { KnowledgeGraph } from '../components/graph/KnowledgeGraph';
 import { GraphControls } from '../components/graph/GraphControls';
@@ -184,9 +184,23 @@ export default function Graph() {
                   </svg>
                 </div>
                 <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-1">No entities in the graph yet</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                   Start by creating pages and linking entities to build the knowledge graph.
                 </p>
+                <div className="flex items-center justify-center gap-3">
+                  <Link
+                    to="/import"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                  >
+                    Import documents
+                  </Link>
+                  <Link
+                    to="/pages"
+                    className="px-4 py-2 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors text-sm font-medium"
+                  >
+                    Browse pages
+                  </Link>
+                </div>
               </div>
             </div>
           )}

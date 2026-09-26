@@ -3,6 +3,18 @@
 All notable changes to this project are documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [v1.30.1] - 2026-09-18
+### Fixed — audit 快速修复批（P0 test + a11y/IA/UX）
+- **AUDIT-F-02** [P0] `tests/unit/drivers/test_mcp_tools.py` expected_tools 加 `saw_deep_research`（34→35），闭合 v1.30.0 遗漏；README MCP 工具数三处 64+/56+ → 35 对齐真实。
+- **AUDIT-F-07** [/integrations nav] `web/src/App.tsx` 顶部 nav 增 Integrations NavLink（原仅经 URL 可达）。
+- **AUDIT-F-09** [/integrations a11y] Refresh 图标按钮补 `aria-label="Refresh"`（移动端文字 hidden 时无可访问名）。
+- **AUDIT-F-10** [/graph 空态] Graph 空数据状态加 CTA（Import documents / Browse pages，原仅文案无动作入口）。
+
+### Release Gate
+- pytest 2399 passed / 7 skipped / 0 failed（+1，AUDIT-F-02 闭合）；coverage 68.42%（gate 67）；ruff 0；tsc clean；vitest 64 passed。
+- **fix 批 PATCH**（不开 MINOR）；4 audit findings → closed。余 audit findings 折入 v1.31/1.33/1.34/1.35（见 `docs/analysis/AUDIT-TO-ROADMAP.md`）。
+- 数据依赖 E2E 仍 BLOCKED（vite proxy→vLLM:8000，非 SAW；解除条件见 E2E-BLOCKED-01），本批结构性改动由 tsc+单测覆盖。
+
 ## [v1.26.0] - 2026-09-09
 ### Added — B4 NLP cost-reduction + B5 auto-feedback + D3 heartbeat patrol
 - **B4 `extract_noun_phrases(text)` + `saw_nlp_keywords`** (FastGraphRAG-inspired): cheap NLP noun-phrase extraction (jieba CJK + regex Latin, no LLM/network) as a cost-reduction pre-index tier / OFFLINE-tier degrade path.

@@ -101,6 +101,16 @@ export default function App() {
               Dashboard
             </NavLink>
             <NavLink
+              to="/integrations"
+              className={({ isActive }) =>
+                isActive
+                  ? 'text-blue-600 font-medium'
+                  : 'text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400'
+              }
+            >
+              Integrations
+            </NavLink>
+            <NavLink
               to="/import"
               className={({ isActive }) =>
                 isActive

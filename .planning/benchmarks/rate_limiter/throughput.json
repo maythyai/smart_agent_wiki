@@ -8,11 +8,11 @@
   "results": {
     "requests_allowed": 10,
     "requests_throttled": 6,
-    "actual_duration_seconds": 2.012,
-    "actual_rate_per_second": 4.97,
+    "actual_duration_seconds": 2.004,
+    "actual_rate_per_second": 4.99,
     "expected_max_requests": 8,
     "rate_limit_works": false
   },
-  "date": "2026-09-26T14:06:45.139637+00:00",
+  "date": "2026-09-26T16:10:26.163856+00:00",
   "version": "1.0"
 }

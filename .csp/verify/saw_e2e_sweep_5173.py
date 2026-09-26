@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """SAW E2E route-sweep audit (Step 2). Evidence-first: route status / button inventory / console errors / network 4xx-5xx / screenshots + frontend-called API vs openapi diff."""
-import json, os, time, re, urllib.request
+import json
+import os
+import time
+import re
+import urllib.request
 from playwright.sync_api import sync_playwright
 
 BASE = "http://localhost:5173"
@@ -43,8 +47,10 @@ with sync_playwright() as p:
             btns = page.locator("button:visible").all()
             bi = []
             for b in btns[:20]:
-                try: bi.append({"text": (b.inner_text() or "").strip()[:40], "disabled": b.is_disabled()})
-                except Exception: bi.append({"text": "<stale>", "disabled": None})
+                try:
+                    bi.append({"text": (b.inner_text() or "").strip()[:40], "disabled": b.is_disabled()})
+                except Exception:
+                    bi.append({"text": "<stale>", "disabled": None})
             rec["button_count"] = len(btns)
             rec["buttons_sample"] = bi
             rec["empty_text_buttons"] = [b for b in bi if b["text"] == "" and not b["disabled"]]

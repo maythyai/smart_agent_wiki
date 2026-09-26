@@ -268,6 +268,8 @@ class TestAllToolsCount:
             "saw_nlp_keywords", "saw_record_feedback", "saw_heartbeat_status",
             # Ops +2 (v1.27 D2/A5)
             "saw_queue_status", "saw_schedule",
+            # A4 deep research +1 (v1.30)
+            "saw_deep_research",
         ]
 
         for tool in expected_tools:

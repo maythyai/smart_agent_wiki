@@ -368,7 +368,7 @@ canonical = `pyproject.toml`。发布时以下必须与之一致，用脚本校�
 | v1.28.0 | C5a Obsidian 插件（触达 KW 用户：只读 sync+chat）+ i18n 基建（prompt/CLI EN 选项）| ecosystem-integration | shipped (2026-09-16) |
 | v1.29.0 | core-trust+perf 硬化：coverage→70%+（AUDIT-F-04 续）+ thin CLI 功能测试 | core-trust | shipped (2026-09-16) |
 | v1.30.0 | A4 深度研究模式（Scholar 编排 web+claims→可溯源报告）+ C5b IM serving（webhook 起步）| intelligence-adaptation | shipped (2026-09-16) |
-| v1.30.1 | fix: audit 快速修复批（AUDIT-F-02 MCP 工具数断言 / F-07 nav / F-09 死按钮 aria / F-10 graph 空态）| core-trust | planned (audit 2026-09-18) |
+| v1.30.1 | fix: audit 快速修复批（AUDIT-F-02 MCP 工具数断言 / F-07 nav / F-09 死按钮 aria / F-10 graph 空态）| core-trust | shipped (2026-09-18) |
 | v1.31.0 | Provenance Verification API + Activity 持久化 + wiki 索引 YAML 韧性（AUDIT-F-03 折入）| core-trust | planned |
 | v1.32.0 | Compliance & Audit Tier（Ed25519 receipt 导出 + 数据驻留 + 删除传播）| platform-team | planned |
 | v1.33.0 | Playwright E2E + Desktop 签名/跨平台（AUDIT-F-07/V1/V2 闭合）| ecosystem-integration | planned |
