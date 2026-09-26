@@ -47,9 +47,11 @@
       "title": "Wiki 索引对坏 markdown YAML 不韧：单页致索引失败",
       "evidence": "saw web 启动日志: `Wiki indexing failed: Failed to read wiki page .claude/skills/csp-workflow/commands/csp-test-spec.md: mapping values are not allowed in this context  in \"<unicode string>\", line 3, column 117`",
       "impact": "单个 wiki 页 YAML front-matter 错误导致整库索引失败（非跳过坏页继续）",
-      "status": "open",
+      "status": "closed",
       "quick_fix": false,
-      "ref_step": "Step1-static"
+      "ref_step": "Step1-static",
+      "fixed_in": "v1.30.2",
+      "closed_at": "2026-09-18"
     },
     {
       "id": "AUDIT-F-04",

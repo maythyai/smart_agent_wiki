@@ -74,3 +74,30 @@ def test_index_page_handles_fts_error_gracefully():
     # Should not raise; indexing is best-effort.
     idx._index_page("p1", "First", "alpha", ["a"])
     conn.close()
+
+
+def test_index_all_skips_unparseable_page():
+    """AUDIT-F-03 (v1.30.2): a bad-YAML page raises StorageError on read;
+    index_all must skip it (warn) and continue indexing good pages rather
+    than aborting the whole index."""
+    from saw.domain.exceptions import StorageError
+    from saw.engines.query.wiki_indexer import WikiIndexer
+
+    conn = _conn()
+    good = _page("good", "Good Page", "alpha beta")
+
+    wiki = MagicMock()
+    # 'bad' raises on read; 'good' returns a page.
+    def _read(slug):
+        if slug == "bad":
+            raise StorageError("Failed to read wiki page bad: mapping values are not allowed")
+        return good
+    wiki.read.side_effect = _read
+    wiki.list_pages.return_value = ["bad", "good"]
+
+    n = WikiIndexer(conn, wiki).index_all()
+    # Good page indexed; bad page skipped — no raise.
+    assert n == 1
+    rows = conn.execute("SELECT count(*) FROM fts_index").fetchone()[0]
+    assert rows == 1
+    conn.close()

@@ -3,6 +3,14 @@
 All notable changes to this project are documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [v1.30.2] - 2026-09-18
+### Fixed — AUDIT-F-03 wiki 索引 YAML 韧性 (PATCH fix)
+- **AUDIT-F-03** [P1 resilience] `WikiIndexer.index_all()` per-page 容错：坏 YAML front-matter 页不再阻断整库索引——坏页 skip + warn + 继续，好页正常入 FTS5。修 `saw web` 启动遇坏页（如 `.claude/skills/csp-workflow/commands/csp-test-spec.md` "mapping values are not allowed"）致整库搜索索引失败。
+
+### Release Gate
+- pytest 2400 passed / 7 skipped / 0 failed（+1: test_index_all_skips_unparseable_page）；coverage 68.42%（gate 67）；ruff 0；tsc clean。
+- fix=PATCH。AUDIT-F-03 → closed。
+
 ## [v1.30.1] - 2026-09-18
 ### Fixed — audit 快速修复批（P0 test + a11y/IA/UX）
 - **AUDIT-F-02** [P0] `tests/unit/drivers/test_mcp_tools.py` expected_tools 加 `saw_deep_research`（34→35），闭合 v1.30.0 遗漏；README MCP 工具数三处 64+/56+ → 35 对齐真实。

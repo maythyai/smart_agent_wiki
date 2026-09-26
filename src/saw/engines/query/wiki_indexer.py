@@ -37,17 +37,33 @@ class WikiIndexer:
     def index_all(self) -> int:
         """Index all wiki pages into FTS5.
 
+        AUDIT-F-03 (v1.30.2): per-page resilience — a single unparseable
+        page (bad YAML frontmatter) is skipped with a warning rather than
+        aborting the whole index. Indexing is a derived cache; one bad page
+        must not block the rest of the wiki from being searchable.
+
         Returns:
             Number of pages indexed.
         """
         count = 0
+        skipped = 0
         for slug in self._wiki_repo.list_pages():
-            page = self._wiki_repo.read(slug)
+            try:
+                page = self._wiki_repo.read(slug)
+            except Exception as e:
+                logger.warning("Skipping unparseable wiki page %s: %s", slug, e)
+                skipped += 1
+                continue
             if page is None:
                 continue
 
             self._index_page(slug, page.title, page.content, page.tags)
             count += 1
+
+        if skipped:
+            logger.warning(
+                "Wiki indexing: %d page(s) skipped due to parse errors", skipped
+            )
 
         return count
 
