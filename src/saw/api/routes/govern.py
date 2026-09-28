@@ -298,6 +298,28 @@ def get_provenance(
     }
 
 
+# ── Contamination scan (v1.31.1) ────────────────────────────────────
+
+
+@router.get("/contamination")
+def scan_contamination(repo=Depends(_claims_repo)):
+    """v1.31.1: scan for claims derived from superseded sources.
+
+    Returns claims whose ``source_uuid`` is one side of a resolved SUPERSEDED
+    contradiction — the source has been ruled stale/wrong, so the derived
+    claims may propagate outdated knowledge (cross-agent contamination). Each
+    entry carries the contradiction ids that flagged its source. Exposes the
+    same scan the ``saw_contamination_scan`` MCP tool returns, via REST.
+    """
+    if not hasattr(repo, "scan_contamination"):
+        raise HTTPException(503, "Contamination scan not available on this repository")
+    try:
+        contaminated = repo.scan_contamination()
+    except sqlite3.ProgrammingError:
+        raise HTTPException(503, "Claims repository unavailable (cross-thread connection)")
+    return {"contaminated": contaminated, "count": len(contaminated)}
+
+
 # ── Lint / Health ────────────────────────────────────────────────────
 
 

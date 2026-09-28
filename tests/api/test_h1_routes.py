@@ -203,6 +203,69 @@ class TestProvenanceRoute:
         assert r.json()["depth"] <= 11
 
 
+class TestContaminationRoute:
+    """v1.31.1 GET /api/v1/contamination — claims derived from superseded sources."""
+
+    def test_contamination_empty(self, tmp_path):
+        client = _build_client(tmp_path)
+        r = client.get("/api/v1/contamination")
+        assert r.status_code == 200
+        assert r.json()["count"] == 0
+
+    def test_contamination_flags_superseded_source(self, tmp_path):
+        from saw.domain.claims import Claim
+
+        client = _build_client(tmp_path)
+        repo = client.app.state.query._claims_repo
+        conn = repo._conn
+        # Two source claims in a resolved SUPERSEDED contradiction.
+        repo.insert(Claim(uuid="src-a", content="old fact", source_uuid="root", content_hash="ha"))
+        repo.insert(Claim(uuid="src-b", content="new fact", source_uuid="root", content_hash="hb"))
+        conn.execute(
+            "INSERT INTO contradictions(uuid, claim_a_uuid, claim_b_uuid, "
+            "contradiction_type, resolution, detected_at, resolved_at) "
+            "VALUES (?,?,?,?,?,?,?)",
+            ("contra-1", "src-a", "src-b", "factual", "superseded",
+             "2026-09-18", "2026-09-18T12:00:00Z"),
+        )
+        conn.commit()
+        # A claim derived from src-a (a superseded side) → contaminated.
+        repo.insert(Claim(uuid="deriv-1", content="derived", source_uuid="src-a", content_hash="hd"))
+
+        r = client.get("/api/v1/contamination")
+        assert r.status_code == 200
+        body = r.json()
+        assert body["count"] == 1
+        item = body["contaminated"][0]
+        assert item["claim_uuid"] == "deriv-1"
+        assert item["source_uuid"] == "src-a"
+        assert item["reason"] == "superseded_source"
+        assert "contra-1" in item["contradiction_ids"]
+
+    def test_contamination_ignores_unresolved(self, tmp_path):
+        """Unresolved (pending) contradictions do NOT contaminate."""
+        from saw.domain.claims import Claim
+
+        client = _build_client(tmp_path)
+        repo = client.app.state.query._claims_repo
+        conn = repo._conn
+        repo.insert(Claim(uuid="src-a", content="a", source_uuid="root", content_hash="ha"))
+        repo.insert(Claim(uuid="src-b", content="b", source_uuid="root", content_hash="hb"))
+        # Pending (resolved_at NULL) — not yet superseded.
+        conn.execute(
+            "INSERT INTO contradictions(uuid, claim_a_uuid, claim_b_uuid, "
+            "contradiction_type, resolution, detected_at) VALUES (?,?,?,?,?,?)",
+            ("contra-2", "src-a", "src-b", "factual", "superseded", "2026-09-18"),
+        )
+        conn.commit()
+        repo.insert(Claim(uuid="deriv-2", content="d", source_uuid="src-a", content_hash="hd2"))
+
+        r = client.get("/api/v1/contamination")
+        assert r.status_code == 200
+        # Pending contradiction → not contamination.
+        assert r.json()["count"] == 0
+
+
 # ── Query / Ingest / Learn routes ────────────────────────────────────
 
 

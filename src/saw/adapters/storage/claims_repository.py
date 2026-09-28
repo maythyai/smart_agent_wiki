@@ -423,6 +423,56 @@ class SQLiteClaimsRepository:
         ).fetchone()
         return int(row[0]) if row else 0
 
+    # ── v1.31.1: contamination scan (knowledge-pollution detection) ──
+
+    def scan_contamination(self) -> list[dict]:
+        """Scan for claims derived from superseded sources (v1.31.1).
+
+        A claim is *contaminated* if its ``source_uuid`` is one side of a
+        resolved SUPERSEDED contradiction — the source has been ruled stale
+        or wrong, so claims derived from it may propagate outdated knowledge
+        (the cross-agent contamination the audit flagged: 97% of multi-agent
+        systems never verify provenance). Returns the *derived* claims (not
+        the superseded sources themselves) with the contradiction ids that
+        flagged their source. Best-effort: returns [] if the contradictions
+        table is absent/empty.
+        """
+        try:
+            contra_rows = self._conn.execute(
+                "SELECT uuid, claim_a_uuid, claim_b_uuid FROM contradictions "
+                "WHERE lower(resolution) = 'superseded' "
+                "AND resolved_at IS NOT NULL"
+            ).fetchall()
+        except sqlite3.Error:
+            return []
+        if not contra_rows:
+            return []
+        source_to_contras: dict[str, list[str]] = {}
+        for c_uuid, a, b in contra_rows:
+            for src in (a, b):
+                source_to_contras.setdefault(src, []).append(c_uuid)
+        superseded_sources = list(source_to_contras.keys())
+        if not superseded_sources:
+            return []
+        placeholders = ",".join("?" * len(superseded_sources))
+        rows = self._conn.execute(
+            f"SELECT uuid, content, source_uuid FROM claim "
+            f"WHERE source_uuid IN ({placeholders}) "
+            f"AND deleted_at IS NULL "
+            f"AND uuid NOT IN ({placeholders})",
+            (*superseded_sources, *superseded_sources),
+        ).fetchall()
+        return [
+            {
+                "claim_uuid": r[0],
+                "content": (r[1] or "")[:200],
+                "source_uuid": r[2],
+                "contradiction_ids": source_to_contras.get(r[2], []),
+                "reason": "superseded_source",
+            }
+            for r in rows
+        ]
+
     @staticmethod
     def _row_to_claim(row) -> Claim:
         """Convert a database row to a Claim dataclass."""

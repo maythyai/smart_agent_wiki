@@ -270,6 +270,8 @@ class TestAllToolsCount:
             "saw_queue_status", "saw_schedule",
             # A4 deep research +1 (v1.30)
             "saw_deep_research",
+            # v1.31.1 contamination scan +1
+            "saw_contamination_scan",
         ]
 
         for tool in expected_tools:

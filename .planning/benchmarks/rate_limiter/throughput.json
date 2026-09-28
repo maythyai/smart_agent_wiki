@@ -9,10 +9,10 @@
     "requests_allowed": 10,
     "requests_throttled": 6,
     "actual_duration_seconds": 2.006,
-    "actual_rate_per_second": 4.99,
+    "actual_rate_per_second": 4.98,
     "expected_max_requests": 8,
     "rate_limit_works": false
   },
-  "date": "2026-09-28T13:28:39.695171+00:00",
+  "date": "2026-09-28T13:38:02.538250+00:00",
   "version": "1.0"
 }

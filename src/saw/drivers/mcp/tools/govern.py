@@ -271,6 +271,35 @@ async def saw_audit(export_path: str | None = None) -> dict[str, Any]:
 
 
 @mcp.tool
+async def saw_contamination_scan() -> dict[str, Any]:
+    """v1.31.1: scan for claims derived from superseded sources.
+
+    Knowledge-contamination detection: a claim is *contaminated* if its
+    source is one side of a resolved SUPERSEDED contradiction — the source
+    has been ruled stale/wrong, so claims derived from it may propagate
+    outdated knowledge (the cross-agent pollution 97% of multi-agent
+    systems never verify, per the v1.30.0 audit). Returns the derived
+    claims (not the superseded sources themselves) with the contradiction
+    ids that flagged their source.
+
+    Returns:
+        ``{contaminated: [...], count, scanned_status}``.
+    """
+    if _governor is None:
+        return {"error": "governor_not_initialized"}
+    claims_repo = getattr(_governor, "claims_repo", None) or getattr(
+        _governor, "_claims_repo", None
+    )
+    if claims_repo is None or not hasattr(claims_repo, "scan_contamination"):
+        return {"error": "claims_repo_not_available", "contaminated": [], "count": 0}
+    try:
+        contaminated = claims_repo.scan_contamination()
+    except Exception as e:
+        return {"error": str(e), "contaminated": [], "count": 0}
+    return {"contaminated": contaminated, "count": len(contaminated)}
+
+
+@mcp.tool
 async def saw_blast_radius(claim_uuid: str) -> dict[str, Any]:
     """Analyze downstream impact before editing.
 

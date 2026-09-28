@@ -6,7 +6,7 @@
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Release](https://img.shields.io/badge/release-v1.30.0-blue.svg)](https://github.com/maythyai/smart_agent_wiki/releases/tag/v1.18.1)
 [![Tests](https://img.shields.io/badge/tests-1898+%20passing-brightgreen.svg)](tests/)
-[![MCP](https://img.shields.io/badge/MCP-35%20tools-purple.svg)](src/saw/drivers/mcp/)
+[![MCP](https://img.shields.io/badge/MCP-36%20tools-purple.svg)](src/saw/drivers/mcp/)
 [![GitHub Stars](https://img.shields.io/github/stars/chensaics/smart_agent_wiki?style=social)](https://github.com/chensaics/smart_agent_wiki)
 [![GitHub Issues](https://img.shields.io/github/issues/chensaics/smart_agent_wiki)](https://github.com/chensaics/smart_agent_wiki/issues)
 
@@ -28,7 +28,7 @@ Smart Agent Wiki is a local-first knowledge management platform that treats know
 - 🧩 **Plugin System** — Extensible SDK with event-driven hooks (sandbox isolation planned)
 - 💰 **Token Optimizer** — Tracking infrastructure for LLM token consumption (theoretical savings benchmark: ~65% in ideal conditions)
 - 🌐 **Web UI** — React + Cytoscape.js knowledge graph + Milkdown editor
-- 🔌 **MCP Server** — 35 tools, compatible with Claude Code / Cursor / Copilot
+- 🔌 **MCP Server** — 36 tools, compatible with Claude Code / Cursor / Copilot
 
 ## Quick Start
 
@@ -199,7 +199,7 @@ print(f"{entry.description} (~{entry.estimated_tokens} tokens)")
 | `saw completion` | — | Shell completion |
 | `saw docs` | — | Offline documentation |
 
-## MCP Tools (35)
+## MCP Tools (36)
 
 **Ingestion (2):** `saw_ingest`, `saw_reparse`
 

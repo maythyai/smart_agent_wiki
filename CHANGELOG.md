@@ -3,6 +3,17 @@
 All notable changes to this project are documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [v1.31.1] - 2026-09-18
+### Added — contamination scan (feat MINOR, v1.31.0 deferred 项)
+- **`saw_contamination_scan` MCP + `GET /api/v1/contamination` REST**: 扫描 claim 库，返回衍生自已解决 SUPERSEDED 矛盾源 claim 的 claim（contaminated）——源被判定过时，衍生 claim 仍被检索/推理使用即污染下游。每条附源 uuid + 矛盾 id + reason="superseded_source"。直击审计调研发现（97% 多 agent 系统从不做溯源验证）。逻辑实现在 `claims_repo.scan_contamination()`（MCP+REST 共用）。
+
+### Deferred → v1.34
+- **stale-freshness contamination**（源 freshness 过期）: 需 FreshnessTracker 集成 + threshold 配置 → v1.34 perf 硬化同批。解除条件: v1.34 freshness threshold 可配。
+
+### Release Gate
+- pytest 2409 passed / 7 skipped / 0 failed（+3: TestContaminationRoute）；coverage 68.4x%（gate 67）；ruff 0；tsc clean。
+- feat MINOR（additive，无 breaking）。MCP 工具数 35→36（expected_tools 同步）。
+
 ## [v1.31.0] - 2026-09-18
 ### Added — Provenance Verification API + Activity 持久化 (feat MINOR)
 - **AUDIT-F-05 闭合（Activity 持久化）**: v12 migration `agent_activity` 表 + `AgentActivityTracker` write-through（每个 WorkflowStep event upsert 到 DB）+ `load()`/`attach_conn()` 启动恢复。进程重启不再丢 agent 调用/失败计数——v1.16 realtime dashboard 活动数据跨重启持久。
