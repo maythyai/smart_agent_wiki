@@ -65,7 +65,8 @@ see_also: docs/strategy/ROADMAP.md | docs/strategy/STRATEGY.md
 | v1.30.1 | web/a11y | AUDIT-F-09: /integrations 图标按钮补 aria-label | ✅ |
 | v1.30.1 | web/ux | AUDIT-F-10: /graph 空状态加 CTA（Import/新建页面） | ✅ |
 | v1.30.2 | govern | AUDIT-F-03: WikiIndexer.index_all per-page 容错（坏 YAML 不阻断整库）| ✅ |
-| v1.31.0 | govern/MCP | `saw_verify_provenance` + activity 持久化 + contamination scan（AUDIT-F-05 闭合）+ wiki 索引 YAML 韧性（AUDIT-F-03 折入）| 📋 |
+| v1.31.0 | govern/MCP | activity 持久化（v12 agent_activity 表 + write-through + load，AUDIT-F-05 闭合）+ GET /api/v1/provenance/{id} REST + saw_verify 增 receipt_id/source_claim_uuid | ✅ |
+| v1.31.1 | govern | contamination scan（检测衍生自过期/被取代源的 claim，v1.31.0 deferred 折入）| 📋 |
 | v1.32.0 | platform | Compliance & Audit Tier（Ed25519 receipt 导出 + 数据驻留 + 删除传播）| 📋 |
 | v1.33.0 | desktop/CI | Playwright E2E + Apple 签名 + 跨平台 CI matrix（AUDIT-F-07/V1/V2）| 📋 |
 | v1.34.0 | perf | ANN hnswlib ≥5000 实证 + coverage 72% + Write Queue 压测（S1/S2/O2）| 📋 |

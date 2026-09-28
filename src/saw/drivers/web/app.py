@@ -119,6 +119,12 @@ async def lifespan(app: FastAPI):
         _db_conn = getattr(_wq, "_conn", None) if _wq else None
         if _db_conn is not None:
             await _asyncio.to_thread(_recover_stranded_workflows, _db_conn)
+            # AUDIT-F-05 (v1.31.0): attach the shared claims-DB connection to
+            # the activity tracker so WorkflowStep events write-through to
+            # agent_activity and counts load() from it on restart.
+            _at = get_activity_tracker()
+            if _at is not None:
+                await _asyncio.to_thread(_at.attach_conn, _db_conn)
 
         # HI-5: register default connectors so the connector API endpoints no
         # longer 404 (ConnectorRegistry singleton is populated at startup).

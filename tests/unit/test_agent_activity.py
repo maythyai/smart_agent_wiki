@@ -152,3 +152,63 @@ def test_handler_never_raises_on_bad_event() -> None:
     tracker._handle_event({"step": None})  # None step
     # No activity recorded for any agent
     assert tracker.get_activity("Librarian")["calls"] == 0
+
+
+def test_activity_persistence_survives_restart() -> None:
+    """AUDIT-F-05 (v1.31.0): counts write-through to agent_activity and
+    load() on a fresh tracker restores them — survives process restart."""
+    import sqlite3
+
+    from saw.db.migrations import apply_migrations
+    from saw.engines.collaborate.activity_tracker import AgentActivityTracker
+
+    conn = sqlite3.connect(":memory:")
+    apply_migrations(conn)
+
+    # Session 1: tracker with conn → events write-through.
+    t1 = AgentActivityTracker(conn)
+    for _ in range(2):
+        t1._handle_event(
+            {"type": "WorkflowStep", "step": "Scholar.synthesize", "status": "completed"}
+        )
+    t1._handle_event(
+        {"type": "WorkflowStep", "step": "Critic.review", "status": "failed"}
+    )
+    assert t1.get_activity("Scholar")["calls"] == 2
+    assert t1.get_activity("Critic")["failures"] == 1
+
+    # Durable store has the rows.
+    rows = conn.execute(
+        "SELECT agent_name, calls, failures FROM agent_activity ORDER BY agent_name"
+    ).fetchall()
+    assert ("Critic", 0, 1) in rows
+    assert ("Scholar", 2, 0) in rows
+
+    # Session 2: NEW tracker on the same conn → load() restores counts.
+    t2 = AgentActivityTracker(conn)
+    assert t2.get_activity("Scholar")["calls"] == 2
+    assert t2.get_activity("Critic")["failures"] == 1
+    conn.close()
+
+
+def test_attach_conn_loads_existing_state() -> None:
+    """attach_conn post-construction loads persisted state (lifespan path)."""
+    import sqlite3
+
+    from saw.db.migrations import apply_migrations
+    from saw.engines.collaborate.activity_tracker import AgentActivityTracker
+
+    conn = sqlite3.connect(":memory:")
+    apply_migrations(conn)
+    conn.execute(
+        "INSERT INTO agent_activity(agent_name, calls, failures, last_action, "
+        "last_active_at) VALUES ('Guardian', 5, 1, 'patrol', '2026-09-18T00:00:00Z')"
+    )
+    conn.commit()
+
+    t = AgentActivityTracker()  # no conn initially → in-memory, empty
+    assert t.get_activity("Guardian")["calls"] == 0
+    t.attach_conn(conn)  # lifespan attaches the shared conn → load
+    assert t.get_activity("Guardian")["calls"] == 5
+    assert t.get_activity("Guardian")["failures"] == 1
+    conn.close()

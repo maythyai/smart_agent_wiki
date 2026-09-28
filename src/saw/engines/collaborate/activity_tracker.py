@@ -25,8 +25,91 @@ class AgentActivityTracker:
     Handler is lightweight (dict counter update), does not block workflow.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, conn: Any = None) -> None:
+        """Initialize activity tracker.
+
+        Args:
+            conn: Optional SQLite connection for durable persistence
+                (AUDIT-F-05 / v1.31.0). When set, each event write-throughs
+                to the ``agent_activity`` table and ``load()`` is called so
+                counters survive restart. None (CLI/test) → in-memory only
+                (legacy behaviour).
+        """
         self._activities: dict[str, dict[str, Any]] = {}
+        self._conn = conn
+        if conn is not None:
+            self.load()
+
+    def attach_conn(self, conn: Any) -> None:
+        """Attach a SQLite connection post-construction and load state.
+
+        Used by the ``saw web`` lifespan which creates the tracker before
+        the write-queue/connection is available, then attaches once the
+        shared ``conn`` is known. Idempotent + safe to call multiple times.
+        """
+        self._conn = conn
+        self.load()
+
+    def load(self) -> int:
+        """Load persisted activity counts from ``agent_activity``.
+
+        Merges DB rows into the in-memory dict (DB wins on overlap so the
+        durable store is authoritative after restart). Returns the number
+        of agents loaded. No-op when no connection is attached.
+        """
+        if self._conn is None:
+            return 0
+        try:
+            rows = self._conn.execute(
+                "SELECT agent_name, calls, failures, last_action, "
+                "last_active_at FROM agent_activity"
+            ).fetchall()
+        except Exception:
+            # Table may not exist yet (pre-migration) — degrade to empty.
+            return 0
+        for name, calls, failures, last_action, last_active_at in rows:
+            self._activities[name] = {
+                "calls": calls,
+                "failures": failures,
+                "last_action": last_action,
+                "last_active_at": last_active_at,
+            }
+        return len(rows)
+
+    def _persist(self, agent_name: str) -> None:
+        """Upsert one agent's activity to ``agent_activity`` (best-effort)."""
+        if self._conn is None:
+            return
+        activity = self._activities.get(agent_name)
+        if activity is None:
+            return
+        try:
+            self._conn.execute(
+                "INSERT INTO agent_activity "
+                "(agent_name, calls, failures, last_action, last_active_at, "
+                "updated_at) VALUES (?, ?, ?, ?, ?, datetime('now')) "
+                "ON CONFLICT(agent_name) DO UPDATE SET "
+                "calls=excluded.calls, failures=excluded.failures, "
+                "last_action=excluded.last_action, "
+                "last_active_at=excluded.last_active_at, "
+                "updated_at=datetime('now')",
+                (
+                    agent_name,
+                    activity["calls"],
+                    activity["failures"],
+                    activity["last_action"],
+                    activity["last_active_at"],
+                ),
+            )
+            # Commit is owned by the caller's connection lifecycle; in the
+            # web runtime the shared conn autocommits per-execute. For safety
+            # in contexts that need it, best-effort commit.
+            if hasattr(self._conn, "commit"):
+                self._conn.commit()
+        except Exception:
+            logger.warning(
+                "Activity persist failed for %s", agent_name, exc_info=True
+            )
 
     def subscribe(self, event_bus: Any) -> None:
         """Register as subscriber for WorkflowStep events.
@@ -69,6 +152,9 @@ class AgentActivityTracker:
 
             activity["last_action"] = action
             activity["last_active_at"] = now
+            # AUDIT-F-05 (v1.31.0): write-through to durable store so
+            # counters survive restart. Best-effort; never blocks the event.
+            self._persist(agent_name)
         except Exception:
             # Handler must never raise — _dispatch already has try/except,
             # but double-guard for safety.

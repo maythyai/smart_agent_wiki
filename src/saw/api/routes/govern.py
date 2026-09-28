@@ -228,6 +228,76 @@ def verify_claims(
     return {"results": results, "total": len(results)}
 
 
+# ── Provenance chain (v1.31.0, AUDIT-F-05 adjacent) ─────────────────
+
+
+@router.get("/provenance/{claim_id}")
+def get_provenance(
+    claim_id: str = Path(..., description="Claim UUID to trace to root source"),
+    repo=Depends(_claims_repo),
+):
+    """Trace a claim's provenance chain to its root source.
+
+    v1.31.0: follows ``source_uuid`` up the derivation chain (claim → source
+    claim → …) to the root, returning page:line location, confidence, and
+    receipt_id at each hop. Exposes the same chain ``saw_verify`` (MCP) returns,
+    via REST so external apps/agents can verify provenance over HTTP. Depth
+    is capped at 10 with a cycle guard.
+    """
+    try:
+        start = repo.get_by_id(claim_id)
+    except sqlite3.ProgrammingError:
+        raise HTTPException(503, "Claims repository unavailable (cross-thread connection)")
+    if start is None:
+        raise HTTPException(404, f"Claim '{claim_id}' not found")
+
+    chain: list[dict] = []
+    seen: set[str] = set()
+    cur = claim_id
+    conn = getattr(repo, "_conn", None)
+    for _ in range(11):  # cap depth 10 (+1 for root)
+        if cur in seen:  # cycle guard
+            break
+        seen.add(cur)
+        claim = repo.get_by_id(cur)
+        if claim is None:
+            break
+        receipt_id = None
+        if conn is not None:
+            try:
+                row = conn.execute(
+                    "SELECT receipt_id FROM receipts WHERE claim_uuid=? LIMIT 1",
+                    (cur,),
+                ).fetchone()
+                receipt_id = row[0] if row else None
+            except Exception:
+                pass
+        chain.append({
+            "uuid": claim.uuid,
+            "content": (claim.content or "")[:200],
+            "source_uuid": claim.source_uuid,
+            "page_location": f"{claim.page_number}:{claim.line_number}"
+            if claim.page_number
+            else None,
+            "confidence": claim.confidence.name.lower()
+            if hasattr(claim.confidence, "name")
+            else str(claim.confidence),
+            "receipt_id": receipt_id,
+        })
+        # Root: source points to self, empty, or non-existent (next loop breaks).
+        if not claim.source_uuid or claim.source_uuid == cur:
+            break
+        cur = claim.source_uuid
+
+    root = chain[-1] if chain else None
+    return {
+        "claim_id": claim_id,
+        "depth": len(chain),
+        "chain": chain,
+        "root_source": root,
+    }
+
+
 # ── Lint / Health ────────────────────────────────────────────────────
 
 

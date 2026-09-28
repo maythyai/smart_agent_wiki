@@ -3,6 +3,19 @@
 All notable changes to this project are documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [v1.31.0] - 2026-09-18
+### Added — Provenance Verification API + Activity 持久化 (feat MINOR)
+- **AUDIT-F-05 闭合（Activity 持久化）**: v12 migration `agent_activity` 表 + `AgentActivityTracker` write-through（每个 WorkflowStep event upsert 到 DB）+ `load()`/`attach_conn()` 启动恢复。进程重启不再丢 agent 调用/失败计数——v1.16 realtime dashboard 活动数据跨重启持久。
+- **`GET /api/v1/provenance/{claim_id}` REST**: trace claim → source chain（follow `source_uuid` 上溯至根，depth cap 10 + cycle guard）→ 返回链数组（uuid/content/source_uuid/page:line/confidence/receipt_id）+ root_source。外部应用可经 HTTP 验证 claim 溯源（既有 `saw_verify` MCP 暴露同链给 MCP 客户端）。
+- **`saw_verify` MCP 增强**: output.provenance 增 `source_claim_uuid` + `receipt_id`（从 receipts 表查 claim_uuid）——agent 可密码学验证溯源而非仅信链。
+
+### Deferred → v1.31.1
+- **contamination scan**（检测衍生自过期/被取代源的 claim）：需 freshness + supersede 状态逻辑，独立能力，拆 v1.31.1 MINOR。解除条件：v1.31.0 released（已满足）。
+
+### Release Gate
+- pytest 2406 passed / 7 skipped / 0 failed（+6: 2 activity persistence + 4 provenance REST）；coverage 68.4x%（gate 67）；ruff 0；tsc clean。
+- feat MINOR（additive，无 breaking）。AUDIT-F-05 → closed。
+
 ## [v1.30.2] - 2026-09-18
 ### Fixed — AUDIT-F-03 wiki 索引 YAML 韧性 (PATCH fix)
 - **AUDIT-F-03** [P1 resilience] `WikiIndexer.index_all()` per-page 容错：坏 YAML front-matter 页不再阻断整库索引——坏页 skip + warn + 继续，好页正常入 FTS5。修 `saw web` 启动遇坏页（如 `.claude/skills/csp-workflow/commands/csp-test-spec.md` "mapping values are not allowed"）致整库搜索索引失败。

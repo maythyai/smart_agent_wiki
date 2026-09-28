@@ -383,6 +383,32 @@ def _add_contradiction_confidence_receipt(conn: sqlite3.Connection) -> None:
 _register(11, _add_contradiction_confidence_receipt)
 
 
+# v12: agent_activity persistence (AUDIT-F-05 / v1.31.0). The
+# AgentActivityTracker was in-memory only — process restart lost all
+# per-agent call/failure counters (PRD §3.3 rule 6 defer). This table is
+# the durable store the tracker write-throughs to (upsert on each
+# WorkflowStep event) and load()s from on startup, so the v1.16 realtime
+# dashboard's activity data survives restarts. Idempotent via IF NOT EXISTS.
+def _create_agent_activity(conn: sqlite3.Connection) -> None:
+    conn.executescript(
+        """CREATE TABLE IF NOT EXISTS agent_activity (
+    agent_name TEXT PRIMARY KEY,
+    calls INTEGER NOT NULL DEFAULT 0,
+    failures INTEGER NOT NULL DEFAULT 0,
+    last_action TEXT,
+    last_active_at TEXT,
+    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_agent_activity_active
+    ON agent_activity(last_active_at);
+"""
+    )
+
+
+_register(12, _create_agent_activity)
+
+
 # ── Public API ────────────────────────────────────────────────────────
 
 TARGET_VERSION = max(v for v, _ in _MIGRATIONS) if _MIGRATIONS else 1

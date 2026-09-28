@@ -121,6 +121,88 @@ class TestGovernRoutes:
         assert "claims" in r.json()
 
 
+# ── Provenance chain (v1.31.0) ────────────────────────────────────────
+
+
+class TestProvenanceRoute:
+    """v1.31.0 GET /api/v1/provenance/{claim_id} — trace to root source."""
+
+    def test_provenance_not_found(self, tmp_path):
+        client = _build_client(tmp_path)
+        r = client.get("/api/v1/provenance/nonexistent")
+        assert r.status_code == 404
+
+    def test_provenance_root_claim_chain(self, tmp_path):
+        """A root claim (source_uuid == self) returns a 1-node chain."""
+        from saw.domain.claims import Claim
+
+        client = _build_client(tmp_path)
+        repo = client.app.state.query._claims_repo
+        cid = "root-claim-1"
+        repo.insert(
+            Claim(
+                uuid=cid,
+                content="root fact",
+                source_uuid=cid,
+                content_hash="h-root",
+                page_number=3,
+                line_number=10,
+            )
+        )
+        r = client.get(f"/api/v1/provenance/{cid}")
+        assert r.status_code == 200
+        body = r.json()
+        assert body["claim_id"] == cid
+        assert body["depth"] == 1
+        assert body["chain"][0]["uuid"] == cid
+        assert body["chain"][0]["page_location"] == "3:10"
+        assert "receipt_id" in body["chain"][0]
+
+    def test_provenance_traces_source_chain(self, tmp_path):
+        """A derived claim traces up to its root source (depth 2)."""
+        from saw.domain.claims import Claim
+
+        client = _build_client(tmp_path)
+        repo = client.app.state.query._claims_repo
+        root = "root-src"
+        derived = "derived-claim"
+        # root: source points to itself
+        repo.insert(
+            Claim(uuid=root, content="root fact", source_uuid=root,
+                  content_hash="h-root", page_number=1, line_number=1)
+        )
+        # derived: source points to root
+        repo.insert(
+            Claim(uuid=derived, content="derived from root", source_uuid=root,
+                  content_hash="h-deriv", page_number=5, line_number=2)
+        )
+        r = client.get(f"/api/v1/provenance/{derived}")
+        assert r.status_code == 200
+        body = r.json()
+        assert body["depth"] == 2
+        assert body["chain"][0]["uuid"] == derived
+        assert body["chain"][1]["uuid"] == root
+        assert body["root_source"]["uuid"] == root
+        assert body["root_source"]["page_location"] == "1:1"
+
+    def test_provenance_cycle_guard(self, tmp_path):
+        """A self-referential cycle (a→b→a) is capped, not infinite."""
+        from saw.domain.claims import Claim
+
+        client = _build_client(tmp_path)
+        repo = client.app.state.query._claims_repo
+        repo.insert(
+            Claim(uuid="a", content="a", source_uuid="b", content_hash="ha")
+        )
+        repo.insert(
+            Claim(uuid="b", content="b", source_uuid="a", content_hash="hb")
+        )
+        r = client.get("/api/v1/provenance/a")
+        assert r.status_code == 200
+        # Cycle guard caps depth; must not hang or exceed the cap.
+        assert r.json()["depth"] <= 11
+
+
 # ── Query / Ingest / Learn routes ────────────────────────────────────
 
 

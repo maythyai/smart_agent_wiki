@@ -145,11 +145,31 @@ async def saw_verify(claim_uuid: str) -> dict[str, Any]:
             result["provenance"] = {
                 "claim_content": chain.claim_content,
                 "source_type": chain.source_type,
+                "source_claim_uuid": chain.source_uuid,
                 "source_uuid": chain.source_uuid,
                 "page_location": chain.page_location,
                 "confidence": chain.confidence,
                 "confidence_reason": chain.confidence_reason,
             }
+            # v1.31.0 (F-PA-3): surface the Ed25519 receipt id for this claim
+            # so an agent/reader can cryptographically verify provenance, not
+            # just trust the chain. Best-effort lookup against the receipts
+            # table via the governor's claims_repo connection.
+            _crepo = getattr(_governor, "claims_repo", None) or getattr(
+                _governor, "_claims_repo", None
+            )
+            _c = getattr(_crepo, "_conn", None) if _crepo is not None else None
+            if _c is not None:
+                try:
+                    _row = _c.execute(
+                        "SELECT receipt_id FROM receipts WHERE claim_uuid=? LIMIT 1",
+                        (claim_uuid,),
+                    ).fetchone()
+                    result["provenance"]["receipt_id"] = _row[0] if _row else None
+                except Exception:
+                    result["provenance"]["receipt_id"] = None
+            else:
+                result["provenance"]["receipt_id"] = None
     except Exception as e:
         result["error"] = str(e)
 

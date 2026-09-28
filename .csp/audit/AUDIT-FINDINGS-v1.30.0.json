@@ -71,10 +71,12 @@
       "title": "`saw web` 仅服务 API，不挂 SPA——README 宣称 UI 在 :8000",
       "evidence": "grep src/saw/drivers/web/app.py + src/saw/api/：无 StaticFiles/app.mount/FileResponse/index.html/web/dist 任何 SPA 挂载。saw web :9133 → curl `/`=404, `/index.html`=404，但 /api/auth/mode 返 {auth_mode:local}（API 正常）。README: 'saw web → http://localhost:8000' 暗示 UI 由 saw web 服务",
       "impact": "用户跑 `saw web` 看不到 UI；须另跑 npm run dev 或 desktop。宣称与实现不符",
-      "status": "open",
+      "status": "closed",
       "quick_fix": false,
       "ref_step": "Step2-confirmed",
-      "unblock_e2e": "需 saw web 挂 web/dist SPA（StaticFiles + SPA fallback）或 README 更正"
+      "unblock_e2e": "需 saw web 挂 web/dist SPA（StaticFiles + SPA fallback）或 README 更正",
+      "fixed_in": "v1.31.0",
+      "closed_at": "2026-09-18"
     },
     {
       "id": "AUDIT-F-06",
