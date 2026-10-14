@@ -353,6 +353,30 @@ async def saw_purge_claim(claim_uuid: str) -> dict[str, Any]:
 
 
 @mcp.tool
+async def saw_compliance_status() -> dict[str, Any]:
+    """v1.32.1: report the active compliance profile + data-residency status.
+
+    Returns the declared profile (hipaa/sox/gdpr/default), on-prem
+    declaration + whether the deployment satisfies it (not networked OR
+    loopback-bound), region, audit-receipt requirement, and retention policy.
+    Aligned with the 2026.05《智能体规范》trust baseline — compliance metadata
+    is introspectable, not opaque.
+
+    Returns:
+        ``{profile, on_prem_declared, on_prem_satisfied, region,
+        require_audit_receipts, retention_days, host, networked}``.
+    """
+    import os
+
+    from saw.compliance.profile import compliance_status, load_compliance_profile
+
+    profile = load_compliance_profile()
+    host = os.environ.get("SAW_HOST", "127.0.0.1")
+    networked = host not in ("127.0.0.1", "localhost", "::1")
+    return compliance_status(profile, host, networked)
+
+
+@mcp.tool
 async def saw_blast_radius(claim_uuid: str) -> dict[str, Any]:
     """Analyze downstream impact before editing.
 

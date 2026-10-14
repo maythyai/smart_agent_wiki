@@ -368,6 +368,28 @@ def purge_claim(
     return result
 
 
+# ── Compliance profile (v1.32.1) ──────────────────────────────────────
+
+
+@router.get("/compliance")
+def get_compliance(request: Request):
+    """v1.32.1: report the active compliance profile + data-residency status.
+
+    Returns the declared profile (hipaa/sox/gdpr/default), on-prem
+    declaration + whether the deployment satisfies it (not networked OR
+    loopback-bound), region, audit-receipt requirement, retention policy.
+    Exposes the same status ``saw_compliance_status`` (MCP) returns, via REST.
+    """
+    from saw.compliance.profile import compliance_status, load_compliance_profile
+
+    profile = getattr(request.app.state, "compliance", None)
+    if profile is None:
+        profile = load_compliance_profile()
+    host = getattr(request.app.state, "host", "127.0.0.1")
+    networked = host not in ("127.0.0.1", "localhost", "::1")
+    return compliance_status(profile, host, networked)
+
+
 # ── Lint / Health ────────────────────────────────────────────────────
 
 

@@ -204,6 +204,15 @@ def create_app(
     app.state.wiki_repo = wiki_repo if wiki_repo is not None else getattr(query, "_wiki_repo", None)
     app.state.host = host
     app.state.port = port
+    # v1.32.1: load the compliance profile once at app construction so the
+    # /api/v1/compliance route + saw_compliance_status MCP can report it
+    # without re-reading YAML per request. Default profile when no YAML.
+    try:
+        from saw.compliance.profile import load_compliance_profile
+
+        app.state.compliance = load_compliance_profile()
+    except Exception:  # pragma: no cover — never block app creation
+        app.state.compliance = None
     # C1: auth mode consumed by get_current_user() on protected routes.
     app.state.auth_mode = auth_mode
 

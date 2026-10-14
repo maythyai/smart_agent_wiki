@@ -374,6 +374,21 @@ class TestComplianceRoute:
         assert repo.get_by_id("other") is not None
 
 
+class TestComplianceProfileRoute:
+    """v1.32.1 GET /api/v1/compliance — profile + data-residency status."""
+
+    def test_compliance_default(self, tmp_path):
+        client = _build_client(tmp_path)
+        r = client.get("/api/v1/compliance")
+        assert r.status_code == 200
+        body = r.json()
+        assert body["profile"] == "default"
+        assert "on_prem_satisfied" in body
+        assert "host" in body
+        assert "networked" in body
+
+
+
 # ── Query / Ingest / Learn routes ────────────────────────────────────
 
 

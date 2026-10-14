@@ -275,6 +275,8 @@ class TestAllToolsCount:
             # v1.32.0 compliance & audit +2
             "saw_export_receipt_bundle",
             "saw_purge_claim",
+            # v1.32.1 compliance profile +1
+            "saw_compliance_status",
         ]
 
         for tool in expected_tools:

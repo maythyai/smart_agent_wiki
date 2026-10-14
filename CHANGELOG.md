@@ -3,6 +3,17 @@
 All notable changes to this project are documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [v1.32.1] - 2026-10-14
+### Added — 数据驻留 + 合规配置 profile (feat MINOR, v1.32.0 deferred 项)
+- **合规 profile 加载 + 状态查询**: `.saw/compliance.yaml`（或 config.yaml `compliance` 节）声明 `profile`(hipaa/sox/gdpr/default) + `data_residency`(on_prem/region) + `require_audit_receipts` + `retention_days`。`saw_compliance_status` MCP + `GET /api/v1/compliance` REST 返回 active profile + on-prem 断言（networked 非 loopback → on_prem_satisfied=False，合规违规显式暴露）。对齐 2026.05《智能体规范》可信底线。新模块 `src/saw/compliance/profile.py`。
+
+### Deferred → v1.39
+- **强制执行**（block 非 on-prem 启动）+ **per-workspace 存储后端物理绑定**: → v1.39 多租户同批。解除条件: v1.39 workspace 物理隔离。
+
+### Release Gate
+- pytest 2419 passed / 7 skipped / 0 failed（+5: test_profile + 1 TestComplianceProfileRoute）；coverage 68.3x%（gate 67）；ruff 0；tsc clean。
+- feat MINOR（additive，无 breaking）。MCP 工具 38→39。
+
 ## [v1.32.0] - 2026-10-14
 ### Added — Compliance & Audit Tier (feat MINOR)
 - **Audit receipt bundle 导出**: `saw_export_receipt_bundle(claim_uuid)` MCP + `GET /api/v1/claims/{claim_id}/receipt-bundle` REST——导出 claim 元数据 + 全部 Ed25519-signed receipts（含 prev 链）+ SHA-256 bundle 完整性 hash（可选 Ed25519 bundle 签名）。监管可离线验证 claim 溯源 + 操作历史。对齐 2026.05《智能体规范》可信底线。
