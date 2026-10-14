@@ -373,7 +373,8 @@ canonical = `pyproject.toml`。发布时以下必须与之一致，用脚本校�
 | v1.31.0 | feat: Activity 持久化（AUDIT-F-05 闭合）+ GET /api/v1/provenance/{id} REST + saw_verify receipt 增强 | core-trust | shipped (2026-09-18) |
 | v1.31.1 | feat: contamination scan（saw_contamination_scan MCP + GET /api/v1/contamination REST，检测衍生自 superseded 源的 claim）| core-trust | shipped (2026-09-18) |
 | v1.31.0 | Provenance Verification API + Activity 持久化 + wiki 索引 YAML 韧性（AUDIT-F-03 折入）| core-trust | planned |
-| v1.32.0 | Compliance & Audit Tier（Ed25519 receipt 导出 + 数据驻留 + 删除传播）| platform-team | planned |
+| v1.32.0 | feat: Compliance & Audit Tier（receipt bundle 导出 + GDPR/PIPL purge 级联）| platform-team | shipped (2026-10-14) |
+| v1.32.1 | feat: 数据驻留控制 + 合规配置 profile（v1.32.0 deferred）| platform-team | planned |
 | v1.33.0 | Playwright E2E + Desktop 签名/跨平台（AUDIT-F-07/V1/V2 闭合）| ecosystem-integration | planned |
 | v1.34.0 | ANN ≥5000 实证 + coverage 72% + Write Queue 压测（S1/S2/O2）| core-trust | planned |
 | v1.35.0 | Structured Context API v1（统一 vector+graph+ontology+state，★品类定位）| intelligence-adaptation | planned |

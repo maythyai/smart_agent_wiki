@@ -10,11 +10,13 @@ for display purposes.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 import sqlite3
 import threading
 from datetime import datetime, timezone
+from typing import Any
 
 from saw.adapters.storage.fts_tokenize import build_match_query
 from saw.domain.claims import Claim
@@ -472,6 +474,131 @@ class SQLiteClaimsRepository:
             }
             for r in rows
         ]
+
+    # ── v1.32.0: Compliance & Audit Tier ──────────────────────────────
+
+    def export_receipt_bundle(
+        self, claim_uuid: str, signer: Any = None
+    ) -> dict | None:
+        """Export a claim's audit receipt bundle for compliance (v1.32.0).
+
+        Returns the claim metadata + all Ed25519-signed receipts for this
+        claim (ordered by timestamp, with the prev_receipt_id chain) as a
+        JSON-serializable bundle, plus a SHA-256 integrity hash of the
+        canonical bundle. When a ``signer`` (ReceiptSigner with a loaded
+        key) is supplied, the bundle is itself Ed25519-signed
+        (``bundle_signature`` + ``bundle_public_key``) so a regulator can
+        verify non-repudiation offline. Returns ``None`` if the claim does
+        not exist.
+        """
+        claim = self.get_by_id(claim_uuid)
+        if claim is None:
+            return None
+        try:
+            rows = self._conn.execute(
+                "SELECT receipt_id, operation_id, operation_type, agent, "
+                "timestamp, signature, prev_receipt_id, public_key, sink_name, "
+                "session_id FROM receipts WHERE claim_uuid=? ORDER BY timestamp",
+                (claim_uuid,),
+            ).fetchall()
+        except sqlite3.Error:
+            rows = []
+        receipts = [
+            {
+                "receipt_id": r[0],
+                "operation_id": r[1],
+                "operation_type": r[2],
+                "agent": r[3],
+                "timestamp": r[4],
+                "signature": r[5],
+                "prev_receipt_id": r[6],
+                "public_key": r[7],
+                "sink_name": r[8],
+                "session_id": r[9],
+            }
+            for r in rows
+        ]
+        bundle = {
+            "claim": {
+                "uuid": claim.uuid,
+                "content": (claim.content or "")[:500],
+                "source_uuid": claim.source_uuid,
+                "page_number": claim.page_number,
+                "line_number": claim.line_number,
+                "confidence": claim.confidence.name.lower()
+                if hasattr(claim.confidence, "name")
+                else str(claim.confidence),
+                "content_hash": claim.content_hash,
+                "created_at": str(claim.created_at) if claim.created_at else None,
+            },
+            "receipts": receipts,
+            "receipt_count": len(receipts),
+            "exported_at": datetime.now(timezone.utc).isoformat(),
+        }
+        # Integrity hash (always computable) + optional Ed25519 non-repudiation.
+        canonical = json.dumps(bundle, sort_keys=True).encode("utf-8")
+        bundle["bundle_hash"] = hashlib.sha256(canonical).hexdigest()
+        pub = None
+        try:
+            pub = signer.get_public_key() if signer is not None else None
+        except Exception:
+            pub = None
+        if signer is not None and pub:
+            try:
+                bundle["bundle_signature"] = signer.sign_message(canonical.decode("utf-8"))
+                bundle["bundle_public_key"] = pub
+            except Exception:
+                bundle["bundle_signature"] = None
+                bundle["bundle_public_key"] = None
+        else:
+            bundle["bundle_signature"] = None
+            bundle["bundle_public_key"] = None
+        return bundle
+
+    def purge_claim(self, claim_uuid: str) -> dict | None:
+        """Hard-delete a claim + cascade (GDPR/PIPL right-to-erasure, v1.32.0).
+
+        Irreversible. Cascades to ``claim_relation`` (both ends), ``receipts``
+        (claim_uuid), ``fts_index`` (doc_id=claim_uuid), and the ``claim``
+        row itself. Returns per-table deletion counts, or ``None`` if the
+        claim does not exist. Distinct from ``soft_delete_claim`` (logical
+        delete) — purge is the compliance-grade erasure.
+        """
+        claim = self.get_by_id(claim_uuid)
+        if claim is None:
+            return None
+        with self._write_lock:
+            try:
+                with self._conn:
+                    cur_rel = self._conn.execute(
+                        "DELETE FROM claim_relation "
+                        "WHERE source_claim_uuid=? OR target_claim_uuid=?",
+                        (claim_uuid, claim_uuid),
+                    )
+                    cur_rec = self._conn.execute(
+                        "DELETE FROM receipts WHERE claim_uuid=?",
+                        (claim_uuid,),
+                    )
+                    cur_fts = self._conn.execute(
+                        "DELETE FROM fts_index WHERE title=?",
+                        (claim_uuid,),
+                    )
+                    cur_clm = self._conn.execute(
+                        "DELETE FROM claim WHERE uuid=?",
+                        (claim_uuid,),
+                    )
+                return {
+                    "purged": cur_clm.rowcount > 0,
+                    "claim_uuid": claim_uuid,
+                    "cascade": {
+                        "relations": cur_rel.rowcount,
+                        "receipts": cur_rec.rowcount,
+                        "fts_entries": cur_fts.rowcount,
+                        "claim": cur_clm.rowcount,
+                    },
+                }
+            except sqlite3.Error as e:
+                raise ClaimsDBError(f"Failed to purge claim: {e}") from e
 
     @staticmethod
     def _row_to_claim(row) -> Claim:

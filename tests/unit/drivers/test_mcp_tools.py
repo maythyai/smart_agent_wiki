@@ -272,6 +272,9 @@ class TestAllToolsCount:
             "saw_deep_research",
             # v1.31.1 contamination scan +1
             "saw_contamination_scan",
+            # v1.32.0 compliance & audit +2
+            "saw_export_receipt_bundle",
+            "saw_purge_claim",
         ]
 
         for tool in expected_tools:

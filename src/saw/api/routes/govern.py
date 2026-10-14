@@ -320,6 +320,54 @@ def scan_contamination(repo=Depends(_claims_repo)):
     return {"contaminated": contaminated, "count": len(contaminated)}
 
 
+# ── Compliance & Audit (v1.32.0) ─────────────────────────────────────
+
+
+@router.get("/claims/{claim_id}/receipt-bundle")
+def export_receipt_bundle(
+    claim_id: str = Path(..., description="Claim UUID"),
+    repo=Depends(_claims_repo),
+):
+    """v1.32.0: export a claim's audit receipt bundle (compliance / GDPR).
+
+    Returns claim metadata + all Ed25519-signed receipts + a SHA-256 bundle
+    integrity hash, so a regulator can verify provenance + operation history
+    offline. Exposes the same bundle ``saw_export_receipt_bundle`` (MCP)
+    returns, via REST.
+    """
+    if not hasattr(repo, "export_receipt_bundle"):
+        raise HTTPException(503, "Receipt bundle export not available on this repository")
+    try:
+        bundle = repo.export_receipt_bundle(claim_id)
+    except sqlite3.ProgrammingError:
+        raise HTTPException(503, "Claims repository unavailable (cross-thread connection)")
+    if bundle is None:
+        raise HTTPException(404, f"Claim '{claim_id}' not found")
+    return bundle
+
+
+@router.delete("/claims/{claim_id}")
+def purge_claim(
+    claim_id: str = Path(..., description="Claim UUID to permanently purge"),
+    repo=Depends(_claims_repo),
+):
+    """v1.32.0: hard-delete a claim + cascade (GDPR/PIPL right-to-erasure).
+
+    **IRREVERSIBLE.** Cascades to claim_relation, receipts, fts_index, and
+    the claim row. Distinct from soft-delete — this is compliance-grade
+    erasure for right-to-erasure requests.
+    """
+    if not hasattr(repo, "purge_claim"):
+        raise HTTPException(503, "Purge not available on this repository")
+    try:
+        result = repo.purge_claim(claim_id)
+    except sqlite3.ProgrammingError:
+        raise HTTPException(503, "Claims repository unavailable (cross-thread connection)")
+    if result is None:
+        raise HTTPException(404, f"Claim '{claim_id}' not found")
+    return result
+
+
 # ── Lint / Health ────────────────────────────────────────────────────
 
 

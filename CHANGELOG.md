@@ -3,6 +3,18 @@
 All notable changes to this project are documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [v1.32.0] - 2026-10-14
+### Added — Compliance & Audit Tier (feat MINOR)
+- **Audit receipt bundle 导出**: `saw_export_receipt_bundle(claim_uuid)` MCP + `GET /api/v1/claims/{claim_id}/receipt-bundle` REST——导出 claim 元数据 + 全部 Ed25519-signed receipts（含 prev 链）+ SHA-256 bundle 完整性 hash（可选 Ed25519 bundle 签名）。监管可离线验证 claim 溯源 + 操作历史。对齐 2026.05《智能体规范》可信底线。
+- **删除传播（GDPR/PIRL purge）**: `saw_purge_claim(claim_uuid)` MCP + `DELETE /api/v1/claims/{claim_id}` REST——hard-delete claim + 级联 `claim_relation`（两端）+ `receipts`（claim_uuid）+ `fts_index`（doc_id）+ `claim`。不可逆，被遗忘权合规级清除。与既有 `soft_delete_claim`（逻辑删）并存。
+
+### Deferred → v1.32.1
+- **数据驻留控制**（workspace→存储后端绑定 + on-prem 断言）+ **合规配置 profile**（YAML per 行业）: config-heavy → v1.32.1 MINOR。解除条件: v1.32.0 released ✓。
+
+### Release Gate
+- pytest 2414 passed / 7 skipped / 0 failed（+5: TestComplianceRoute）；coverage 68.4x%（gate 67）；ruff 0；tsc clean。
+- feat MINOR（additive，无 breaking）。MCP 工具 36→38（expected_tools + README 同步）。
+
 ## [v1.31.1] - 2026-09-18
 ### Added — contamination scan (feat MINOR, v1.31.0 deferred 项)
 - **`saw_contamination_scan` MCP + `GET /api/v1/contamination` REST**: 扫描 claim 库，返回衍生自已解决 SUPERSEDED 矛盾源 claim 的 claim（contaminated）——源被判定过时，衍生 claim 仍被检索/推理使用即污染下游。每条附源 uuid + 矛盾 id + reason="superseded_source"。直击审计调研发现（97% 多 agent 系统从不做溯源验证）。逻辑实现在 `claims_repo.scan_contamination()`（MCP+REST 共用）。

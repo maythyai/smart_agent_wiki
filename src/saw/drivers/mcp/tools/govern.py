@@ -300,6 +300,59 @@ async def saw_contamination_scan() -> dict[str, Any]:
 
 
 @mcp.tool
+async def saw_export_receipt_bundle(claim_uuid: str) -> dict[str, Any]:
+    """v1.32.0: export a claim's audit receipt bundle (compliance / GDPR).
+
+    Returns the claim metadata + all Ed25519-signed receipts for the claim
+    (with the prev_receipt_id chain) + a SHA-256 bundle integrity hash. Lets
+    a regulator verify a claim's provenance + operation history offline.
+
+    Args:
+        claim_uuid: UUID of the claim whose receipt bundle to export.
+
+    Returns:
+        ``{claim, receipts, receipt_count, exported_at, bundle_hash,
+        bundle_signature?, bundle_public_key?}`` or ``{error}``.
+    """
+    if _governor is None:
+        return {"error": "governor_not_initialized"}
+    repo = getattr(_governor, "claims_repo", None) or getattr(_governor, "_claims_repo", None)
+    if repo is None or not hasattr(repo, "export_receipt_bundle"):
+        return {"error": "claims_repo_not_available"}
+    bundle = repo.export_receipt_bundle(claim_uuid)
+    if bundle is None:
+        return {"error": "claim_not_found", "claim_uuid": claim_uuid}
+    return bundle
+
+
+@mcp.tool
+async def saw_purge_claim(claim_uuid: str) -> dict[str, Any]:
+    """v1.32.0: hard-delete a claim + cascade (GDPR/PIPL right-to-erasure).
+
+    **IRREVERSIBLE.** Cascades to ``claim_relation`` (both ends),
+    ``receipts`` (claim_uuid), ``fts_index`` (doc_id), and the ``claim``
+    row. Distinct from soft-delete (logical) — purge is compliance-grade
+    erasure. Use only for right-to-erasure requests.
+
+    Args:
+        claim_uuid: UUID of the claim to permanently purge.
+
+    Returns:
+        ``{purged, claim_uuid, cascade:{relations,receipts,fts_entries,claim}}``
+        or ``{error: claim_not_found}``.
+    """
+    if _governor is None:
+        return {"error": "governor_not_initialized"}
+    repo = getattr(_governor, "claims_repo", None) or getattr(_governor, "_claims_repo", None)
+    if repo is None or not hasattr(repo, "purge_claim"):
+        return {"error": "claims_repo_not_available"}
+    result = repo.purge_claim(claim_uuid)
+    if result is None:
+        return {"error": "claim_not_found", "claim_uuid": claim_uuid}
+    return result
+
+
+@mcp.tool
 async def saw_blast_radius(claim_uuid: str) -> dict[str, Any]:
     """Analyze downstream impact before editing.
 

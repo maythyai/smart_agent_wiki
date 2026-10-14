@@ -266,6 +266,114 @@ class TestContaminationRoute:
         assert r.json()["count"] == 0
 
 
+class TestComplianceRoute:
+    """v1.32.0 GET /claims/{id}/receipt-bundle + DELETE /claims/{id} (GDPR purge)."""
+
+    def test_receipt_bundle_not_found(self, tmp_path):
+        client = _build_client(tmp_path)
+        r = client.get("/api/v1/claims/nonexistent/receipt-bundle")
+        assert r.status_code == 404
+
+    def test_receipt_bundle_returns_claim_and_hash(self, tmp_path):
+        from saw.domain.claims import Claim
+
+        client = _build_client(tmp_path)
+        repo = client.app.state.query._claims_repo
+        cid = "claim-comp-1"
+        repo.insert(
+            Claim(uuid=cid, content="compliance fact", source_uuid="root",
+                  content_hash="hc", page_number=2, line_number=5)
+        )
+        r = client.get(f"/api/v1/claims/{cid}/receipt-bundle")
+        assert r.status_code == 200
+        body = r.json()
+        assert body["claim"]["uuid"] == cid
+        assert body["claim"]["page_number"] == 2
+        assert body["receipt_count"] == 0
+        assert "bundle_hash" in body
+        assert len(body["bundle_hash"]) == 64  # sha256 hex
+
+    def test_receipt_bundle_includes_receipts(self, tmp_path):
+        from saw.domain.claims import Claim
+
+        client = _build_client(tmp_path)
+        repo = client.app.state.query._claims_repo
+        conn = repo._conn
+        cid = "claim-comp-2"
+        repo.insert(Claim(uuid=cid, content="x", source_uuid="root", content_hash="hx"))
+        conn.execute(
+            "INSERT INTO receipts(receipt_id, operation_id, operation_type, agent, "
+            "timestamp, claim_uuid, payload_hash, signature, public_key, session_id) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?)",
+            ("r-1", "op-1", "ingest", "Writer", "2026-10-14T00:00:00Z",
+             cid, "ph-1", "sig-1", "pk-1", "s-1"),
+        )
+        conn.commit()
+        r = client.get(f"/api/v1/claims/{cid}/receipt-bundle")
+        assert r.status_code == 200
+        body = r.json()
+        assert body["receipt_count"] == 1
+        assert body["receipts"][0]["receipt_id"] == "r-1"
+        assert body["receipts"][0]["signature"] == "sig-1"
+
+    def test_purge_not_found(self, tmp_path):
+        client = _build_client(tmp_path)
+        r = client.delete("/api/v1/claims/nonexistent")
+        assert r.status_code == 404
+
+    def test_purge_cascades(self, tmp_path):
+        """Purge hard-deletes the claim + cascades to relations, receipts, FTS."""
+        from saw.domain.claims import Claim
+
+        client = _build_client(tmp_path)
+        repo = client.app.state.query._claims_repo
+        conn = repo._conn
+        cid = "claim-purge-1"
+        # claim + a relation referencing it + a receipt + an fts entry
+        repo.insert(Claim(uuid=cid, content="to be purged", source_uuid="root", content_hash="hp"))
+        repo.insert(Claim(uuid="other", content="related", source_uuid="root", content_hash="ho"))
+        conn.execute(
+            "INSERT INTO claim_relation(source_claim_uuid, target_claim_uuid, relation_type) "
+            "VALUES (?,?,'derives')",
+            (cid, "other"),
+        )
+        conn.execute(
+            "INSERT INTO receipts(receipt_id, operation_id, operation_type, agent, "
+            "timestamp, claim_uuid, payload_hash, signature, public_key, session_id) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?)",
+            ("rp-1", "op-p", "ingest", "Writer", "2026-10-14T00:00:00Z",
+             cid, "php", "sigp", "pkp", "sp"),
+        )
+        conn.execute(
+            "INSERT INTO fts_index(title, content, tags, original) VALUES (?,?,?,?)",
+            (cid, "to be purged content", "", "to be purged content"),
+        )
+        conn.commit()
+
+        r = client.delete(f"/api/v1/claims/{cid}")
+        assert r.status_code == 200
+        body = r.json()
+        assert body["purged"] is True
+        assert body["cascade"]["claim"] == 1
+        assert body["cascade"]["relations"] == 1
+        assert body["cascade"]["receipts"] == 1
+        assert body["cascade"]["fts_entries"] == 1
+
+        # Verify the claim + cascade rows are gone.
+        assert repo.get_by_id(cid) is None
+        rel = conn.execute(
+            "SELECT COUNT(*) FROM claim_relation WHERE source_claim_uuid=? OR target_claim_uuid=?",
+            (cid, cid),
+        ).fetchone()[0]
+        assert rel == 0
+        rec = conn.execute("SELECT COUNT(*) FROM receipts WHERE claim_uuid=?", (cid,)).fetchone()[0]
+        assert rec == 0
+        fts = conn.execute("SELECT COUNT(*) FROM fts_index WHERE title=?", (cid,)).fetchone()[0]
+        assert fts == 0
+        # The 'other' claim is untouched.
+        assert repo.get_by_id("other") is not None
+
+
 # ── Query / Ingest / Learn routes ────────────────────────────────────
 
 
