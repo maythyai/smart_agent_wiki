@@ -281,6 +281,20 @@ Push 阶段: G1, G4（全量检查，可较重，≤2min 完成）
 | R6 | Step 0 强制既有 findings 基线回读 | `audit-pipeline.md` Step 0 | cookie-health/sre 已登记但未被发现 |
 | R7 | 每步产物带"检测盲区声明" | 全部 prompt 文件 | UNSCREENED 分层登记未验项 |
 
+## 三.5、自动化门禁映射（G1-G5 编码门禁 ↔ G-* 治理门禁）
+
+> 本文件的 G1-G5 是**编码级门禁**（PR/push 拦截具体代码问题）；`automation-validation.md` 的 G-POS/G-NAV/G-DOC/G-FLAG/G-PLACEHOLDER/G-DUAL-NAV 是**治理级门禁**（收敛闸门拦截架构/定位问题）。两层互补，统一由 `scripts/validate_gates.py` 编排治理级，编码级由各 CI 脚本独立跑。
+
+| 编码门禁（本文件） | 对应治理门禁 | 关系 |
+|------------------|------------|------|
+| G1 route_registry.py | G-NAV / G-DUAL-NAV | G1 查单条孤儿路由；G-NAV 查导航总量预算 |
+| G2 wording_check.mjs | G-POS | G2 查文案一致性；G-POS 查定位漂移（to-B 关键词） |
+| G3 placeholder_gate.mjs | G-PLACEHOLDER | 同一门禁，G3 是 CI 脚本名，G-PLACEHOLDER 是 validate_gates 委托封装 |
+| G4 deprecation_ttl.py | —（治理级未覆盖） | deprecation TTL 仍由 G4 独立跑 |
+| G5 hex_lint.mjs | —（治理级未覆盖） | hex/token 纪律仍由 G5 独立跑（diff 级） |
+
+**统一编排**：`python scripts/validate_gates.py` 跑全部治理级门禁 + 委托 G-CONTRACT/G-BUTTON/G-LAYER 到既有脚本。编码级 G1/G2/G4/G5 在 PR CI 独立跑（见 §二门禁执行策略）。参考实现见 auto_content `scripts/validate_gates.py`，移植指引见 `automation-validation.md` §六。
+
 ---
 
 ## 四、根因 → 规范映射速查

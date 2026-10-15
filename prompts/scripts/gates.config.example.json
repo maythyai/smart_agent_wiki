@@ -1,0 +1,65 @@
+{
+  "_comment": "通用治理门禁配置示例 — 复制为 .csp/gates.config.json 并按项目实际修改。schema 见 prompts/automation-validation.md，脚本见 prompts/scripts/validate_gates.py",
+
+  "project_name": "my-project",
+
+  "_trust_model": "信任模型，决定 G-POS/G-FLAG 判定哪些关键词/flag 是漂移。single-operator 产品填 to-B 关键词为漂移；to-B 产品应反转（填 to-C 关键词为漂移，或禁用 G-POS）",
+  "trust_model": "single-operator",
+
+  "paths": {
+    "_comment": "全部相对仓库根。留空字符串 = 该门禁 SKIPPED（不报错，登记解除条件）",
+    "agents_md": "AGENTS.md",
+    "nav_config": "apps/web/src/components/layout/sidebar-config.ts",
+    "feature_flags": "apps/web/src/lib/feature-flags.ts",
+    "doc_status": "docs/DOC-STATUS.md",
+    "placeholder_registry": "docs/PLACEHOLDER-REGISTRY.md",
+    "roadmap": "docs/strategy/ROADMAP.md",
+    "web_src": "apps/web/src"
+  },
+
+  "thresholds": {
+    "nav_budget": 7,
+    "doc_stale_warn_days": 30,
+    "doc_stale_error_days": 60,
+    "_placeholder_baseline": "null = 从 registry 文件解析 'N 处占位'；也可硬编码整数",
+    "placeholder_baseline": null
+  },
+
+  "_drift_keywords": "与 trust_model 冲突的特性关键词。single-operator 产品填 to-B 关键词",
+  "drift_keywords": [
+    "team", "团队", "enterprise", "企业", "tenant", "多租户", "multi-tenant",
+    "SSO", "广告主", "advertiser", "CRM", "商单", "结算", "settlement",
+    "变现", "monetization", "组织", "organization", "RBAC", "权限管理",
+    "团队协作", "team_collaboration", "白标", "white-label", "SLA"
+  ],
+
+  "_severe_drift_keywords": "命中 nav 即 ERROR（用户可见漂移）的子集",
+  "severe_drift_keywords": [
+    "team", "团队", "enterprise", "企业", "tenant", "多租户",
+    "变现", "monetization", "广告主", "advertiser", "商单", "结算", "settlement"
+  ],
+
+  "_flag_conflict_pattern": "flag 名中与 trust_model 冲突的正则（仅 single-operator 时生效）",
+  "flag_conflict_pattern": "team|enterprise|tenant|org",
+
+  "_delegated_gates": "委托项目既有脚本。script 留空 = SKIPPED。args 传给脚本",
+  "delegated_gates": {
+    "G-CONTRACT": {"script": "scripts/scan_contract.py", "args": ["--strict"]},
+    "G-BUTTON": {"script": "scripts/button_audit.py", "args": []},
+    "G-LAYER": {"script": "scripts/lint_layer.py", "args": ["--strict"]}
+  },
+
+  "_enabled_gates": "启用的门禁，可按项目裁剪（如无前端则去掉 G-NAV/G-BUTTON）",
+  "enabled_gates": [
+    "G-POS", "G-NAV", "G-DOC", "G-FLAG", "G-PLACEHOLDER",
+    "G-DUAL-NAV", "G-CONTRACT", "G-BUTTON", "G-LAYER"
+  ],
+
+  "_blocking_gates": "ERROR 即 exit 1 的门禁（阻断收敛/发布）",
+  "blocking_gates": [
+    "G-POS", "G-NAV", "G-DOC", "G-FLAG", "G-PLACEHOLDER",
+    "G-CONTRACT", "G-LAYER"
+  ],
+
+  "report_dir": ".csp/convergence"
+}

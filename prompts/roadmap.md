@@ -6,9 +6,9 @@
 
 ## 全流程定位
 
-**全流程**：外环 `roadmap`（战略锚点+版本号规则+版本序列路径+**集成必要性审视 gate**，跑一次/低频增量）→ 内环 `00` 知识中枢 → `01` PRD → `02` 需求拆解 → `03` 技术方案+Spec → `04` 任务拆解 → `05` 实施 → `06` 审查·发布 → `07` 复盘（findings 回流 roadmap/下一轮 01）。
+**全流程**：外环 `roadmap`（战略锚点+版本号规则+版本序列路径+**集成必要性审视 gate**，跑一次/低频增量）→ ★ **收敛闸门** `product-design-convergence`（功能架构收敛+核心取舍+IA 方向，每次 roadmap 后必跑，不通过不回 01）→ 内环 `00` 知识中枢 → `01` PRD → `02` 需求拆解 → `03` 技术方案+Spec → `04` 任务拆解 → `05` 实施 → `06` 审查·发布 → `07` 复盘（findings 回流 roadmap/下一轮 01）。
 
-**你现在在：外环 `roadmap`**（先于 00；每个项目跑一次，07 回流/战略调整时增量更新；下一步 → 内环 `00` 知识中枢）。
+**你现在在：外环 `roadmap`**（先于 00；每个项目跑一次，07 回流/战略调整时增量更新；下一步 → 收敛闸门 `product-design-convergence`）。
 
 ## 一、使命与硬边界（红线）
 
@@ -166,7 +166,7 @@
 ### Phase 5：产出 + 回写 + 衔接
 - 写 `docs/strategy/STRATEGY.md`（锚点）+ `docs/strategy/ROADMAP.md`（版本号规则 + **Phase 2.5 审视后的净版**版本序列路径 + 版本-主题表）+ `docs/FEATURES.md`（功能列表：版本×模块×功能×集成状态矩阵；Phase 2 每版本的功能行落入此文件，状态初始 `📋规划中`，Phase 2.5 剔除/降级/合并后同步）；若有参考文件夹，另写 `docs/analysis/COMPETITIVE-REFERENCE.md`（借鉴清单）；Phase 2.5 写 `docs/analysis/INTEGRATION-NECESSITY-{date}.md`（审视表）。
 - 回写 `.csp/manifest.json`：strategy/roadmap/competitive-reference/integration-necessity item `source_type=doc`、`build_status=built` + `content_hash`；被 Phase 2.5 剔除/降级的功能行 item 标 `degraded`/移除。
-- 衔接声明：01 PRD 读 ROADMAP（已过 Phase 2.5 净版）定位本版本主题；06 release 用版本号规则 + 标记 `docs/FEATURES.md` 已交付功能 `✅`；07 复盘 findings 回流更新 ROADMAP 下一版本主题 + 校准 FEATURES.md planned-vs-delivered 漂移；**07 回流触发增量更新时 Phase 2.5 重跑**（对新主题候选再过一遍集成必要性审视）。
+- 衔接声明：01 PRD 读 ROADMAP（已过 Phase 2.5 净版）定位本版本主题——**但 01 PRD 的功能清单必须基于 `.csp/convergence/CONVERGED-FEATURE-PLAN.md`（收敛闸门产物），不能用 ROADMAP 原始清单**；06 release 用版本号规则 + 标记 `docs/FEATURES.md` 已交付功能 `✅`；07 复盘 findings 回流更新 ROADMAP 下一版本主题 + 校准 FEATURES.md planned-vs-delivered 漂移；**07 回流触发增量更新时 Phase 2.5 重跑**（对新主题候选再过一遍集成必要性审视）。
 
 ## 五、产物路径规范（与 00-07 同构）
 
@@ -201,7 +201,9 @@ see_also: docs/prd/PRD-INDEX.md | .csp/review/REVIEW-FINDINGS-*.json
 
 | 衔接点 | 方向 | 内容 |
 |---|---|---|
-| **roadmap → 01 PRD** | 下游 | 01 探测读 ROADMAP，PRD front-matter `roadmap_ref` + `target_version` 标注本 PRD 实现哪个版本/主题；PRD 正文背景/价值对齐 ROADMAP 主题，详细 spec 才展开 |
+| **roadmap → 收敛闸门** | 下游 | `product-design-convergence` 读取 ROADMAP 的版本-主题表，做功能架构收敛+核心取舍+IA 方向+迭代优先级审查，产出收敛后功能清单 |
+| **收敛闸门 → 01 PRD** | 下游 | 01 探测读 ROADMAP 的版本/主题定位，读 `.csp/convergence/CONVERGED-FEATURE-PLAN.md` 的收敛后功能清单（PRD 功能以此为唯一事实源）；PRD front-matter `roadmap_ref` + `target_version` 标注本 PRD 实现哪个版本/主题；PRD 正文背景/价值对齐 ROADMAP 主题，IA 对齐 `IA-DIRECTION.md` |
+| **roadmap → 01 PRD** | 间接 | 01 仍读 ROADMAP 定位版本/主题，但功能清单不直接从 ROADMAP 取——必经收敛闸门
 | **roadmap → 06 release** | 下游 | 06 发布执行用 ROADMAP「版本号规则」节（SemVer/CalVer/Tag/预发布）；版本号一致性校验 reference 此节 |
 | **07 复盘 → roadmap** | 回流 | 07 findings（status=open/deferred）回流为 ROADMAP 下一版本主题输入；更新版本-主题表 status（planned→in-progress→shipped→deferred） |
 | **roadmap → lifecycle** | 感知 | 读 `.csp/lifecycle-state.json` 对齐在跑版本；roadmap 自身不写 lifecycle（它在外环） |

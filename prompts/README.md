@@ -7,6 +7,7 @@
 | 顺序 | 阶段 | 文件 | 产出目录 |
 |---|---|---|---|
 | 外环 | 产品长期规划（战略锚点+版本号规则+版本序列路径+**版本功能集成必要性审视 gate**） | [roadmap.md](./roadmap.md) | `docs/strategy/`（STRATEGY+ROADMAP）+ `docs/analysis/`（INTEGRATION-NECESSITY） |
+| 闸门 | 产品架构收敛审查（功能架构梳理+核心/次要取舍+IA 方向+迭代优先级——roadmap 与 01 PRD 之间的必经闸门） | [product-design-convergence.md](./product-design-convergence.md) | `.csp/convergence/`（CONVERGENCE-REPORT + CONVERGED-FEATURE-PLAN + IA-DIRECTION）+ `docs/analysis/`（摘要） |
 | 0 | 知识中枢初始化 | [00-knowledge-hub.md](./00-knowledge-hub.md) | `.csp/AGENTS.md` + `.csp/manifest.json` |
 | 1 | PRD 生成（产品需求） | [01-prd.md](./01-prd.md) | `docs/prd/` + `.csp/product-spec/`（PMS） |
 | 2 | 需求拆解（工程级 Feature） | [02-decomposition.md](./02-decomposition.md) | `.csp/decomposition/` |
@@ -20,11 +21,16 @@
 | 独立 | E2E 深度验证（M1 交互验证+修复 / M2 建套件 / M3 取证 / M4 全路由 sweep+按钮级点击审计+孤儿路由/隐藏后端功能审计+结构健康核查） | [e2e-deep-audit.md](./e2e-deep-audit.md) | `verify/` + `evidence/` + `gap-analysis/`（零 skill 依赖，可独立粘贴） |
 | 独立 | 产品总监批评性审查（重复/冗余/IA/视觉交互一致性/用户习惯/定位/完整性/状态 七镜头，带产品 sense 给 critic judgement） | [product-critic-review.md](./product-critic-review.md) | `.csp/critic/` + `docs/analysis/`（前缀 `CRITIC-F-NN`，交棒 roadmap→Phase 2.5） |
 | 独立 | UI/UX 设计总监审查——从审查方法到版本迭代的完整闭环（八镜头→提升点分级→落实到 PRD/Spec/Task→版本迭代路线图→回归验证） | [ui-review-to-iteration.md](./ui-review-to-iteration.md) | `.csp/ui-review/` + `docs/analysis/`（前缀 `UI-F-NN`，交棒 roadmap） |
+| 独立 | 自动化验证层——提示词↔脚本契约（9 个机器可执行治理门禁 G-POS/G-NAV/G-DOC/G-FLAG/G-PLACEHOLDER/G-DUAL-NAV/G-CONTRACT/G-BUTTON/G-LAYER，映射五类根因 Pattern，统一 JSON 报告供提示词消费） | [automation-validation.md](./automation-validation.md) | `.csp/convergence/GATE-REPORT-{date}.json`（通用脚本 `scripts/validate_gates.py` + 配置 `gates.config.example.json`） |
+| 独立 | 连续版本交付流水线——lifecycle-orchestrator 续跑全部待交付版本，含 01 前置四读、收敛闸门、findings 闭合契约、06 双闸门（findings_closure + version_integrity） | [develop_pipeline.md](./develop_pipeline.md) | 驱动 00-07 连续迭代 + `prompts/scripts/` 发布门禁 |
+| 独立 | 开发期 UI 预防规范（8 条编码规范 N1-N8 + 5 个 CI 门禁 G1-G5 + 7 项审查链路增强，从历次审计根因提炼） | [prevention-norms.md](./prevention-norms.md) | 供 AGENTS.md 检查清单引用 |
 | 棕地 | docs/→.csp/ 双轨整合（PRD→PMS、strategy→lifecycle、solutions→specs、analysis→audit） | [brownfield-doc-integration.md](./brownfield-doc-integration.md) | `.csp/product-spec/` + `.csp/manifest.json` + `docs/` 整理归位 |
 
 > **06 vs 07**：06 是**发布前符合性验证**（实现是否满足 PRD/Spec/AC、能否上线），是门控；07 是**里程碑后整体复盘**（产品对不对、架构稳不稳、下一步做什么），探索性/战略性，不卡发布。07 从用户视角+技术视角发现 Spec 之外的新问题，findings 回流下一迭代 01-05 + 外环 roadmap。
 
 > **外环 roadmap**：`roadmap.md` 先于 00 跑一次——产出战略锚点（STRATEGY.md）+ 版本号规则 + 1/3 年+迭代路径（ROADMAP.md）。01 PRD 读 ROADMAP 定位本版本主题（`roadmap_ref`/`target_version`）；06 release 用版本号规则；07 复盘 findings 回流更新 ROADMAP 下一版本主题。每个项目通常只跑一次，07 回流或战略调整时增量更新。
+
+> **收敛闸门 `product-design-convergence`**：roadmap 与 01 PRD 之间的**必经硬闸门**——不通过不进入开发。核心判断："功能杂乱"不是审美问题，是治理问题；产品说的（AGENTS.md 定位）和产品做的（roadmap 功能清单）分家是根因。本流程建立**功能准入机制**：Phase 0 定位与支柱基线（AGENTS.md 最高权威）→ Phase 1 功能全景+定位对齐+支柱映射 → Phase 2 六维度收敛（D1 功能架构/D2 核心取舍/D3 IA+**导航准入三问**+导航预算/D4 迭代优先级/D5 **定位对齐与前提挑战**/D6 **系统级卫生**：后端膨胀+Feature Flag+文档权威）→ Phase 3 五类根因 Pattern 检测（A 定位漂移/B 架构无收敛/C 前端 IA 债/D 后端膨胀/E 文档权威失守）→ Phase 4 收敛后功能清单（01 PRD 唯一输入）→ Phase 5 裁决记录+交棒。导航准入三问：Q1 独立任务域？Q2 频率≥每周？Q3 导航预算内？三问不过禁止新增顶级导航。定位漂移 >30% → 整个 roadmap 回炉。产出 CONVERGED-FEATURE-PLAN + IA-DIRECTION（含导航预算）+ SYSTEM-HYGIENE。非单功能 PATCH 修复版本必跑。
 
 > **独立审计 `audit`**：`audit.md` 独立于 00–07 链路，可随时运行——模块化拆解（含 DB 模块）→ 并行 fan-out 事实 → 需求可追溯缺口 → 跨层联动测试 → 逐模块可用性审查（Mode A/B + Nielsen 10）→ 评级 → 裁决报告 → findings 带 SemVer bump 建议回流 roadmap。产出 `.csp/audit/`（MODULE-LIST/USABILITY-REPORT/AUDIT-VERDICT/FINDINGS）。兼容 CSP 全部约定；不写 lifecycle、不改代码，只产审计+建议（修复归 05/06）。
 
@@ -35,6 +41,10 @@
 > **产品总监批评性审查 `product-critic-review`**：独立于 00–07 链路，版本间隙/发布前任意时点触发。以产品总监/资深 PM 视角带 product sense 对**已实现功能与界面挑刺**（不是找缺口增强，而是批评已有问题）。七组镜头全覆盖：A 重复与冗余（功能重复跨模块 / 配置重复多处 / 实现重复 / 入口重复——按限界上下文判归属、单一真相源）、B 信息架构与模块组织、C 视觉与交互一致性、D 用户习惯与认知（Nielsen ①⑥）、E 宏观定位与产品阶段对齐、F 功能完整性与可用性违例（F1-F12 + Nielsen 10 + 领域目录）、G 状态覆盖与边界。内置设计判定清单 M1-M8（视觉层级/交互模式/响应式/原型验证/视觉基线对比/可访问性/限界上下文判散乱/图表规范），UI 改动建议先出原型不悬空提。每条 finding 必带产品 sense rationale（论证对用户认知/效率/信任/定位的具体伤害），区分真问题 vs 审美偏好。落 `.csp/critic/`（`CRITIC-F-NN`）+ `docs/analysis/`，经 `回流阶段` 字段三路径汇入主线：P0 直发 04 fix / P1·P2 经 Phase 2.5 集成必要性审视交棒 roadmap→01 / deferred 自动承继下一版本。与 `audit`（工程结构体检）、`feature-gap`（增强深潜）互补可串联，前缀不同可并存去重。
 
 > **UI/UX 设计总监审查 `ui-review-to-iteration`**：独立于 00–07 链路，版本间隙/发布前任意时点触发。以 UI/UX 设计总监视角对**全部界面做系统性审查**，产出从审查方法到版本迭代的完整闭环。六大 Phase 贯穿：Phase 1 审查前基线建立（产品定位+设计系统+Token 漂移对照表+界面全景）；Phase 2 八镜头逐模块审查（①视觉层级与布局 ②交互模式与反馈 ③信息架构与导航 ④视觉与交互一致性 ⑤用户习惯与认知 ⑥响应式与多端适配 ⑦可访问性 ⑧状态覆盖与边界——8 个镜头共 50+ 细粒度检查项，均内联判定标准+反模式，不依赖外部 skill）；Phase 3 跨模块聚合裁决（一致性聚合/IA 重组/Token 漂移全局治理/宏观定位复检）；Phase 4 提升点优先级矩阵（4 级严重度 + P0-P3 四级优先级 + 版本迭代路线图模板 + 按产品阶段的迭代节奏建议）；Phase 5 落实到产品文档（Finding→PRD/UI 要求、Finding→Spec/验收标准、Finding→Task/实现的具体映射格式）；Phase 6 版本迭代执行与回归验证（执行流+回归清单+闭环度量）。内置附录：审查执行快速参考卡、Nielsen 10 速查表、M1-M8 设计方法速查。落 `.csp/ui-review/`（`UI-F-NN`）+ `docs/analysis/`，交棒 roadmap。与其他提示词互补：`audit` 出结构问题 → 本流程做 UI 级分析 → `feature-gap` 出增强点 → `product-audit-to-roadmap` 聚合成产品演进方向。区别于 `product-critic-review`（产品总监挑刺已有功能，侧重定位/重复/散乱/反习惯）——本流程专注 UI/UX 层面的视觉/交互/一致性/可访问性/状态覆盖，侧重"界面怎么改、怎么排期"。
+
+> **自动化验证层 `automation-validation`**：提示词↔脚本契约——把"判断与裁决"（提示词，需 product sense）与"确定性检测"（脚本，可机器判定）分离。定义 9 个治理门禁（G-POS 定位漂移/G-NAV 导航预算/G-DOC 文档新鲜度/G-FLAG Flag 卫生/G-PLACEHOLDER 占位增长/G-DUAL-NAV 多导航源/G-CONTRACT 契约孤儿/G-BUTTON 按钮 a11y/G-LAYER 分层违规），映射五类根因 Pattern A-E，统一编排命令 `python scripts/validate_gates.py`，退出码 0/1/2 语义，JSON 报告落 `.csp/convergence/GATE-REPORT-{date}.json` 供 convergence/audit-pipeline/ui-review 程序化消费。参考实现已在 auto_content 落地（委托既有 scan_contract.py/button_audit.py/lint_layer.py，新增 6 个治理门禁）。提示词层项目无关（引用门禁 ID + JSON schema），脚本层项目特定（路径/关键词/阈值可移植）。含 CI 集成示例 + 移植到新项目的 5 步模板化指引。
+
+> **开发期预防规范 `prevention-norms`**：从历次 UI/UX 审计 findings 提炼的根因→机器可查约束。8 条编码规范（N1 路由必须注册/N2 导航只放目的地/N3 同域单一事实源/N4 按钮文案动作词典/N5 占位规范/N6 hex-token 纪律/N7 deprecation 带 TTL/N8 立项查重）+ 5 个 CI 门禁（G1 route_registry/G2 wording_check/G3 placeholder_gate/G4 deprecation_ttl/G5 hex_lint，含统一脚本接口约定 exit 0/1/2/3 + stdout JSON）+ 7 项审查链路增强（R1-R7）。供 AGENTS.md 检查清单引用，与 `automation-validation.md` 的 G-* 门禁互补（G1-G5 是 PR/push 级编码门禁，G-POS 等是治理级收敛门禁）。
 
 > **棕地文档整合 `brownfield-doc-integration`**：独立于 00–07 链路，是 00 Phase 1.5/1.7 在"docs/→.csp/ 双轨整合"上的具体化。棕地项目 onboarding 时跑——把 `docs/` 的 `prd/`/`strategy/`/`solutions/`/`analysis/` 蒸馏+索引进 `.csp/`（PRD→PMS、strategy→lifecycle/VERSION-REGISTRY、solutions→specs/review、analysis→audit/review），原文留 `docs/` 不复制全文，`.csp/` 只存工程蒸馏 + manifest 索引 + front-matter 互链。`.csp/AGENTS.md` 不存在先跑 00。可随时增量重跑（delta）。产物 `.csp/product-spec/` + `.csp/manifest.json` + `docs/` 整理归位。
 

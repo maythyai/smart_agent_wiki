@@ -104,6 +104,22 @@ done
 
 本轮 findings 的根因分类与预防规范已写入 `prompts/prevention-norms.md`（8 条编码规范 + 5 个 CI 门禁 + 7 项审查链路增强）。在进入具体 Step 前，确保理解每条 finding 都有一个对应的**机器可查的预防手段**——审查不是终点，预防才是。
 
+### Step 0.8 — 自动化门禁快照（机器证据前置）
+
+> 详见 `automation-validation.md`。在人工审查前，先跑确定性门禁拿机器证据，避免 agent 用 grep 凑数。
+
+```bash
+python scripts/validate_gates.py --json > .csp/audit/GATE-SNAPSHOT-{date}.json 2>&1
+python scripts/validate_gates.py   # 人类可读摘要
+```
+
+**消费规则**：
+- 9 个门禁（G-POS/G-NAV/G-DOC/G-FLAG/G-PLACEHOLDER/G-DUAL-NAV/G-CONTRACT/G-BUTTON/G-LAYER）映射五类根因 Pattern A-E
+- `verdict == "BLOCKED"` → 这些阻断项成为 Step 1-5 的**优先审查目标**（机器已定位，人工深挖 product sense）
+- 各 Step 引用门禁 metrics 作为证据（如 Step 3 ui-review 镜头 3 引用 G-NAV 的"11 sections > 7"），不重复计数
+- 脚本不存在 → 标 SKIPPED + 解除条件，降级为人工检查但须声明"无机器证据"
+- 门禁报告与 Step 1-5 的 findings 交叉验证：机器报 ERROR 但人工判误报 → 记入"门禁校准"反馈，调阈值或白名单
+
 ---
 
 ## 调用顺序与去重归属
