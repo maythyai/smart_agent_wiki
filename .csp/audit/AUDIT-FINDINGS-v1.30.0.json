@@ -38,7 +38,12 @@
       "ref_step": "Step1-static",
       "fix_hint": "更新 tests/unit/drivers/test_mcp_tools.py expected_tools 列表 +1 工具，并三处(README/test/manifest)对齐真实工具数",
       "fixed_in": "v1.30.1",
-      "closed_at": "2026-09-18"
+      "closed_at": "2026-09-18",
+      "resolution": "test_mcp_tools expected_tools +saw_deep_research (34→35) + README MCP count 对齐; test_all_tools_registered pass",
+      "verification": {
+        "code_evidence": "tests/unit/drivers/test_mcp_tools.py:268-272 (expected_tools +saw_deep_research)",
+        "dynamic": "pytest tests/unit/drivers/test_mcp_tools.py -q → 30 passed exit 0 (v1.30.1)"
+      }
     },
     {
       "id": "AUDIT-F-03",
@@ -51,7 +56,12 @@
       "quick_fix": false,
       "ref_step": "Step1-static",
       "fixed_in": "v1.30.2",
-      "closed_at": "2026-09-18"
+      "closed_at": "2026-09-18",
+      "resolution": "WikiIndexer.index_all per-page try/except: bad YAML page skip+warn+continue, 整库索引不阻断",
+      "verification": {
+        "code_evidence": "src/saw/engines/query/wiki_indexer.py index_all (AUDIT-F-03 per-page try/except)",
+        "dynamic": "pytest tests/unit/engines/query/test_wiki_indexer.py::test_index_all_skips_unparseable_page → pass exit 0 (v1.30.2)"
+      }
     },
     {
       "id": "AUDIT-F-04",
@@ -71,12 +81,11 @@
       "title": "`saw web` 仅服务 API，不挂 SPA——README 宣称 UI 在 :8000",
       "evidence": "grep src/saw/drivers/web/app.py + src/saw/api/：无 StaticFiles/app.mount/FileResponse/index.html/web/dist 任何 SPA 挂载。saw web :9133 → curl `/`=404, `/index.html`=404，但 /api/auth/mode 返 {auth_mode:local}（API 正常）。README: 'saw web → http://localhost:8000' 暗示 UI 由 saw web 服务",
       "impact": "用户跑 `saw web` 看不到 UI；须另跑 npm run dev 或 desktop。宣称与实现不符",
-      "status": "closed",
+      "status": "open",
       "quick_fix": false,
       "ref_step": "Step2-confirmed",
       "unblock_e2e": "需 saw web 挂 web/dist SPA（StaticFiles + SPA fallback）或 README 更正",
-      "fixed_in": "v1.31.0",
-      "closed_at": "2026-09-18"
+      "planned_fix": "v1.33.0 (saw web 挂 SPA + proxy + 404)"
     },
     {
       "id": "AUDIT-F-06",
@@ -101,7 +110,12 @@
       "ref_step": "Step2-confirmed",
       "fix_hint": "App.tsx 顶部 nav 增 Integrations NavLink",
       "fixed_in": "v1.30.1",
-      "closed_at": "2026-09-18"
+      "closed_at": "2026-09-18",
+      "resolution": "App.tsx 顶部 nav 增 Integrations NavLink (to=/integrations), /integrations 经 nav 可达",
+      "verification": {
+        "code_evidence": "web/src/App.tsx NavLink to=\"/integrations\" (AUDIT-F-07 nav)",
+        "dynamic": "tsc --noEmit clean exit 0 (v1.30.1)"
+      }
     },
     {
       "id": "AUDIT-F-08",
@@ -126,7 +140,12 @@
       "ref_step": "Step2-confirmed",
       "fix_hint": "补 aria-label 或确认图标按钮的可访问名",
       "fixed_in": "v1.30.1",
-      "closed_at": "2026-09-18"
+      "closed_at": "2026-09-18",
+      "resolution": "Integrations.tsx Refresh 图标按钮补 aria-label=Refresh (移动端文字 hidden 时可访问名非空)",
+      "verification": {
+        "code_evidence": "web/src/pages/Integrations.tsx aria-label=\"Refresh\" (AUDIT-F-09)",
+        "dynamic": "tsc --noEmit clean exit 0 (v1.30.1)"
+      }
     },
     {
       "id": "AUDIT-F-10",
@@ -139,7 +158,12 @@
       "quick_fix": true,
       "ref_step": "Step2-confirmed",
       "fixed_in": "v1.30.1",
-      "closed_at": "2026-09-18"
+      "closed_at": "2026-09-18",
+      "resolution": "Graph.tsx 空态 (data.nodes.length===0) 加 CTA Link to=/import + /pages, 空数据有动作入口",
+      "verification": {
+        "code_evidence": "web/src/pages/Graph.tsx empty-state Link to=\"/import\" + to=\"/pages\" (AUDIT-F-10)",
+        "dynamic": "tsc --noEmit clean exit 0 (v1.30.1)"
+      }
     }
   ],
   "blocked": [

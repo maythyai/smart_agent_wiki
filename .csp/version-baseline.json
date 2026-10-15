@@ -1,0 +1,6 @@
+{
+ "violations": [
+  "T2 空 tag v1.18.1: commit 86a36a67 仅文档(.md)变更 — 纯文档禁打版本 tag"
+ ],
+ "warnings": []
+}
