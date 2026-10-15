@@ -21,23 +21,31 @@ def vite_content() -> str:
 
 
 def test_api_proxy_target_is_8000(vite_content: str) -> None:
-    """vite proxy /api target uses port 8000 (not 8080)."""
-    # Find the /api proxy block
-    api_match = re.search(r"'/api'[^\n]*\n\s*target:\s*'([^']+)'", vite_content)
+    """vite proxy /api target defaults to port 8000 (not 8080).
+
+    v1.33.0 (AUDIT-F-06): target is now env-configurable via
+    VITE_API_TARGET, defaulting to http://localhost:8000.
+    """
+    # Find the /api proxy block — target may be an env expression
+    # (process.env.VITE_API_TARGET || 'http://localhost:8000')
+    api_match = re.search(r"'/api'[^\n]*\n\s*target:\s*(.+)", vite_content)
     assert api_match is not None, "Could not find /api proxy target in vite.config.ts"
-    target = api_match.group(1)
-    assert "8000" in target, f"/api proxy target should contain '8000', got: {target}"
-    assert "8080" not in target, f"/api proxy target should NOT contain '8080', got: {target}"
+    target_line = api_match.group(1)
+    assert "8000" in target_line, f"/api proxy target should contain '8000', got: {target_line}"
+    assert "8080" not in target_line, f"/api proxy target should NOT contain '8080', got: {target_line}"
 
 
 def test_ws_proxy_target_is_8000(vite_content: str) -> None:
-    """vite proxy /ws target uses port 8000 (not 8080)."""
-    # Find the /ws proxy block
-    ws_match = re.search(r"'/ws'[^\n]*\n\s*target:\s*'([^']+)'", vite_content)
+    """vite proxy /ws target defaults to port 8000 (not 8080).
+
+    v1.33.0 (AUDIT-F-06): target is now env-configurable via
+    VITE_API_TARGET, defaulting to ws://localhost:8000.
+    """
+    ws_match = re.search(r"'/ws'[^\n]*\n\s*target:\s*(.+)", vite_content)
     assert ws_match is not None, "Could not find /ws proxy target in vite.config.ts"
-    target = ws_match.group(1)
-    assert "8000" in target, f"/ws proxy target should contain '8000', got: {target}"
-    assert "8080" not in target, f"/ws proxy target should NOT contain '8080', got: {target}"
+    target_line = ws_match.group(1)
+    assert "8000" in target_line, f"/ws proxy target should contain '8000', got: {target_line}"
+    assert "8080" not in target_line, f"/ws proxy target should NOT contain '8080', got: {target_line}"
 
 
 def test_no_8080_references_remain(vite_content: str) -> None:

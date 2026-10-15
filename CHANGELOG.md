@@ -3,6 +3,24 @@
 All notable changes to this project are documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [v1.33.0] - 2026-10-15
+### Added — saw web 挂 SPA + proxy 配置化 + 404 noindex (feat MINOR, P1, 解 E2E-BLOCKED-01)
+- **AUDIT-F-05 闭合（saw web 挂 SPA）**: `create_app()` 末尾 mount `web/dist` 静态 + SPA fallback（非 `/api/*`、非 `/assets/*` 路径 → index.html，HTTP 200 SPA 模式）。`saw web` 单命令即服务 API + SPA，不再需另起 `npm run dev`/desktop。graceful：web/dist 不存在则 API-only。
+- **AUDIT-F-06 闭合（vite proxy env-config）**: `vite.config.ts` proxy target 走 `VITE_API_TARGET` env（默认 :8000 向后兼容），dev 可指向任意 saw web 端口（解 vLLM 占 :8000 冲突）。
+- **AUDIT-F-08 闭合（NotFound noindex）**: NotFound 组件 useEffect 注入 `<meta name="robots" content="noindex">`（SPA 404→200 是标准模式，noindex 防软 404 索引）。
+- **E2E-BLOCKED-01 解除**: Playwright smoke `tests/e2e/test_saw_web_spa.py`——真实 saw web + headless chromium → GET / 200 + `#root` div + GET /api/auth/mode 200。数据 E2E gate 绿（saw web 服务 SPA 后直驱，不再经 vite proxy→vLLM）。
+
+### Release Gate
+- pytest 2425 passed / 7 skipped / 0 failed（+5: 4 TestSpaMountRoute + 1 Playwright e2e）；coverage 68.x%（gate 67）；ruff 0；tsc clean；vitest pass。
+- 双闸门 exit 0：version_integrity（latest_tag=v1.33.0, T3/T4 ✓）+ findings_closure（AUDIT-F-05/06/08 + E2E-BLOCKED-01 closed 带验证）。
+- feat MINOR（additive，无 breaking）。
+
+### Deferred → v1.33.1
+- desktop 签名/跨平台（V1/V2）：解除条件 v1.33.0 released ✓。
+
+### Note
+- saw web 启动索引 wiki 页（repo 根含数百 .md，含 .csp/specs/.claude/.cursor）耗时 ~80s；AUDIT-F-03 fix 使坏页 skip 不阻断。wiki 根改 `wiki/`（非 cwd）留后续优化（性能 finding）。
+
 ## [v1.32.1] - 2026-10-14
 ### Added — 数据驻留 + 合规配置 profile (feat MINOR, v1.32.0 deferred 项)
 - **合规 profile 加载 + 状态查询**: `.saw/compliance.yaml`（或 config.yaml `compliance` 节）声明 `profile`(hipaa/sox/gdpr/default) + `data_residency`(on_prem/region) + `require_audit_receipts` + `retention_days`。`saw_compliance_status` MCP + `GET /api/v1/compliance` REST 返回 active profile + on-prem 断言（networked 非 loopback → on_prem_satisfied=False，合规违规显式暴露）。对齐 2026.05《智能体规范》可信底线。新模块 `src/saw/compliance/profile.py`。

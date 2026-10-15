@@ -388,6 +388,38 @@ class TestComplianceProfileRoute:
         assert "networked" in body
 
 
+class TestSpaMountRoute:
+    """v1.33.0 (AUDIT-F-05): saw web serves the SPA at / when web/dist exists."""
+
+    def test_root_serves_spa_index(self):
+        """GET / → 200 text/html with the SPA root div (web/dist in cwd)."""
+        client = _build_client(Path("."))
+        r = client.get("/")
+        assert r.status_code == 200
+        assert "text/html" in r.headers.get("content-type", "")
+        assert '<div id="root">' in r.text
+
+    def test_api_not_shadowed_by_spa_fallback(self):
+        """GET /api/v1/compliance → 200 JSON (API routes match before SPA fallback)."""
+        client = _build_client(Path("."))
+        r = client.get("/api/v1/compliance")
+        assert r.status_code == 200
+        assert r.json()["profile"] == "default"
+
+    def test_unknown_api_returns_404_not_spa(self):
+        """GET /api/unknown → 404 (fallback excludes api/ paths, not masked by SPA)."""
+        client = _build_client(Path("."))
+        r = client.get("/api/unknown-path-xyz")
+        assert r.status_code == 404
+
+    def test_client_route_serves_spa_fallback(self):
+        """GET /pages → 200 text/html (SPA fallback for client-side routes)."""
+        client = _build_client(Path("."))
+        r = client.get("/pages")
+        assert r.status_code == 200
+        assert '<div id="root">' in r.text
+
+
 
 # ── Query / Ingest / Learn routes ────────────────────────────────────
 

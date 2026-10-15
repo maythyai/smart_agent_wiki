@@ -11,21 +11,21 @@
   "results": {
     "100": {
       "duration_seconds": 0.0,
-      "items_per_second": 5769316.0
+      "items_per_second": 9302506.6
     },
     "500": {
       "duration_seconds": 0.0001,
-      "items_per_second": 6085160.7
+      "items_per_second": 9724424.9
     },
     "1000": {
-      "duration_seconds": 0.0002,
-      "items_per_second": 5314461.8
+      "duration_seconds": 0.0001,
+      "items_per_second": 8174319.5
     },
     "2000": {
-      "duration_seconds": 0.0004,
-      "items_per_second": 5640429.8
+      "duration_seconds": 0.0003,
+      "items_per_second": 7990666.6
     }
   },
-  "date": "2026-10-14T05:04:53.673329+00:00",
+  "date": "2026-10-15T10:28:44.745127+00:00",
   "version": "1.0"
 }

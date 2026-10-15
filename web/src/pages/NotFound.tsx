@@ -1,11 +1,31 @@
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router';
 
 /**
  * 404 Not Found page — 断裂点 #5 fix.
  * Friendly page for invalid routes with navigation options.
+ *
+ * v1.33.0 (AUDIT-F-08): SPA client-side 404 returns HTTP 200 (standard SPA
+ * routing — the server serves index.html + the client router resolves 404).
+ * To prevent search engines from indexing soft-404 pages, inject a noindex
+ * meta tag for the lifetime of this component.
  */
 export default function NotFound() {
   const navigate = useNavigate();
+
+  useEffect(() => {
+    let meta = document.querySelector('meta[name="robots"][content="noindex"]');
+    if (!meta) {
+      meta = document.createElement('meta');
+      meta.setAttribute('name', 'robots');
+      meta.setAttribute('content', 'noindex');
+      document.head.appendChild(meta);
+    }
+    return () => {
+      // Remove on unmount so non-404 pages are indexable again.
+      meta?.remove();
+    };
+  }, []);
 
   return (
     <div className="min-h-[60vh] flex items-center justify-center">

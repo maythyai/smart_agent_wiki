@@ -1,3 +1,8 @@
+// v1.33.0 (AUDIT-F-06): process.env access in vite.config.ts. Declared
+// minimally so `tsc -b` type-checks without requiring @types/node in the
+// tsconfig.node.json types field.
+declare const process: { env: Record<string, string | undefined> }
+
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { visualizer } from 'rollup-plugin-visualizer'
@@ -15,12 +20,14 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
+      // v1.33.0 (AUDIT-F-06): proxy target via env so dev can point at any
+      // `saw web` port (default :8000 for backward compat).
       '/api': {
-        target: 'http://localhost:8000',
+        target: process.env.VITE_API_TARGET || 'http://localhost:8000',
         changeOrigin: true,
       },
       '/ws': {
-        target: 'ws://localhost:8000',
+        target: (process.env.VITE_API_TARGET || 'http://localhost:8000').replace(/^http/, 'ws'),
         ws: true,
       },
     },

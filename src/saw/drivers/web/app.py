@@ -460,6 +460,30 @@ def create_app(
     from saw.drivers.web.routes.admin import router as admin_router
     app.include_router(admin_router, dependencies=admin_auth_dep)
 
+    # v1.33.0 (AUDIT-F-05): serve the built SPA (web/dist) from `saw web` so the
+    # React UI is reachable at `/` without a separate `npm run dev` / desktop.
+    # Mounted AFTER all API routers so /api/* routes match first and are not
+    # shadowed by the SPA fallback. Graceful: no web/dist → API-only (legacy).
+    from pathlib import Path as _SpaPath
+    from fastapi.responses import FileResponse
+    from fastapi.staticfiles import StaticFiles as _StaticFiles
+
+    _spa_dist = _SpaPath("web/dist")
+    _spa_index = _spa_dist / "index.html"
+    if _spa_dist.is_dir() and _spa_index.is_file():
+        _spa_assets = _spa_dist / "assets"
+        if _spa_assets.is_dir():
+            app.mount("/assets", _StaticFiles(directory=str(_spa_assets)), name="spa-assets")
+
+        @app.get("/{full_path:path}", include_in_schema=False)
+        async def _spa_fallback(full_path: str):  # noqa: ANN202
+            # Non-/api, non-/assets paths → index.html (SPA client routing).
+            # /api/unknown → 404 (API 404s stay JSON-404, not masked by SPA).
+            if full_path.startswith("api/") or full_path.startswith("assets/"):
+                from fastapi import HTTPException as _HE
+                raise _HE(status_code=404)
+            return FileResponse(str(_spa_index))
+
     return app
 
 

@@ -69,6 +69,8 @@ see_also: docs/strategy/ROADMAP.md | docs/strategy/STRATEGY.md
 | v1.31.1 | govern | contamination scan（saw_contamination_scan MCP + /api/v1/contamination REST，检测 superseded 源衍生 claim）| ✅ |
 | v1.32.0 | platform | Compliance & Audit Tier（saw_export_receipt_bundle + saw_purge_claim MCP + REST，GDPR 级联清除）| ✅ |
 | v1.32.1 | platform | 数据驻留 + 合规配置 profile（saw_compliance_status MCP + REST，on-prem 断言）| ✅ |
+| v1.33.0 | ecosystem | saw web 挂 SPA（StaticFiles+fallback）+ vite proxy env + NotFound noindex + Playwright e2e | ✅ |
+| v1.33.1 | ecosystem | desktop 签名/跨平台（V1/V2，v1.33.0 deferred）| 📋 |
 | v1.32.0 | platform | Compliance & Audit Tier（Ed25519 receipt 导出 + 数据驻留 + 删除传播）| 📋 |
 | v1.33.0 | desktop/CI | Playwright E2E + Apple 签名 + 跨平台 CI matrix（AUDIT-F-07/V1/V2）| 📋 |
 | v1.34.0 | perf | ANN hnswlib ≥5000 实证 + coverage 72% + Write Queue 压测（S1/S2/O2）| 📋 |
