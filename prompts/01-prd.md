@@ -38,7 +38,7 @@
 0.35 **收敛闸门**：`.csp/convergence/CONVERGED-FEATURE-PLAN.md` → 本 PRD 的功能清单输入**必须以此为准**，不能直接用 `ROADMAP.md` 的原始功能清单。不存在 → 提示先跑 `product-design-convergence`（或本 PRD 标 `[TBD]` 待收敛审查后补）。
 0.4 **IA 方向**：`.csp/convergence/IA-DIRECTION.md` → 本 PRD 的信息架构设计必须对齐此文件的方向（导航分类/页面层级/核心流程）。
 0.5 **阶段状态**：读 `.csp/lifecycle-state.json`，确认前置阶段（00）status==`done`；未完成 → 路由回上游；明确"我是第 1 步（PRD），下一步 → 02 需求拆解"。读后按 README「进度播报」格式播报当前进度。
-1. **PRD 索引**：`docs/prd/PRD-INDEX.md` → 找既有 PRD，判断新增还是变更。
+1. **PRD 索引**：`docs/prd/PRD-INDEX.md` → 找既有 PRD，判断新增还是变更。**规划级 SPEC 升级模式**：若存在同 `target_version`、`prd_depth: planning` 的 Draft SPEC（外环 roadmap Phase 4.5 产出）→ 不新建，在原文件上升级为工程级（见「变更同步」节 step 0）。
 2. **产品说明书**：`.csp/product-spec/PMS-INDEX.md` + `PMS-{module}.md` → 读既有模块边界与验收形态，**新需求不得越界既有 PMS 模块**。
 3. **项目级 docs**：`docs/ARCHITECTURE.md`/`docs/ARCHITECTURE_zh.md`（判断功能边界是否越界）、`docs/USER-GUIDE.md`（复用既有能力）、`docs/analysis/`（背景素材）、`README.md`/`CLAUDE.md`（核心定位）。
 4. **既有技术产物**：`.csp/code-spec/`（CMS，若存在 → 参考既有代码地图与入口点，判断需求是否可复用既有能力）、`.csp/specs/SPEC-INDEX.md`。
@@ -199,6 +199,7 @@ PRD 落盘同时，建立/更新产品说明书 PMS：
 ## 十一、变更同步（迭代回路）
 
 当 PRD/PMS 发生变更（重新执行本流程）：
+0. **升级模式判定**：目标版本已有 `prd_depth: planning` 的 Draft SPEC（外环 roadmap Phase 4.5 产出）→ 本阶段任务 = 在原文件上 delta 升级为工程级（补全业务规则穷举/异常流/每模块 AC≥3/埋点/非功能；功能清单以 `.csp/convergence/CONVERGED-FEATURE-PLAN.md` 为准），front-matter `prd_depth: engineering` + `version` 自增 + status 走评审 gate，**不新建文件**。
 1. **先读既有产物**：读原 PRD + PMS，diff 出 delta（哪些模块/AC/规则变了）。
 2. **只更新 delta**：幂等覆盖原文件，front-matter `version` 自增、`date` 更新；不重写未变章节。
 3. **传播变更**：沿追溯链通知下游——更新 `docs/prd/PRD-INDEX.md` 状态；若已有 Spec/Task，标 `stale` 并提示技术方案侧做变更影响分析。
@@ -222,6 +223,7 @@ thin_sections: [{section编号}, ...]
 upstream_source: docs/ARCHITECTURE.md | docs/strategy/ROADMAP.md#vX.Y.Z | user-input（仅稳定来源；源自 .csp/spark 或采纳 .csp/review finding 的 provenance 由该 .csp/ 产物 forward ref + manifest 承载，不在 PRD 反向引用）
 roadmap_ref: docs/strategy/ROADMAP.md#vX.Y.Z（本 PRD 实现的版本/主题；外环规划，无则 [TBD]）
 target_version: vX.Y.Z（对应 ROADMAP 版本号规则）
+prd_depth: planning | engineering（planning=外环 roadmap Phase 4.5 产的规划级种子 SPEC；engineering=01 升级/产出后的工程级，默认）
 # related_pms / related_specs 不写入 PRD front-matter（docs/ 不内嵌 .csp/ 引用）；PRD↔PMS/Spec 映射由 .csp/manifest.json 承载
 ---
 ```

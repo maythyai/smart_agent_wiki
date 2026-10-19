@@ -6,7 +6,7 @@
 
 | 顺序 | 阶段 | 文件 | 产出目录 |
 |---|---|---|---|
-| 外环 | 产品长期规划（战略锚点+版本号规则+版本序列路径+**版本功能集成必要性审视 gate**） | [roadmap.md](./roadmap.md) | `docs/strategy/`（STRATEGY+ROADMAP）+ `docs/analysis/`（INTEGRATION-NECESSITY） |
+| 外环 | 产品长期规划（**方向调研**+战略锚点+版本号规则+版本序列路径+**版本功能集成必要性审视 gate**+**每版本规划级 PRD SPECs**） | [roadmap.md](./roadmap.md) | `docs/strategy/`（STRATEGY+ROADMAP）+ `docs/analysis/`（MARKET-RESEARCH/INTEGRATION-NECESSITY）+ `docs/prd/`（规划级 SPEC，01 升级） |
 | 闸门 | 产品架构收敛审查（功能架构梳理+核心/次要取舍+IA 方向+迭代优先级——roadmap 与 01 PRD 之间的必经闸门） | [product-design-convergence.md](./product-design-convergence.md) | `.csp/convergence/`（CONVERGENCE-REPORT + CONVERGED-FEATURE-PLAN + IA-DIRECTION）+ `docs/analysis/`（摘要） |
 | 0 | 知识中枢初始化 | [00-knowledge-hub.md](./00-knowledge-hub.md) | `.csp/AGENTS.md` + `.csp/manifest.json` |
 | 1 | PRD 生成（产品需求） | [01-prd.md](./01-prd.md) | `docs/prd/` + `.csp/product-spec/`（PMS） |
@@ -25,11 +25,12 @@
 | 独立 | 连续版本交付流水线——lifecycle-orchestrator 续跑全部待交付版本，含 01 前置四读、收敛闸门、findings 闭合契约、06 双闸门（findings_closure + version_integrity） | [develop_pipeline.md](./develop_pipeline.md) | 驱动 00-07 连续迭代 + `prompts/scripts/` 发布门禁 |
 | 独立 | 开发期 UI 预防规范（8 条编码规范 N1-N8 + 5 个 CI 门禁 G1-G5 + 7 项审查链路增强，从历次审计根因提炼） | [prevention-norms.md](./prevention-norms.md) | 供 AGENTS.md 检查清单引用 |
 | 独立 | 功能去重护栏——新功能开发前置约束通用方法论（六约束：定位查重/支柱归属/复用基础设施/元数据单源/导航准入/完成自检；防 R1 平行页面·R2 旁路实现·R3 元数据多副本·R4 语义重叠；含可粘贴 prompt 片段） | [feature-dedup-guardrails.md](./feature-dedup-guardrails.md) | 注入 `05-implementation.md` §7.0 开发期 gate |
+| 独立 | Python 代码审查专家提示词——六维审查框架（正确性/复用/简化/效率/安全/可测试性）+ 硬规则 H1-H8/必须项 M1-M5 + 安全深度清单（注入/反序列化/密钥/依赖/并发）+ FastAPI/Django/Flask/Agentic 框架特化 + 对抗性与边界镜头 + 项目结构 A-D 评估矩阵 + 严重度/反馈标签/裁决标准（零 skill 依赖，可独立粘贴到任意 Agent 执行 review） | [python-code-review.md](./python-code-review.md) | 审查报告（可选落 `.csp/review/`） |
 | 棕地 | docs/→.csp/ 双轨整合（PRD→PMS、strategy→lifecycle、solutions→specs、analysis→audit） | [brownfield-doc-integration.md](./brownfield-doc-integration.md) | `.csp/product-spec/` + `.csp/manifest.json` + `docs/` 整理归位 |
 
 > **06 vs 07**：06 是**发布前符合性验证**（实现是否满足 PRD/Spec/AC、能否上线），是门控；07 是**里程碑后整体复盘**（产品对不对、架构稳不稳、下一步做什么），探索性/战略性，不卡发布。07 从用户视角+技术视角发现 Spec 之外的新问题，findings 回流下一迭代 01-05 + 外环 roadmap。
 
-> **外环 roadmap**：`roadmap.md` 先于 00 跑一次——产出战略锚点（STRATEGY.md）+ 版本号规则 + 1/3 年+迭代路径（ROADMAP.md）。01 PRD 读 ROADMAP 定位本版本主题（`roadmap_ref`/`target_version`）；06 release 用版本号规则；07 复盘 findings 回流更新 ROADMAP 下一版本主题。每个项目通常只跑一次，07 回流或战略调整时增量更新。
+> **外环 roadmap**：`roadmap.md` 先于 00 跑一次——四步链：**调研**（Phase R：行业扫描/竞品深潜/客户洞察/经济模型/方向可行性，落 `docs/analysis/MARKET-RESEARCH-{date}.md`）→ **规划功能版本**（战略锚点 STRATEGY.md + 版本号规则 + 版本序列路径 ROADMAP.md，每版本给版本号+主题+简要功能模块清单）→ **去除不必要功能**（Phase 2.5 集成必要性审视，净版回写 ROADMAP+FEATURES）→ **产出 PRD SPECs**（Phase 4.5：每净版版本一份规划级 SPEC 落 `docs/prd/`，`prd_depth: planning` + Draft）。01 PRD 读 ROADMAP 定位本版本主题（`roadmap_ref`/`target_version`），探测到同版本规划级 SPEC 时走**升级模式**（原文件 delta 升级为工程级，不新建）；06 release 用版本号规则；07 复盘 findings 回流更新 ROADMAP 下一版本主题。每个项目通常只跑一次，07 回流或战略调整时增量更新。
 
 > **收敛闸门 `product-design-convergence`**：roadmap 与 01 PRD 之间的**必经硬闸门**——不通过不进入开发。核心判断："功能杂乱"不是审美问题，是治理问题；产品说的（AGENTS.md 定位）和产品做的（roadmap 功能清单）分家是根因。本流程建立**功能准入机制**：Phase 0 定位与支柱基线（AGENTS.md 最高权威）→ Phase 1 功能全景+定位对齐+支柱映射 → Phase 2 六维度收敛（D1 功能架构/D2 核心取舍/D3 IA+**导航准入三问**+导航预算/D4 迭代优先级/D5 **定位对齐与前提挑战**/D6 **系统级卫生**：后端膨胀+Feature Flag+文档权威）→ Phase 3 五类根因 Pattern 检测（A 定位漂移/B 架构无收敛/C 前端 IA 债/D 后端膨胀/E 文档权威失守）→ Phase 4 收敛后功能清单（01 PRD 唯一输入）→ Phase 5 裁决记录+交棒。导航准入三问：Q1 独立任务域？Q2 频率≥每周？Q3 导航预算内？三问不过禁止新增顶级导航。定位漂移 >30% → 整个 roadmap 回炉。产出 CONVERGED-FEATURE-PLAN + IA-DIRECTION（含导航预算）+ SYSTEM-HYGIENE。非单功能 PATCH 修复版本必跑。
 
@@ -48,6 +49,8 @@
 > **开发期预防规范 `prevention-norms`**：从历次 UI/UX 审计 findings 提炼的根因→机器可查约束。8 条编码规范（N1 路由必须注册/N2 导航只放目的地/N3 同域单一事实源/N4 按钮文案动作词典/N5 占位规范/N6 hex-token 纪律/N7 deprecation 带 TTL/N8 立项查重）+ 5 个 CI 门禁（G1 route_registry/G2 wording_check/G3 placeholder_gate/G4 deprecation_ttl/G5 hex_lint，含统一脚本接口约定 exit 0/1/2/3 + stdout JSON）+ 7 项审查链路增强（R1-R7）。供 AGENTS.md 检查清单引用，与 `automation-validation.md` 的 G-* 门禁互补（G1-G5 是 PR/push 级编码门禁，G-POS 等是治理级收敛门禁）。
 
 > **功能去重护栏 `feature-dedup-guardrails`**：开发期（05 实施）功能准入护栏，与规划期 `product-design-convergence`（收敛闸门）互补——闸门裁决"该不该做"，护栏约束"怎么做不产生重复冗余"。**通用方法论，项目无关**（支柱名/基础设施通道/元数据源/次级入口均为占位符，各项目在 AGENTS.md/.csp/product-spec/ 实例化）。定义功能重复冗余四形态（R1 平行页面/R2 旁路实现/R3 元数据多副本/R4 语义重叠）+ 通用根因 + 边界判定（什么算"同一能力"，≥3 维度命中=重复候选）+ 六条开发前置约束（①定位查重 grep 域词典②支柱归属③复用统一基础设施通道④元数据单一事实源⑤导航准入三问+预算⑥完成前唯一性自检+归并/复用/新增三行清单）+ 预防措施四层级（事前规划>事中开发>事中CI>事后审计，成本递增）+ 反模式 + 边界豁免（不同支柱同名/只读vs可写/平台适配/测试mock/TTL过渡入口）+ §七可粘贴 prompt 片段。注入 `05-implementation.md` §7.0 作为每个新功能 TDD 前的强制 gate；N8 立项查重是其约束 1 的 CI 版，G-POS/G-NAV/G-DUAL-NAV 是其约束 2/5 的机器版，critic 镜头 A 是其 R1-R4 的事后兜底版。
+
+> **Python 代码审查 `python-code-review`**：独立于 00–07 链路，随时可跑的 Python 专项 code review 提示词。综合提炼自 `csp-python-reviewer`（含 coding-standards/security-checklist/project-structure 三份 references）、`csp-code-review` 六维方法论、`csp-ruff-fixer` lint 修复纪律、`python-testing` 测试实践、`python-review` command 流程与 adversarial/edge-case 审查工具。**零 skill 依赖、自包含**——全部规则/清单/命令/模板已内联，可直接复制粘贴到任意 Agent 执行。三种模式：Mode A diff/PR 审查（默认，五步审查法：读意图→先读测试→六维读实现→追踪关键路径→检查接缝）、Mode B 文件/模块审查、Mode C 全项目审计（叠加六维工程完备性 A-D 评估矩阵 + 结构反模式）。核心资产：硬规则 H1-H8（裸 except/f-string SQL/eval-exec/硬编码密钥等 CRITICAL 级禁止项）+ 必须项 M1-M5 + 按严重度分组的优先级速查 + OWASP 安全深度清单（SQL/命令/路径/模板注入、反序列化、密钥、依赖 P0-P3、TOCTOU）+ 框架特化检查（FastAPI/Django/Flask/Agentic-LLM）+ Python 版本兼容性核查 + 严重度评级（CRITICAL-LOW/NIT）与反馈标签（blocking/suggestion/nit/question/praise）双轨制 + 裁决标准（Approve/Request Changes/Comment）+ 审查反模式自查（橡皮图章/nit 轰炸/只审新增行等）。产物为带 file:line 证据与可执行修复的审查报告，可与 06 发布门控衔接。
 
 > **棕地文档整合 `brownfield-doc-integration`**：独立于 00–07 链路，是 00 Phase 1.5/1.7 在"docs/→.csp/ 双轨整合"上的具体化。棕地项目 onboarding 时跑——把 `docs/` 的 `prd/`/`strategy/`/`solutions/`/`analysis/` 蒸馏+索引进 `.csp/`（PRD→PMS、strategy→lifecycle/VERSION-REGISTRY、solutions→specs/review、analysis→audit/review），原文留 `docs/` 不复制全文，`.csp/` 只存工程蒸馏 + manifest 索引 + front-matter 互链。`.csp/AGENTS.md` 不存在先跑 00。可随时增量重跑（delta）。产物 `.csp/product-spec/` + `.csp/manifest.json` + `docs/` 整理归位。
 
