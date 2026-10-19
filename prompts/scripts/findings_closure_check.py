@@ -32,7 +32,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-TAG_RE = re.compile(r"^v\d+\.\d+\.\d+(-[a-z0-9.]+)?$")
+TAG_RE = re.compile(r"^v\d+\.\d+(?:\.\d+)?(-[a-z0-9.]+)?$")  # accepts 2-part (v1.2) or 3-part (v1.2.0) SemVer
 HASH_RE = re.compile(r"^[0-9a-f]{7,40}$")
 
 

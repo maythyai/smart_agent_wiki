@@ -27,7 +27,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-SEMVER_RE = re.compile(r"(\d+)\.(\d+)\.(\d+)(?:[-+][0-9A-Za-z.-]+)?")
+SEMVER_RE = re.compile(r"(\d+)\.(\d+)(?:\.(\d+))?(?:[-+][0-9A-Za-z.-]+)?")
 TOML_VER_RE = re.compile(r'^version\s*=\s*["\']([^"\']+)["\']', re.MULTILINE)
 
 
@@ -41,9 +41,18 @@ def git(root: Path, args: list[str]) -> str | None:
         return None
 
 
-def semver_key(tag: str) -> tuple[int, int, int]:
+def semver_key(tag: str) -> tuple[int, int, int, int]:
+    """Sort key. Handles 2-part (1.2) and 3-part (1.2.0) SemVer. CalVer
+    (vYYYY.M.DD — major is a year >= 2000) is treated as historical and must
+    NOT win 'latest' over active SemVer. Bucket CalVer below active SemVer:
+    (is_active_semver, major, minor, patch)."""
     m = SEMVER_RE.search(tag)
-    return (int(m.group(1)), int(m.group(2)), int(m.group(3))) if m else (0, 0, 0)
+    if not m:
+        return (0, 0, 0, 0)
+    major, minor = int(m.group(1)), int(m.group(2))
+    patch = int(m.group(3)) if m.group(3) else 0
+    is_active_semver = 1 if major < 2000 else 0  # CalVer years (2026…) → bucket 0
+    return (is_active_semver, major, minor, patch)
 
 
 def list_tags(root: Path, prefix: str) -> dict[str, str]:
@@ -101,7 +110,7 @@ def changelog_latest(path: Path, prefix: str) -> str | None:
     if not path.exists():
         return None
     for line in path.read_text(encoding="utf-8", errors="replace").splitlines()[:200]:
-        m = re.match(r"^#{1,3}\s*\[?(v?\d+\.\d+\.\d+)", line.strip())
+        m = re.match(r"^#{1,3}\s*\[?(v?\d+\.\d+(?:\.\d+)?)", line.strip())
         if m:
             v = m.group(1)
             return v[len(prefix):] if v.startswith(prefix) else v
@@ -132,7 +141,12 @@ def main() -> int:
         print("PASS: 无版本 tag（新项目）")
         return 0
 
-    latest_tag = max(tags, key=semver_key)
+    # latest release tag = most recently CREATED (handles multiple version
+    # lines + historical CalVer: the active line is the one most recently
+    # released, not the highest semver). Falls back to semver max if query fails.
+    recent = git(root, ["for-each-ref", "--sort=-creatordate",
+                        f"refs/tags/{args.tag_prefix}*", "--format=%(refname:short)", "--count=1"])
+    latest_tag = recent.strip() if (recent and recent.strip() in tags) else max(tags, key=semver_key)
     latest_ver = latest_tag[len(args.tag_prefix):] if latest_tag.startswith(args.tag_prefix) else latest_tag
 
     # T1 多 tag 同 commit
