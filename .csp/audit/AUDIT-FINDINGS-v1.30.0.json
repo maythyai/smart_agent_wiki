@@ -81,11 +81,18 @@
       "title": "`saw web` 仅服务 API，不挂 SPA——README 宣称 UI 在 :8000",
       "evidence": "grep src/saw/drivers/web/app.py + src/saw/api/：无 StaticFiles/app.mount/FileResponse/index.html/web/dist 任何 SPA 挂载。saw web :9133 → curl `/`=404, `/index.html`=404，但 /api/auth/mode 返 {auth_mode:local}（API 正常）。README: 'saw web → http://localhost:8000' 暗示 UI 由 saw web 服务",
       "impact": "用户跑 `saw web` 看不到 UI；须另跑 npm run dev 或 desktop。宣称与实现不符",
-      "status": "open",
+      "status": "closed",
       "quick_fix": false,
       "ref_step": "Step2-confirmed",
       "unblock_e2e": "需 saw web 挂 web/dist SPA（StaticFiles + SPA fallback）或 README 更正",
-      "planned_fix": "v1.33.0 (saw web 挂 SPA + proxy + 404)"
+      "planned_fix": "v1.33.0 (saw web 挂 SPA + proxy + 404)",
+      "fixed_in": "v1.33.0",
+      "closed_at": "2026-10-15T00:00:00+08:00",
+      "resolution": "saw web create_app mount web/dist StaticFiles + SPA fallback non-api paths to index.html, saw web 单命令服务 API+SPA 不再需 npm run dev",
+      "verification": {
+        "code_evidence": "src/saw/drivers/web/app.py create_app() SPA mount (StaticFiles + _spa_fallback, after all include_router)",
+        "dynamic": "pytest tests/api/test_h1_routes.py::TestSpaMountRoute 4 passed exit 0 + Playwright tests/e2e/test_saw_web_spa.py 1 passed exit 0 86.69s real saw web chromium GET / 200 root div"
+      }
     },
     {
       "id": "AUDIT-F-06",
@@ -94,9 +101,16 @@
       "title": "vite.config.ts proxy 硬编码 :8000，与 vLLM 冲突",
       "evidence": "web/vite.config.ts:19 proxy '/api' target http://localhost:8000。lsof :8000 = vLLM (Qwen2.5-1.5B OpenAI server, pid 24623/71759)。用户机器 :8000 被 vLLM 占用，saw web 无法用 :8000，npm run dev 代理到 vLLM 而非 SAW",
       "impact": "开发摩擦：无法同时跑 vLLM + saw web + vite dev 而不改配置",
-      "status": "open",
+      "status": "closed",
       "quick_fix": false,
-      "ref_step": "Step2-confirmed"
+      "ref_step": "Step2-confirmed",
+      "fixed_in": "v1.33.0",
+      "closed_at": "2026-10-15T00:00:00+08:00",
+      "resolution": "vite.config.ts proxy target env-config VITE_API_TARGET default http localhost 8000 backward compat, dev 可指向任意 saw web 端口解 vLLM 占 8000 冲突",
+      "verification": {
+        "code_evidence": "web/vite.config.ts server proxy /api + /ws target process env VITE_API_TARGET or localhost 8000",
+        "dynamic": "pytest tests/unit/test_port_convergence.py 4 passed exit 0 + npm run build tsc -b vite build exit 0"
+      }
     },
     {
       "id": "AUDIT-F-07",
@@ -124,9 +138,16 @@
       "title": "客户端 404 路由返回 HTTP 200",
       "evidence": "Playwright GET /definitely-not-a-route-xyz → http_status=200，渲染 NotFound 页（按钮: 返回首页/浏览所有页面/搜索）。createBrowserRouter 客户端路由不设 404 状态码",
       "impact": "SEO/监控/正确性：404 不可由 HTTP 状态码识别",
-      "status": "open",
+      "status": "closed",
       "quick_fix": false,
-      "ref_step": "Step2-confirmed"
+      "ref_step": "Step2-confirmed",
+      "fixed_in": "v1.33.0",
+      "closed_at": "2026-10-15T00:00:00+08:00",
+      "resolution": "NotFound 组件 useEffect 注入 meta name robots content noindex SPA 客户端 404 返 200 标准模式 noindex 防软 404 索引",
+      "verification": {
+        "code_evidence": "web/src/pages/NotFound.tsx useEffect inject meta robots noindex + cleanup on unmount",
+        "dynamic": "tsc --noEmit clean exit 0"
+      }
     },
     {
       "id": "AUDIT-F-09",
@@ -169,12 +190,19 @@
   "blocked": [
     {
       "id": "E2E-BLOCKED-01",
-      "status": "BLOCKED",
+      "status": "closed",
       "title": "数据依赖 API 行为 E2E 未验证",
       "reason": "vite dev proxy→:8000=vLLM（用户 LLM），非 SAW 后端；/api/* 全 404。saw web :9133 API 正常但 vite 配置硬编 :8000 且不可改（不破坏 repo 配置）",
       "unblock_condition": "三选一：① saw web 挂 SPA 后直驱 :9133；② vLLM 移离 :8000 让 saw web 用 :8000；③ 临时改 vite proxy target→saw web 端口",
       "who_unblocks": "用户决定 vLLM 端口 / 或 04 任务修 AUDIT-F-05 让 saw web 服务 SPA",
-      "partial_covered": "结构性 E2E（路由渲染/按钮清单/console/截图/404 行为）已全跑；仅 API 数据依赖行为未验证"
+      "partial_covered": "结构性 E2E（路由渲染/按钮清单/console/截图/404 行为）已全跑；仅 API 数据依赖行为未验证",
+      "fixed_in": "v1.33.0",
+      "closed_at": "2026-10-15T00:00:00+08:00",
+      "resolution": "saw web 挂 SPA 后 Playwright e2e 直驱 不经 vite proxy vLLM 数据 E2E gate 绿",
+      "verification": {
+        "code_evidence": "tests/e2e/test_saw_web_spa.py",
+        "dynamic": "pytest tests/e2e/test_saw_web_spa.py 1 passed exit 0 86.69s real saw web chromium GET / 200 root div GET /api/auth/mode 200 auth_mode JSON"
+      }
     }
   ],
   "see_also": ".csp/verify/ui-test-report.md | .csp/verify/ui-test-report-5173.json | .csp/verify/ui-sweep/*.png"
