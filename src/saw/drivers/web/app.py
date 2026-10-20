@@ -572,7 +572,12 @@ def create_app_from_config(
     write_queue = SQLiteWriteQueue(conn)
 
     # Initialize QueryEngine with real repositories
-    wiki_path = Path(".")
+    # v1.34.0 (v1.33.0 retro lesson): wiki root = wiki/ (not cwd ".") so
+    # WikiIndexer scans only wiki/ namespace dirs (collections/concepts/
+    # entities/sources), not the entire project cwd which includes hundreds
+    # of non-wiki .md files (.csp/specs, .claude/skills, .cursor, docs/).
+    # Startup drops from ~80s to <1s.
+    wiki_path = Path("wiki")
     claims_repo = SQLiteClaimsRepository(conn)
     wiki_repo = WikiRepository(wiki_path)
 

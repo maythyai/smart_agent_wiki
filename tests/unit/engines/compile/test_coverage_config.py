@@ -16,4 +16,4 @@ def test_fail_under_ratchet():
         data = tomllib.load(f)
     fail_under = data["tool"]["coverage"]["report"]["fail_under"]
     assert fail_under >= 65, f"Expected fail_under>=65, got {fail_under}"
-    assert fail_under == 67, f"Expected fail_under=67 (v1.13.0 ratchet), got {fail_under}"
+    assert fail_under == 68, f"Expected fail_under=68 (v1.34.0 ratchet), got {fail_under}"

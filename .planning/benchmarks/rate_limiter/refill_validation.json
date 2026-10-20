@@ -8,9 +8,9 @@
   "results": {
     "tokens_before_acquire": 0.0,
     "tokens_after_acquire": 0.0,
-    "expected_approx_tokens": -5369747003.39,
+    "expected_approx_tokens": -5377382193.41,
     "refill_precision_acceptable": true
   },
-  "date": "2026-10-15T10:28:05.355855+00:00",
+  "date": "2026-10-20T02:33:20.338898+00:00",
   "version": "1.0"
 }

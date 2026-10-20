@@ -3,6 +3,20 @@
 All notable changes to this project are documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [v1.34.0] - 2026-10-20
+### Added — wiki 根性能 + coverage 推进 (feat MINOR)
+- **wiki 根性能**（v1.33.0 retro lesson）: `app.py:575` `Path(".")` → `Path("wiki")`——WikiRepository 只扫 wiki/（4 namespace）而非整个 cwd（含 .csp/.claude/.cursor/docs 数百 .md）。saw web 启动从 ~80s → ~15s（e2e 验证 86s→16s）。
+- **coverage 推进**（AUDIT-F-04 partial）: 补 12 个 ingest pipeline 测试（parse.py 13→77%, validate.py 15→87%）。fail_under 67→68（棘轮）。total coverage 68.43→68.74%。
+
+### Deferred → v1.34.1
+- **AUDIT-F-04 70% target**: 仍差 ~1.3% 到 70%。需补 extract.py/feed_cmd.py/learn.py 测试。解除条件 v1.34.0 released ✓。
+- **AUDIT-F-01 god-files 拆分**（app.py 755/engine.py 631/compiler.py 663）: 大重构。解除条件 v1.34.0 released ✓。
+- **stale-freshness contamination**: 需 FreshnessTracker 集成。
+
+### Release Gate
+- pytest 2437 passed / 7 skipped / 0 failed（+12 pipeline tests）；coverage 68.74%（gate 68）；ruff 0；tsc clean。
+- feat MINOR（additive，无 breaking）。
+
 ## [v1.33.0] - 2026-10-15
 ### Added — saw web 挂 SPA + proxy 配置化 + 404 noindex (feat MINOR, P1, 解 E2E-BLOCKED-01)
 - **AUDIT-F-05 闭合（saw web 挂 SPA）**: `create_app()` 末尾 mount `web/dist` 静态 + SPA fallback（非 `/api/*`、非 `/assets/*` 路径 → index.html，HTTP 200 SPA 模式）。`saw web` 单命令即服务 API + SPA，不再需另起 `npm run dev`/desktop。graceful：web/dist 不存在则 API-only。

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "smart-agent-wiki"
-version = "1.33.0"
+version = "1.34.0"
 description = "Smart Agent Wiki - 智能多代理知识平台"
 requires-python = ">=3.11"
 dependencies = [
@@ -131,7 +131,7 @@ omit = [
 # test cases covering 30+ functions in compile/compiler.py).
 # T-F-R-4 (v1.13.0): ratcheted 65→67 (coverage 66→≥67%, ingest dir
 # recursion + benchmark + REST alias + coverage tests added).
-fail_under = 67
+fail_under = 68
 show_missing = true
 exclude_lines = [
     "pragma: no cover",

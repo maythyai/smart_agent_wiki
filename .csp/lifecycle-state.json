@@ -1,8 +1,8 @@
 {
   "pipeline_version": 2,
-  "milestone": "v6.6",
-  "current_stage": "released-v1.33.0",
-  "next_cycle": "v1.34.0",
+  "milestone": "v6.7",
+  "current_stage": "released-v1.34.0",
+  "next_cycle": "v1.34.1",
   "stages": [
     {
       "stage": "00-hub",
