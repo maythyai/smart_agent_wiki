@@ -703,6 +703,42 @@ canonical = `pyproject.toml`。发布时以下必须与之一致，用脚本校�
 - **v3.3.0** — 知识资产经济（claim attribution/许可/计费——可信知识作为可交易资产，差异化：provenance 使知识可 attribution，为数据要素流通提供可信底座）。
 - **远期愿景**：见 §4——SAW 成为 AI agent 与人类共用的、可验证可溯源可治理的本地知识编译层；护城河=溯源+治理+数据主权三耦合。
 
+## 2.7 Phase 2.5 审视后净版（2026-10-20 增量更新）
+
+> 2026-10-20 外环 roadmap Phase 2.5 集成必要性审视产出。审视表见 `docs/analysis/INTEGRATION-NECESSITY-2026-10-20.md`。**精简优先**（砍不是留）：原 v1.34.1–v2.2 共 ~18 planned 版本 → 净版 8 版本（4 版由合并来），9 版/功能降级到 v2.0+/v3.0（非当前核心场景）。每版本附 PRD SPEC 链接（Phase 4.5 规划级 Draft，`docs/prd/`）。
+
+### 净版版本-主题表（v1.34.1–v2.0.0）
+
+| 版本 | 主题 | Track | status | PRD SPEC | 原版本来源 |
+|---|---|---|---|---|---|
+| v1.34.1 | coverage 70% + god-files + stale-freshness + Dashboard 修复 | core-trust | planned | `docs/prd/PRD-v1.34.1-core-trust-hardening.md` | v1.34.1 + CRITIC-F-01 合并 |
+| v1.35.0 | Structured Context API v1（★品类定位） | intelligence | planned | `docs/prd/PRD-v1.35-structured-context-api.md` | v1.35 不变 |
+| v1.36.0 | Incremental Graph + Reasoning + Deep Research v2 | intelligence | planned | `docs/prd/PRD-v1.36-incremental-graph-reasoning.md` | v1.36 + v1.45 合并 |
+| v1.37.0 | Governed Code Intelligence + Token Optimizer | core-trust+intelligence | planned | `docs/prd/PRD-v1.37-governed-code-intelligence.md` | v1.43 + v1.44 合并 |
+| v1.38.0 | RBAC深化 + SSO/OIDC + Plugin SDK v1 + Observability v2 | platform | planned | [TBD] | v1.39 + v1.40(SDK) + v1.47(obs) 合并 |
+| v1.39.0 | Pre-v2.0 硬化 + coverage 75 + property/fuzz | core-trust | planned | [TBD] | v1.49 不变 |
+| v1.40.0 | v2.0 RC + Context API freeze | intelligence | planned | [TBD] | v1.50 不变 |
+| v2.0.0 | 平台化 MAJOR（仅真实 breaking） | platform | planned | [TBD] | v2.0.0 不变 |
+
+### 降级到 v2.0+ / v3.0（附原因，非核心场景/生态阶段）
+
+| 原版本 | 功能 | 降级原因 | 去向 |
+|---|---|---|---|
+| v1.37 Claim Exchange | 联邦互操作种子 | 非 local-first 核心场景（联邦是 v3.0 生态） | → v2.0+ |
+| v1.38 Multi-Agent A2A + Sleeptime | A2A 协议 + sleeptime | platform/生态非当前核心；sleeptime 合并 Learn 既有 | → v2.0+ |
+| v1.40 Plugin Marketplace | registry 基建 | ecosystem 非当前；SDK v1 stable 留 v1.38 | → v2.0+ |
+| v1.41 Skill Sandbox | Docker/E2B 沙箱 | 重基建，非核心编译/治理 | → v2.0+ |
+| v1.42 IM SDK Serving | 飞书/Slack/企微 SDK | ecosystem 触达，非 local-first 核心 | → v2.0+ |
+| v1.46 Self-Evolution + Dreaming | 自演进 | 高级，非当前核心；auto-distill 留 Learn | → v2.0+ |
+| v1.48 Federated KG | 跨实例联邦 | v3.0 生态 | → v3.0 |
+| Phase F–H (v2.1–v3.3) | 生态深化/自治/标准/行业 | 全部远期 | → Phase 3 方向 |
+
+### 攒批合并依据
+- v1.36+v1.45 → 合并：同 intelligence track，incremental graph + reasoning + deep research 都是"更智能的检索"。
+- v1.43+v1.44 → 合并：同 DEV 用户价值（code governance + token cost）。
+- v1.39+v1.40(SDK)+v1.47(obs) → 合并：同 platform/ops 模块。
+- CRITIC-F-01 → 合并入 v1.34.1：Dashboard 修复是 UX fix，同 core-trust 硬化批。
+
 ## 3. 3 年路径（大版本里程碑）
 
 > 主题演进与关键能力跃迁。战略主题号是叙事愿景，不是确定 tag——实际发布号按 1.1 从 v1.9.0 续编增量，只在真实 breaking/范式跃迁发生时才到达 v2.0/v3.0。

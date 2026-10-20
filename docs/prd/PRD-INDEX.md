@@ -1,27 +1,34 @@
-# PRD Index
+---
+id: PRD-INDEX
+project: smart-agent-wiki
+version: 1.0
+last_updated: 2026-10-20
+status: active
+see_also: docs/strategy/ROADMAP.md | docs/analysis/INTEGRATION-NECESSITY-2026-10-20.md
+---
 
-> 全部 PRD 索引。幂等覆盖（同 slug 重写覆盖，不拗留 -v2）。下游 02/03 读此定位需求。
+# PRD Index — Smart Agent Wiki
 
-| id | title | version | status | date | slug | mvp | file |
-|---|---|---|---|---|---|---|---|
-| PRD-product-hardening-v1 | 产品形态补全与基础加固 | 1.0 | Released | 2026-09-01 | product-hardening-v1 | e2e-usability, security-hardening, test-gate | docs/prd/PRD-product-hardening-v1.md |
-| PRD-hardening-tail-v1.3.0 | 硬化尾巴 + 技术债清理 | 1.0 | Released | 2026-09-03 | hardening-tail-v1.3.0 | e2e-usability, claim-alignment, test-gate, tech-debt | docs/prd/PRD-hardening-tail-v1.3.0.md |
-| PRD-platform-team-v1.4.0 | 平台化与团队协作 | 1.0 | Released | 2026-09-03 | platform-team-v1.4.0 | platform-team, deployment, observability, workspace-isolation | docs/prd/PRD-platform-team-v1.4.0.md |
-| PRD-intelligence-adaptation-v1.5.0 | 智能与自适应 | 1.0 | Released | 2026-09-03 | intelligence-adaptation-v1.5.0 | intelligence-adaptation, workflow-orchestration, learn-engine, token-optimization | docs/prd/PRD-intelligence-adaptation-v1.5.0.md |
-| PRD-debt-closure-v1.6.0 | workspace 全路径 II + 深覆盖 + policy web 端点 | 1.0 | Released | 2026-09-03 | debt-closure-v1.6.0 | workspace-routing-ii, ingest-workspace-write, query-deep-coverage, policy-web-endpoint | docs/prd/PRD-debt-closure-v1.6.0.md |
-| PRD-graph-workspace-v1.7.0 | graph 隔离 + scope 清理 + coverage→65 | 1.0 | Released | 2026-09-04 | graph-workspace-v1.7.0 | graph-workspace-isolation, scope-propagation-cleanup, coverage-65 | docs/prd/PRD-graph-workspace-v1.7.0.md |
-| PRD-smart-linking-v1.8.0 | Smart Linking + AI Summarization | 1.0 | Released | 2026-09-04 | smart-linking-v1.8.0 | smart-linking-suggest, link-audit, ai-summarize | docs/prd/PRD-smart-linking-v1.8.0.md |
-| PRD-agent-viz-v1.9.0 | Agent & Workflow 可视化（CLI+REST） | 1.0 | Released | 2026-09-04 | agent-viz-v1.9.0 | workflow-list-durable, agents-roster, agents-rest | docs/prd/PRD-agent-viz-v1.9.0.md |
-| PRD-embedding-v1.10.0 | embedding 语义搜索 | 1.0 | Released | 2026-09-04 | embedding-v1.10.0 | embedding-index, semantic-search-endpoint, smart-linking-embedding, importorskip-heavy-sdk | docs/prd/PRD-embedding-v1.10.0.md |
-| PRD-debt-closure-v1.11.0 | 债务收口 IV / bug fix | 1.0 | Released | 2026-09-05 | debt-closure-v1.11.0 | semantic-cache, compile-coverage, workflow-rest-unify, spec-naming-revert, hash-reverify | docs/prd/PRD-debt-closure-v1.11.0.md |
-| PRD-embedding-api-v1.12.0 | embedding 改用 OpenAI 风格 API + E2E 验证 | 1.0 | Released | 2026-09-05 | embedding-api-v1.12.0 | embedding-provider-api, embedding-dim-configurable, local-st-optional-fallback, test-api-mock-e2e | docs/prd/PRD-embedding-api-v1.12.0.md |
-| PRD-e2e-tail-v1.13.0 | E2E 收尾轮（ingest recursion + benchmark + REST alias + coverage 67 + Q1/Q3 closure） | 1.0 | Released | 2026-09-06 | e2e-tail-v1.13.0 | ingest-dir-recursion, real-vllm-benchmark, rest-alias-changelog, coverage-67, retrospective-closure | docs/prd/PRD-e2e-tail-v1.13.0.md |
-| PRD-semantic-perf-v1.14.0 | semantic 性能优化 | 1.0 | Released | 2026-09-06 | semantic-perf-v1.14.0 | cache-threshold-config, ann-index, benchmark-update | docs/prd/PRD-semantic-perf-v1.14.0.md |
-| PRD-agent-link-v1.15.0 | agent/link 能力（自定义 agent 角色 + L2 links apply + M2 活动聚合） | 1.0 | Released | 2026-09-06 | agent-link-v1.15.0 | custom-agent-roles, links-auto-apply, agent-activity-aggregation | docs/prd/PRD-agent-link-v1.15.0.md |
-| PRD-dashboard-v1.16.0 | realtime 仪表盘 v4.3（agent roster + activity + workflow 运行态 + 实时更新） | 1.0 | Released | 2026-09-06 | dashboard-v1.16.0 | agent-roster-dashboard, workflow-runtime-view, realtime-update | docs/prd/PRD-dashboard-v1.16.0.md |
-| PRD-desktop-v1.17.0 | desktop 完成 v4.4（Tauri→1.0 + 集成 web 仪表盘） | 1.0 | Released | 2026-09-07 | desktop-v1.17.0 | desktop-version-bump, web-dashboard-integration, tauri-build-verification, backend-coordination | docs/prd/PRD-desktop-v1.17.0.md |
-| PRD-per-request-ws-v1.18.0 | per-request workspace 注入 + O4 tag 流程 | 1.0 | Approved | 2026-09-07 | per-request-ws-v1.18.0 | per-request-ws-contextvar, o4-tag-flow | docs/prd/PRD-per-request-ws-v1.18.0.md |
+> 与 01 共用索引。`prd_depth: planning` = 外环规划级 Draft（01 升级为 engineering）；`prd_depth: engineering` = 内环工程级。
 
-## 状态约定
-- Draft → Reviewing → Approved → Released → Deprecated
-- 变更只写 delta，front-matter version 自增；已有 Spec/Task 标 stale。
+## 规划级 PRD SPECs（外环 Phase 4.5 产出，status: Draft）
+
+| target_version | slug | prd_depth | status | 主题 |
+|---|---|---|---|---|
+| v1.34.1 | PRD-v1.34.1-core-trust-hardening | planning | Draft | coverage 70% + god-files + stale-freshness + Dashboard 修复 |
+| v1.35.0 | PRD-v1.35-structured-context-api | planning | Draft | Structured Context API v1（★品类定位） |
+| v1.36.0 | PRD-v1.36-incremental-graph-reasoning | planning | Draft | Incremental Graph + Reasoning + Deep Research v2（v1.36+v1.45 合并） |
+| v1.37.0 | PRD-v1.37-governed-code-intelligence | planning | Draft | Governed Code Intelligence + Token Optimizer（v1.43+v1.44 合并） |
+
+## 既有工程级 PRD（内环 01 产出，历史）
+
+| target_version | slug | prd_depth | status | 主题 |
+|---|---|---|---|---|
+| v1.30.1 | PRD-audit-fix-v1.30.1 | engineering | Approved | audit 快速修复批 |
+| v1.30.2 | PRD-wiki-index-resilience-v1.30.2 | engineering | Approved | wiki 索引 YAML 韧性 |
+| v1.31.0 | PRD-provenance-activity-v1.31.0 | engineering | Approved | Provenance API + Activity 持久化 |
+| v1.31.1 | PRD-contamination-scan-v1.31.1 | engineering | Approved | contamination scan |
+| v1.32.0 | PRD-compliance-audit-v1.32.0 | engineering | Approved | Compliance & Audit Tier |
+| v1.32.1 | PRD-compliance-profile-v1.32.1 | engineering | Approved | 数据驻留 + 合规 profile |
+| v1.33.0 | PRD-saw-web-spa-v1.33.0 | engineering | Approved | saw web 挂 SPA + proxy + 404 |
+| v1.34.0 | PRD-wiki-root-perf-v1.34.0 | engineering | Approved | wiki 根性能 + coverage 推进 |
