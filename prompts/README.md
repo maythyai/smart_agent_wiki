@@ -9,7 +9,7 @@
 | 外环 | 产品长期规划（**方向调研**+战略锚点+版本号规则+版本序列路径+**版本功能集成必要性审视 gate**+**每版本规划级 PRD SPECs**） | [roadmap.md](./roadmap.md) | `docs/strategy/`（STRATEGY+ROADMAP）+ `docs/analysis/`（MARKET-RESEARCH/INTEGRATION-NECESSITY）+ `docs/prd/`（规划级 SPEC，01 升级） |
 | 闸门 | 产品架构收敛审查（功能架构梳理+核心/次要取舍+IA 方向+迭代优先级——roadmap 与 01 PRD 之间的必经闸门） | [product-design-convergence.md](./product-design-convergence.md) | `.csp/convergence/`（CONVERGENCE-REPORT + CONVERGED-FEATURE-PLAN + IA-DIRECTION）+ `docs/analysis/`（摘要） |
 | 0 | 知识中枢初始化 | [00-knowledge-hub.md](./00-knowledge-hub.md) | `.csp/AGENTS.md` + `.csp/manifest.json` |
-| 1 | PRD 生成（产品需求） | [01-prd.md](./01-prd.md) | `docs/prd/` + `.csp/product-spec/`（PMS） |
+| 1 | PRD 生成（产品需求；升级模式承接外环规划级 SPEC；评审前 11 点预设清单自查） | [01-prd.md](./01-prd.md) | `docs/prd/` + `.csp/product-spec/`（PMS） |
 | 2 | 需求拆解（工程级 Feature） | [02-decomposition.md](./02-decomposition.md) | `.csp/decomposition/` |
 | 3 | 技术选型 + 技术方案 + 全栈 Spec | [03-tech-design.md](./03-tech-design.md) | `.csp/tech-decisions/` + `.csp/tech-design/` + `.csp/specs/` + `.csp/test-spec/`（TMS） |
 | 4 | 任务拆解 + 实施规划 | [04-task-breakdown.md](./04-task-breakdown.md) | `.csp/tasks/`（WBS/DAG/WAVE-PLAN） |
@@ -17,6 +17,8 @@
 | 6 | 审查·测试·发布交付·运维 | [06-verify-ship.md](./06-verify-ship.md) | `.csp/artifacts/{verify,review}/` + `.csp/ship/` + `.csp/ops/` + `.csp/milestones/` |
 | 7 | 整体复盘审查（产品+技术，迭代探索） | [07-reviewer.md](./07-reviewer.md) | `.csp/review/` + `docs/solutions/`（摘要） |
 | 独立 | 模块化审计+可用性审查+联动测试+roadmap bump | [audit.md](./audit.md) | `.csp/audit/` + `docs/analysis/`（摘要） |
+| 独立 | 全链路审计 pipeline——串联六个审查提示词（体检→实机验证→UI/UX 专项→产品批评→缺口补强→演进交棒），互不重复劳动；Step 0 运行模式检测（标准 subagent fan-out / Fallback 串行+完整性硬门控）+ 0.5 环境自检会话重建 + 0.6 findings 基线回读防重复侦查 + 0.8 自动化门禁快照 | [audit-pipeline.md](./audit-pipeline.md) | 聚合 `.csp/{audit,verify,evidence,ui-review,critic,gap-analysis}/` 六步产物 + findings 交棒 roadmap |
+| 独立 | 产品巡检+多角度审查主 Agent（07 复盘与外环 roadmap 之间的桥接）——巡检现有功能模块 → 增强规划/功能迭代/模块重组/界面规划 + 扩展维度 → 版本主题候选交棒 roadmap 做实证输入 | [product-audit-to-roadmap.md](./product-audit-to-roadmap.md) | `docs/audit/PRODUCT-AUDIT-{date}.md` + `REVIEW-FINDINGS-{audit-slug}.json`（交棒 roadmap） |
 | 独立 | 单页面/单功能模块缺口与增强深潜（通用面+领域目录+联动） | [feature-gap-analysis.md](./feature-gap-analysis.md) | `.csp/gap-analysis/` + `docs/analysis/`（摘要） |
 | 独立 | E2E 深度验证（M1 交互验证+修复 / M2 建套件 / M3 取证 / M4 全路由 sweep+按钮级点击审计+孤儿路由/隐藏后端功能审计+结构健康核查） | [e2e-deep-audit.md](./e2e-deep-audit.md) | `verify/` + `evidence/` + `gap-analysis/`（零 skill 依赖，可独立粘贴） |
 | 独立 | 产品总监批评性审查（重复/冗余/IA/视觉交互一致性/用户习惯/定位/完整性/状态 七镜头，带产品 sense 给 critic judgement） | [product-critic-review.md](./product-critic-review.md) | `.csp/critic/` + `docs/analysis/`（前缀 `CRITIC-F-NN`，交棒 roadmap→Phase 2.5） |
@@ -27,6 +29,9 @@
 | 独立 | 功能去重护栏——新功能开发前置约束通用方法论（六约束：定位查重/支柱归属/复用基础设施/元数据单源/导航准入/完成自检；防 R1 平行页面·R2 旁路实现·R3 元数据多副本·R4 语义重叠；含可粘贴 prompt 片段） | [feature-dedup-guardrails.md](./feature-dedup-guardrails.md) | 注入 `05-implementation.md` §7.0 开发期 gate |
 | 独立 | Python 代码审查专家提示词——六维审查框架（正确性/复用/简化/效率/安全/可测试性）+ 硬规则 H1-H8/必须项 M1-M5 + 安全深度清单（注入/反序列化/密钥/依赖/并发）+ FastAPI/Django/Flask/Agentic 框架特化 + 对抗性与边界镜头 + 项目结构 A-D 评估矩阵 + 严重度/反馈标签/裁决标准（零 skill 依赖，可独立粘贴到任意 Agent 执行 review） | [python-code-review.md](./python-code-review.md) | 审查报告（可选落 `.csp/review/`） |
 | 棕地 | docs/→.csp/ 双轨整合（PRD→PMS、strategy→lifecycle、solutions→specs、analysis→audit） | [brownfield-doc-integration.md](./brownfield-doc-integration.md) | `.csp/product-spec/` + `.csp/manifest.json` + `docs/` 整理归位 |
+| 参考 | 版本号管理规范——SemVer/CalVer 机制、tag 纪律、攒批发布 feat/fix 分轨、多平台六处一致的权威定义（roadmap/05/06 引用，冲突时以其为准） | [version-management.md](./version-management.md) | 被各提示词引用，无独立产物 |
+| 参考 | PRD 预设检查清单——实证评审提炼的 11 类高频 Critical 模式（可测指标禁 [TBD]/分母一致/安全闸门治理/known-limit 上界/双模式显式/恢复路径/HOW 不具名/三处同步/信任模型/入出站对称/选型不外渗），01 升级/评审前必过；项目以 `.csp/agent-conventions/PRD-PRESET-CHECKLIST.md` overlay 叠加 | [prd-preset-checklist.md](./prd-preset-checklist.md) | 被 01/prd-writer 引用，无独立产物 |
+| 模板 | 技能解耦移植任务模板——把外部借鉴的平台耦合技能解耦为目标框架原生等价物（本地 markdown+git+脚本）；A 表场景变量 + B–H 不变方法论，换场景只重填 A 表 | [skill-port-decouple.md](./skill-port-decouple.md) | 目标技能目录（按任务填充） |
 
 > **06 vs 07**：06 是**发布前符合性验证**（实现是否满足 PRD/Spec/AC、能否上线），是门控；07 是**里程碑后整体复盘**（产品对不对、架构稳不稳、下一步做什么），探索性/战略性，不卡发布。07 从用户视角+技术视角发现 Spec 之外的新问题，findings 回流下一迭代 01-05 + 外环 roadmap。
 
@@ -35,6 +40,10 @@
 > **收敛闸门 `product-design-convergence`**：roadmap 与 01 PRD 之间的**必经硬闸门**——不通过不进入开发。核心判断："功能杂乱"不是审美问题，是治理问题；产品说的（AGENTS.md 定位）和产品做的（roadmap 功能清单）分家是根因。本流程建立**功能准入机制**：Phase 0 定位与支柱基线（AGENTS.md 最高权威）→ Phase 1 功能全景+定位对齐+支柱映射 → Phase 2 六维度收敛（D1 功能架构/D2 核心取舍/D3 IA+**导航准入三问**+导航预算/D4 迭代优先级/D5 **定位对齐与前提挑战**/D6 **系统级卫生**：后端膨胀+Feature Flag+文档权威）→ Phase 3 五类根因 Pattern 检测（A 定位漂移/B 架构无收敛/C 前端 IA 债/D 后端膨胀/E 文档权威失守）→ Phase 4 收敛后功能清单（01 PRD 唯一输入）→ Phase 5 裁决记录+交棒。导航准入三问：Q1 独立任务域？Q2 频率≥每周？Q3 导航预算内？三问不过禁止新增顶级导航。定位漂移 >30% → 整个 roadmap 回炉。产出 CONVERGED-FEATURE-PLAN + IA-DIRECTION（含导航预算）+ SYSTEM-HYGIENE。非单功能 PATCH 修复版本必跑。
 
 > **独立审计 `audit`**：`audit.md` 独立于 00–07 链路，可随时运行——模块化拆解（含 DB 模块）→ 并行 fan-out 事实 → 需求可追溯缺口 → 跨层联动测试 → 逐模块可用性审查（Mode A/B + Nielsen 10）→ 评级 → 裁决报告 → findings 带 SemVer bump 建议回流 roadmap。产出 `.csp/audit/`（MODULE-LIST/USABILITY-REPORT/AUDIT-VERDICT/FINDINGS）。兼容 CSP 全部约定；不写 lifecycle、不改代码，只产审计+建议（修复归 05/06）。
+
+> **全链路审计 pipeline `audit-pipeline`**：发现层一键编排——按「工程体检（audit）→ 实机验证（e2e-deep-audit）→ UI/UX 八镜头（ui-review-to-iteration）→ 产品总监批评（product-critic-review）→ 单模块缺口深潜（feature-gap-analysis）→ 演进交棒（product-audit-to-roadmap）」顺序串联六个审查提示词，互不重复劳动。四道前置保险：运行模式检测（subagent 不可用 → Fallback 串行+完整性硬门控，禁止批量文件读取替代深度分析）、环境自检+会话重建（防 E2E 依赖断裂）、findings 基线强制回读（防重复侦查）、自动化门禁快照（机器证据前置）。存量仓库"深挖问题 → 修复 → 上线"先跑它。
+
+> **产品巡检交棒 `product-audit-to-roadmap`**：07 复盘与外环 roadmap 之间的桥接流程，任意里程碑后/版本间隙可触发——巡检现有功能模块后从四个必选角度（增强规划/功能迭代/模块重组/界面规划）+ 按项目特征裁剪的扩展角度产出审查发现，把"版本主题候选+优先级+依据"交棒 roadmap（交棒不代行：版本号/序列由 roadmap 定）。全部结论来自实际读到的模块/代码/界面/反馈，高危结论（死代码/无鉴权/从未调用）实机核验带 file:line；产出 `docs/audit/PRODUCT-AUDIT-{date}.md` + 结构化 findings JSON。
 
 > **独立深潜 `feature-gap-analysis`**：`feature-gap-analysis.md` 独立于 00–07 链路，可随时运行——锁定**单个已实现的页面/功能模块**，做现状重建 → 通用能力面扫描（F1–F12 横切关注点）→ **UI 与产品维度深审（U1–U7：宏观定位/信息架构/散乱/视觉与交互一致性/色调/用户习惯/响应式与 a11y，结合 `csp-frontend-design`/`csp-html-prototype`/`dataviz` 等设计技能）** → 领域增强目录对照（认证/CRUD/列表/搜索/上传/支付/Dashboard/消息/设置/审批等功能原型）→ 边界联动检查 → 优先级评级 → 交棒。粒度细到单页面/单模块（如 login 缺密码大小写校验、缺验证码、缺找回流程），findings 前缀 `GAP-F-NN`，落 `.csp/gap-analysis/`。P0 直发 04 拆 fix task → 05 → 06；P1/P2 攒批进 roadmap 版本主题。与 `audit.md`（全项目体检）、`product-audit-to-roadmap.md`（产品级演进方向）互补：audit 出结构问题 → 本流程深潜增强点；多模块 GAP findings 可由 product-audit 聚合。不写 lifecycle、不改代码，只产缺口+建议（实现归 01/03/05）。文末附「全界面自动巡检」驱动提示词——不指定页面时自动发现全部界面逐个深潜 + 跨模块 UI 一致性/重组聚合。
 

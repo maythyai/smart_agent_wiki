@@ -199,7 +199,7 @@ PRD 落盘同时，建立/更新产品说明书 PMS：
 ## 十一、变更同步（迭代回路）
 
 当 PRD/PMS 发生变更（重新执行本流程）：
-0. **升级模式判定**：目标版本已有 `prd_depth: planning` 的 Draft SPEC（外环 roadmap Phase 4.5 产出）→ 本阶段任务 = 在原文件上 delta 升级为工程级（补全业务规则穷举/异常流/每模块 AC≥3/埋点/非功能；功能清单以 `.csp/convergence/CONVERGED-FEATURE-PLAN.md` 为准），front-matter `prd_depth: engineering` + `version` 自增 + status 走评审 gate，**不新建文件**。
+0. **升级模式判定**：目标版本已有 `prd_depth: planning` 的 Draft SPEC（外环 roadmap Phase 4.5 产出）→ 本阶段任务 = 在原文件上 delta 升级为工程级（补全业务规则穷举/异常流/每模块 AC≥3/埋点/非功能；功能清单以 `.csp/convergence/CONVERGED-FEATURE-PLAN.md` 为准），front-matter `prd_depth: engineering` + `version` 自增 + status 走评审 gate，**不新建文件**。升级完成提交评审前，必须逐条过 `prd-preset-checklist.md` 11 点预设清单（+ 项目 `.csp/agent-conventions/PRD-PRESET-CHECKLIST.md` overlay 条目，若存在）。
 1. **先读既有产物**：读原 PRD + PMS，diff 出 delta（哪些模块/AC/规则变了）。
 2. **只更新 delta**：幂等覆盖原文件，front-matter `version` 自增、`date` 更新；不重写未变章节。
 3. **传播变更**：沿追溯链通知下游——更新 `docs/prd/PRD-INDEX.md` 状态；若已有 Spec/Task，标 `stale` 并提示技术方案侧做变更影响分析。
@@ -245,6 +245,8 @@ prd_depth: planning | engineering（planning=外环 roadmap Phase 4.5 产的规�
 | 9 | 优先级明确 | P0/P1/P2 标注 |
 | 10 | 不含排期/估时 | 工时归任务管理，不进 PRD |
 
+> **预设清单（11 点，第二道自查线）**：10 点自检覆盖结构完备性；实证评审提炼的 11 类高频 Critical 模式（可测指标禁 [TBD]/分母一致/安全闸门治理生命周期/known-limit 定量上界/双模式分支显式/恢复路径全覆盖/HOW 不具名/规则-AC-异常三处同步/信任模型按场景/入站出站对称/选型不外渗+分母不 bleed）见独立参考文件 `prd-preset-checklist.md`——**提交评审前（尤其 planning→engineering 升级时）必须逐条过**；项目若有 `.csp/agent-conventions/PRD-PRESET-CHECKLIST.md` overlay 则叠加项目特有条目。评审反复命中的新 Critical 模式回流追加进 overlay（living，编号续接）。
+
 ## 十三.五、PRD 评审（01 完成前 gate——未批准禁止标 done / 进 02）
 
 > 定位：工程前的人工决策 gate（同 06 的 Git 发布 gate 性质），不是自主构建阶段。PRD 出 draft 后、标 01 done 前必须过评审。
@@ -253,6 +255,8 @@ prd_depth: planning | engineering（planning=外环 roadmap Phase 4.5 产的规�
 **触发**：01 产出 PRD draft（front-matter `status: Draft`）后、写 lifecycle `01 done` 前。
 
 **评审者**：**reviewer ≠ author**——派 reviewer sub-agent（或加载 prd-review companion）做评审，不由作者自审，避免偏差。作者只负责按 findings 修改。
+
+**预设清单 fast scan（前置）**：reviewer 先按 `prd-preset-checklist.md` 11 点做机械式模式快扫（命中直接出 finding，编号沿用 PRD-REV-F-NN），再进多视角深审——高频 Critical 在快扫阶段即可拦截。
 
 **多视角评审**（每视角出 findings）：
 - **产品完整性**：是否覆盖所有角色与场景；MVP 范围是否合理；隐藏需求清单逐项核对无遗漏。
