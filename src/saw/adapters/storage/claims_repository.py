@@ -15,7 +15,7 @@ import json
 import logging
 import sqlite3
 import threading
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Any
 
 from saw.adapters.storage.fts_tokenize import build_match_query
@@ -464,13 +464,62 @@ class SQLiteClaimsRepository:
             f"AND uuid NOT IN ({placeholders})",
             (*superseded_sources, *superseded_sources),
         ).fetchall()
-        return [
+        results = [
             {
                 "claim_uuid": r[0],
                 "content": (r[1] or "")[:200],
                 "source_uuid": r[2],
                 "contradiction_ids": source_to_contras.get(r[2], []),
                 "reason": "superseded_source",
+            }
+            for r in rows
+        ]
+        # v1.34.1 (F3): append stale-source claims (distinct reason, may overlap).
+        results.extend(self._stale_source_scan())
+        return results
+
+    # ── v1.34.1 (F3): stale-source contamination (v1.31.1 deferred) ──
+
+    def _stale_source_scan(self) -> list[dict]:
+        """Return claims whose source has gone stale (v1.34.1, AUDIT-F-04 adjacent).
+
+        A claim is *stale-contaminated* if its source claim's ``last_accessed``
+        is older than ``SAW_STALE_THRESHOLD_DAYS`` (default 90) — the source
+        has gone unread so long that claims derived from it are likely
+        outdated. Stale detection is independent of contradiction detection:
+        a claim flagged as ``superseded_source`` may also be flagged as
+        ``stale_source`` if both conditions hold.
+
+        Best-effort; graceful degradation when the ``last_accessed`` column
+        is absent (pre-migration-v3 DB) or the table is empty.
+        """
+        try:
+            threshold_days = int(
+                __import__("os").environ.get("SAW_STALE_THRESHOLD_DAYS", "90")
+            )
+        except (ValueError, TypeError):
+            threshold_days = 90
+        threshold_dt = datetime.now(timezone.utc) - timedelta(days=threshold_days)
+        threshold = threshold_dt.isoformat()
+        if threshold_days <= 0:  # threshold=0 disables stale scan
+            return []
+        try:
+            rows = self._conn.execute(
+                "SELECT c.uuid, c.content, c.source_uuid FROM claim c "
+                "JOIN claim s ON c.source_uuid = s.uuid "
+                "WHERE (s.last_accessed IS NULL OR s.last_accessed < ?) "
+                "AND c.deleted_at IS NULL",
+                (threshold,),
+            ).fetchall()
+        except sqlite3.Error:
+            return []
+        return [
+            {
+                "claim_uuid": r[0],
+                "content": (r[1] or "")[:200],
+                "source_uuid": r[2],
+                "contradiction_ids": [],
+                "reason": "stale_source",
             }
             for r in rows
         ]

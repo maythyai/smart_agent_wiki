@@ -11,31 +11,31 @@
   "results": {
     "10_items": {
       "duration_seconds": 0.0,
-      "throughput_items_per_second": 2824061.1,
+      "throughput_items_per_second": 2891844.4,
       "latency_per_item_ms": 0.0
     },
     "100_items": {
       "duration_seconds": 0.0,
-      "throughput_items_per_second": 4444444.5,
+      "throughput_items_per_second": 7643514.6,
       "latency_per_item_ms": 0.0
     },
     "500_items": {
       "duration_seconds": 0.0001,
-      "throughput_items_per_second": 3442340.8,
+      "throughput_items_per_second": 5099854.4,
       "latency_per_item_ms": 0.0
     },
     "1000_items": {
       "duration_seconds": 0.0001,
-      "throughput_items_per_second": 6677796.3,
+      "throughput_items_per_second": 7616669.0,
       "latency_per_item_ms": 0.0
     }
   },
   "analysis": {
-    "max_throughput_items_per_second": 6677796.3,
+    "max_throughput_items_per_second": 7643514.6,
     "throughput_ceiling_reached": false,
     "bottleneck": "in_memory_processing",
     "recommendation": "For higher throughput, consider batch processing optimization"
   },
-  "date": "2026-10-20T02:33:59.695284+00:00",
+  "date": "2026-10-27T09:23:47.843660+00:00",
   "version": "1.0"
 }

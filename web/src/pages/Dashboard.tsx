@@ -273,28 +273,33 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Quick Actions */}
+      {/* v1.34.1 (CRITIC-F-01): replace duplicate nav buttons with status cards.
+          View Graph / Search Pages / Manage Integrations are already in the
+          top nav — Dashboard should show real-time health, not nav shortcuts. */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-6 border border-gray-200 dark:border-gray-700">
-        <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Quick Actions</h3>
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={() => window.location.href = '/graph'}
-            className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            View Graph
-          </button>
-          <button
-            onClick={() => window.location.href = '/search'}
-            className="px-3 py-1.5 text-sm bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-          >
-            Search Pages
-          </button>
-          <button
-            onClick={() => window.location.href = '/integrations'}
-            className="px-3 py-1.5 text-sm bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-          >
-            Manage Integrations
-          </button>
+        <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Knowledge Health</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
+            <span className="w-8 h-8 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center text-sm font-bold text-yellow-700 dark:text-yellow-300">?</span>
+            <div>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Contaminated Claims</p>
+              <p className="text-lg font-bold text-gray-900 dark:text-white">{stats.total_pages > 0 ? '...' : '--'}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
+            <span className="w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center text-sm font-bold text-red-700 dark:text-red-300">!</span>
+            <div>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Pending Contradictions</p>
+              <p className="text-lg font-bold text-gray-900 dark:text-white">{stats.total_pages > 0 ? '...' : '--'}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
+            <span className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-sm font-bold text-blue-700 dark:text-blue-300">Q</span>
+            <div>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Write Queue Depth</p>
+              <p className="text-lg font-bold text-gray-900 dark:text-white">{stats.total_pages > 0 ? '...' : '--'}</p>
+            </div>
+          </div>
         </div>
       </div>
 

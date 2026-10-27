@@ -229,6 +229,9 @@ class TestContaminationRoute:
              "2026-09-18", "2026-09-18T12:00:00Z"),
         )
         conn.commit()
+        # Set last_accessed to avoid stale-source false positive (v1.34.1 F3).
+        conn.execute("UPDATE claim SET last_accessed='2026-10-27T00:00:00Z' WHERE uuid IN ('src-a','src-b')")
+        conn.commit()
         # A claim derived from src-a (a superseded side) → contaminated.
         repo.insert(Claim(uuid="deriv-1", content="derived", source_uuid="src-a", content_hash="hd"))
 

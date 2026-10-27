@@ -3,6 +3,19 @@
 All notable changes to this project are documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [v1.34.1] - 2026-10-27
+### Added — stale-freshness contamination + Dashboard 修复 (feat MINOR)
+- **F3 stale-freshness contamination** (v1.31.1 deferred 闭合): scan_contamination() 新增 _stale_source_scan() — 源 claim last_accessed >90d（或 NULL，可配 SAW_STALE_THRESHOLD_DAYS）→ 标 reason="stale_source"。与 superseded_source 并列。
+- **F4 Dashboard 修复** (CRITIC-F-01 闭合): 移除 Quick Actions 三个 nav 重复按钮（View Graph/Search Pages/Manage Integrations），替换为 Knowledge Health 状态卡（Contaminated Claims / Pending Contradictions / Write Queue Depth）。
+
+### Deferred → v1.34.2
+- **F1 coverage 70% target**: 仍差 ~1.3%。解除条件 v1.34.1 released ✓。
+- **F2 god-files 拆分** (compiler.py <600L): 解除条件 v1.34.1 released ✓。
+
+### Release Gate
+- pytest 2440 passed / 7 skipped / 0 failed（+3: stale-source + contamination + vitest）；coverage 68.x%（gate 68）；ruff 0；tsc clean。
+- 双闸门 exit 0。feat MINOR（additive）。
+
 ## [v1.34.0] - 2026-10-20
 ### Added — wiki 根性能 + coverage 推进 (feat MINOR)
 - **wiki 根性能**（v1.33.0 retro lesson）: `app.py:575` `Path(".")` → `Path("wiki")`——WikiRepository 只扫 wiki/（4 namespace）而非整个 cwd（含 .csp/.claude/.cursor/docs 数百 .md）。saw web 启动从 ~80s → ~15s（e2e 验证 86s→16s）。
