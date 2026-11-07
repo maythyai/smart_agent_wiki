@@ -423,6 +423,68 @@ class TestSpaMountRoute:
         assert '<div id="root">' in r.text
 
 
+class TestStructuredContextRoute:
+    """v1.35.0 POST /api/v1/context — unified structured context bundle."""
+
+    def test_context_semantic_mode(self, tmp_path):
+        client = _build_client(tmp_path)
+        r = client.post("/api/v1/context?query=test&mode=semantic")
+        assert r.status_code == 200
+        body = r.json()
+        assert body["mode"] == "semantic"
+        assert "claims" in body
+        assert "metadata" in body
+        assert body["metadata"]["modes_used"] == ["semantic"]
+        assert body["metadata"]["elapsed_ms"] >= 0
+
+    def test_context_hybrid_mode(self, tmp_path):
+        client = _build_client(tmp_path)
+        r = client.post("/api/v1/context?query=test&mode=hybrid")
+        assert r.status_code == 200
+        body = r.json()
+        assert body["mode"] == "hybrid"
+        # hybrid uses semantic+graph layers (graph may be None on empty DB)
+        assert "semantic" in body["metadata"]["modes_used"]
+
+    def test_context_bad_mode_400(self, tmp_path):
+        client = _build_client(tmp_path)
+        r = client.post("/api/v1/context?query=test&mode=invalid")
+        assert r.status_code == 400
+
+    def test_context_confidence_filter(self, tmp_path):
+        """confidence_min filters out lower-confidence claims (honest count)."""
+        from saw.domain.claims import Claim
+        from saw.domain.value_objects import ConfidenceLevel
+
+        client = _build_client(tmp_path)
+        repo = client.app.state.query._claims_repo
+        # Insert one cross_validated + one unverified claim (searchable).
+        repo.insert(Claim(uuid="ctx-hi", content="alpha beta gamma delta",
+                          source_uuid="root", content_hash="hh1",
+                          confidence=ConfidenceLevel.CROSS_VALIDATED))
+        repo.insert(Claim(uuid="ctx-lo", content="alpha beta gamma epsilon",
+                          source_uuid="root", content_hash="hh2",
+                          confidence=ConfidenceLevel.UNVERIFIED))
+        # Seed the FTS index so semantic search can find them.
+        conn = repo._conn
+        conn.execute(
+            "INSERT INTO fts_index(title, content, tags, original) VALUES (?,?,?,?)",
+            ("ctx-hi", "alpha beta gamma delta", "", "alpha beta gamma delta"),
+        )
+        conn.execute(
+            "INSERT INTO fts_index(title, content, tags, original) VALUES (?,?,?,?)",
+            ("ctx-lo", "alpha beta gamma epsilon", "", "alpha beta gamma epsilon"),
+        )
+        conn.commit()
+        r = client.post("/api/v1/context?query=alpha%20beta&mode=semantic&confidence_min=single_source")
+        assert r.status_code == 200
+        body = r.json()
+        uuids = [c["uuid"] for c in body["claims"]]
+        assert "ctx-hi" in uuids
+        assert "ctx-lo" not in uuids
+        assert body["metadata"]["filtered_out"] >= 1
+
+
 
 # ── Query / Ingest / Learn routes ────────────────────────────────────
 

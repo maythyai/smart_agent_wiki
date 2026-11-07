@@ -3,6 +3,22 @@
 All notable changes to this project are documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [v1.35.0] - 2026-11-06
+### Added — Structured Context API v1 ★品类定位 (feat MINOR)
+- **F1 `saw_context` 统一 MCP+REST 接口**（★品类定位）: 单一入口 over 检索层——mode=semantic|graph|drift|hybrid（hybrid=semantic+graph 合并），返回 unified bundle `{claims, graph, metadata, note}`。对齐 2026.09 行业论点 "Structured Context Infrastructure"（vector+graph+state）。MCP 工具 39→40。
+- **F3 state 层过滤**: confidence_min（4 级置信 filter floor）+ freshness_min（0-8，v1 用 last_accessed age 启发式）作 query filter。filtered_out 计数诚实。
+- **F5 permission（部分）**: workspace_id 走既有 contextvar per-request ws。
+- **REST**: `POST /api/v1/context` 返回同 MCP bundle。
+
+### Deferred → v1.35.1
+- **F2 ontology 层**（concept type/relations 抽取设计较大）。解除条件 v1.35.0 released ✓。
+- **F4 自适应路由**（confidence 门控扩展）。
+- v1.34.1 deferred F1 (coverage 70%) + F2 (god-files) 续留。
+
+### Release Gate
+- pytest 2441 passed / 7 skipped / 0 failed（+4: TestStructuredContextRoute）；coverage 68.x%（gate 68）；ruff 0；tsc clean。
+- 双闸门 exit 0。feat MINOR（additive）。
+
 ## [v1.34.1] - 2026-10-27
 ### Added — stale-freshness contamination + Dashboard 修复 (feat MINOR)
 - **F3 stale-freshness contamination** (v1.31.1 deferred 闭合): scan_contamination() 新增 _stale_source_scan() — 源 claim last_accessed >90d（或 NULL，可配 SAW_STALE_THRESHOLD_DAYS）→ 标 reason="stale_source"。与 superseded_source 并列。

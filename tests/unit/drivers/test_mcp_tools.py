@@ -277,6 +277,8 @@ class TestAllToolsCount:
             "saw_purge_claim",
             # v1.32.1 compliance profile +1
             "saw_compliance_status",
+            # v1.35.0 structured context API +1
+            "saw_context",
         ]
 
         for tool in expected_tools:

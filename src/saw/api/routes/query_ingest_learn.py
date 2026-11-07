@@ -94,6 +94,155 @@ def query_knowledge(
     return response
 
 
+# ── v1.35.0 ★品类定位: Structured Context API (F1+F3) ────────────────
+
+_CONF_ORDER = ["unverified", "single_source", "cross_validated", "human_verified"]
+
+
+def _conf_rank(conf: str) -> int:
+    try:
+        return _CONF_ORDER.index(str(conf).lower())
+    except ValueError:
+        return 0
+
+
+def _freshness_rank(conn, claim_uuid: str) -> int:
+    """Best-effort freshness 0-8 from last_accessed age (NULL=0, v1 heuristic)."""
+    if conn is None or not claim_uuid:
+        return 0
+    try:
+        row = conn.execute(
+            "SELECT last_accessed FROM claim WHERE uuid=?", (claim_uuid,)
+        ).fetchone()
+    except Exception:
+        return 0
+    if row is None or row[0] is None:
+        return 0
+    try:
+        from datetime import datetime, timezone
+
+        accessed = datetime.fromisoformat(str(row[0]))
+        age_days = (datetime.now(timezone.utc) - accessed).days
+    except Exception:
+        return 0
+    if age_days <= 7:
+        return 8
+    if age_days <= 30:
+        return 6
+    if age_days <= 60:
+        return 4
+    if age_days <= 90:
+        return 2
+    return 0
+
+
+@router.post("/context")
+def get_structured_context(
+    query: str = Query(..., description="Question / search anchor"),
+    mode: str = Query("hybrid", description="semantic / graph / drift / hybrid"),
+    confidence_min: str = Query(
+        "", description="Filter floor: unverified / single_source / cross_validated / human_verified (empty = no filter)"
+    ),
+    freshness_min: int = Query(0, ge=0, le=8, description="Min freshness 0-8 (0 = no filter)"),
+    limit: int = Query(10, ge=1, le=50),
+    engine=Depends(_query_engine),
+):
+    """v1.35.0 ★: unified structured context bundle (vector + graph + state).
+
+    Single entry point over the retrieval layers. Dispatches to the engine's
+    semantic/graph modes and returns a unified bundle with state-layer
+    post-filtering (confidence + freshness). Exposes the same bundle the
+    ``saw_context`` MCP tool returns, via REST.
+    """
+    import time as _time
+
+    mode = mode.lower()
+    if mode not in ("semantic", "graph", "drift", "hybrid"):
+        raise HTTPException(400, f"mode must be one of semantic/graph/drift/hybrid, got: {mode}")
+
+    start = _time.time()
+    claims_repo = getattr(engine, "_claims_repo", None)
+    conn = getattr(claims_repo, "_conn", None) if claims_repo is not None else None
+    modes_used: list[str] = []
+    raw_claims: list[dict] = []
+    graph_data: dict | None = None
+
+    def _collect(qr) -> list[dict]:
+        out: list[dict] = []
+        for s in (qr.sources or []):
+            cuid = s.get("claim_uuid") or s.get("page_slug", "")
+            claim = claims_repo.get_by_id(cuid) if claims_repo is not None and cuid else None
+            conf = s.get("confidence") or (
+                claim.confidence.name.lower() if claim else "unverified"
+            )
+            out.append({
+                "uuid": cuid,
+                "content": s.get("content", ""),
+                "confidence": conf,
+                "source_uuid": (claim.source_uuid if claim is not None else None),
+            })
+        return out
+
+    if mode in ("semantic", "hybrid", "drift"):
+        try:
+            qr = engine.query(query, mode="semantic", limit=limit)
+            raw_claims.extend(_collect(qr))
+            modes_used.append("semantic")
+        except Exception as e:
+            raise HTTPException(500, f"semantic layer failed: {e}")
+
+    if mode in ("graph", "hybrid", "drift"):
+        try:
+            qr = engine.query(query, mode="graph")
+            for c in _collect(qr):
+                if c not in raw_claims:
+                    raw_claims.append(c)
+            nodes: list[dict] = []
+            edges: list[dict] = []
+            for s in (qr.sources or []):
+                ent = s.get("entity") or s.get("page_slug") or s.get("claim_uuid")
+                if ent:
+                    nodes.append({"id": ent, "label": s.get("content", "")[:60]})
+                rel = s.get("relation")
+                if rel and ent:
+                    edges.append({"from": ent, "type": rel})
+            graph_data = {"nodes": nodes[:limit], "edges": edges[: limit * 2]}
+            modes_used.append("graph")
+        except Exception:
+            graph_data = None
+
+    total_before = len(raw_claims)
+    filtered = raw_claims[:limit]
+    if confidence_min:
+        min_rank = _conf_rank(confidence_min)
+        filtered = [c for c in filtered if _conf_rank(c["confidence"]) >= min_rank]
+    if freshness_min > 0:
+        filtered = [
+            c for c in filtered if _freshness_rank(conn, c["uuid"]) >= freshness_min
+        ]
+
+    elapsed_ms = round((_time.time() - start) * 1000, 2)
+    note = ""
+    if mode == "drift":
+        note = "v1 drift is a simplified semantic+graph hybrid"
+    if freshness_min > 0:
+        note += " freshness uses last_accessed age (NULL=0)"
+
+    return {
+        "mode": mode,
+        "query": query,
+        "claims": filtered,
+        "graph": graph_data,
+        "metadata": {
+            "total_claims": len(filtered),
+            "filtered_out": total_before - len(filtered),
+            "elapsed_ms": elapsed_ms,
+            "modes_used": modes_used,
+        },
+        "note": note,
+    }
+
+
 @router.post("/compare")
 def compare_pages(
     targets: list[str] = Query(..., description="Page slugs or claim UUIDs to compare"),

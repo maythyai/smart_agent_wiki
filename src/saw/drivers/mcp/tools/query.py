@@ -421,3 +421,176 @@ async def saw_drift_search(query: str, depth: int = 2, limit: int = 5) -> dict:
                 continue
 
     return out
+
+# ── v1.35.0 ★品类定位: Structured Context API (F1+F3) ────────────────
+
+_CONF_ORDER = ["unverified", "single_source", "cross_validated", "human_verified"]
+
+
+def _conf_rank(conf: str) -> int:
+    """Rank a confidence label (0=unverified … 3=human_verified). Unknown → 0."""
+    try:
+        return _CONF_ORDER.index(str(conf).lower())
+    except ValueError:
+        return 0
+
+
+@mcp.tool
+async def saw_context(
+    query: str,
+    mode: str = "hybrid",
+    confidence_min: str = "",
+    freshness_min: int = 0,
+    limit: int = 10,
+) -> dict:
+    """v1.35.0 ★品类定位: unified structured context for agents.
+
+    Single entry point over the retrieval layers (the "Structured Context
+    Infrastructure" the 2026.09 industry thesis describes — vector for
+    similarity + graph for relations + state for freshness/confidence).
+    Dispatches to the QueryEngine's existing modes and returns a unified
+    bundle with state-layer post-filtering.
+
+    Args:
+        query: Question / search anchor.
+        mode: ``semantic`` | ``graph`` | ``drift`` | ``hybrid`` (hybrid =
+            semantic + graph merged; drift is a simplified hybrid in v1 —
+            the full community primer lives in ``saw_drift_search``).
+        confidence_min: Filter floor — ``unverified`` | ``single_source`` |
+            ``cross_validated`` | ``human_verified`` (empty = no filter).
+        freshness_min: Minimum freshness level 0-8 (0 = no filter; NULL
+            last_accessed counts as 0, the least fresh).
+        limit: Max claims to return.
+
+    Returns:
+        ``{mode, query, claims: [{uuid, content, confidence, source_uuid}],
+        graph: {nodes, edges} | None, metadata: {total_claims, filtered_out,
+        elapsed_ms, modes_used}, note}``.
+    """
+    import time as _time
+
+    if _query_engine is None:
+        return {"error": "query_engine_not_initialized"}
+    mode = str(mode).lower()
+    if mode not in ("semantic", "graph", "drift", "hybrid"):
+        return {"error": f"unknown mode: {mode}"}
+
+    start = _time.time()
+    claims_repo = getattr(_query_engine, "_claims_repo", None)
+    modes_used: list[str] = []
+    raw_claims: list[dict] = []
+    graph_data: dict | None = None
+
+    def _collect(qr) -> list[dict]:
+        """Extract claim dicts from a QueryResult's sources."""
+        out: list[dict] = []
+        for s in (qr.sources or []):
+            cuid = s.get("claim_uuid") or s.get("page_slug", "")
+            claim = claims_repo.get_by_id(cuid) if claims_repo is not None and cuid else None
+            conf = s.get("confidence") or (
+                claim.confidence.name.lower() if claim else "unverified"
+            )
+            out.append({
+                "uuid": cuid,
+                "content": s.get("content", ""),
+                "confidence": conf,
+                "source_uuid": (claim.source_uuid if claim is not None else None),
+            })
+        return out
+
+    # (1) semantic layer (vector/BM25 similarity)
+    if mode in ("semantic", "hybrid", "drift"):
+        try:
+            qr = _query_engine.query(query, mode="semantic", limit=limit)
+            raw_claims.extend(_collect(qr))
+            modes_used.append("semantic")
+        except Exception as e:
+            return {"error": f"semantic layer failed: {e}"}
+
+    # (2) graph layer (entity relations)
+    if mode in ("graph", "hybrid", "drift"):
+        try:
+            qr = _query_engine.query(query, mode="graph")
+            graph_claims = _collect(qr)
+            for c in graph_claims:
+                if c not in raw_claims:
+                    raw_claims.append(c)
+            nodes: list[dict] = []
+            edges: list[dict] = []
+            for s in (qr.sources or []):
+                ent = s.get("entity") or s.get("page_slug") or s.get("claim_uuid")
+                if ent:
+                    nodes.append({"id": ent, "label": s.get("content", "")[:60]})
+                rel = s.get("relation")
+                if rel and ent:
+                    edges.append({"from": ent, "type": rel})
+            graph_data = {"nodes": nodes[: limit], "edges": edges[: limit * 2]}
+            modes_used.append("graph")
+        except Exception:
+            # Graph layer failure degrades to claims-only (best-effort).
+            graph_data = None
+
+    # (3) state layer — post-filter by confidence / freshness
+    total_before = len(raw_claims)
+    filtered = raw_claims[:limit]
+    if confidence_min:
+        min_rank = _conf_rank(confidence_min)
+        filtered = [c for c in filtered if _conf_rank(c["confidence"]) >= min_rank]
+    if freshness_min and freshness_min > 0:
+        # v1: freshness from last_accessed age (NULL = 0, least fresh).
+        # The full 9-level FreshnessTracker integration lands with F2/v1.35.1.
+        filtered = [
+            c for c in filtered if _freshness_rank(claims_repo, c["uuid"]) >= freshness_min
+        ]
+
+    elapsed_ms = round((_time.time() - start) * 1000, 2)
+    note = ""
+    if mode == "drift":
+        note = "v1 drift is a simplified semantic+graph hybrid; full community primer in saw_drift_search"
+    if freshness_min and freshness_min > 0:
+        note += " freshness uses last_accessed age (NULL=0); full 9-level tracker in v1.35.1"
+
+    return {
+        "mode": mode,
+        "query": query,
+        "claims": filtered,
+        "graph": graph_data,
+        "metadata": {
+            "total_claims": len(filtered),
+            "filtered_out": total_before - len(filtered),
+            "elapsed_ms": elapsed_ms,
+            "modes_used": modes_used,
+        },
+        "note": note,
+    }
+
+
+def _freshness_rank(claims_repo, claim_uuid: str) -> int:
+    """Best-effort freshness rank 0-8 from last_accessed age (v1 heuristic)."""
+    if claims_repo is None or not claim_uuid:
+        return 0
+    try:
+        row = claims_repo._conn.execute(
+            "SELECT last_accessed FROM claim WHERE uuid=?", (claim_uuid,)
+        ).fetchone()
+    except Exception:
+        return 0
+    if row is None or row[0] is None:
+        return 0
+    try:
+        from datetime import datetime, timezone
+
+        accessed = datetime.fromisoformat(str(row[0]))
+        age_days = (datetime.now(timezone.utc) - accessed).days
+    except Exception:
+        return 0
+    # Heuristic: 0-7d→8(fresh) … 90d+→0(stale), 30d buckets.
+    if age_days <= 7:
+        return 8
+    if age_days <= 30:
+        return 6
+    if age_days <= 60:
+        return 4
+    if age_days <= 90:
+        return 2
+    return 0
